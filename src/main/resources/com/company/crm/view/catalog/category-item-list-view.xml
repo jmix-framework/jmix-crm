@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      xmlns:c="http://jmix.io/schema/flowui/jpql-condition"
+      title="msg://categoryItemListView.title"
+      focusComponent="categoryItemsDataGrid">
+    <data>
+        <collection id="categoryItemsDc"
+                    class="com.company.crm.model.catalog.item.CategoryItem">
+            <fetchPlan extends="_base">
+                <property name="category" fetchPlan="_base"/>
+            </fetchPlan>
+            <loader id="categoryItemsDl" readOnly="true"/>
+        </collection>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+        <urlQueryParameters>
+            <pagination component="pagination"/>
+        </urlQueryParameters>
+    </facets>
+    <actions>
+        <action id="selectAction" type="lookup_select"/>
+        <action id="discardAction" type="lookup_discard"/>
+    </actions>
+    <layout>
+        <hbox id="buttonsPanel" classNames="buttons-panel">
+            <button id="createButton" action="categoryItemsDataGrid.createAction"/>
+            <button id="editButton" action="categoryItemsDataGrid.editAction"/>
+            <button id="removeButton" action="categoryItemsDataGrid.removeAction"/>
+            <simplePagination id="pagination" dataLoader="categoryItemsDl"/>
+        </hbox>
+        <dataGrid id="categoryItemsDataGrid"
+                  width="100%"
+                  minHeight="20em"
+                  dataContainer="categoryItemsDc"
+                  columnReorderingAllowed="true"
+                  selectionMode="MULTI">
+            <actions>
+                <action id="createAction" type="list_create"/>
+                <action id="editAction" type="list_edit"/>
+                <action id="removeAction" type="list_remove"/>
+            </actions>
+            <columns resizable="true">
+                <column property="name"/>
+                <column property="code"/>
+                <column property="category"/>
+            </columns>
+        </dataGrid>
+        <hbox id="lookupActions" visible="false">
+            <button id="selectButton" action="selectAction"/>
+            <button id="discardButton" action="discardAction"/>
+        </hbox>
+    </layout>
+</view>

@@ -1,0 +1,60 @@
+package com.company.crm.model.base;
+
+import io.jmix.core.FetchPlan;
+import io.jmix.core.FluentLoader;
+import io.jmix.core.repository.JmixDataRepository;
+import org.springframework.data.repository.NoRepositoryBean;
+import org.springframework.lang.Nullable;
+
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+@NoRepositoryBean
+public interface UuidEntityRepository<T extends UuidEntity> extends JmixDataRepository<T, UUID> {
+
+    default List<T> listByQuery(String query, Object... params) {
+        return fluentLoader().query(query, params).list();
+    }
+
+    default Optional<T> optionalByQuery(String query, Object... params) {
+        return queryLoader(query, params).maxResults(1).optional();
+    }
+
+    default T oneByQuery(String query, Object... params) {
+        return queryLoader(query, params).maxResults(1).one();
+    }
+
+    default Iterable<T> findAll(long offset, long limit) {
+        return findAll(offset, limit, null);
+    }
+
+    default Iterable<T> findAll(long offset, long limit, @Nullable FetchPlan fetchPlan) {
+        return findAll(OffsetLimitPageRequest.of(offset, limit), fetchPlan);
+    }
+
+    // ----- utils -----
+
+    default FluentLoader.ByQuery<T> queryLoader(String query, Object... params) {
+        return fluentLoader().query(query, params);
+    }
+
+    default FluentLoader<T> fluentLoader() {
+        return getDataManager().load(getEntityClass());
+    }
+
+    default Class<T> getEntityClass() {
+        Type[] interfaces = getClass().getInterfaces();
+        for (Type t : interfaces) {
+            if (t instanceof Class<?> clazz) {
+                Type genericInterface = clazz.getGenericInterfaces()[0];
+                //noinspection unchecked
+                return (Class<T>) ((ParameterizedType) genericInterface).getActualTypeArguments()[0];
+            }
+        }
+
+        throw new IllegalStateException("Can not resolve entity class from repository interface");
+    }
+}

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      xmlns:c="http://jmix.io/schema/flowui/jpql-condition"
+      title="msg://orderListView.title"
+      focusComponent="ordersDataGrid">
+    <data>
+        <collection id="ordersDc"
+                    class="com.company.crm.model.order.Order">
+            <fetchPlan extends="_base"/>
+            <loader id="ordersDl" readOnly="true"/>
+        </collection>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+        <urlQueryParameters>
+            <pagination component="pagination"/>
+        </urlQueryParameters>
+    </facets>
+    <actions>
+        <action id="selectAction" type="lookup_select"/>
+        <action id="discardAction" type="lookup_discard"/>
+    </actions>
+    <layout>
+        <hbox id="buttonsPanel" classNames="buttons-panel">
+            <button id="createButton" action="ordersDataGrid.createAction"/>
+            <button id="editButton" action="ordersDataGrid.editAction"/>
+            <button id="removeButton" action="ordersDataGrid.removeAction"/>
+            <simplePagination id="pagination" dataLoader="ordersDl"/>
+        </hbox>
+        <dataGrid id="ordersDataGrid"
+                  width="100%"
+                  minHeight="20em"
+                  dataContainer="ordersDc"
+                  columnReorderingAllowed="true"
+                  selectionMode="MULTI">
+            <actions>
+                <action id="createAction" type="list_create"/>
+                <action id="editAction" type="list_edit"/>
+                <action id="removeAction" type="list_remove"/>
+            </actions>
+            <columns resizable="true">
+                <column property="date"/>
+                <column property="quote"/>
+                <column property="comment"/>
+                <column property="total"/>
+                <column property="discountValue"/>
+                <column property="discountPercent"/>
+                <column property="status"/>
+            </columns>
+        </dataGrid>
+        <hbox id="lookupActions" visible="false">
+            <button id="selectButton" action="selectAction"/>
+            <button id="discardButton" action="discardAction"/>
+        </hbox>
+    </layout>
+</view>

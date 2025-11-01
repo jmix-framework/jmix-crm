@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      xmlns:c="http://jmix.io/schema/flowui/jpql-condition"
+      title="msg://clientListView.title"
+      focusComponent="clientsDataGrid">
+    <data>
+        <collection id="clientsDc"
+                    class="com.company.crm.model.client.Client">
+            <fetchPlan extends="_base"/>
+            <loader id="clientsDl" readOnly="true"/>
+        </collection>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+        <urlQueryParameters>
+            <pagination component="pagination"/>
+        </urlQueryParameters>
+    </facets>
+    <actions>
+        <action id="selectAction" type="lookup_select"/>
+        <action id="discardAction" type="lookup_discard"/>
+    </actions>
+    <layout>
+        <hbox id="buttonsPanel" classNames="buttons-panel">
+            <button id="createButton" action="clientsDataGrid.createAction"/>
+            <button id="editButton" action="clientsDataGrid.editAction"/>
+            <button id="removeButton" action="clientsDataGrid.removeAction"/>
+            <simplePagination id="pagination" dataLoader="clientsDl"/>
+        </hbox>
+        <dataGrid id="clientsDataGrid"
+                  width="100%"
+                  minHeight="20em"
+                  dataContainer="clientsDc"
+                  columnReorderingAllowed="true"
+                  selectionMode="MULTI">
+            <actions>
+                <action id="createAction" type="list_create"/>
+                <action id="editAction" type="list_edit"/>
+                <action id="removeAction" type="list_remove"/>
+            </actions>
+            <columns resizable="true">
+                <column property="name"/>
+                <column property="fullName"/>
+                <column property="address"/>
+                <column property="type"/>
+                <column property="vatNumber"/>
+                <column property="regNumber"/>
+                <column property="website"/>
+            </columns>
+        </dataGrid>
+        <hbox id="lookupActions" visible="false">
+            <button id="selectButton" action="selectAction"/>
+            <button id="discardButton" action="discardAction"/>
+        </hbox>
+    </layout>
+</view>

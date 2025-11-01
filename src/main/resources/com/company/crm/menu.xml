@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<menu-config xmlns="http://jmix.io/schema/flowui/menu">
+    <item view="HomeView" id="home" icon="vaadin:home"
+          description="msg://com.company.crm/menu_config.home.description"
+          title="msg://com.company.crm/menu_config.home.title"/>
+
+    <item view="TasksView" id="tasks" icon="vaadin:check-square"
+          description=""
+          title="My Tasks"/>
+
+    <item view="Client.list" id="clients" icon="vaadin:users"
+          description=""
+          title="Clients"/>
+
+    <menu id="catalog" title="Catalog" icon="vaadin:open-book">
+        <item view="Category.list" id="categories" icon="vaadin:list-select"
+              description=""
+              title="Categories"/>
+        <item view="CategoryItem.list" id="categoryItems" icon="vaadin:list"
+              description=""
+              title="Products"/>
+    </menu>
+
+    <item view="Order.list" id="orders" icon="vaadin:cart"
+          description=""
+          title="Orders"/>
+
+    <item view="FinanceView" id="finance" title="Finance" icon="vaadin:pie-chart"/>
+
+    <menu id="administration" icon="vaadin:cog"
+          description="msg://com.company.crm/menu_config.administration.description"
+          title="msg://com.company.crm/menu_config.administration.title">
+        <item view="dynat_CategoryView.list" id="dynamic_attributes" icon="vaadin:table"
+              description=""
+              title="msg://io.jmix.dynattrflowui.panel/category"/>
+        <item view="appSettings.view" id="app_settings" icon="vaadin:wrench"
+              description=""
+              title="msg://io.jmix.appsettingsflowui.view.appsettings/appSettingsEntityView.menu"/>
+    </menu>
+</menu-config>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      title="msg://orderDetailView.title"
+      focusComponent="form">
+    <data>
+        <instance id="orderDc"
+                  class="com.company.crm.model.order.Order">
+            <fetchPlan extends="_base"/>
+            <loader id="orderDl"/>
+        </instance>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+    </facets>
+    <actions>
+        <action id="saveCloseAction" type="detail_saveClose"/>
+        <action id="closeAction" type="detail_close"/>
+    </actions>
+    <layout>
+        <formLayout id="form" dataContainer="orderDc">
+            <responsiveSteps>
+                <responsiveStep minWidth="0" columns="1"/>
+                <responsiveStep minWidth="40em" columns="2"/>
+            </responsiveSteps>
+            <datePicker id="dateField" property="date"/>
+            <textField id="quoteField" property="quote"/>
+            <textArea id="commentField" height="9.5em" property="comment"/>
+            <textField id="totalField" property="total"/>
+            <textField id="discountValueField" property="discountValue"/>
+            <textField id="discountPercentField" property="discountPercent"/>
+            <select id="statusField" property="status"/>
+        </formLayout>
+        <hbox id="detailActions">
+            <button id="saveAndCloseButton" action="saveCloseAction"/>
+            <button id="closeButton" action="closeAction"/>
+        </hbox>
+    </layout>
+</view>

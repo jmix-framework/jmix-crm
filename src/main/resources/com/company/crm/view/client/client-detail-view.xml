@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      title="msg://clientDetailView.title"
+      focusComponent="form">
+    <data>
+        <instance id="clientDc"
+                  class="com.company.crm.model.client.Client">
+            <fetchPlan extends="_base"/>
+            <loader id="clientDl"/>
+        </instance>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+    </facets>
+    <actions>
+        <action id="saveCloseAction" type="detail_saveClose"/>
+        <action id="closeAction" type="detail_close"/>
+    </actions>
+    <layout>
+        <formLayout id="form" dataContainer="clientDc">
+            <responsiveSteps>
+                <responsiveStep minWidth="0" columns="1"/>
+                <responsiveStep minWidth="40em" columns="2"/>
+            </responsiveSteps>
+            <textField id="nameField" property="name"/>
+            <textField id="fullNameField" property="fullName"/>
+            <textField id="addressField" property="address"/>
+            <select id="typeField" property="type"/>
+            <textField id="vatNumberField" property="vatNumber"/>
+            <textField id="regNumberField" property="regNumber"/>
+            <textField id="websiteField" property="website"/>
+        </formLayout>
+        <hbox id="detailActions">
+            <button id="saveAndCloseButton" action="saveCloseAction"/>
+            <button id="closeButton" action="closeAction"/>
+        </hbox>
+    </layout>
+</view>

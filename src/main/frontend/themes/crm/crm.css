@@ -1,0 +1,4 @@
+/* Define your styles here */
+html {
+    --lumo-clickable-cursor: pointer;
+}
