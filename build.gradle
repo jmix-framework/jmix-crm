@@ -1,14 +1,14 @@
 plugins {
-    id 'io.jmix' version '2.7.0-RC2'
     id 'java'
+    id 'io.jmix' version '2.7.0-RC2'
     id 'org.jetbrains.gradle.plugin.idea-ext' version '1.1.9'
 }
 
-apply plugin: 'org.springframework.boot'
 apply plugin: 'com.vaadin'
+apply plugin: 'org.springframework.boot'
 
 jmix {
-    bomVersion = '2.7.0-RC2'
+    bomVersion = '2.7.0'
 }
 
 java {
@@ -21,8 +21,13 @@ version = '0.0.1-SNAPSHOT'
 
 repositories {
     mavenCentral()
+
     maven {
         url = 'https://nexus.jmix.io/repository/public'
+    }
+
+    maven {
+        url = 'https://maven.vaadin.com/vaadin-addons'
     }
 }
 
@@ -57,6 +62,9 @@ dependencies {
     implementation 'io.jmix.charts:jmix-charts-flowui-starter'
     implementation 'io.jmix.gridexport:jmix-gridexport-flowui-starter'
     implementation 'io.jmix.translations:jmix-translations-ru'
+
+    //              --- [ VAADIN ADD-ONS ] ---
+    implementation 'org.vaadin.jchristophe:sortable-layout:2.1.0'
 
     //              --- [ SPRING ] ---
     implementation 'org.springframework.boot:spring-boot-starter-web'

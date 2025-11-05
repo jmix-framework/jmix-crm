@@ -1,5 +1,6 @@
 package com.company.crm.view.home;
 
+import com.company.crm.app.feature.sortable.SortableFeature;
 import com.company.crm.app.service.user.UserService;
 import com.company.crm.app.service.datetime.DateTimeService;
 import com.company.crm.app.service.finance.InvoiceService;
@@ -21,11 +22,14 @@ import com.company.crm.view.main.MainView;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.avatar.Avatar;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.H3;
+import com.vaadin.flow.component.html.H4;
 import com.vaadin.flow.component.html.H5;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
@@ -48,6 +52,7 @@ import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.component.card.JmixCard;
 import io.jmix.flowui.component.formlayout.JmixFormLayout;
 import io.jmix.flowui.component.grid.DataGrid;
+import io.jmix.flowui.facet.SettingsFacet;
 import io.jmix.flowui.view.StandardView;
 import io.jmix.flowui.view.Subscribe;
 import io.jmix.flowui.view.ViewComponent;
@@ -103,6 +108,8 @@ public class HomeView extends StandardView {
     private JmixFormLayout rightContent;
     @ViewComponent
     private JmixFormLayout leftContent;
+    @ViewComponent
+    private SettingsFacet settingsFacet;
 
     @Subscribe
     private void onInit(final InitEvent event) {
@@ -116,25 +123,44 @@ public class HomeView extends StandardView {
 
     private void createLeftComponents() {
         doCreateCards(getLeftCardsModels(), leftContent);
+        SortableFeature.makeSortable(leftContent);
     }
 
     private void createRightComponents() {
         doCreateCards(getRightCardsModels(), rightContent);
+        SortableFeature.makeSortable(rightContent);
     }
 
     private List<CardModel> getLeftCardsModels() {
         return List.of(
-                new CardModel(1, "Total Orders Value", this::createTotalOrdersValueComponent),
-                new CardModel(1, "Payments", this::createPaymentsComponent),
-                new CardModel(2, "Overdue Invoices", this::createOverdueInvoicesComponent),
-                new CardModel(2, "My Tasks", this::createMyTasksComponent)
+                new CardModel("totalOrdersValue", 1, "Total Orders Value", this::createTotalOrdersValueComponent),
+                new CardModel("payments", 1, "Payments", this::createPaymentsComponent),
+                new CardModel("overdueInvoices", 2, "Overdue Invoices", this::createOverdueInvoicesComponent),
+                new CardModel("myTasks", 2, myTasksTitleComponent(), this::createMyTasksComponent)
         );
+    }
+
+    private static Component myTasksTitleComponent() {
+        var hbox = new HorizontalLayout();
+        hbox.setWidthFull();
+        hbox.setAlignItems(FlexComponent.Alignment.CENTER);
+        hbox.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
+
+        var title = new H4("My Tasks");
+        hbox.add(title);
+
+        var newTaskButton = new Button("New Task");
+        newTaskButton.setIcon(VaadinIcon.PLUS.create());
+        newTaskButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        hbox.add(newTaskButton);
+
+        return hbox;
     }
 
     private List<CardModel> getRightCardsModels() {
         return List.of(
-                new CardModel(2, "Sales Chart", this::createSalesFunnelComponent),
-                new CardModel(2, "Recent Activities", this::createRecentActivitiesComponent)
+                new CardModel("salesChart", 2, "Sales Chart", this::createSalesFunnelComponent),
+                new CardModel("recentActivities", 2, "Recent Activities", this::createRecentActivitiesComponent)
         );
     }
 
@@ -232,7 +258,9 @@ public class HomeView extends StandardView {
     }
 
     private CardContentModel createMyTasksComponent(CardPeriod period) {
-        return withDefaultBackgroundCallback(new ComponentCardContentModel(new Span("My Tasks Content")));
+        return withDefaultBackgroundCallback(
+                new ComponentCardContentModel(new Span("My Tasks Content"))
+        );
     }
 
     private CardContentModel createSalesFunnelComponent(CardPeriod period) {

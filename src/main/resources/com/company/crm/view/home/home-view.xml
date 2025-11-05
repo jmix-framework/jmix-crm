@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <view xmlns="http://jmix.io/schema/flowui/view"
       title="msg://homeView.title">
+    <facets>
+        <settings id="settingsFacet" auto="true"/>
+    </facets>
     <layout padding="false">
         <split themeNames="minimal" orientation="HORIZONTAL" width="100%" height="100%">
             <vbox minHeight="40em" minWidth="10em" maxWidth="65%">

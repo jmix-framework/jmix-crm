@@ -7,6 +7,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.card.CardVariant;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.H4;
 import com.vaadin.flow.component.html.Span;
@@ -22,6 +23,7 @@ import io.jmix.flowui.kit.component.dropdownbutton.DropdownButtonItem;
 import io.jmix.flowui.kit.component.dropdownbutton.DropdownButtonVariant;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.text.CaseUtils;
 import org.springframework.context.ApplicationContext;
 import org.springframework.lang.Nullable;
 
@@ -32,17 +34,24 @@ import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-public record CardModel(@Nullable String id,
+public record CardModel(String id,
                         int colspan,
-                        String title,
+                        Component title,
                         Function<CardPeriod, CardContentModel> contentModelProvider
 ) implements CrmComponentModel<JmixCard> {
 
-    public CardModel(int colspan,
+    public CardModel(String id,
+                     int colspan,
                      String title,
                      Function<CardPeriod, CardContentModel> contentProvider
     ) {
-        this(null, colspan, title, contentProvider);
+        this(id, colspan, createDefaultTitleComponent(title), contentProvider);
+    }
+
+    private static H4 createDefaultTitleComponent(String title) {
+        var titleComponent = new H4(title);
+        titleComponent.addClassNames(LumoUtility.Margin.Right.LARGE, LumoUtility.Whitespace.NOWRAP);
+        return titleComponent;
     }
 
     public interface CardContentModel {
@@ -217,11 +226,7 @@ public record CardModel(@Nullable String id,
 
     @Override
     public void fillComponent(JmixCard card, ApplicationContext applicationContext) {
-        if (StringUtils.isNotBlank(id)) {
-            card.setId(id);
-        }
-
-        card.setTitle(title);
+        card.setId(id);
         card.setMinWidth(20, Unit.EM);
         card.addThemeVariants(CardVariant.LUMO_ELEVATED, CardVariant.LUMO_OUTLINED);
         card.getElement().setAttribute("colspan", String.valueOf(Math.max(1, colspan)));
@@ -248,9 +253,7 @@ public record CardModel(@Nullable String id,
         horizontalLayout.setAlignItems(FlexComponent.Alignment.CENTER);
         header.add(horizontalLayout);
 
-        var titleComponent = new H4(title);
-        titleComponent.addClassNames(LumoUtility.Margin.Right.LARGE, LumoUtility.Whitespace.NOWRAP);
-        horizontalLayout.add(titleComponent);
+        horizontalLayout.add(title);
 
         if (contentModel.hasPeriodFilter()) {
             var periodFilter = uiComponents.create(DropdownButton.class);
@@ -324,7 +327,7 @@ public record CardModel(@Nullable String id,
             Function<CardPeriod, DefaultCardContentModel> cardContentProvider) {
         return period -> {
             var cardContent = cardContentProvider.apply(period);
-            var contentComponent = new Div(new H2(cardContent.content()));
+            var contentComponent = new Div(new H1(cardContent.content()));
 
             var horizontalLayout = new HorizontalLayout();
             horizontalLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);

@@ -1,70 +1,3 @@
-/* Custom styles */
-.jmix-list-menu {
-    color: var(--lumo-body-text-color);
-}
-
-.jmix-list-menu a[highlight][class*='jmix-menu-item-link'] {
-    background-color: var(--lumo-contrast-10pct);
-    border-radius: 10px;
-}
-
-.jmix-list-menu vaadin-details-summary {
-    padding: 0 !important;
-}
-
-.jmix-list-menu vaadin-details-summary::part(toggle) {
-    display: none;
-}
-
-.jmix-menubar-item vaadin-details-summary:hover .jmix-menubar-summary-icon-container {
-    background-color: var(--lumo-contrast-10pct);
-    color: var(--lumo-primary-text-color);
-}
-
-.jmix-menu-item-link {
-    padding: 0.75rem 0.25rem 0.75rem 0.75rem !important;
-}
-
-.jmix-menu-item-link span {
-    font-weight: 700 !important;
-}
-
-.jmix-menu-item-link:hover {
-    background-color: var(--lumo-contrast-10pct);
-    color: var(--lumo-primary-text-color);
-    border-radius: 10px;
-}
-
-.jmix-menu-item-link:focus {
-    background-color: var(--lumo-primary-color-50pct);
-    color: var(--lumo-primary-contrast-color);
-    border-radius: 10px;
-}
-
-.jmix-menubar-item {
-    color: var(--lumo-body-text-color);
-    padding: 0 !important;
-}
-
-.jmix-menubar-item:focus {
-    background-color: var(--lumo-primary-color-50pct);
-    color: var(--lumo-primary-contrast-color);
-    border-radius: 10px;
-}
-
-.jmix-menubar-summary-icon-container {
-    box-sizing: border-box;
-    display: flex;
-    align-items: center;
-    gap: var(--lumo-space-s);
-    padding: 0.75rem 0.25rem 0.75rem 0.75rem !important;
-    color: var(--lumo-body-text-color);
-    border-radius: 10px;
-    flex: 1 1 auto;
-    min-width: 0;
-    width: auto !important;
-}
-
 /* Predefined styles for the MainView */
 .jmix-main-view-header {
   box-sizing: border-box;
@@ -172,7 +105,7 @@ vaadin-menu-bar[jmix-role='jmix-user-menu'][theme~='substituted'] .user-menu-but
 .user-menu-header-content > .user-menu-text {
     grid-area: text;
 
-    color: var(--lumo-body-text-color);
+    color: var(--lumo-body-text-color) !important;
     font-weight: 700;
     font-size: var(--lumo-font-size-m);
 }
@@ -197,7 +130,7 @@ vaadin-menu-bar[jmix-role='jmix-user-menu'][theme~='substituted'] .user-menu-but
     align-self: center;
     text-align: start;
 
-    color: var(--lumo-secondary-text-color);
+    color: var(--lumo-secondary-text-color) !important;
     font-size: var(--lumo-font-size-xs);
 
     width: 100%;
@@ -207,4 +140,71 @@ vaadin-menu-bar[jmix-role='jmix-user-menu'][theme~='substituted'] .user-menu-but
 
 vaadin-menu-bar[jmix-role='jmix-user-menu']:not([theme~='substituted']) .user-menu-button-content > .user-menu-subtext {
     display: none;
+}
+
+/* Custom styles */
+.jmix-list-menu {
+    color: var(--lumo-body-text-color);
+}
+
+.jmix-list-menu a[highlight][class*='jmix-menu-item-link'] {
+    background-color: var(--lumo-contrast-10pct);
+    border-radius: 10px;
+}
+
+.jmix-list-menu vaadin-details-summary {
+    padding: 0 !important;
+}
+
+.jmix-list-menu vaadin-details-summary::part(toggle) {
+    display: none;
+}
+
+.jmix-menubar-item vaadin-details-summary:hover .jmix-menubar-summary-icon-container {
+    background-color: var(--lumo-contrast-10pct);
+    color: var(--lumo-primary-text-color);
+}
+
+.jmix-menu-item-link {
+    padding: 0.75rem 0.25rem 0.75rem 0.75rem !important;
+}
+
+.jmix-menu-item-link span {
+    font-weight: 700 !important;
+}
+
+.jmix-menu-item-link:hover {
+    background-color: var(--lumo-contrast-10pct);
+    color: var(--lumo-primary-text-color);
+    border-radius: 10px;
+}
+
+.jmix-menu-item-link:focus {
+    background-color: var(--lumo-primary-color-50pct);
+    color: var(--lumo-primary-contrast-color);
+    border-radius: 10px;
+}
+
+.jmix-menubar-item {
+    color: var(--lumo-body-text-color);
+    padding: 0 !important;
+}
+
+.jmix-menubar-item:focus {
+    background-color: var(--lumo-primary-color-50pct);
+    color: var(--lumo-primary-contrast-color);
+    border-radius: 10px;
+}
+
+.jmix-menubar-summary-icon-container {
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    gap: var(--lumo-space-s);
+    padding: 0.75rem 0.25rem 0.75rem 0.75rem !important;
+    color: var(--lumo-body-text-color);
+    border-radius: 10px;
+    flex: 1 1 auto;
+    min-width: 0;
+    width: auto !important;
 }

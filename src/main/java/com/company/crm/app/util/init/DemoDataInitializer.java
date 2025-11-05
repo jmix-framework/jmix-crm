@@ -1,4 +1,4 @@
-package com.company.crm.app.init;
+package com.company.crm.app.util.init;
 
 import com.company.crm.model.catalog.category.Category;
 import com.company.crm.model.catalog.item.CategoryItem;

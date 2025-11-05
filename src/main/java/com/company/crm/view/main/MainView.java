@@ -39,7 +39,7 @@ public class MainView extends StandardMainView {
         String userName = generateUserName(user);
 
         Div content = uiComponents.create(Div.class);
-        content.setClassName("user-menu-button-contentModelProvider");
+        content.setClassName("user-menu-button-content");
 
         Avatar avatar = createAvatar(userName);
 
@@ -69,7 +69,7 @@ public class MainView extends StandardMainView {
         }
 
         Div content = uiComponents.create(Div.class);
-        content.setClassName("user-menu-header-contentModelProvider");
+        content.setClassName("user-menu-header-content");
 
         String name = generateUserName(user);
 
