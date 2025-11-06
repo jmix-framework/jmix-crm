@@ -2,6 +2,7 @@ package com.company.crm.model.contact;
 
 import com.company.crm.model.base.VersionedEntity;
 import com.company.crm.model.client.Client;
+import io.jmix.core.metamodel.annotation.InstanceName;
 import io.jmix.core.metamodel.annotation.JmixEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -11,7 +12,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDate;
 
@@ -22,6 +22,7 @@ import java.time.LocalDate;
 @Entity
 public class Contact extends VersionedEntity {
 
+    @InstanceName
     @JoinColumn(name = "CLIENT_ID", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     private Client client;

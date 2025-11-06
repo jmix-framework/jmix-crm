@@ -1,4 +1,4 @@
-package com.company.crm.view.home;
+package com.company.crm.app.util.ui.component.model.card;
 
 import com.company.crm.app.util.ui.component.model.CrmComponentModel;
 import com.vaadin.flow.component.Component;
@@ -8,7 +8,6 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.card.CardVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H1;
-import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.H4;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -21,11 +20,8 @@ import io.jmix.flowui.component.card.JmixCard;
 import io.jmix.flowui.kit.component.dropdownbutton.DropdownButton;
 import io.jmix.flowui.kit.component.dropdownbutton.DropdownButtonItem;
 import io.jmix.flowui.kit.component.dropdownbutton.DropdownButtonVariant;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.text.CaseUtils;
 import org.springframework.context.ApplicationContext;
-import org.springframework.lang.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collection;

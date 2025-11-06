@@ -1,40 +1,24 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <menu-config xmlns="http://jmix.io/schema/flowui/menu">
-    <item view="HomeView" id="home" icon="vaadin:home"
-          description="msg://com.company.crm/menu_config.home.description"
-          title="msg://com.company.crm/menu_config.home.title"/>
 
-    <item view="TasksView" id="tasks" icon="vaadin:check-square"
-          description=""
-          title="My Tasks"/>
-
-    <item view="Client.list" id="clients" icon="vaadin:users"
-          description=""
-          title="Clients"/>
-
+    <item view="HomeView" id="home" description="msg://com.company.crm/menu_config.home.description"
+          title="msg://com.company.crm/menu_config.home.title" icon="vaadin:home"/>
+    <item view="TasksView" id="tasks" title="My Tasks" icon="vaadin:check-square"/>
+    <item view="Client.list" id="clients" title="Clients" icon="vaadin:users"/>
     <menu id="catalog" title="Catalog" icon="vaadin:open-book">
-        <item view="Category.list" id="categories" icon="vaadin:list-select"
-              description=""
-              title="Categories"/>
-        <item view="CategoryItem.list" id="categoryItems" icon="vaadin:list"
-              description=""
-              title="Products"/>
+        <item view="Category.list" id="categories" title="Categories" icon="vaadin:list-select"/>
+        <item view="CategoryItem.list" id="categoryItems" title="Products" icon="vaadin:list"/>
     </menu>
-
-    <item view="Order.list" id="orders" icon="vaadin:cart"
-          description=""
-          title="Orders"/>
-
+    <item view="Order.list" id="orders" title="Orders" icon="vaadin:cart"/>
     <item view="FinanceView" id="finance" title="Finance" icon="vaadin:pie-chart"/>
-
-    <menu id="administration" icon="vaadin:cog"
-          description="msg://com.company.crm/menu_config.administration.description"
-          title="msg://com.company.crm/menu_config.administration.title">
-        <item view="dynat_CategoryView.list" id="dynamic_attributes" icon="vaadin:table"
-              description=""
-              title="msg://io.jmix.dynattrflowui.panel/category"/>
-        <item view="appSettings.view" id="app_settings" icon="vaadin:wrench"
-              description=""
-              title="msg://io.jmix.appsettingsflowui.view.appsettings/appSettingsEntityView.menu"/>
+    <menu id="administration" description="msg://com.company.crm/menu_config.administration.description"
+          title="msg://com.company.crm/menu_config.administration.title" icon="vaadin:cog">
+        <item view="dynat_CategoryView.list" id="dynamic_attributes" title="msg://io.jmix.dynattrflowui.panel/category"
+              icon="vaadin:table"/>
+        <item view="appSettings.view" id="app_settings"
+              title="msg://io.jmix.appsettingsflowui.view.appsettings/appSettingsEntityView.menu" icon="vaadin:wrench"/>
+        <item view="jmxcon_JmxConsoleView"
+              icon="vaadin:list-select"
+              title="msg://io.jmix.jmxconsole/jmxConsoleView.menu"/>
     </menu>
 </menu-config>

@@ -5,31 +5,133 @@
     <data>
         <instance id="clientDc"
                   class="com.company.crm.model.client.Client">
-            <fetchPlan extends="_base"/>
+            <fetchPlan extends="_base">
+                <property name="accountManager" fetchPlan="_base"/>
+                <property name="contacts" fetchPlan="_base"/>
+            </fetchPlan>
             <loader id="clientDl"/>
+            <collection id="contactsDc" property="contacts"/>
         </instance>
+        <collection id="ordersDc" class="com.company.crm.model.order.Order">
+            <fetchPlan extends="_base">
+                <property name="orderItems" fetchPlan="_base"/>
+            </fetchPlan>
+            <loader id="ordersDl">
+                <query>
+                    <![CDATA[select e from Order_ e where e.client = :container_clientDc]]>
+                </query>
+            </loader>
+        </collection>
+        <collection id="invoicesDc" class="com.company.crm.model.invoice.Invoice">
+            <fetchPlan extends="_base"/>
+            <loader id="invoicesDl">
+                <query>
+                    <![CDATA[select e from Invoice e where e.client = :container_clientDc]]>
+                </query>
+            </loader>
+        </collection>
+        <collection id="paymentsDc" class="com.company.crm.model.payment.Payment">
+            <fetchPlan extends="_base">
+                <property name="invoice" fetchPlan="_base"/>
+            </fetchPlan>
+            <loader id="paymentsDl">
+                <query>
+                    <![CDATA[select e from Payment e where e.invoice.client = :container_clientDc]]>
+                </query>
+            </loader>
+        </collection>
+        <collection id="activitiesDc" class="com.company.crm.model.user.UserActivity">
+            <fetchPlan extends="_base">
+                <property name="user" fetchPlan="_base"/>
+            </fetchPlan>
+            <loader id="activitiesDl" readOnly="true"/>
+        </collection>
     </data>
     <facets>
         <dataLoadCoordinator auto="true"/>
+        <urlQueryParameters id="urlQueryParameters"/>
     </facets>
     <actions>
         <action id="saveCloseAction" type="detail_saveClose"/>
         <action id="closeAction" type="detail_close"/>
     </actions>
     <layout>
-        <formLayout id="form" dataContainer="clientDc">
-            <responsiveSteps>
-                <responsiveStep minWidth="0" columns="1"/>
-                <responsiveStep minWidth="40em" columns="2"/>
-            </responsiveSteps>
-            <textField id="nameField" property="name"/>
-            <textField id="fullNameField" property="fullName"/>
-            <textField id="addressField" property="address"/>
-            <select id="typeField" property="type"/>
-            <textField id="vatNumberField" property="vatNumber"/>
-            <textField id="regNumberField" property="regNumber"/>
-            <textField id="websiteField" property="website"/>
-        </formLayout>
+        <h2 id="companyName" dataContainer="clientDc" property="name" classNames="ml-m"/>
+        <scroller width="100%" height="100%">
+            <div width="100%" height="100%">
+                <tabSheet id="tabSheet">
+                    <tab id="infoTab" label="Info">
+                        <formLayout id="form" dataContainer="clientDc">
+                            <responsiveSteps>
+                                <responsiveStep minWidth="0" columns="1"/>
+                                <responsiveStep minWidth="40em" columns="2"/>
+                            </responsiveSteps>
+                            <entityPicker id="accountManagerField" property="accountManager" readOnly="true"/>
+                            <textField id="nameField" property="name"/>
+                            <textField id="fullNameField" property="fullName"/>
+                            <textField id="addressField" property="address"/>
+                            <select id="typeField" property="type"/>
+                            <textField id="vatNumberField" property="vatNumber"/>
+                            <textField id="regNumberField" property="regNumber"/>
+                            <textField id="websiteField" property="website"/>
+                        </formLayout>
+                    </tab>
+                    <tab id="contactsTab" label="Contacts">
+                        <div width="100%" height="100%">
+                            <dataGrid id="contactsDataGrid" dataContainer="contactsDc">
+                                <columns sortable="true">
+                                    <column property="position"/>
+                                    <column property="email"/>
+                                    <column property="phone"/>
+                                </columns>
+                            </dataGrid>
+                        </div>
+                    </tab>
+                    <tab id="ordersTab" label="Orders">
+                        <div width="100%" height="100%">
+                            <dataGrid id="ordersDataGrid" dataContainer="ordersDc">
+                                <columns sortable="true">
+                                    <column property="status" filterable="true"/>
+                                    <column property="date"/>
+                                    <column property="total"/>
+                                </columns>
+                            </dataGrid>
+                        </div>
+                    </tab>
+                    <tab id="invoicesTab" label="Invoices">
+                        <div width="100%" height="100%">
+                            <dataGrid id="invoicesDataGrid" dataContainer="invoicesDc">
+                                <columns sortable="true">
+                                    <column property="status" filterable="true"/>
+                                    <column property="date" filterable="true"/>
+                                    <column property="dueDate" filterable="true"/>
+                                </columns>
+                            </dataGrid>
+                        </div>
+                    </tab>
+                    <tab id="paymentsTab" label="Payments">
+                        <div width="100%" height="100%">
+                            <dataGrid id="paymentsDataGrid" dataContainer="paymentsDc">
+                                <columns sortable="true">
+                                    <column property="invoice" filterable="true"/>
+                                    <column property="date" filterable="true"/>
+                                    <column property="amount" filterable="true"/>
+                                </columns>
+                            </dataGrid>
+                        </div>
+                    </tab>
+                    <tab id="activitiesTab" label="Activities">
+                        <div width="100%" height="100%">
+                            <dataGrid id="activitiesDataGrid" dataContainer="activitiesDc">
+                                <columns sortable="true">
+                                    <column property="actionDescription" filterable="true"/>
+                                </columns>
+                            </dataGrid>
+                        </div>
+                    </tab>
+                </tabSheet>
+            </div>
+        </scroller>
         <hbox id="detailActions">
             <button id="saveAndCloseButton" action="saveCloseAction"/>
             <button id="closeButton" action="closeAction"/>

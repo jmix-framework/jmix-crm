@@ -1,4 +1,4 @@
-package com.company.crm.view.home;
+package com.company.crm.app.util.ui.component.model.card;
 
 import com.company.crm.model.base.DefaultStringEnumClass;
 

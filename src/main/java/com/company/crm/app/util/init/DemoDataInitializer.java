@@ -14,7 +14,11 @@ import com.company.crm.model.order.OrderStatus;
 import com.company.crm.model.payment.Payment;
 import com.company.crm.model.user.User;
 import com.company.crm.model.user.UserActivity;
+import com.company.crm.security.FullAccessRole;
 import io.jmix.core.UnconstrainedDataManager;
+import io.jmix.core.security.CurrentAuthentication;
+import io.jmix.security.role.assignment.RoleAssignment;
+import io.jmix.security.role.assignment.RoleAssignmentRepository;
 import io.jmix.security.role.assignment.RoleAssignmentRoleType;
 import io.jmix.securitydata.entity.RoleAssignmentEntity;
 import net.datafaker.Faker;
@@ -47,15 +51,36 @@ import java.util.concurrent.ThreadLocalRandom;
 public class DemoDataInitializer {
 
     private static final Logger log = LoggerFactory.getLogger(DemoDataInitializer.class);
+    private final CurrentAuthentication currentAuthentication;
+    private final RoleAssignmentRepository roleAssignmentRepository;
 
     @Autowired
     private UnconstrainedDataManager dataManager;
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    public DemoDataInitializer(CurrentAuthentication currentAuthentication, RoleAssignmentRepository roleAssignmentRepository) {
+        this.currentAuthentication = currentAuthentication;
+        this.roleAssignmentRepository = roleAssignmentRepository;
+    }
+
     @EventListener(ApplicationReadyEvent.class)
-    public void init(ApplicationReadyEvent event) {
+    public void onApplicationReadyEvent(ApplicationReadyEvent event) {
+        initDataIfNeeded();
+    }
+
+    public void resetDemoData() {
+        log.info("Resetting demo data...");
+        clearData();
+        initData();
+    }
+
+    private void initDataIfNeeded() {
         if (!shouldInitializeDemoData()) return;
+        initData();
+    }
+
+    private void initData() {
         log.info("Initializing demo data...");
 
         List<User> users = generateUsers();
@@ -71,13 +96,70 @@ public class DemoDataInitializer {
         List<Invoice> invoices = generateInvoices(orders);
         generatePayments(invoices);
 
-        log.info("Demo data initialization finished: clients={} contacts={} orders={} invoices={} payments={}",
+        log.info("Demo data initialization finished: " +
+                        "categories={}, categoriesItems={}, " +
+                        "clients={} contacts={} orders={} " +
+                        "invoices={} payments={}",
+                catalog.size(),
+                catalog.values().stream().mapToLong(Collection::size).sum(),
                 clients.size(),
                 dataManager.loadValue("select count(c) from Contact c", Long.class).one(),
                 dataManager.loadValue("select count(o) from Order_ o", Long.class).one(),
                 dataManager.loadValue("select count(i) from Invoice i", Long.class).one(),
                 dataManager.loadValue("select count(p) from Payment p", Long.class).one()
         );
+    }
+
+    private void clearData() {
+        log.info("Clearing data...");
+        var entityClassesToRemove = List.of(
+                Payment.class,
+                Invoice.class,
+                Order.class,
+                Contact.class,
+                Client.class,
+                RoleAssignmentEntity.class,
+                UserActivity.class,
+                CategoryItem.class,
+                Category.class,
+                User.class
+        );
+
+        for (Class<?> entityClass : entityClassesToRemove) {
+            List<?> entitiesToRemove = dataManager.load(entityClass).all().list();
+            filterEntitiesToRemove(entityClass, entitiesToRemove);
+            log.info("Removing {} entities of type {}", entitiesToRemove.size(), entityClass.getSimpleName());
+            dataManager.remove(entitiesToRemove.toArray());
+        }
+    }
+
+    private void filterEntitiesToRemove(Class<?> entityClass, List<?> entities) {
+        if (entityClass.equals(User.class)) {
+            excludeAdmins(entities);
+        } else if (entityClass.equals(RoleAssignmentEntity.class)) {
+            excludeAdminAssignments(entities);
+        }
+    }
+
+    private void excludeAdmins(List<?> entities) {
+        for (Object entity : new ArrayList<>(entities)) {
+            if (entity instanceof User user) {
+                Collection<RoleAssignment> userRoles =
+                        roleAssignmentRepository.getAssignmentsByUsername(user.getUsername());
+                if (userRoles.stream().anyMatch(ra -> ra.getRoleCode().equals(FullAccessRole.CODE))) {
+                    entities.remove(user);
+                }
+            }
+        }
+    }
+
+    private void excludeAdminAssignments(List<?> entities) {
+        for (Object entity : new ArrayList<>(entities)) {
+            if (entity instanceof RoleAssignmentEntity roleAssignment
+                    && roleAssignment.getRoleCode().equals(FullAccessRole.CODE)) {
+                entities.remove(roleAssignment);
+            }
+        }
     }
 
     private Map<Category, List<CategoryItem>> generateCatalog(int categoriesCount, int categoryItemsCount) {
@@ -373,7 +455,7 @@ public class DemoDataInitializer {
         CategoryItemComment comment = dataManager.create(CategoryItemComment.class);
         comment.setCategoryItem(categoryItem);
         comment.setMessage(messages[r.nextInt(messages.length)]);
-        
+
         // Save the comment first to avoid cascade persistence issues
         dataManager.save(comment);
 

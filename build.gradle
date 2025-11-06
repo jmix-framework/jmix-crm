@@ -45,8 +45,6 @@ dependencies {
     implementation 'io.jmix.flowui:jmix-flowui-themes'
 
     //              --- [ JMIX ADD-ONS ] ---
-    implementation 'io.jmix.localfs:jmix-localfs-starter'
-
     implementation 'io.jmix.audit:jmix-audit-starter'
     implementation 'io.jmix.audit:jmix-audit-flowui-starter'
 
@@ -59,9 +57,10 @@ dependencies {
     implementation 'io.jmix.dynattr:jmix-dynattr-starter'
     implementation 'io.jmix.dynattr:jmix-dynattr-flowui-starter'
 
+    implementation 'io.jmix.localfs:jmix-localfs-starter'
+    implementation 'io.jmix.jmxconsole:jmix-jmxconsole-starter'
     implementation 'io.jmix.charts:jmix-charts-flowui-starter'
     implementation 'io.jmix.gridexport:jmix-gridexport-flowui-starter'
-    implementation 'io.jmix.translations:jmix-translations-ru'
 
     //              --- [ VAADIN ADD-ONS ] ---
     implementation 'org.vaadin.jchristophe:sortable-layout:2.1.0'
