@@ -9,6 +9,7 @@ import com.company.crm.app.service.order.OrderService;
 import com.company.crm.app.service.ui.CrmUiComponents;
 import com.company.crm.app.util.ui.component.model.card.CardModel;
 import com.company.crm.app.util.ui.component.model.card.CardPeriod;
+import com.company.crm.app.util.ui.listener.resize.WidthResizeListener;
 import com.company.crm.model.datatype.PriceDataType;
 import com.company.crm.model.order.Order;
 import com.company.crm.model.order.OrderStatus;
@@ -34,6 +35,8 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility;
@@ -54,6 +57,7 @@ import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.component.card.JmixCard;
 import io.jmix.flowui.component.formlayout.JmixFormLayout;
 import io.jmix.flowui.component.grid.DataGrid;
+import io.jmix.flowui.component.splitlayout.JmixSplitLayout;
 import io.jmix.flowui.facet.SettingsFacet;
 import io.jmix.flowui.view.StandardView;
 import io.jmix.flowui.view.Subscribe;
@@ -77,7 +81,7 @@ import java.util.stream.Stream;
 @Route(value = "home", layout = MainView.class)
 @ViewController(id = "HomeView")
 @ViewDescriptor(path = "home-view.xml")
-public class HomeView extends StandardView {
+public class HomeView extends StandardView implements WidthResizeListener {
 
     private static final DateTimeFormatter DATE_WITHOUT_YEAR =
             DateTimeFormatter.ofPattern("dd MMM");
@@ -107,11 +111,49 @@ public class HomeView extends StandardView {
     private CrmUiComponents crmUiComponents;
 
     @ViewComponent
+    private JmixSplitLayout split;
+    @ViewComponent
+    private VerticalLayout leftBox;
+    @ViewComponent
+    private VerticalLayout rightBox;
+    @ViewComponent
     private JmixFormLayout rightContent;
     @ViewComponent
     private JmixFormLayout leftContent;
-    @ViewComponent
-    private SettingsFacet settingsFacet;
+
+    private volatile int lastProcessedWidth = -1;
+
+    @Override
+    public void configureUiForWidth(int width) {
+        if (needToReconfigureUi(width)) {
+            lastProcessedWidth = width;
+
+            var breakpoint = 1200;
+            if (width < breakpoint) {
+                configureUiForSmallWidth();
+            } else {
+                configureUiForNormalWidth();
+            }
+        }
+    }
+
+    private boolean needToReconfigureUi(int width) {
+        return width != lastProcessedWidth
+                || (width >= 1000 && lastProcessedWidth <= 0 && lastProcessedWidth >= 1000)
+                || (width <= 1000 && lastProcessedWidth <= 0 && lastProcessedWidth <= 1000);
+    }
+
+    private void configureUiForNormalWidth() {
+        split.setOrientation(JmixSplitLayout.Orientation.HORIZONTAL);
+        leftBox.setWidth(65, Unit.PERCENTAGE);
+        rightBox.setWidth(35, Unit.PERCENTAGE);
+    }
+
+    private void configureUiForSmallWidth() {
+        split.setOrientation(JmixSplitLayout.Orientation.VERTICAL);
+        leftBox.setWidthFull();
+        rightBox.setWidthFull();
+    }
 
     @Subscribe
     private void onInit(final InitEvent event) {
