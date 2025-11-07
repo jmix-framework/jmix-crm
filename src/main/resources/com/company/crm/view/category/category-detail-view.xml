@@ -5,7 +5,9 @@
     <data>
         <instance id="categoryDc"
                   class="com.company.crm.model.catalog.category.Category">
-            <fetchPlan extends="_base"/>
+            <fetchPlan extends="_base">
+                <property name="parent" fetchPlan="_base"/>
+            </fetchPlan>
             <loader id="categoryDl"/>
         </instance>
     </data>
@@ -22,6 +24,12 @@
                 <responsiveStep minWidth="0" columns="1"/>
                 <responsiveStep minWidth="40em" columns="2"/>
             </responsiveSteps>
+            <entityPicker id="parentField" property="parent">
+                <actions>
+                    <action id="lookupAction" type="entity_lookup"/>
+                    <action id="clearAction" type="entity_clear"/>
+                </actions>
+            </entityPicker>
             <textField id="nameField" property="name"/>
         </formLayout>
         <hbox id="detailActions">
