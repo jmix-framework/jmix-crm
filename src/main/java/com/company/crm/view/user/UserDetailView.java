@@ -45,26 +45,26 @@ public class UserDetailView extends StandardDetailView<User> {
     private boolean newEntity;
 
     @Subscribe
-    public void onInit(final InitEvent event) {
+    private void onInit(final InitEvent event) {
         timeZoneField.setItems(List.of(TimeZone.getAvailableIDs()));
     }
 
     @Subscribe
-    public void onInitEntity(final InitEntityEvent<User> event) {
+    private void onInitEntity(final InitEntityEvent<User> event) {
         usernameField.setReadOnly(false);
         passwordField.setVisible(true);
         confirmPasswordField.setVisible(true);
     }
 
     @Subscribe
-    public void onReady(final ReadyEvent event) {
+    private void onReady(final ReadyEvent event) {
         if (entityStates.isNew(getEditedEntity())) {
             usernameField.focus();
         }
     }
 
     @Subscribe
-    public void onValidation(final ValidationEvent event) {
+    private void onValidation(final ValidationEvent event) {
         if (entityStates.isNew(getEditedEntity())
                 && !Objects.equals(passwordField.getValue(), confirmPasswordField.getValue())) {
             event.getErrors().add(messageBundle.getMessage("passwordsDoNotMatch"));
@@ -72,7 +72,7 @@ public class UserDetailView extends StandardDetailView<User> {
     }
 
     @Subscribe
-    public void onBeforeSave(final BeforeSaveEvent event) {
+    private void onBeforeSave(final BeforeSaveEvent event) {
         if (entityStates.isNew(getEditedEntity())) {
             getEditedEntity().setPassword(passwordEncoder.encode(passwordField.getValue()));
 
@@ -81,7 +81,7 @@ public class UserDetailView extends StandardDetailView<User> {
     }
 
     @Subscribe
-    public void onAfterSave(final AfterSaveEvent event) {
+    private void onAfterSave(final AfterSaveEvent event) {
         if (newEntity) {
             notifications.create(messageBundle.getMessage("noAssignedRolesNotification"))
                     .withThemeVariant(NotificationVariant.LUMO_WARNING)

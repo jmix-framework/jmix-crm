@@ -59,7 +59,7 @@ public class LoginView extends StandardView implements LocaleChangeObserver {
     private String defaultPassword;
 
     @Subscribe
-    public void onInit(final InitEvent event) {
+    private void onInit(final InitEvent event) {
         initLocales();
         initDefaultCredentials();
     }
@@ -85,7 +85,7 @@ public class LoginView extends StandardView implements LocaleChangeObserver {
     }
 
     @Subscribe("login")
-    public void onLogin(final LoginEvent event) {
+    private void onLogin(final LoginEvent event) {
         try {
             loginViewSupport.authenticate(
                     AuthDetails.of(event.getUsername(), event.getPassword())
