@@ -24,6 +24,13 @@ import java.util.TimeZone;
 @EditedEntityContainer("userDc")
 public class UserDetailView extends StandardDetailView<User> {
 
+    @Autowired
+    private EntityStates entityStates;
+    @Autowired
+    private Notifications notifications;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     @ViewComponent
     private TypedTextField<String> usernameField;
     @ViewComponent
@@ -34,13 +41,6 @@ public class UserDetailView extends StandardDetailView<User> {
     private ComboBox<String> timeZoneField;
     @ViewComponent
     private MessageBundle messageBundle;
-    @Autowired
-    private Notifications notifications;
-
-    @Autowired
-    private EntityStates entityStates;
-    @Autowired
-    private PasswordEncoder passwordEncoder;
 
     private boolean newEntity;
 

@@ -377,61 +377,20 @@ public class HomeView extends StandardView implements WidthResizeListener {
                         .withValueField("amount")
         );
     }
-
-    // TODO: should we load by period?
+    
     private CardContentModel createRecentActivitiesComponent(CardPeriod period) {
-        LocalDate todayStart = dateTimeService.getDayStart().toLocalDate();
-
-        List<UserActivity> todayActivities = userService.loadActivities(todayStart, 3);
-        List<UserActivity> yesterdayActivities = userService.loadActivities(todayStart.minusDays(1), 3);
-
         Div container = new Div();
+
         container.add(new H5("Today"));
-        for (UserActivity todayActivity : todayActivities) {
-            User user = todayActivity.getUser();
-            String actionDescription = todayActivity.getActionDescription();
-            OffsetDateTime createdDate = todayActivity.getCreatedDate();
-
-            HorizontalLayout horizontalLayout = new HorizontalLayout();
-            horizontalLayout.setAlignItems(FlexComponent.Alignment.CENTER);
-
-            Avatar avatar = new Avatar(user.getFirstName().substring(0, 1));
-            horizontalLayout.add(avatar);
-
-            Span userNameSpan = new Span(user.getFullNameName());
-            userNameSpan.addClassNames(LumoUtility.TextColor.BODY);
-
-            Span activityDescriptionSpan = new Span(actionDescription);
-            activityDescriptionSpan.addClassNames(LumoUtility.TextColor.TERTIARY);
-
-            Span dateSpan = new Span(DATE_WITH_YEAR_AND_TIME.format(createdDate));
-            dateSpan.addClassNames(LumoUtility.TextColor.TERTIARY);
-
-            Div activityInfoBlock = new Div(new HorizontalLayout(userNameSpan, activityDescriptionSpan), dateSpan);
-            horizontalLayout.add(activityInfoBlock);
-
-            container.add(horizontalLayout);
+        LocalDate todayStart = dateTimeService.getDayStart().toLocalDate();
+        for (UserActivity todayActivity : userService.loadActivities(todayStart, 3)) {
+            container.add(createActivityRow(todayActivity));
         }
 
         container.add(new H5("Yesterday"));
-        for (UserActivity yesterdayActivity : yesterdayActivities) {
-            User user = yesterdayActivity.getUser();
-            String actionDescription = yesterdayActivity.getActionDescription();
-            OffsetDateTime createdDate = yesterdayActivity.getCreatedDate();
-
-            HorizontalLayout horizontalLayout = new HorizontalLayout();
-            horizontalLayout.setAlignItems(FlexComponent.Alignment.CENTER);
-            Avatar avatar = new Avatar(user.getFirstName().substring(0, 1));
-            horizontalLayout.add(avatar);
-
-            Div activityInfoBlock = new Div();
-            Span userNameSpan = new Span(user.getFullNameName());
-            Span activityDescriptionSpan = new Span(actionDescription);
-            activityInfoBlock.add(new HorizontalLayout(userNameSpan, activityDescriptionSpan));
-            activityInfoBlock.add(new Span(DATE_WITH_YEAR.format(createdDate)));
-            horizontalLayout.add(activityInfoBlock);
-
-            container.add(horizontalLayout);
+        LocalDate yesterdayStart = todayStart.minusDays(1);
+        for (UserActivity yesterdayActivity : userService.loadActivities(yesterdayStart, 3)) {
+            container.add(createActivityRow(yesterdayActivity));
         }
 
         return withDefaultBackgroundCallback(
@@ -439,6 +398,28 @@ public class HomeView extends StandardView implements WidthResizeListener {
                         .withHasPeriodFilter(false)
                         .withHasEllipsisButton(false)
         );
+    }
+    private Component createActivityRow(UserActivity activity) {
+        User user = activity.getUser();
+        HorizontalLayout row = new HorizontalLayout();
+        row.setAlignItems(FlexComponent.Alignment.CENTER);
+
+        Avatar avatar = new Avatar(user.getFirstName().substring(0, 1));
+        row.add(avatar);
+
+        Span userNameSpan = new Span(user.getFullNameName());
+        userNameSpan.addClassNames(LumoUtility.TextColor.BODY);
+
+        Span activityDescriptionSpan = new Span(activity.getActionDescription());
+        activityDescriptionSpan.addClassNames(LumoUtility.TextColor.TERTIARY);
+
+        Span dateSpan = new Span(DATE_WITH_YEAR_AND_TIME.format(activity.getCreatedDate()));
+        dateSpan.addClassNames(LumoUtility.TextColor.TERTIARY);
+
+        Div activityInfoBlock = new Div(new HorizontalLayout(userNameSpan, activityDescriptionSpan), dateSpan);
+        row.add(activityInfoBlock);
+
+        return row;
     }
 
     private Pair<LocalDate, LocalDate> getDateRangeBy(CardPeriod period) {

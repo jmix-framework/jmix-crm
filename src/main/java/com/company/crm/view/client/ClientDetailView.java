@@ -4,11 +4,13 @@ import com.company.crm.app.feature.queryparameters.tab.TabIndexUrlQueryParameter
 import com.company.crm.model.client.Client;
 import com.company.crm.model.client.ClientRepository;
 import com.company.crm.model.user.UserActivity;
+import com.company.crm.model.user.UserActivityRepository;
 import com.company.crm.view.main.MainView;
 import com.vaadin.flow.router.Route;
 import io.jmix.core.FetchPlan;
 import io.jmix.core.LoadContext;
 import io.jmix.core.SaveContext;
+import io.jmix.core.repository.JmixDataRepositoryContext;
 import io.jmix.flowui.component.tabsheet.JmixTabSheet;
 import io.jmix.flowui.view.EditedEntityContainer;
 import io.jmix.flowui.view.Install;
@@ -19,6 +21,7 @@ import io.jmix.flowui.view.ViewComponent;
 import io.jmix.flowui.view.ViewController;
 import io.jmix.flowui.view.ViewDescriptor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
@@ -33,6 +36,8 @@ public class ClientDetailView extends StandardDetailView<Client> {
 
     @Autowired
     private ClientRepository repository;
+    @Autowired
+    private UserActivityRepository userActivityRepository;
 
     @ViewComponent
     private JmixTabSheet tabSheet;
@@ -52,9 +57,8 @@ public class ClientDetailView extends StandardDetailView<Client> {
         return Set.of(repository.save(getEditedEntity()));
     }
 
-    @Install(to = "activitiesDl", target = Target.DATA_LOADER)
-    private List<UserActivity> activitiesDlLoadDelegate(final LoadContext<UserActivity> loadContext) {
-        // TODO:
-        return List.of();
+    @Install(to = "activitiesDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
+    private List<UserActivity> activitiesDlLoadFromRepositoryDelegate(final Pageable pageable, final JmixDataRepositoryContext ctx) {
+        return userActivityRepository.findAll(pageable, ctx).getContent();
     }
 }

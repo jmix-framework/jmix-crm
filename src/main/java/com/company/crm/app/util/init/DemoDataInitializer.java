@@ -16,7 +16,6 @@ import com.company.crm.model.user.User;
 import com.company.crm.model.user.UserActivity;
 import com.company.crm.security.FullAccessRole;
 import io.jmix.core.UnconstrainedDataManager;
-import io.jmix.core.security.CurrentAuthentication;
 import io.jmix.security.role.assignment.RoleAssignment;
 import io.jmix.security.role.assignment.RoleAssignmentRepository;
 import io.jmix.security.role.assignment.RoleAssignmentRoleType;
@@ -24,7 +23,6 @@ import io.jmix.securitydata.entity.RoleAssignmentEntity;
 import net.datafaker.Faker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -51,17 +49,15 @@ import java.util.concurrent.ThreadLocalRandom;
 public class DemoDataInitializer {
 
     private static final Logger log = LoggerFactory.getLogger(DemoDataInitializer.class);
-    private final CurrentAuthentication currentAuthentication;
+
     private final RoleAssignmentRepository roleAssignmentRepository;
+    private final UnconstrainedDataManager dataManager;
+    private final PasswordEncoder passwordEncoder;
 
-    @Autowired
-    private UnconstrainedDataManager dataManager;
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    public DemoDataInitializer(CurrentAuthentication currentAuthentication, RoleAssignmentRepository roleAssignmentRepository) {
-        this.currentAuthentication = currentAuthentication;
+    public DemoDataInitializer(RoleAssignmentRepository roleAssignmentRepository, UnconstrainedDataManager dataManager, PasswordEncoder passwordEncoder) {
         this.roleAssignmentRepository = roleAssignmentRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.dataManager = dataManager;
     }
 
     @EventListener(ApplicationReadyEvent.class)

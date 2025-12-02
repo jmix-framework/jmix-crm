@@ -37,7 +37,6 @@ public class CategoryItem extends VersionedEntity {
     private String code;
 
 
-    // TODO: what is it?
     @Column(name = "UOM")
     private String uom;
 
