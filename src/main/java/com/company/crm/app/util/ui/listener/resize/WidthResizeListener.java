@@ -12,6 +12,12 @@ import java.util.function.Consumer;
 @FunctionalInterface
 public interface WidthResizeListener {
 
+    static boolean isWidthChanged(int actualWidth, int lastWidth, int breakpoint) {
+        return lastWidth < 0
+                || (actualWidth >= breakpoint && lastWidth < breakpoint)
+                || (actualWidth <= breakpoint && lastWidth > breakpoint);
+    }
+
     void configureUiForWidth(int width);
 
     @Subscribe

@@ -35,14 +35,14 @@ public class DateTimeService {
     }
 
     /**
-     * Получить дату с использованием формата "dd.MM.yy HH:mm".
+     * Get the date using the format "dd.MM.yy HH:mm".
      */
     public String defaultFormat(OffsetDateTime dateTime) {
         return dateTime.format(DateTimeFormatter.ofPattern("dd.MM.yy HH:mm"));
     }
 
     /**
-     * Получить время с использованием формата "HH:mm".
+     * Get the time in "HH:mm" format.
      */
     public String defaultTimeFormat(OffsetDateTime dateTime) {
         return dateTime.format(DateTimeFormatter.ofPattern("HH:mm"));

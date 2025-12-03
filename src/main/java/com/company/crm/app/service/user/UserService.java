@@ -2,6 +2,9 @@ package com.company.crm.app.service.user;
 
 import com.company.crm.app.service.datetime.DateTimeService;
 import com.company.crm.model.base.OffsetLimitPageRequest;
+import com.company.crm.model.client.Client;
+import com.company.crm.model.client.ClientRepository;
+import com.company.crm.model.user.User;
 import com.company.crm.model.user.UserActivity;
 import com.company.crm.model.user.UserActivityRepository;
 import org.springframework.stereotype.Service;
@@ -15,9 +18,18 @@ import java.util.List;
 public class UserService {
 
     private final UserActivityRepository userActivityRepository;
+    private final ClientRepository clientRepository;
 
-    public UserService(UserActivityRepository userActivityRepository, DateTimeService dateTimeService) {
+    public UserService(UserActivityRepository userActivityRepository, DateTimeService dateTimeService, ClientRepository clientRepository) {
         this.userActivityRepository = userActivityRepository;
+        this.clientRepository = clientRepository;
+    }
+
+    public List<User> loadAccountManagers() {
+        return clientRepository.findAllByAccountManagerNotNull().stream()
+                .map(Client::getAccountManager)
+                .distinct()
+                .toList();
     }
 
     public List<UserActivity> loadActivities(LocalDate from, LocalDate to, int offset, int limit) {

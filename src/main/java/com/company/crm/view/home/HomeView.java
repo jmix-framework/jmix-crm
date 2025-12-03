@@ -36,7 +36,6 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility;
@@ -58,7 +57,6 @@ import io.jmix.flowui.component.card.JmixCard;
 import io.jmix.flowui.component.formlayout.JmixFormLayout;
 import io.jmix.flowui.component.grid.DataGrid;
 import io.jmix.flowui.component.splitlayout.JmixSplitLayout;
-import io.jmix.flowui.facet.SettingsFacet;
 import io.jmix.flowui.view.StandardView;
 import io.jmix.flowui.view.Subscribe;
 import io.jmix.flowui.view.ViewComponent;
@@ -68,7 +66,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -77,6 +74,8 @@ import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Stream;
+
+import static com.company.crm.app.util.ui.listener.resize.WidthResizeListener.isWidthChanged;
 
 @Route(value = "home", layout = MainView.class)
 @ViewController(id = "HomeView")
@@ -121,12 +120,13 @@ public class HomeView extends StandardView implements WidthResizeListener {
     @ViewComponent
     private JmixFormLayout leftContent;
 
-    private volatile int lastProcessedWidth = -1;
+    private volatile int lastWidth = -1;
+    private static final int widthBreakpoint = 1000;
 
     @Override
     public void configureUiForWidth(int width) {
-        if (needToReconfigureUi(width)) {
-            lastProcessedWidth = width;
+        if (isWidthChanged(width, lastWidth, widthBreakpoint)) {
+            lastWidth = width;
 
             var breakpoint = 1200;
             if (width < breakpoint) {
@@ -135,12 +135,6 @@ public class HomeView extends StandardView implements WidthResizeListener {
                 configureUiForNormalWidth();
             }
         }
-    }
-
-    private boolean needToReconfigureUi(int width) {
-        return width != lastProcessedWidth
-                || (width >= 1000 && lastProcessedWidth <= 0 && lastProcessedWidth >= 1000)
-                || (width <= 1000 && lastProcessedWidth <= 0 && lastProcessedWidth <= 1000);
     }
 
     private void configureUiForNormalWidth() {
@@ -377,7 +371,7 @@ public class HomeView extends StandardView implements WidthResizeListener {
                         .withValueField("amount")
         );
     }
-    
+
     private CardContentModel createRecentActivitiesComponent(CardPeriod period) {
         Div container = new Div();
 
@@ -399,6 +393,7 @@ public class HomeView extends StandardView implements WidthResizeListener {
                         .withHasEllipsisButton(false)
         );
     }
+
     private Component createActivityRow(UserActivity activity) {
         User user = activity.getUser();
         HorizontalLayout row = new HorizontalLayout();

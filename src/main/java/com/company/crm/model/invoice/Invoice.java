@@ -2,8 +2,8 @@ package com.company.crm.model.invoice;
 
 import com.company.crm.model.base.VersionedEntity;
 import com.company.crm.model.client.Client;
-import com.company.crm.model.datatype.PriceDataType;
 import com.company.crm.model.order.Order;
+import com.company.crm.model.payment.Payment;
 import io.jmix.core.metamodel.annotation.DependsOnProperties;
 import io.jmix.core.metamodel.annotation.InstanceName;
 import io.jmix.core.metamodel.annotation.JmixEntity;
@@ -15,10 +15,13 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 @JmixEntity
 @Table(name = "INVOICE", indexes = {
@@ -32,6 +35,10 @@ public class Invoice extends VersionedEntity {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     private Client client;
 
+    @OrderBy("date")
+    @OneToMany(mappedBy = "invoice")
+    private List<Payment> payments;
+
     @JoinColumn(name = "ORDER_ID")
     @ManyToOne(fetch = FetchType.LAZY)
     private Order order;
@@ -42,19 +49,27 @@ public class Invoice extends VersionedEntity {
     @Column(name = "DUE_DATE")
     private LocalDate dueDate;
 
-    @PropertyDatatype(PriceDataType.NAME)
-    @Column(name = "SUBTOTAL", precision = 19, scale = 2)
+    @PropertyDatatype("price")
+    @Column(name = "SUBTOTAL")
     private BigDecimal subtotal;
 
     @Column(name = "VAT", precision = 19, scale = 2)
     private BigDecimal vat;
 
-    @PropertyDatatype(PriceDataType.NAME)
-    @Column(name = "TOTAL", precision = 19, scale = 2)
+    @PropertyDatatype("price")
+    @Column(name = "TOTAL")
     private BigDecimal total;
 
     @Column(name = "STATUS")
     private Integer status;
+
+    public List<Payment> getPayments() {
+        return payments;
+    }
+
+    public void setPayments(List<Payment> payments) {
+        this.payments = payments;
+    }
 
     public InvoiceStatus getStatus() {
         return InvoiceStatus.fromId(status);

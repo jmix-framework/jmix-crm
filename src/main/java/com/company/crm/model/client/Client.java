@@ -2,10 +2,15 @@ package com.company.crm.model.client;
 
 import com.company.crm.model.base.VersionedEntity;
 import com.company.crm.model.contact.Contact;
+import com.company.crm.model.invoice.Invoice;
+import com.company.crm.model.order.Order;
+import com.company.crm.model.payment.Payment;
 import com.company.crm.model.user.User;
 import io.jmix.core.metamodel.annotation.Composition;
+import io.jmix.core.metamodel.annotation.DependsOnProperties;
 import io.jmix.core.metamodel.annotation.InstanceName;
 import io.jmix.core.metamodel.annotation.JmixEntity;
+import io.jmix.core.metamodel.annotation.JmixProperty;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -15,6 +20,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @JmixEntity
@@ -25,6 +31,14 @@ public class Client extends VersionedEntity {
     @InstanceName
     @Column(name = "NAME", nullable = false)
     private String name;
+
+    @OrderBy("date")
+    @OneToMany(mappedBy = "client")
+    private List<Invoice> invoices;
+
+    @OrderBy("date")
+    @OneToMany(mappedBy = "client")
+    private List<Order> orders;
 
     @Column(name = "FULL_NAME")
     private String fullName;
@@ -52,6 +66,36 @@ public class Client extends VersionedEntity {
     @OrderBy("person")
     @OneToMany(mappedBy = "client")
     private List<Contact> contacts;
+
+    @DependsOnProperties("invoices")
+    public List<Payment> getPayments() {
+        List<Payment> payments = new ArrayList<>();
+        if (invoices == null) {
+            return payments;
+        }
+
+        for (Invoice invoice : invoices) {
+            payments.addAll(invoice.getPayments());
+        }
+
+        return payments;
+    }
+
+    public List<Invoice> getInvoices() {
+        return invoices;
+    }
+
+    public void setInvoices(List<Invoice> invoices) {
+        this.invoices = invoices;
+    }
+
+    public List<Order> getOrders() {
+        return orders;
+    }
+
+    public void setOrders(List<Order> orders) {
+        this.orders = orders;
+    }
 
     public List<Contact> getContacts() {
         return contacts;
