@@ -8,6 +8,7 @@
     <!-- DO NOT REMOVE. This changelog is required for user management. -->
 
     <changeSet id="1" author="crm" context="!cuba">
+        <validCheckSum>ANY</validCheckSum>
 
         <createTable tableName="USER_">
             <column name="ID" type="${uuid.type}">
@@ -30,14 +31,15 @@
     </changeSet>
 
     <changeSet id="2" author="crm" context="!cuba">
+        <validCheckSum>ANY</validCheckSum>
         <createIndex indexName="IDX_USER__ON_USERNAME"
                      tableName="USER_" unique="true">
             <column name="USERNAME"/>
         </createIndex>
     </changeSet>
 
-    <changeSet id="3" author="test" context="!cuba">
-
+    <changeSet id="3" author="crm" context="!cuba">
+        <validCheckSum>ANY</validCheckSum>
         <insert tableName="USER_" dbms="postgresql, mssql, hsqldb">
             <column name="ID" value="60885987-1b61-4247-94c7-dff348347f93"/>
             <column name="VERSION" value="1"/>
@@ -56,8 +58,8 @@
 
     </changeSet>
 
-    <changeSet id="4" author="test" context="!cuba">
-
+    <changeSet id="4" author="crm" context="!cuba">
+        <validCheckSum>ANY</validCheckSum>
         <insert tableName="SEC_ROLE_ASSIGNMENT" dbms="postgresql, mssql, hsqldb">
             <column name="ID" value="6c9e420a-2b7a-4c42-8654-a9027ee14083"/>
             <column name="VERSION" value="1"/>

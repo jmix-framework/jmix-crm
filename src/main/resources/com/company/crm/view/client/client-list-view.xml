@@ -2,7 +2,7 @@
 <view xmlns="http://jmix.io/schema/flowui/view"
       xmlns:c="http://jmix.io/schema/flowui/jpql-condition"
       title="msg://clientListView.title"
-      focusComponent="clientsDataGrid">
+      focusComponent="searchField">
     <data>
         <collection id="clientsDc" class="com.company.crm.model.client.Client">
             <fetchPlan extends="_base">
@@ -10,7 +10,7 @@
             </fetchPlan>
             <loader id="clientsDl" readOnly="true">
                 <query>
-                    <![CDATA[select c from Client c order by c.name]]>
+                    <![CDATA[select distinct c from Client c order by c.name]]>
                 </query>
             </loader>
         </collection>
@@ -20,6 +20,7 @@
         <dataLoadCoordinator auto="true"/>
         <urlQueryParameters>
             <pagination component="pagination"/>
+            <genericFilter component="advancedFilter"/>
         </urlQueryParameters>
     </facets>
     <actions>
@@ -28,31 +29,37 @@
     </actions>
     <layout>
         <formLayout id="chartsBlock" width="100%" autoResponsive="true" autoRows="true" columnWidth="22em"/>
-        <div id="filterPanel" width="100%" classNames="pb-m">
-            <hbox alignItems="CENTER">
-                <textField id="searchField" placeholder="msg://searchField.placeholder"
-                           width="50%" minWidth="10em" maxWidth="30em" classNames="rounded-full">
-                    <prefix>
-                        <icon icon="SEARCH"/>
-                    </prefix>
-                </textField>
-                <switch id="showOnlyMyClientsCheckBox" label="msg://showOnlyMyClients"/>
-            </hbox>
-            <formLayout classNames="pb-m">
-                <select id="typeSelect" placeholder="msg://typePlaceholder"
-                        itemsEnum="com.company.crm.model.client.ClientType"/>
-                <select id="accountManagerSelect" label=" " placeholder="msg://accountManagerPlaceholder"/>
-                <select id="categorySelect" placeholder="msg://categoryPlaceholder"
-                        itemsEnum="com.company.crm.view.client.ClientCategory"/>
-                <responsiveSteps>
-                    <responsiveStep minWidth="0" columns="1"/>
-                    <responsiveStep minWidth="40em" columns="3"/>
-                </responsiveSteps>
-            </formLayout>
-            <genericFilter dataLoader="clientsDl" summaryText="msg:///advancedFilter" opened="false" themeNames="small">
-                <properties include=".*"/>
-            </genericFilter>
-        </div>
+
+        <details id="filters" opened="true" summaryText="msg://filters">
+            <vbox>
+                <hbox alignItems="CENTER" width="100%">
+                    <textField id="searchField" placeholder="msg://searchField.placeholder"
+                               width="50%" minWidth="10em" maxWidth="30em" clearButtonVisible="true">
+                        <prefix>
+                            <icon icon="SEARCH"/>
+                        </prefix>
+                    </textField>
+                    <switch id="showOnlyMyClientsCheckBox" label="msg://showOnlyMyClients"/>
+                </hbox>
+                <formLayout width="100%" autoResponsive="true" autoRows="true">
+                    <select id="typeSelect" placeholder="msg://typePlaceholder"
+                            itemsEnum="com.company.crm.model.client.ClientType" emptySelectionAllowed="true"/>
+                    <select id="accountManagerSelect" label=" " placeholder="msg://accountManagerPlaceholder"
+                            emptySelectionAllowed="true"/>
+                    <select id="categorySelect" placeholder="msg://categoryPlaceholder"
+                            itemsEnum="com.company.crm.view.client.ClientCategory" emptySelectionAllowed="true"/>
+                    <responsiveSteps>
+                        <responsiveStep minWidth="0" columns="1"/>
+                        <responsiveStep minWidth="40em" columns="3"/>
+                    </responsiveSteps>
+                </formLayout>
+                <genericFilter id="advancedFilter" dataLoader="clientsDl"
+                               opened="false" summaryText="msg:///advanced" themeNames="filled">
+                    <properties include=".*"/>
+                </genericFilter>
+            </vbox>
+        </details>
+
         <hbox id="buttonsPanel" classNames="buttons-panel">
             <button id="createButton" action="clientsDataGrid.createAction"/>
             <button id="editButton" action="clientsDataGrid.editAction"/>

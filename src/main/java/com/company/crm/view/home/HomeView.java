@@ -21,7 +21,9 @@ import com.company.crm.app.util.ui.component.model.card.CardModel.CardContentMod
 import com.company.crm.app.util.ui.component.model.card.CardModel.ComponentCardContentModel;
 import com.company.crm.app.util.ui.component.model.card.CardModel.DefaultCardContentModel;
 import com.company.crm.model.invoice.Invoice;
+import com.company.crm.model.user.UserTask;
 import com.company.crm.view.main.MainView;
+import com.company.crm.view.usertask.UserTaskListView;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.avatar.Avatar;
@@ -36,6 +38,7 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility;
@@ -52,7 +55,9 @@ import io.jmix.chartsflowui.kit.component.model.toolbox.Toolbox;
 import io.jmix.chartsflowui.kit.data.chart.ListChartItems;
 import io.jmix.core.Messages;
 import io.jmix.core.common.datastruct.Pair;
+import io.jmix.flowui.DialogWindows;
 import io.jmix.flowui.UiComponents;
+import io.jmix.flowui.Views;
 import io.jmix.flowui.component.card.JmixCard;
 import io.jmix.flowui.component.formlayout.JmixFormLayout;
 import io.jmix.flowui.component.grid.DataGrid;
@@ -65,6 +70,7 @@ import io.jmix.flowui.view.ViewDescriptor;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -122,6 +128,10 @@ public class HomeView extends StandardView implements WidthResizeListener {
 
     private volatile int lastWidth = -1;
     private static final int widthBreakpoint = 1000;
+    @Autowired
+    private DialogWindows dialogWindows;
+    @Autowired
+    private Views views;
 
     @Override
     public void configureUiForWidth(int width) {
@@ -178,7 +188,7 @@ public class HomeView extends StandardView implements WidthResizeListener {
         );
     }
 
-    private static Component myTasksTitleComponent() {
+    private Component myTasksTitleComponent() {
         var hbox = new HorizontalLayout();
         hbox.setWidthFull();
         hbox.setAlignItems(FlexComponent.Alignment.CENTER);
@@ -190,6 +200,9 @@ public class HomeView extends StandardView implements WidthResizeListener {
         var newTaskButton = new Button("New Task");
         newTaskButton.setIcon(VaadinIcon.PLUS.create());
         newTaskButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        newTaskButton.addClickListener(e -> {
+            dialogWindows.detail(this, UserTask.class);
+        });
         hbox.add(newTaskButton);
 
         return hbox;
@@ -214,14 +227,52 @@ public class HomeView extends StandardView implements WidthResizeListener {
         return contentModelForPriceSum(period,
                 (startDate, endDate) ->
                         orderService.loadOrders(startDate, endDate).stream().map(Order::getTotal),
-                sum -> "↑20.82%"); // TODO
+                sum -> {
+                    Pair<LocalDate, LocalDate> range = getDateRangeBy(period);
+                    Pair<LocalDate, LocalDate> previousRange = getPreviousDateRangeBy(range, period);
+
+                    var previousPeriodStart = previousRange.getFirst();
+                    var previousPeriodEnd = previousRange.getSecond();
+
+                    var previousSum = orderService.loadOrders(previousPeriodStart, previousPeriodEnd)
+                            .stream()
+                            .map(Order::getTotal)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+                    return getDeltaString(sum, previousSum);
+                });
     }
 
     private CardContentModel createPaymentsComponent(CardPeriod period) {
         return contentModelForPriceSum(period,
                 (startDate, endDate) ->
                         paymentService.loadPayments(startDate, endDate).stream().map(Payment::getAmount),
-                sum -> "↓-200,000$"); // TODO
+                sum -> {
+                    Pair<LocalDate, LocalDate> range = getDateRangeBy(period);
+                    Pair<LocalDate, LocalDate> previousRange = getPreviousDateRangeBy(range, period);
+
+                    var previousPeriodStart = previousRange.getFirst();
+                    var previousPeriodEnd = previousRange.getSecond();
+                    
+                    var previousSum = paymentService.loadPayments(previousPeriodStart, previousPeriodEnd)
+                            .stream()
+                            .map(Payment::getAmount)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+                    return getDeltaString(sum, previousSum);
+                });
+    }
+
+    private String getDeltaString(BigDecimal actualValue, BigDecimal previousValue) {
+        if (previousValue.compareTo(BigDecimal.ZERO) == 0) {
+            return actualValue.compareTo(BigDecimal.ZERO) == 0 ? "0%" : "↑100%";
+        }
+
+        var percentChange = actualValue.subtract(previousValue)
+                .multiply(new BigDecimal("100"))
+                .divide(previousValue, 2, RoundingMode.HALF_UP);
+
+        return (percentChange.compareTo(BigDecimal.ZERO) >= 0 ? "↑" : "↓") + percentChange.abs() + "%";
     }
 
     private CardContentModel contentModelForPriceSum(CardPeriod period,
@@ -297,7 +348,8 @@ public class HomeView extends StandardView implements WidthResizeListener {
 
     private CardContentModel createMyTasksComponent(CardPeriod period) {
         return withDefaultBackgroundCallback(
-                new ComponentCardContentModel(new Span("My Tasks Content"))
+                // FIXME:
+                new ComponentCardContentModel(views.create(UserTaskListView.class))
         );
     }
 
@@ -308,7 +360,19 @@ public class HomeView extends StandardView implements WidthResizeListener {
 
         List<Order> orders = orderService.loadOrders(startDate, endDate);
 
-        String statInfo = "↑20.82%"; // TODO
+        Pair<LocalDate, LocalDate> previousRange = getPreviousDateRangeBy(dateRange, period);
+        List<Order> previousOrders = orderService.loadOrders(
+                previousRange.getFirst(),
+                previousRange.getSecond()
+        );
+
+        String statInfo;
+        if (previousOrders.isEmpty()) {
+            statInfo = orders.isEmpty() ? "0%" : "↑100%";
+        } else {
+            var percentChange = (orders.size() - previousOrders.size()) * 100.0 / previousOrders.size();
+            statInfo = (percentChange >= 0 ? "↑" : "↓") + String.format("%.2f", Math.abs(percentChange)) + "%";
+        }
 
         CardContentModel mainContent = new DefaultCardContentModel(
                 orders.size() + " orders",
@@ -415,6 +479,25 @@ public class HomeView extends StandardView implements WidthResizeListener {
         row.add(activityInfoBlock);
 
         return row;
+    }
+
+    private Pair<LocalDate, LocalDate> getPreviousDateRangeBy(Pair<LocalDate, LocalDate> range, CardPeriod period) {
+        var startDate = range.getFirst();
+        var endDate = range.getSecond();
+
+        var previousPeriodStart = switch (period) {
+            case WEEK -> startDate.minusWeeks(1);
+            case MONTH -> startDate.minusMonths(1);
+            case YEAR -> startDate.minusYears(1);
+        };
+
+        var previousPeriodEnd = switch (period) {
+            case WEEK -> endDate.minusWeeks(1);
+            case MONTH -> endDate.minusMonths(1);
+            case YEAR -> endDate.minusYears(1);
+        };
+
+        return new Pair<>(previousPeriodStart, previousPeriodEnd);
     }
 
     private Pair<LocalDate, LocalDate> getDateRangeBy(CardPeriod period) {

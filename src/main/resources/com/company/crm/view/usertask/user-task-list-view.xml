@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      xmlns:c="http://jmix.io/schema/flowui/jpql-condition"
+      title="msg://userTaskListView.title"
+      focusComponent="userTasksDataGrid">
+    <data>
+        <collection id="userTasksDc"
+                    class="com.company.crm.model.user.UserTask">
+            <fetchPlan extends="_base">
+                <property name="author" fetchPlan="_base"/>
+            </fetchPlan>
+            <loader id="userTasksDl" readOnly="true">
+                <query>
+                    <![CDATA[select e from UserTask e where e.author = :current_user]]>
+                </query>
+            </loader>
+        </collection>
+        <instance id="userTaskDc"
+                  class="com.company.crm.model.user.UserTask">
+            <fetchPlan extends="_base">
+                <property name="author" fetchPlan="_base"/>
+            </fetchPlan>
+            <loader id="userTaskDl"/>
+        </instance>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+        <urlQueryParameters>
+            <pagination component="pagination"/>
+        </urlQueryParameters>
+    </facets>
+    <actions>
+        <action id="selectAction" type="lookup_select"/>
+        <action id="discardAction" type="lookup_discard"/>
+    </actions>
+    <layout padding="false">
+        <formLayout id="layoutWrapper" classNames="master-detail-layout" height="100%">
+            <vbox id="listLayout" height="100%">
+                <hbox id="buttonsPanel" classNames="buttons-panel">
+                    <startSlot>
+                        <button id="createButton" action="userTasksDataGrid.createAction"/>
+                        <button id="editButton" action="userTasksDataGrid.editAction"/>
+                        <button id="removeButton" action="userTasksDataGrid.removeAction"/>
+                    </startSlot>
+                    <endSlot>
+                        <simplePagination id="pagination" dataLoader="userTasksDl"/>
+                    </endSlot>
+                </hbox>
+                <dataGrid id="userTasksDataGrid"
+                          width="100%"
+                          minHeight="20em"
+                          dataContainer="userTasksDc"
+                          columnReorderingAllowed="true"
+                          selectionMode="MULTI">
+                    <actions>
+                        <action id="createAction" type="list_create"/>
+                        <action id="editAction" type="list_edit"/>
+                        <action id="removeAction" type="list_remove"/>
+                    </actions>
+                    <columns resizable="true">
+                        <column property="isCompleted"/>
+                        <column property="title"/>
+                        <column property="description"/>
+                        <column property="dueDate"/>
+                        <column property="author"/>
+                    </columns>
+                </dataGrid>
+                <hbox id="lookupActions" visible="false">
+                    <button id="selectButton" action="selectAction"/>
+                    <button id="discardButton" action="discardAction"/>
+                </hbox>
+            </vbox>
+            <vbox id="detailsLayout" height="100%">
+                <formLayout id="form" dataContainer="userTaskDc">
+                    <responsiveSteps>
+                        <responsiveStep minWidth="0" columns="1"/>
+                        <responsiveStep minWidth="40em" columns="2"/>
+                    </responsiveSteps>
+                    <checkbox id="isCompletedField" property="isCompleted"/>
+                    <textField id="titleField" property="title"/>
+                    <textArea id="descriptionField" height="9.5em" property="description"/>
+                    <datePicker id="dueDateField" property="dueDate"/>
+                    <entityPicker id="authorField" property="author">
+                        <actions>
+                            <action id="entityLookupAction" type="entity_lookup"/>
+                            <action id="entityClearAction" type="entity_clear"/>
+                        </actions>
+                    </entityPicker>
+                </formLayout>
+                <hbox id="detailActions">
+                    <button id="saveButton" text="msg:///actions.Save" icon="CHECK" themeNames="primary"/>
+                    <button id="cancelButton" text="msg:///actions.Cancel" icon="BAN"/>
+                </hbox>
+            </vbox>
+        </formLayout>
+    </layout>
+</view>

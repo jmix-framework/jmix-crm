@@ -7,9 +7,15 @@
         objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
 
     <changeSet author="b2b-crm" id="1">
+        <validCheckSum>ANY</validCheckSum>
         <createIndex indexName="IDX_USER_ACTIVITY_USER"
                      tableName="USER_ACTIVITY">
             <column name="USER_ID"/>
+        </createIndex>
+
+        <createIndex indexName="IDX_USER_TASK_AUTHOR"
+                     tableName="USER_TASK">
+            <column name="AUTHOR_ID"/>
         </createIndex>
 
         <createIndex indexName="IDX_CATEGORY_ITEM_CATEGORY"
@@ -67,10 +73,17 @@
     </changeSet>
 
     <changeSet author="b2b-crm" id="2">
+        <validCheckSum>ANY</validCheckSum>
         <addForeignKeyConstraint baseColumnNames="USER_ID"
                                  baseTableName="USER_ACTIVITY"
                                  constraintName="FK_USER_ACTIVITY_ON_USER"
                                  onDelete="CASCADE"
+                                 referencedColumnNames="ID"
+                                 referencedTableName="USER_"/>
+
+        <addForeignKeyConstraint baseColumnNames="AUTHOR_ID"
+                                 baseTableName="USER_TASK"
+                                 constraintName="FK_USER_TASK_ON_AUTHOR"
                                  referencedColumnNames="ID"
                                  referencedTableName="USER_"/>
 
@@ -94,7 +107,6 @@
 
         <addForeignKeyConstraint baseColumnNames="ORDER_ID" baseTableName="INVOICE" constraintName="FK_INVOICE_ON_ORDER"
                                  referencedColumnNames="ID" referencedTableName="ORDER_"/>
-
 
         <addForeignKeyConstraint baseColumnNames="CLIENT_ID" baseTableName="ORDER_" constraintName="FK_ORDER__ON_CLIENT"
                                  referencedColumnNames="ID" referencedTableName="CLIENT"/>
@@ -130,7 +142,6 @@
                                  onDelete="CASCADE"
                                  referencedColumnNames="ID"
                                  referencedTableName="ORDER_"/>
-
 
         <addForeignKeyConstraint baseColumnNames="PARENT_ID"
                                  baseTableName="CATEGORY"

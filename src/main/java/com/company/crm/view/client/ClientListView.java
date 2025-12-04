@@ -16,7 +16,9 @@ import com.company.crm.view.client.charts.categories.ClientCategoryValueDescript
 import com.company.crm.view.client.charts.type.ClientTypeAmountItem;
 import com.company.crm.view.client.charts.type.ClientTypeAmountValueDescription;
 import com.company.crm.view.main.MainView;
+import com.vaadin.flow.component.AbstractField.ComponentValueChangeEvent;
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.HasValue;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Div;
@@ -31,13 +33,19 @@ import io.jmix.chartsflowui.kit.component.model.shared.FontStyle;
 import io.jmix.chartsflowui.kit.data.chart.ListChartItems;
 import io.jmix.core.Messages;
 import io.jmix.core.common.datastruct.Pair;
+import io.jmix.core.querycondition.LogicalCondition;
+import io.jmix.core.querycondition.PropertyCondition;
 import io.jmix.core.repository.JmixDataRepositoryContext;
+import io.jmix.core.security.CurrentAuthentication;
 import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.asynctask.UiAsyncTasks;
+import io.jmix.flowui.component.checkbox.Switch;
 import io.jmix.flowui.component.details.JmixDetails;
+import io.jmix.flowui.component.genericfilter.GenericFilter;
 import io.jmix.flowui.component.pagination.SimplePagination;
 import io.jmix.flowui.component.select.JmixSelect;
 import io.jmix.flowui.component.textfield.TypedTextField;
+import io.jmix.flowui.model.CollectionLoader;
 import io.jmix.flowui.view.DialogMode;
 import io.jmix.flowui.view.Install;
 import io.jmix.flowui.view.LookupComponent;
@@ -47,6 +55,7 @@ import io.jmix.flowui.view.Target;
 import io.jmix.flowui.view.ViewComponent;
 import io.jmix.flowui.view.ViewController;
 import io.jmix.flowui.view.ViewDescriptor;
+import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,10 +67,14 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 import static com.company.crm.app.util.ui.listener.resize.WidthResizeListener.isWidthChanged;
+import static io.jmix.core.querycondition.PropertyCondition.contains;
+import static io.jmix.core.querycondition.PropertyCondition.equal;
+import static io.jmix.core.querycondition.PropertyCondition.isCollectionEmpty;
 
 @Route(value = "clients", layout = MainView.class)
 @ViewController(id = "Client.list")
@@ -73,31 +86,42 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
     private static final Logger log = LoggerFactory.getLogger(ClientListView.class);
 
     @Autowired
+    private UserService userService;
+    @Autowired
+    private ClientService clientService;
+    @Autowired
     private ClientRepository repository;
+
     @Autowired
     private Messages messages;
     @Autowired
     private UiComponents uiComponents;
     @Autowired
-    private ClientService clientService;
-    @Autowired
     private UiAsyncTasks uiAsyncTasks;
+    @Autowired
+    private CurrentAuthentication currentAuthentication;
 
     @ViewComponent
     private SimplePagination pagination;
     @ViewComponent
     private FormLayout chartsBlock;
     @ViewComponent
-    private TypedTextField<Object> searchField;
-    @ViewComponent
-    private Div filterPanel;
+    private TypedTextField<String> searchField;
     @ViewComponent
     private JmixSelect<User> accountManagerSelect;
+    @ViewComponent
+    private CollectionLoader<Client> clientsDl;
+    @ViewComponent
+    private JmixSelect<ClientType> typeSelect;
+    @ViewComponent
+    private Switch showOnlyMyClientsCheckBox;
+    @ViewComponent
+    private JmixSelect<ClientCategory> categorySelect;
+    @ViewComponent
+    private GenericFilter advancedFilter;
 
     private volatile int lastWidth = -1;
     private static final int widthBreakpoint = 600;
-    @Autowired
-    private UserService userService;
 
     @Override
     public void configureUiForWidth(int width) {
@@ -110,13 +134,13 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
 
     @Subscribe
     public void onInit(final InitEvent event) {
-        initAccountManagerSelect();
+        initializeFilterFields();
         initializeChartsAsync();
     }
 
     @Install(to = "clientsDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
     private List<Client> loadDelegate(Pageable pageable, JmixDataRepositoryContext context) {
-        return repository.findAll(pageable, context).getContent();
+        return repository.findAll(pageable, wrapContext(context)).getContent();
     }
 
     @Install(to = "clientsDataGrid.removeAction", subject = "delegate")
@@ -126,17 +150,73 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
 
     @Install(to = "pagination", subject = "totalCountByRepositoryDelegate")
     private Long paginationTotalCountByRepositoryDelegate(final JmixDataRepositoryContext context) {
-        return repository.count(context);
+        return repository.count(wrapContext(context));
+    }
+
+    @Subscribe("showOnlyMyClientsCheckBox")
+    private void onShowOnlyMyClientsCheckBoxComponentValueChange(final ComponentValueChangeEvent<Switch, Boolean> event) {
+        boolean isFromClient = event.isFromClient();
+        if (!isFromClient) {
+            return;
+        }
+
+        if (event.getValue()) {
+            accountManagerSelect.setValue(getCurrentUser());
+        } else {
+            accountManagerSelect.setValue(null);
+        }
+    }
+
+    @Subscribe("accountManagerSelect")
+    private void onAccountManagerSelectComponentValueChange(final ComponentValueChangeEvent<JmixSelect<User>, User> event) {
+        User currentSelection = event.getValue();
+        showOnlyMyClientsCheckBox.setValue(currentSelection != null && currentSelection.equals(getCurrentUser()));
+    }
+
+    private JmixDataRepositoryContext wrapContext(JmixDataRepositoryContext context) {
+        return new JmixDataRepositoryContext(context.fetchPlan(), buildFiltersCondition(), context.hints());
+    }
+
+    private void initializeFilterFields() {
+        List<User> accountManagers = new ArrayList<>(userService.loadAccountManagers());
+        accountManagers.addFirst(getCurrentUser());
+        accountManagerSelect.setItems(accountManagers);
+
+        List.<HasValue<?, ?>>of(searchField, typeSelect, accountManagerSelect, categorySelect)
+                .forEach(field -> field.addValueChangeListener(e -> applyFilters()));
+    }
+
+    private void applyFilters() {
+        clientsDl.setCondition(buildFiltersCondition());
+        clientsDl.load();
+    }
+
+    private LogicalCondition buildFiltersCondition() {
+        Optional<String> searchByName = searchField.getOptionalValue();
+        Optional<ClientType> type = typeSelect.getOptionalValue();
+        Optional<User> accountManager = accountManagerSelect.getOptionalValue();
+        Optional<ClientCategory> category = categorySelect.getOptionalValue();
+
+        LogicalCondition resultCondition = advancedFilter.getQueryCondition();
+
+        type.ifPresent(value -> resultCondition.add(contains("type", value)));
+        accountManager.ifPresent(value -> resultCondition.add(equal("accountManager", value)));
+        searchByName.ifPresent(name -> resultCondition.add(contains("name", name)));
+        category.ifPresent(value -> {
+            switch (value) {
+                case WITH_ORDERS -> resultCondition.add(isCollectionEmpty("orders", false));
+                // FIXME: distinct does not work here for some reason
+                case WITH_PAYMENTS -> resultCondition.add(isCollectionEmpty("invoices.payments", false));
+            }
+        });
+        return resultCondition;
     }
 
     private void configureFiltersPanel(int width) {
         if (width < widthBreakpoint) {
             searchField.setWidthFull();
-            JmixDetails details = wrapToDetails("Filters", filterPanel);
-            getContent().addComponentAtIndex(1, details);
         } else {
             searchField.setWidth("50%");
-            getContent().addComponentAtIndex(1, filterPanel);
         }
     }
 
@@ -155,10 +235,6 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
         details.add(component);
         details.setSummaryText(summaryText);
         return details;
-    }
-
-    private void initAccountManagerSelect() {
-        accountManagerSelect.setItems(userService.loadAccountManagers());
     }
 
     private void initializeChartsAsync() {
@@ -301,5 +377,9 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
             add(new ClientCategoryInfo("With orders", clientService.loadClientsWithOrders().size()));
             add(new ClientCategoryInfo("With payments", clientService.loadClientsWithPayments().size()));
         }};
+    }
+
+    private User getCurrentUser() {
+        return ((User) currentAuthentication.getUser());
     }
 }

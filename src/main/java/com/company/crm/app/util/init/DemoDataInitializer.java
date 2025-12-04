@@ -14,6 +14,7 @@ import com.company.crm.model.order.OrderStatus;
 import com.company.crm.model.payment.Payment;
 import com.company.crm.model.user.User;
 import com.company.crm.model.user.UserActivity;
+import com.company.crm.model.user.UserTask;
 import com.company.crm.security.FullAccessRole;
 import io.jmix.core.UnconstrainedDataManager;
 import io.jmix.security.role.assignment.RoleAssignment;
@@ -81,6 +82,7 @@ public class DemoDataInitializer {
 
         List<User> users = generateUsers();
         assignRoles(users);
+        generateUserTasks(users);
         generateUserActivity(users);
 
         List<Client> clients = generateClients(60, users);
@@ -210,6 +212,46 @@ public class DemoDataInitializer {
                 saveUser("bob", "Robert", "Taylor"),
                 saveUser("jared", "Jared", "Glover")
         );
+    }
+
+    private List<UserTask> generateUserTasks(List<User> users) {
+        log.info("Generating user tasks...");
+        ThreadLocalRandom random = ThreadLocalRandom.current();
+
+        var tasks = Map.of(
+                "Make report", "Send year finance report to CEO",
+                "Client meeting", "Schedule meeting with new client",
+                "Update documentation", "Review and update project documentation",
+                "Team training", "Organize training session for new team members",
+                "Budget review", "Review quarterly budget and expenses",
+                "System backup", "Perform system backup and verification",
+                "Client presentation", "Prepare presentation for client demo",
+                "Code review", "Review pull requests from development team",
+                "Risk assessment", "Conduct project risk assessment",
+                "Status update", "Send weekly status update to stakeholders"
+        );
+
+        List<UserTask> generatedTasks = new ArrayList<>();
+        users.forEach(user ->
+                tasks.forEach((title, description) -> {
+                    if (random.nextBoolean()) {
+                        LocalDate dueDate = randomDateWithinDays(30, random).toLocalDate();
+                        boolean completed = random.nextBoolean();
+                        generatedTasks.add(saveUserTask(title, description, dueDate, user, completed));
+                    }
+                }));
+
+        return generatedTasks;
+    }
+
+    private UserTask saveUserTask(String title, String description, LocalDate dueDate, User user, boolean completed) {
+        UserTask userTask = dataManager.create(UserTask.class);
+        userTask.setTitle(title);
+        userTask.setDescription(description);
+        userTask.setDueDate(dueDate);
+        userTask.setAuthor(user);
+        userTask.setIsCompleted(completed);
+        return dataManager.save(userTask);
     }
 
     private User saveUser(String username, String firstName, String lastName) {
