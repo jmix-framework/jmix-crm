@@ -84,6 +84,7 @@
         <addForeignKeyConstraint baseColumnNames="AUTHOR_ID"
                                  baseTableName="USER_TASK"
                                  constraintName="FK_USER_TASK_ON_AUTHOR"
+                                 onDelete="CASCADE"
                                  referencedColumnNames="ID"
                                  referencedTableName="USER_"/>
 

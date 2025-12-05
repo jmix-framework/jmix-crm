@@ -3,6 +3,7 @@ package com.company.crm.model.client;
 import com.company.crm.model.base.UuidEntityRepository;
 import io.jmix.core.FetchPlan;
 import io.jmix.core.repository.Query;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -24,4 +25,6 @@ public interface ClientRepository extends UuidEntityRepository<Client> {
     List<Client> findAllWithPayments(FetchPlan fetchPlan);
 
     List<Client> findAllByAccountManagerNotNull();
+
+    List<Client> findAllByNameContains(String name, Pageable pageable);
 }

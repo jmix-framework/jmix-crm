@@ -21,7 +21,6 @@ import com.company.crm.app.util.ui.component.model.card.CardModel.CardContentMod
 import com.company.crm.app.util.ui.component.model.card.CardModel.ComponentCardContentModel;
 import com.company.crm.app.util.ui.component.model.card.CardModel.DefaultCardContentModel;
 import com.company.crm.model.invoice.Invoice;
-import com.company.crm.model.user.UserTask;
 import com.company.crm.view.main.MainView;
 import com.company.crm.view.usertask.UserTaskListView;
 import com.vaadin.flow.component.Component;
@@ -38,7 +37,6 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility;
@@ -59,9 +57,12 @@ import io.jmix.flowui.DialogWindows;
 import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.Views;
 import io.jmix.flowui.component.card.JmixCard;
+import io.jmix.flowui.component.formatter.DateFormatter;
 import io.jmix.flowui.component.formlayout.JmixFormLayout;
 import io.jmix.flowui.component.grid.DataGrid;
+import io.jmix.flowui.component.layout.ViewLayout;
 import io.jmix.flowui.component.splitlayout.JmixSplitLayout;
+import io.jmix.flowui.view.StandardOutcome;
 import io.jmix.flowui.view.StandardView;
 import io.jmix.flowui.view.Subscribe;
 import io.jmix.flowui.view.ViewComponent;
@@ -82,6 +83,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static com.company.crm.app.util.ui.listener.resize.WidthResizeListener.isWidthChanged;
+import static io.jmix.flowui.component.UiComponentUtils.traverseComponents;
 
 @Route(value = "home", layout = MainView.class)
 @ViewController(id = "HomeView")
@@ -109,9 +111,13 @@ public class HomeView extends StandardView implements WidthResizeListener {
     private DateTimeService dateTimeService;
 
     @Autowired
+    private Views views;
+    @Autowired
     private Messages messages;
     @Autowired
     private UiComponents uiComponents;
+    @Autowired
+    private DialogWindows dialogWindows;
     @Autowired
     private CrmUiComponents crmUiComponents;
 
@@ -129,9 +135,7 @@ public class HomeView extends StandardView implements WidthResizeListener {
     private volatile int lastWidth = -1;
     private static final int widthBreakpoint = 1000;
     @Autowired
-    private DialogWindows dialogWindows;
-    @Autowired
-    private Views views;
+    private DateFormatter<LocalDate> localDateFormatter;
 
     @Override
     public void configureUiForWidth(int width) {
@@ -200,8 +204,18 @@ public class HomeView extends StandardView implements WidthResizeListener {
         var newTaskButton = new Button("New Task");
         newTaskButton.setIcon(VaadinIcon.PLUS.create());
         newTaskButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        newTaskButton.addClickListener(e -> {
-            dialogWindows.detail(this, UserTask.class);
+        newTaskButton.addClickListener(clickEvent -> {
+            dialogWindows.view(this, UserTaskListView.class)
+                    .withViewConfigurer(UserTaskListView::detailOnly)
+                    .withAfterCloseListener(closeEvent -> {
+                        if (closeEvent.closedWith(StandardOutcome.SAVE)) {
+                            traverseComponents(this, component -> {
+                                if (component instanceof UserTaskListView userTaskListView) {
+                                    userTaskListView.reloadData();
+                                }
+                            });
+                        }
+                    }).open();
         });
         hbox.add(newTaskButton);
 
@@ -253,7 +267,7 @@ public class HomeView extends StandardView implements WidthResizeListener {
 
                     var previousPeriodStart = previousRange.getFirst();
                     var previousPeriodEnd = previousRange.getSecond();
-                    
+
                     var previousSum = paymentService.loadPayments(previousPeriodStart, previousPeriodEnd)
                             .stream()
                             .map(Payment::getAmount)
@@ -331,9 +345,11 @@ public class HomeView extends StandardView implements WidthResizeListener {
     private CardContentModel createOverdueInvoicesComponent(CardPeriod period) {
         DataGrid<Invoice> grid = uiComponents.create(DataGrid.class);
 
-        grid.addColumn(new ComponentRenderer<>(r -> new Span(r.getClient().getFullName())))
+        grid.addColumn(new ComponentRenderer<>(r -> new Span(r.getClient().getName())))
                 .setHeader("Client");
-        grid.addColumn(new ComponentRenderer<>(r -> new Span(DATE_WITH_YEAR.format(r.getDueDate()))))
+        localDateFormatter.setUseUserTimezone(true);
+        localDateFormatter.setFormat(messages.getMessage("dateFormat"));
+        grid.addColumn(new ComponentRenderer<>(r -> new Span(localDateFormatter.apply(r.getDueDate()))))
                 .setHeader("Due Date");
 
         grid.setItems(invoiceService.getOverdueInvoices());
@@ -347,10 +363,11 @@ public class HomeView extends StandardView implements WidthResizeListener {
     }
 
     private CardContentModel createMyTasksComponent(CardPeriod period) {
-        return withDefaultBackgroundCallback(
-                // FIXME:
-                new ComponentCardContentModel(views.create(UserTaskListView.class))
-        );
+        UserTaskListView userTasksView = views.create(UserTaskListView.class).gridOnly();
+        ViewLayout viewLayout = userTasksView.getContent();
+        viewLayout.setPadding(false);
+        viewLayout.setMaxHeight(15, Unit.EM);
+        return withDefaultBackgroundCallback(new ComponentCardContentModel(userTasksView));
     }
 
     private CardContentModel createSalesFunnelComponent(CardPeriod period) {

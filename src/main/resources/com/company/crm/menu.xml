@@ -3,7 +3,7 @@
 
     <item view="HomeView" id="home" description="msg://com.company.crm/menu_config.home.description"
           title="msg://com.company.crm/menu_config.home.title" icon="vaadin:home"/>
-    <item view="TasksView" id="tasks" title="My Tasks" icon="vaadin:check-square"/>
+    <item view="UserTask.list" id="tasks" title="My Tasks" icon="vaadin:check-square"/>
     <item view="Client.list" id="clients" title="Clients" icon="vaadin:users"/>
     <menu id="catalog" title="Catalog" icon="vaadin:open-book">
         <item view="Category.list" id="categories" title="Categories" icon="vaadin:list-select"/>

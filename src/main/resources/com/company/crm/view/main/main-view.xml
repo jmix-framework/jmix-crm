@@ -10,7 +10,7 @@
                 <h2 id="applicationTitle"
                     classNames="jmix-main-view-application-title">
                     <anchor id="baseLink"
-                            href="."
+                            href="./home"
                             text="msg://applicationTitle.text"
                             classNames="jmix-main-view-application-title-base-link"/>
                 </h2>
@@ -30,12 +30,14 @@
                               ariaLabel="msg://drawerToggle.ariaLabel"/>
                 <h1 id="viewTitle" classNames="jmix-main-view-title"/>
 
-                <textField placeholder="Search" classNames="ms-auto me-l" minWidth="20em">
+                <textField id="searchField" valueChangeMode="EAGER" valueChangeTimeout="500"
+                            placeholder="Search for clients..." clearButtonVisible="true"
+                            classNames="ms-auto me-l" minWidth="20em">
                     <suffix>
                         <icon icon="SEARCH"/>
                     </suffix>
                 </textField>
-                <button icon="BELL_O" themeNames="error" classNames="me-l"
+                <button id="notificationsButton" icon="BELL_O" themeNames="error" classNames="me-l"
                         css="background-color: var(--lumo-error-color-10pct);"/>/>
                 <userMenu id="userMenu" themeNames="tertiary" classNames="me-l">
                     <items>

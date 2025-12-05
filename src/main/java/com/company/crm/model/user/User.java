@@ -3,18 +3,24 @@ package com.company.crm.model.user;
 import com.company.crm.model.base.VersionedEntity;
 import io.jmix.core.HasTimeZone;
 import io.jmix.core.annotation.Secret;
-import io.jmix.core.entity.annotation.JmixGeneratedValue;
 import io.jmix.core.entity.annotation.SystemLevel;
+import io.jmix.core.metamodel.annotation.Composition;
 import io.jmix.core.metamodel.annotation.DependsOnProperties;
 import io.jmix.core.metamodel.annotation.InstanceName;
 import io.jmix.core.metamodel.annotation.JmixEntity;
 import io.jmix.security.authentication.JmixUserDetails;
-import org.springframework.security.core.GrantedAuthority;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Index;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import jakarta.validation.constraints.Email;
+import org.springframework.security.core.GrantedAuthority;
+
 import java.util.Collection;
 import java.util.Collections;
-import java.util.UUID;
+import java.util.List;
 
 @JmixEntity
 @Entity
@@ -25,6 +31,10 @@ public class User extends VersionedEntity implements JmixUserDetails, HasTimeZon
 
     @Column(name = "USERNAME", nullable = false)
     private String username;
+
+    @Composition
+    @OneToMany(mappedBy = "author")
+    private List<UserTask> tasks;
 
     @Secret
     @SystemLevel
@@ -49,6 +59,14 @@ public class User extends VersionedEntity implements JmixUserDetails, HasTimeZon
 
     @Transient
     private Collection<? extends GrantedAuthority> authorities;
+
+    public List<UserTask> getTasks() {
+        return tasks;
+    }
+
+    public void setTasks(List<UserTask> tasks) {
+        this.tasks = tasks;
+    }
 
     public String getPassword() {
         return password;

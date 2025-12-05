@@ -1,9 +1,18 @@
 package com.company.crm.model.user;
 
 import com.company.crm.model.base.VersionedEntity;
+import io.jmix.core.DeletePolicy;
+import io.jmix.core.entity.annotation.OnDeleteInverse;
 import io.jmix.core.metamodel.annotation.InstanceName;
 import io.jmix.core.metamodel.annotation.JmixEntity;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
 import java.time.LocalDate;
 
@@ -28,8 +37,9 @@ public class UserTask extends VersionedEntity {
     @Column(name = "DUE_DATE")
     private LocalDate dueDate;
 
-    @JoinColumn(name = "AUTHOR_ID")
     @ManyToOne(fetch = FetchType.LAZY)
+    @OnDeleteInverse(DeletePolicy.CASCADE)
+    @JoinColumn(name = "AUTHOR_ID")
     private User author;
 
     public Boolean getIsCompleted() {

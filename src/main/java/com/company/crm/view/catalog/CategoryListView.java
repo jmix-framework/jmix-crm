@@ -1,42 +1,29 @@
-package com.company.crm.view.usertask;
+package com.company.crm.view.catalog;
 
-import com.company.crm.model.user.User;
-import com.company.crm.model.user.UserTask;
-import com.company.crm.model.user.UserTaskRepository;
+import com.company.crm.model.catalog.category.Category;
+import com.company.crm.model.catalog.category.CategoryRepository;
 import com.company.crm.view.main.MainView;
 import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.HasValidation;
 import com.vaadin.flow.component.HasValueAndElement;
-import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.formlayout.FormLayout;
-import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.data.renderer.ComponentRenderer;
-import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.router.BeforeLeaveEvent;
 import com.vaadin.flow.router.Route;
 import io.jmix.core.AccessManager;
-import io.jmix.core.DataManager;
 import io.jmix.core.EntityStates;
 import io.jmix.core.LoadContext;
 import io.jmix.core.SaveContext;
-import io.jmix.core.Sort;
 import io.jmix.core.entity.EntityValues;
-import io.jmix.core.querycondition.LogicalCondition;
-import io.jmix.core.querycondition.PropertyCondition;
-import io.jmix.core.security.CurrentAuthentication;
 import io.jmix.core.validation.group.UiCrossFieldChecks;
 import io.jmix.flowui.UiComponentProperties;
-import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.UiViewProperties;
 import io.jmix.flowui.accesscontext.UiEntityAttributeContext;
 import io.jmix.flowui.action.SecuredBaseAction;
-import io.jmix.flowui.action.list.EditAction;
 import io.jmix.flowui.component.UiComponentUtils;
-import io.jmix.flowui.component.checkbox.Switch;
-import io.jmix.flowui.component.formlayout.JmixFormLayout;
 import io.jmix.flowui.component.grid.DataGrid;
+import io.jmix.flowui.component.grid.TreeDataGrid;
 import io.jmix.flowui.component.validation.ValidationErrors;
 import io.jmix.flowui.data.EntityValueSource;
 import io.jmix.flowui.data.SupportsValueSource;
@@ -44,7 +31,6 @@ import io.jmix.flowui.kit.action.Action;
 import io.jmix.flowui.kit.action.ActionPerformedEvent;
 import io.jmix.flowui.kit.component.button.JmixButton;
 import io.jmix.flowui.model.CollectionContainer;
-import io.jmix.flowui.model.CollectionLoader;
 import io.jmix.flowui.model.DataContext;
 import io.jmix.flowui.model.InstanceContainer;
 import io.jmix.flowui.model.InstanceLoader;
@@ -59,7 +45,6 @@ import io.jmix.flowui.view.NavigateCloseAction;
 import io.jmix.flowui.view.StandardListView;
 import io.jmix.flowui.view.StandardOutcome;
 import io.jmix.flowui.view.Subscribe;
-import io.jmix.flowui.view.Supply;
 import io.jmix.flowui.view.Target;
 import io.jmix.flowui.view.ViewComponent;
 import io.jmix.flowui.view.ViewController;
@@ -67,7 +52,6 @@ import io.jmix.flowui.view.ViewDescriptor;
 import io.jmix.flowui.view.ViewValidation;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -77,113 +61,60 @@ import static io.jmix.core.repository.JmixDataRepositoryUtils.buildRepositoryCon
 import static io.jmix.core.repository.JmixDataRepositoryUtils.extractEntityId;
 import static io.jmix.flowui.component.delegate.AbstractFieldDelegate.PROPERTY_INVALID;
 
-@Route(value = "user-tasks", layout = MainView.class)
-@ViewController(id = "UserTask.list")
-@ViewDescriptor(path = "user-task-list-view.xml")
-@LookupComponent("userTasksDataGrid")
+@Route(value = "categories", layout = MainView.class)
+@ViewController(id = "Category.list")
+@ViewDescriptor(path = "category-list-view.xml")
+@LookupComponent("categoriesDataGrid")
 @DialogMode(width = "64em")
-public class UserTaskListView extends StandardListView<UserTask> {
+public class CategoryListView extends StandardListView<Category> {
 
     @Autowired
-    private UserTaskRepository repository;
-    @Autowired
-    private DataManager dataManager;
-    @Autowired
-    private UiComponents uiComponents;
-    @Autowired
-    private EntityStates entityStates;
-    @Autowired
-    private AccessManager accessManager;
-    @Autowired
-    private ViewValidation viewValidation;
-    @Autowired
-    private UiViewProperties uiViewProperties;
-    @Autowired
-    private UiComponentProperties uiComponentProperties;
-    @Autowired
-    private CurrentAuthentication currentAuthentication;
+    private CategoryRepository repository;
 
     @ViewComponent
     private DataContext dataContext;
+
     @ViewComponent
-    private CollectionLoader<UserTask> userTasksDl;
+    private CollectionContainer<Category> categoriesDc;
+
     @ViewComponent
-    private InstanceContainer<UserTask> userTaskDc;
+    private InstanceContainer<Category> categoryDc;
+
     @ViewComponent
-    private CollectionContainer<UserTask> userTasksDc;
+    private InstanceLoader<Category> categoryDl;
+
     @ViewComponent
-    private InstanceLoader<UserTask> userTaskDl;
+    private VerticalLayout listLayout;
+
+    @ViewComponent
+    private TreeDataGrid<Category> categoriesDataGrid;
 
     @ViewComponent
     private FormLayout form;
-    @ViewComponent
-    private VerticalLayout listLayout;
-    @ViewComponent
-    private VerticalLayout detailsLayout;
-    @ViewComponent
-    private DataGrid<UserTask> userTasksDataGrid;
+
     @ViewComponent
     private HorizontalLayout detailActions;
-    @ViewComponent
-    private HorizontalLayout buttonsPanel;
-    @ViewComponent
-    private JmixFormLayout layoutWrapper;
-    @ViewComponent("userTasksDataGrid.editAction")
-    private EditAction<UserTask> userTasksDataGridEditAction;
+
+    @Autowired
+    private AccessManager accessManager;
+
+    @Autowired
+    private EntityStates entityStates;
+
+    @Autowired
+    private UiViewProperties uiViewProperties;
+
+    @Autowired
+    private ViewValidation viewValidation;
+
+    @Autowired
+    private UiComponentProperties uiComponentProperties;
 
     private boolean modifiedAfterEdit;
 
-    private Boolean gridOnly = null;
-
-    public void reloadData() {
-        userTasksDl.load();
-    }
-
-    public UserTaskListView detailOnly() {
-        this.gridOnly = false;
-        processGridOnly();
-        return this;
-    }
-
-    public UserTaskListView gridOnly() {
-        this.gridOnly = true;
-        processGridOnly();
-        return this;
-    }
-
-    private void processGridOnly() {
-        if (gridOnly == null) {
-            return;
-        }
-
-        listLayout.setPadding(!gridOnly);
-        listLayout.setVisible(gridOnly);
-        listLayout.setHeight(getContent().getHeight());
-        listLayout.setMaxHeight(getContent().getMaxHeight());
-
-        detailsLayout.setVisible(!gridOnly);
-        buttonsPanel.setVisible(!gridOnly);
-        layoutWrapper.setAutoResponsive(gridOnly);
-
-        if (gridOnly) {
-            listLayout.setWidthFull();
-            layoutWrapper.setColumnWidth(100, Unit.PERCENTAGE);
-            layoutWrapper.setMaxColumns(1);
-        } else {
-            listLayout.setWidth(null);
-            layoutWrapper.setColumnWidth(null);
-            layoutWrapper.setMaxColumns(2);
-        }
-    }
-
     @Subscribe
-    private void onInit(final InitEvent event) {
-        userTasksDataGrid.addItemDoubleClickListener(e -> {
-            if (!isGridOnlyMode()) {
-                userTasksDataGridEditAction.execute();
-            }
-        });
-        userTasksDataGrid.getActions().forEach(action -> {
+    public void onInit(final InitEvent event) {
+        categoriesDataGrid.getActions().forEach(action -> {
             if (action instanceof SecuredBaseAction secured) {
                 secured.addEnabledRule(() -> listLayout.isEnabled());
             }
@@ -191,21 +122,13 @@ public class UserTaskListView extends StandardListView<UserTask> {
     }
 
     @Subscribe
-    private void onReady(final ReadyEvent event) {
+    public void onReady(final ReadyEvent event) {
         setupModifiedTracking();
     }
 
     @Subscribe
-    private void onBeforeShow(final BeforeShowEvent event) {
-        processGridOnly();
+    public void onBeforeShow(final BeforeShowEvent event) {
         updateControls(false);
-        processDetailsMode();
-    }
-
-    private void processDetailsMode() {
-        if (isDetailsOnlyMode()) {
-            createAndEditNewTask();
-        }
     }
 
     @Subscribe
@@ -213,42 +136,28 @@ public class UserTaskListView extends StandardListView<UserTask> {
         preventUnsavedChanges(event);
     }
 
-    @Subscribe("userTasksDataGrid.createAction")
-    private void onUserTasksDataGridCreateAction(final ActionPerformedEvent event) {
-        createAndEditNewTask();
-    }
-
-    private void createAndEditNewTask() {
+    @Subscribe("categoriesDataGrid.createAction")
+    public void onCategoriesDataGridCreateAction(final ActionPerformedEvent event) {
         prepareFormForValidation();
+
         dataContext.clear();
-        UserTask task = dataContext.create(UserTask.class);
-        task.setIsCompleted(false);
-        task.setAuthor(getCurrentUser());
-        task.setDueDate(LocalDate.now());
-        userTaskDc.setItem(task);
+        Category entity = dataContext.create(Category.class);
+        categoryDc.setItem(entity);
         updateControls(true);
     }
 
-    @Subscribe("userTasksDataGrid.editAction")
-    private void onUserTasksDataGridEditAction(final ActionPerformedEvent event) {
+    @Subscribe("categoriesDataGrid.editAction")
+    public void onCategoriesDataGridEditAction(final ActionPerformedEvent event) {
         updateControls(true);
     }
 
     @Subscribe("saveButton")
-    private void onSaveButtonClick(final ClickEvent<JmixButton> event) {
-        saveEditedEntity().then(() -> closeViewIfDetailsMode(StandardOutcome.SAVE));
+    public void onSaveButtonClick(final ClickEvent<JmixButton> event) {
+        saveEditedEntity();
     }
 
     @Subscribe("cancelButton")
-    private void onCancelButtonClick(final ClickEvent<JmixButton> event) {
-        if (isDetailsOnlyMode()) {
-            if (hasUnsavedChanges()) {
-                discardEditedEntity();
-            }
-            closeViewIfDetailsMode(StandardOutcome.CLOSE);
-            return;
-        }
-
+    public void onCancelButtonClick(final ClickEvent<JmixButton> event) {
         if (!hasUnsavedChanges()) {
             discardEditedEntity();
             return;
@@ -264,82 +173,20 @@ public class UserTaskListView extends StandardListView<UserTask> {
         }
     }
 
-    @Subscribe(id = "userTasksDc", target = Target.DATA_CONTAINER)
-    public void onUserTasksDcItemChange(final InstanceContainer.ItemChangeEvent<UserTask> event) {
+    @Subscribe(id = "categoriesDc", target = Target.DATA_CONTAINER)
+    public void onCategoriesDcItemChange(final InstanceContainer.ItemChangeEvent<Category> event) {
         prepareFormForValidation();
 
-        UserTask entity = event.getItem();
+        Category entity = event.getItem();
         dataContext.clear();
         if (entity != null) {
-            userTaskDl.setEntityId(EntityValues.getId(entity));
-            userTaskDl.load();
+            categoryDl.setEntityId(EntityValues.getId(entity));
+            categoryDl.load();
         } else {
-            userTaskDl.setEntityId(null);
-            userTaskDc.setItem(null);
+            categoryDl.setEntityId(null);
+            categoryDc.setItem(null);
         }
         updateControls(false);
-    }
-
-    @Install(to = "userTasksDl", target = Target.DATA_LOADER)
-    private List<UserTask> listLoadDelegate(LoadContext<UserTask> context) {
-        LoadContext.Query query = new LoadContext.Query("select u from UserTask u");
-        query.setCondition(LogicalCondition.and(PropertyCondition.equal("author", getCurrentUser())));
-        query.setSort(Sort.by(Sort.Direction.ASC, "isCompleted", "dueDate"));
-        context.setQuery(query);
-        return repository.findAll(buildPageRequest(context), buildRepositoryContext(context)).getContent();
-    }
-
-    @Install(to = "userTasksDataGrid.removeAction", subject = "delegate")
-    private void userTasksDataGridRemoveDelegate(final Collection<UserTask> collection) {
-        repository.deleteAll(collection);
-    }
-
-    @Supply(to = "userTasksDataGrid.isCompleted", subject = "renderer")
-    private Renderer<UserTask> userTasksDataGridIsCompletedRenderer() {
-        return new ComponentRenderer<>(userTask -> {
-            Switch editor = uiComponents.create(Switch.class);
-            editor.setValue(userTask.getIsCompleted());
-            editor.addValueChangeListener(e -> {
-                userTask.setIsCompleted(e.getValue());
-                dataManager.save(userTask);
-                reloadData();
-            });
-
-            HorizontalLayout layout = new HorizontalLayout();
-            // layout.setJustifyContentMode(FlexComponent.JustifyContentMode.CENTER);
-            layout.setAlignItems(FlexComponent.Alignment.CENTER);
-            layout.add(editor);
-
-            return layout;
-        });
-    }
-
-    @Install(to = "userTaskDl", target = Target.DATA_LOADER)
-    private UserTask detailLoadDelegate(LoadContext<UserTask> context) {
-        return repository.getById(extractEntityId(context), context.getFetchPlan());
-    }
-
-    @Install(target = Target.DATA_CONTEXT)
-    private Set<Object> saveDelegate(SaveContext saveContext) {
-        return Set.of(repository.save(userTaskDc.getItem()));
-    }
-
-    private User getCurrentUser() {
-        return (User) currentAuthentication.getUser();
-    }
-
-    private void closeViewIfDetailsMode(StandardOutcome outcome) {
-        if (isDetailsOnlyMode()) {
-            close(outcome);
-        }
-    }
-
-    private boolean isDetailsOnlyMode() {
-        return gridOnly != null && !gridOnly;
-    }
-
-    private boolean isGridOnlyMode() {
-        return gridOnly != null && gridOnly;
     }
 
     private void prepareFormForValidation() {
@@ -352,7 +199,7 @@ public class UserTaskListView extends StandardListView<UserTask> {
     }
 
     private OperationResult saveEditedEntity() {
-        UserTask item = userTaskDc.getItem();
+        Category item = categoryDc.getItem();
         ValidationErrors validationErrors = validateView(item);
 
         if (!validationErrors.isEmpty()) {
@@ -362,7 +209,7 @@ public class UserTaskListView extends StandardListView<UserTask> {
         }
 
         dataContext.save();
-        userTasksDc.replaceItem(item);
+        categoriesDc.replaceItem(item);
         updateControls(false);
         return OperationResult.success();
     }
@@ -371,8 +218,8 @@ public class UserTaskListView extends StandardListView<UserTask> {
         resetFormInvalidState();
 
         dataContext.clear();
-        userTaskDc.setItem(null);
-        userTaskDl.load();
+        categoryDc.setItem(null);
+        categoryDl.load();
         updateControls(false);
     }
 
@@ -385,7 +232,7 @@ public class UserTaskListView extends StandardListView<UserTask> {
         });
     }
 
-    private ValidationErrors validateView(UserTask entity) {
+    private ValidationErrors validateView(Category entity) {
         ValidationErrors validationErrors = viewValidation.validateUiComponents(form);
         if (!validationErrors.isEmpty()) {
             return validationErrors;
@@ -406,7 +253,7 @@ public class UserTaskListView extends StandardListView<UserTask> {
         modifiedAfterEdit = false;
         detailActions.setVisible(editing);
         listLayout.setEnabled(!editing);
-        userTasksDataGrid.getActions().forEach(Action::refreshState);
+        categoriesDataGrid.getActions().forEach(Action::refreshState);
 
         if (!uiComponentProperties.isImmediateRequiredValidationEnabled() && editing) {
             resetFormInvalidState();
@@ -443,10 +290,6 @@ public class UserTaskListView extends StandardListView<UserTask> {
     }
 
     private void preventUnsavedChanges(BeforeCloseEvent event) {
-        if (isGridOnlyMode()) {
-            return;
-        }
-
         CloseAction closeAction = event.getCloseAction();
 
         if (closeAction instanceof ChangeTrackerCloseAction trackerCloseAction
@@ -520,5 +363,25 @@ public class UserTaskListView extends StandardListView<UserTask> {
     private OperationResult closeWithSave() {
         return saveEditedEntity()
                 .compose(() -> close(StandardOutcome.SAVE));
+    }
+
+    @Install(to = "categoriesDl", target = Target.DATA_LOADER)
+    private List<Category> listLoadDelegate(LoadContext<Category> context) {
+        return repository.findAll(buildPageRequest(context), buildRepositoryContext(context)).getContent();
+    }
+
+    @Install(to = "categoriesDataGrid.removeAction", subject = "delegate")
+    private void categoriesDataGridRemoveDelegate(final Collection<Category> collection) {
+        repository.deleteAll(collection);
+    }
+
+    @Install(to = "categoryDl", target = Target.DATA_LOADER)
+    private Category detailLoadDelegate(LoadContext<Category> context) {
+        return repository.getById(extractEntityId(context), context.getFetchPlan());
+    }
+
+    @Install(target = Target.DATA_CONTEXT)
+    private Set<Object> saveDelegate(SaveContext saveContext) {
+        return Set.of(repository.save(categoryDc.getItem()));
     }
 }
