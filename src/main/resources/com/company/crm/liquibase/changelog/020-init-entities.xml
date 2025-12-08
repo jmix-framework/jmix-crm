@@ -239,6 +239,28 @@
                 <constraints nullable="false"/>
             </column>
         </createTable>
+
+        <createTable tableName="CRM_SETTINGS">
+            <column name="ID"
+                    type="INT">
+                <constraints nullable="false"
+                             primaryKey="true"
+                             primaryKeyName="PK_CRM_SETTINGS"/>
+            </column>
+            <column name="VERSION" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CREATED_BY"
+                    type="VARCHAR(255)"/>
+            <column name="NAVIGATION_BAR_TOUCH_OPTIMIZED"
+                    type="BOOLEAN"/>
+            <column name="CREATED_DATE"
+                    type="${offsetDateTime.type}"/>
+            <column name="LAST_MODIFIED_BY"
+                    type="VARCHAR(255)"/>
+            <column name="LAST_MODIFIED_DATE"
+                    type="${offsetDateTime.type}"/>
+        </createTable>
     </changeSet>
 
 </databaseChangeLog>

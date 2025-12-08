@@ -24,7 +24,11 @@ public class ClientPurchasesSumValueDescription {
 
     @Override
     public boolean equals(Object obj) {
-        return EqualsBuilder.reflectionEquals(this, obj);
+        if (obj instanceof ClientPurchasesSumValueDescription) {
+            return EqualsBuilder.reflectionEquals(this, obj);
+        } else {
+            return false;
+        }
     }
 
     @Override

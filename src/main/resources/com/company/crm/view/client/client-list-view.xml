@@ -21,6 +21,7 @@
         <urlQueryParameters>
             <pagination component="pagination"/>
             <genericFilter component="advancedFilter"/>
+            <dataGridFilter component="clientsDataGrid"/>
         </urlQueryParameters>
     </facets>
     <actions>
@@ -28,36 +29,42 @@
         <action id="discardAction" type="lookup_discard"/>
     </actions>
     <layout>
-        <formLayout id="chartsBlock" width="100%" autoResponsive="true" autoRows="true" columnWidth="22em"/>
+        <details id="chartsDetails" opened="true" summaryText="msg:///charts" width="100%">
+            <formLayout id="chartsBlock" width="100%" autoResponsive="true" autoRows="true" expandFields="true" expandColumns="true"/>
+        </details>
 
-        <details id="filters" opened="true" summaryText="msg://filters">
-            <vbox>
-                <hbox alignItems="CENTER" width="100%">
-                    <textField id="searchField" placeholder="msg://searchField.placeholder"
-                               width="50%" minWidth="10em" maxWidth="30em" clearButtonVisible="true">
+        <details id="filtersDetails" opened="true" summaryText="msg:///filters" width="50%" maxWidth="40em">
+            <div classNames="pl-m" width="100%">
+                <formLayout>
+                    <responsiveSteps>
+                        <responsiveStep minWidth="0" columns="1"/>
+                        <responsiveStep minWidth="30em" columns="2"/>
+                    </responsiveSteps>
+                    <textField id="searchField" width="100%" placeholder="msg://searchField.placeholder"
+                               clearButtonVisible="true">
                         <prefix>
                             <icon icon="SEARCH"/>
                         </prefix>
                     </textField>
                     <switch id="showOnlyMyClientsCheckBox" label="msg://showOnlyMyClients"/>
-                </hbox>
-                <formLayout width="100%" autoResponsive="true" autoRows="true">
+                </formLayout>
+                <formLayout >
+                    <responsiveSteps>
+                        <responsiveStep minWidth="0" columns="1"/>
+                        <responsiveStep minWidth="30em" columns="3"/>
+                    </responsiveSteps>
                     <select id="typeSelect" placeholder="msg://typePlaceholder"
                             itemsEnum="com.company.crm.model.client.ClientType" emptySelectionAllowed="true"/>
                     <select id="accountManagerSelect" label=" " placeholder="msg://accountManagerPlaceholder"
                             emptySelectionAllowed="true"/>
                     <select id="categorySelect" placeholder="msg://categoryPlaceholder"
                             itemsEnum="com.company.crm.view.client.ClientCategory" emptySelectionAllowed="true"/>
-                    <responsiveSteps>
-                        <responsiveStep minWidth="0" columns="1"/>
-                        <responsiveStep minWidth="40em" columns="3"/>
-                    </responsiveSteps>
                 </formLayout>
                 <genericFilter id="advancedFilter" dataLoader="clientsDl"
                                opened="false" summaryText="msg:///advanced" themeNames="filled">
                     <properties include=".*"/>
                 </genericFilter>
-            </vbox>
+            </div>
         </details>
 
         <hbox id="buttonsPanel" classNames="buttons-panel">

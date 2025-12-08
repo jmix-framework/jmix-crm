@@ -27,12 +27,20 @@ public interface UuidEntityRepository<T extends UuidEntity> extends JmixDataRepo
         return queryLoader(query, params).maxResults(1).one();
     }
 
-    default Iterable<T> findAll(long offset, long limit) {
+    default List<T> findAll(long offset, long limit, @Nullable FetchPlan fetchPlan) {
+        return findAll(OffsetLimitPageRequest.of(offset, limit), fetchPlan).getContent();
+    }
+
+    default List<T> findAll(long offset, long limit) {
         return findAll(offset, limit, null);
     }
 
-    default Iterable<T> findAll(long offset, long limit, @Nullable FetchPlan fetchPlan) {
-        return findAll(OffsetLimitPageRequest.of(offset, limit), fetchPlan);
+    default List<T> findAll(long limit, @Nullable FetchPlan fetchPlan) {
+        return findAll(0, limit, fetchPlan);
+    }
+
+    default List<T> findAll(long limit) {
+        return findAll(limit, null);
     }
 
     // ----- utils -----

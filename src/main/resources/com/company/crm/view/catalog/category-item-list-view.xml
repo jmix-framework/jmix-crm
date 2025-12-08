@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <view xmlns="http://jmix.io/schema/flowui/view"
       xmlns:c="http://jmix.io/schema/flowui/jpql-condition"
-      title="msg://categoryItemListView.title"
-      focusComponent="categoryItemsDataGrid">
+      title="msg://categoryItemListView.title">
     <data>
         <collection id="categoryItemsDc"
                     class="com.company.crm.model.catalog.item.CategoryItem">
@@ -13,9 +12,12 @@
         </collection>
     </data>
     <facets>
+        <settings auto="true"/>
         <dataLoadCoordinator auto="true"/>
         <urlQueryParameters>
             <pagination component="pagination"/>
+            <genericFilter component="advancedFilter"/>
+            <dataGridFilter component="categoryItemsDataGrid"/>
         </urlQueryParameters>
     </facets>
     <actions>
@@ -23,6 +25,32 @@
         <action id="discardAction" type="lookup_discard"/>
     </actions>
     <layout>
+        <details id="chartsDetails" opened="true" summaryText="msg:///charts" width="100%">
+            <formLayout id="chartsBlock" width="100%" autoResponsive="true" autoRows="true" expandFields="true" expandColumns="true"/>
+        </details>
+
+        <details id="filters" opened="true" summaryText="msg:///filters" width="50%" maxWidth="40em">
+            <div classNames="pl-m" width="100%">
+                <formLayout width="100%" classNames="gap-x-xl">
+                    <responsiveSteps>
+                        <responsiveStep minWidth="0" columns="1"/>
+                        <responsiveStep minWidth="20em" columns="2"/>
+                    </responsiveSteps>
+                    <textField id="searchField" placeholder="msg://searchField.placeholder" clearButtonVisible="true">
+                        <prefix>
+                            <icon icon="SEARCH"/>
+                        </prefix>
+                    </textField>
+                    <select id="categorySelect" label=" " placeholder="Category"
+                            emptySelectionAllowed="true"/>
+                </formLayout>
+                <genericFilter id="advancedFilter" dataLoader="categoryItemsDl"
+                               opened="false" summaryText="msg:///advanced" themeNames="filled">
+                    <properties include=".*"/>
+                </genericFilter>
+            </div>
+        </details>
+
         <hbox id="buttonsPanel" classNames="buttons-panel">
             <button id="createButton" action="categoryItemsDataGrid.createAction"/>
             <button id="editButton" action="categoryItemsDataGrid.editAction"/>
@@ -41,9 +69,9 @@
                 <action id="removeAction" type="list_remove"/>
             </actions>
             <columns resizable="true">
-                <column property="name"/>
-                <column property="code"/>
-                <column property="category"/>
+                <column property="name" filterable="true"/>
+                <column property="code" filterable="true"/>
+                <column property="category" filterable="true"/>
             </columns>
         </dataGrid>
         <hbox id="lookupActions" visible="false">

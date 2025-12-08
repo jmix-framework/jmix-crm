@@ -16,6 +16,7 @@ import com.company.crm.model.user.User;
 import com.company.crm.model.user.UserActivity;
 import com.company.crm.model.user.UserTask;
 import com.company.crm.security.FullAccessRole;
+import io.jmix.core.SaveContext;
 import io.jmix.core.UnconstrainedDataManager;
 import io.jmix.security.role.assignment.RoleAssignment;
 import io.jmix.security.role.assignment.RoleAssignmentRepository;
@@ -368,6 +369,7 @@ public class DemoDataInitializer {
         int categoryItemsSize = categoryItems.size();
 
         List<Order> result = new ArrayList<>();
+        SaveContext saveContext = new SaveContext().setDiscardSaved(true);
         for (Client client : clients) {
             int n = random.nextInt(0, 9); // 0..8
             for (int i = 0; i < n; i++) {
@@ -385,16 +387,17 @@ public class DemoDataInitializer {
                     else order.setDiscountPercent(BigDecimal.valueOf(random.nextInt(1, 30)));
                 }
                 order.setStatus(OrderStatus.values()[random.nextInt(OrderStatus.values().length)]);
-                order = dataManager.save(order);
-                generateOrderItems(order, categoryItems.subList(random.nextInt(1, categoryItemsSize - 1), categoryItemsSize));
+                List<OrderItem> orderItems = generateOrderItems(order, categoryItems.subList(random.nextInt(1, categoryItemsSize - 1), categoryItemsSize));
+                saveContext.saving(order, orderItems);
                 result.add(order);
             }
         }
+        dataManager.save(saveContext);
         log.info("Generated {} orders", result.size());
         return result;
     }
 
-    private void generateOrderItems(Order order, Collection<CategoryItem> categoryItems) {
+    private List<OrderItem> generateOrderItems(Order order, Collection<CategoryItem> categoryItems) {
         log.info("Generating {} order items for order {}", categoryItems.size(), order.getId());
 
         ThreadLocalRandom random = ThreadLocalRandom.current();
@@ -404,7 +407,10 @@ public class DemoDataInitializer {
             OrderItem orderItem = dataManager.create(OrderItem.class);
             orderItem.setCategoryItem(categoryItem);
             orderItem.setOrder(order);
-            orderItem.setQuantity(BigDecimal.valueOf(random.nextInt(3)));
+            orderItem.setVatAmount(BigDecimal.valueOf(random.nextInt(100, 200)));
+            orderItem.setNetPrice(BigDecimal.valueOf(random.nextInt(1000, 10000)));
+            orderItem.setGrossPrice(BigDecimal.valueOf(random.nextInt(2000, 20000)));
+            orderItem.setQuantity(BigDecimal.valueOf(random.nextInt(2, 10)));
             generatedItems.add(orderItem);
         }
 
@@ -412,6 +418,7 @@ public class DemoDataInitializer {
         if (orderItems == null) orderItems = new ArrayList<>();
         orderItems.addAll(generatedItems);
         order.setOrderItems(orderItems);
+        return generatedItems;
     }
 
     private List<Invoice> generateInvoices(List<Order> orders) {

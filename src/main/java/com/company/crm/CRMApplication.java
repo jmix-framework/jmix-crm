@@ -1,5 +1,6 @@
 package com.company.crm;
 
+import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.component.page.AppShellConfigurator;
 import com.vaadin.flow.component.page.Push;
 import com.vaadin.flow.server.PWA;
@@ -17,6 +18,7 @@ import javax.sql.DataSource;
 @Theme(value = "crm")
 @PWA(name = "CRM", shortName = "CRM", offline = false)
 @SpringBootApplication
+@JsModule("./src/theme/color-scheme-switching-support.js")
 public class CRMApplication implements AppShellConfigurator {
 
     public static void main(String[] args) {

@@ -61,6 +61,7 @@ import static io.jmix.core.repository.JmixDataRepositoryUtils.buildRepositoryCon
 import static io.jmix.core.repository.JmixDataRepositoryUtils.extractEntityId;
 import static io.jmix.flowui.component.delegate.AbstractFieldDelegate.PROPERTY_INVALID;
 
+// TODO: charts?
 @Route(value = "categories", layout = MainView.class)
 @ViewController(id = "Category.list")
 @ViewDescriptor(path = "category-list-view.xml")

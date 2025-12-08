@@ -23,6 +23,10 @@ public final class UiUtils {
         return getCurrentUI().map(UI::getPage);
     }
 
+    public static void reloadCurrentPage() {
+        getCurrentPage().ifPresent(Page::reload);
+    }
+
     public static Optional<Registration> addBrowserWindowResizeListener(Consumer<BrowserWindowResizeEvent> onResize) {
         return getCurrentPage().map(page -> page.addBrowserWindowResizeListener(onResize::accept));
     }

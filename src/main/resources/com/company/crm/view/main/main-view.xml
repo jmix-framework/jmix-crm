@@ -46,6 +46,12 @@
                                     themeNames="non-checkable">
                             <action id="substituteUserAction" type="sec_userMenuSubstituteUser"/>
                         </actionItem>
+                        <actionItem id="themeItem" themeNames="non-checkable">
+                            <action id="themeAction" type="userMenu_themeSwitch"/>
+                        </actionItem>
+                        <actionItem id="languageItem" themeNames="non-checkable">
+                            <action id="languageAction" type="userMenu_languageSwitch"/>
+                        </actionItem>
                         <separator/>
                         <actionItem id="logoutMenuItem" ref="logoutAction"
                                     themeNames="non-checkable"/>

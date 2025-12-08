@@ -2,6 +2,7 @@ package com.company.crm.view.client;
 
 import com.company.crm.app.service.client.ClientService;
 import com.company.crm.app.service.user.UserService;
+import com.company.crm.app.util.ui.component.chart.ChartsUtils;
 import com.company.crm.app.util.ui.listener.resize.WidthResizeListener;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.client.ClientRepository;
@@ -19,26 +20,17 @@ import com.company.crm.view.main.MainView;
 import com.vaadin.flow.component.AbstractField.ComponentValueChangeEvent;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasValue;
-import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.formlayout.FormLayout;
-import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.router.Route;
 import io.jmix.chartsflowui.component.Chart;
 import io.jmix.chartsflowui.kit.component.model.DataSet;
-import io.jmix.chartsflowui.kit.component.model.Grid;
-import io.jmix.chartsflowui.kit.component.model.Title;
-import io.jmix.chartsflowui.kit.component.model.Tooltip;
-import io.jmix.chartsflowui.kit.component.model.series.PieSeries;
-import io.jmix.chartsflowui.kit.component.model.shared.FontStyle;
 import io.jmix.chartsflowui.kit.data.chart.ListChartItems;
 import io.jmix.core.Messages;
 import io.jmix.core.common.datastruct.Pair;
 import io.jmix.core.querycondition.LogicalCondition;
-import io.jmix.core.querycondition.PropertyCondition;
 import io.jmix.core.repository.JmixDataRepositoryContext;
 import io.jmix.core.security.CurrentAuthentication;
 import io.jmix.flowui.UiComponents;
-import io.jmix.flowui.asynctask.UiAsyncTasks;
 import io.jmix.flowui.component.checkbox.Switch;
 import io.jmix.flowui.component.details.JmixDetails;
 import io.jmix.flowui.component.genericfilter.GenericFilter;
@@ -55,9 +47,6 @@ import io.jmix.flowui.view.Target;
 import io.jmix.flowui.view.ViewComponent;
 import io.jmix.flowui.view.ViewController;
 import io.jmix.flowui.view.ViewDescriptor;
-import org.apache.commons.collections4.CollectionUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 
@@ -68,7 +57,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 import static com.company.crm.app.util.ui.listener.resize.WidthResizeListener.isWidthChanged;
@@ -83,8 +71,6 @@ import static io.jmix.core.querycondition.PropertyCondition.isCollectionEmpty;
 @DialogMode(width = "64em")
 public class ClientListView extends StandardListView<Client> implements WidthResizeListener {
 
-    private static final Logger log = LoggerFactory.getLogger(ClientListView.class);
-
     @Autowired
     private UserService userService;
     @Autowired
@@ -95,9 +81,7 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
     @Autowired
     private Messages messages;
     @Autowired
-    private UiComponents uiComponents;
-    @Autowired
-    private UiAsyncTasks uiAsyncTasks;
+    private ChartsUtils chartsUtils;
     @Autowired
     private CurrentAuthentication currentAuthentication;
 
@@ -122,12 +106,12 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
 
     private volatile int lastWidth = -1;
     private static final int widthBreakpoint = 600;
+    private final LogicalCondition filtersCondition = LogicalCondition.and();
 
     @Override
     public void configureUiForWidth(int width) {
         if (isWidthChanged(width, lastWidth, widthBreakpoint)) {
             lastWidth = width;
-            configureChartsBlock(width);
             configureFiltersPanel(width);
         }
     }
@@ -135,7 +119,7 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
     @Subscribe
     public void onInit(final InitEvent event) {
         initializeFilterFields();
-        initializeChartsAsync();
+        chartsUtils.initializeChartsAsync(getChartsLoaders());
     }
 
     @Install(to = "clientsDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
@@ -174,7 +158,13 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
     }
 
     private JmixDataRepositoryContext wrapContext(JmixDataRepositoryContext context) {
-        return new JmixDataRepositoryContext(context.fetchPlan(), buildFiltersCondition(), context.hints());
+        LogicalCondition resultCondition;
+        if (context.condition() != null) {
+            resultCondition = LogicalCondition.and(context.condition(), filtersCondition);
+        } else {
+            resultCondition = filtersCondition;
+        }
+        return new JmixDataRepositoryContext(context.fetchPlan(), resultCondition, context.hints());
     }
 
     private void initializeFilterFields() {
@@ -187,29 +177,41 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
     }
 
     private void applyFilters() {
-        clientsDl.setCondition(buildFiltersCondition());
+        updateFiltersCondition();
         clientsDl.load();
     }
 
-    private LogicalCondition buildFiltersCondition() {
-        Optional<String> searchByName = searchField.getOptionalValue();
-        Optional<ClientType> type = typeSelect.getOptionalValue();
-        Optional<User> accountManager = accountManagerSelect.getOptionalValue();
-        Optional<ClientCategory> category = categorySelect.getOptionalValue();
+    private void updateFiltersCondition() {
+        filtersCondition.getConditions().clear();
+        addSearchByNameCondition();
+        addSearchByTypeCondition();
+        addSearchByManagerCondition();
+        addSearchByCategoryCondition();
+    }
 
-        LogicalCondition resultCondition = advancedFilter.getQueryCondition();
+    private void addSearchByNameCondition() {
+        searchField.getOptionalValue().ifPresent(name ->
+                filtersCondition.add(contains("name", name)));
+    }
 
-        type.ifPresent(value -> resultCondition.add(contains("type", value)));
-        accountManager.ifPresent(value -> resultCondition.add(equal("accountManager", value)));
-        searchByName.ifPresent(name -> resultCondition.add(contains("name", name)));
-        category.ifPresent(value -> {
+    private void addSearchByTypeCondition() {
+        typeSelect.getOptionalValue().ifPresent(type ->
+                filtersCondition.add(equal("type", type)));
+    }
+
+    private void addSearchByManagerCondition() {
+        accountManagerSelect.getOptionalValue().ifPresent(manager ->
+                filtersCondition.add(equal("accountManager", manager)));
+    }
+
+    private void addSearchByCategoryCondition() {
+        categorySelect.getOptionalValue().ifPresent(value -> {
             switch (value) {
-                case WITH_ORDERS -> resultCondition.add(isCollectionEmpty("orders", false));
+                case WITH_ORDERS -> filtersCondition.add(isCollectionEmpty("orders", false));
                 // FIXME: distinct does not work here for some reason
-                case WITH_PAYMENTS -> resultCondition.add(isCollectionEmpty("invoices.payments", false));
+                case WITH_PAYMENTS -> filtersCondition.add(isCollectionEmpty("invoices.payments", false));
             }
         });
-        return resultCondition;
     }
 
     private void configureFiltersPanel(int width) {
@@ -220,49 +222,7 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
         }
     }
 
-    private void configureChartsBlock(int width) {
-        if (width < widthBreakpoint) {
-            JmixDetails details = wrapToDetails("Charts", chartsBlock);
-            getContent().addComponentAtIndex(0, details);
-        } else {
-            getContent().addComponentAtIndex(0, chartsBlock);
-        }
-    }
-
-    private JmixDetails wrapToDetails(String summaryText, Component component) {
-        JmixDetails details = uiComponents.create(JmixDetails.class);
-        details.setWidthFull();
-        details.add(component);
-        details.setSummaryText(summaryText);
-        return details;
-    }
-
-    private void initializeChartsAsync() {
-        chartsBlock.removeAll();
-
-        var chart2DataSetLoader = getChart2DataSetLoader();
-
-        uiAsyncTasks.supplierConfigurer(() -> {
-                    var chartDataSetters = new ArrayList<Runnable>();
-                    chart2DataSetLoader.forEach((chart, dataSetLoader) -> {
-                        DataSet dataSet = dataSetLoader.get();
-                        chartDataSetters.add(() -> {
-                            chart.withDataSet(dataSet);
-                            SkeletonStyler.remove(chart);
-                        });
-                    });
-                    return chartDataSetters;
-                })
-                .withTimeout(5, TimeUnit.SECONDS)
-                .withResultHandler(r -> r.forEach(Runnable::run))
-                .withExceptionHandler(e -> {
-                    log.error(e.getMessage(), e);
-                    SkeletonStyler.remove(chart2DataSetLoader.keySet());
-                })
-                .supplyAsync();
-    }
-
-    private HashMap<Chart, Supplier<DataSet>> getChart2DataSetLoader() {
+    private Map<Chart, Supplier<DataSet>> getChartsLoaders() {
         var chart2DataSetLoader = new HashMap<Chart, Supplier<DataSet>>();
 
         new ArrayList<Pair<Chart, Supplier<DataSet>>>() {{
@@ -280,45 +240,18 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
     }
 
     private Pair<Chart, Supplier<DataSet>> createBestBuyersChart() {
-        Chart chart = createChart("Best Buyers");
+        Chart chart = chartsUtils.createDefaulListViewTopChart("Best Buyers");
         return new Pair<>(chart, this::createBestBuyersChartDataSet);
     }
 
     private Pair<Chart, Supplier<DataSet>> createClientCategoriesChart() {
-        Chart chart = createChart("By Category");
+        Chart chart = chartsUtils.createDefaulListViewTopChart("By Category");
         return new Pair<>(chart, this::createClientsCategoriesDataSet);
     }
 
     private Pair<Chart, Supplier<DataSet>> createClientsTypesChart() {
-        Chart chart = createChart("By Type");
+        Chart chart = chartsUtils.createDefaulListViewTopChart("By Type");
         return new Pair<>(chart, this::createClientsByTypeChartDataSet);
-    }
-
-    private Chart createChart(String title) {
-        Chart chart = uiComponents.create(Chart.class)
-                .withTooltip(new Tooltip())
-                .withSeries(new PieSeries()
-                        .withAnimation(true))
-                .withTitle(new Title()
-                        .withText(title)
-                        .withBottom("0")
-                        .withRight("10%")
-                        .withTextAlign(Title.TextAlign.CENTER)
-                        .withTextVerticalAlign(Title.TextVerticalAlign.BOTTOM)
-                        .withTextStyle(new Title.TextStyle()
-                                .withFontSize(12)
-                                .withFontStyle(FontStyle.NORMAL)))
-                .withGrid(new Grid()
-                        .withShow(false));
-
-        applyDefaultChartSettings(chart);
-
-        return chart;
-    }
-
-    private void applyDefaultChartSettings(Chart chart) {
-        chart.setHeight(12, Unit.EM);
-        chart.setMinWidth(20, Unit.EM);
     }
 
     private DataSet createBestBuyersChartDataSet() {
