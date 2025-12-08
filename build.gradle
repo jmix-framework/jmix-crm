@@ -11,6 +11,10 @@ jmix {
     bomVersion = '2.7.1'
 }
 
+bootJar {
+    archiveFileName = "crm.jar"
+}
+
 java {
     sourceCompatibility = JavaVersion.VERSION_21
     targetCompatibility = JavaVersion.VERSION_21
