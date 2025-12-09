@@ -1,5 +1,6 @@
 package com.company.crm.app.util.init;
 
+import com.company.crm.model.address.Address;
 import com.company.crm.model.catalog.category.Category;
 import com.company.crm.model.catalog.item.CategoryItem;
 import com.company.crm.model.catalog.item.CategoryItemComment;
@@ -41,6 +42,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -316,7 +318,7 @@ public class DemoDataInitializer {
             Client client = dataManager.create(Client.class);
             client.setName(faker.company().name());
             client.setFullName(faker.company().name() + " " + faker.company().suffix());
-            client.setAddress(faker.address().fullAddress());
+            client.setAddress(createAddressFrom(faker.address()));
             client.setType(ClientType.values()[random.nextInt(ClientType.values().length)]);
             client.setVatNumber(randomVatLike(random));
             client.setRegNumber("REG-" + (1000 + random.nextInt(9000)) + (i % 10));
@@ -327,6 +329,17 @@ public class DemoDataInitializer {
         }
         log.info("Generated {} clients", result.size());
         return result;
+    }
+
+    private Address createAddressFrom(net.datafaker.providers.base.Address fakerAddress) {
+        Address address = dataManager.create(Address.class);
+        address.setPostalCode(fakerAddress.postcode());
+        address.setCountry(fakerAddress.country());
+        address.setCity(fakerAddress.city());
+        address.setStreet(fakerAddress.streetName());
+        address.setBuilding(fakerAddress.buildingNumber());
+        address.setApartment(ThreadLocalRandom.current().nextInt(50) + "");
+        return address;
     }
 
     private void generateContacts(List<Client> clients) {

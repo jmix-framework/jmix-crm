@@ -1,6 +1,7 @@
 package com.company.crm.model.invoice;
 
-import com.company.crm.model.base.VersionedEntity;
+import com.company.crm.app.annotation.TrackedByUserActivityRecorder;
+import com.company.crm.model.base.FullAuditEntity;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.order.Order;
 import com.company.crm.model.payment.Payment;
@@ -23,13 +24,14 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
+@Entity
 @JmixEntity
 @Table(name = "INVOICE", indexes = {
         @Index(name = "IDX_INVOICE_ORDER", columnList = "ORDER_ID"),
         @Index(name = "IDX_INVOICE_CLIENT", columnList = "CLIENT_ID")
 })
-@Entity
-public class Invoice extends VersionedEntity {
+@TrackedByUserActivityRecorder
+public class Invoice extends FullAuditEntity {
 
     @JoinColumn(name = "CLIENT_ID", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

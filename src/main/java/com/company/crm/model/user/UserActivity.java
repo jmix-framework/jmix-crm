@@ -1,7 +1,7 @@
 package com.company.crm.model.user;
 
 import com.company.crm.model.base.CreateAuditEntity;
-import com.company.crm.model.base.VersionedEntity;
+import com.company.crm.model.base.FullAuditEntity;
 import io.jmix.core.DeletePolicy;
 import io.jmix.core.entity.annotation.OnDeleteInverse;
 import io.jmix.core.metamodel.annotation.InstanceName;

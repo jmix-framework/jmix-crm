@@ -8,6 +8,8 @@
     <!-- DO NOT REMOVE. This is a master changelog that runs all other changelogs. -->
 
     <!-- TYPE MAPPINGS -->
+    <property name="offsetDateTime.type" dbms="hsqldb" value="timestamp with time zone"/>
+    <property name="offsetDateTime.type" dbms="postgresql" value="timestamp with time zone"/>
     <property name="offsetDateTime.type"
               dbms="postgresql,hsqldb"
               value="TIMESTAMPTZ"/>

@@ -8,6 +8,7 @@ import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.router.Route;
 import io.jmix.core.EntityStates;
+import io.jmix.core.security.CurrentAuthentication;
 import io.jmix.flowui.Notifications;
 import io.jmix.flowui.component.textfield.TypedTextField;
 import io.jmix.flowui.view.*;
@@ -43,6 +44,8 @@ public class UserDetailView extends StandardDetailView<User> {
     private MessageBundle messageBundle;
 
     private boolean newEntity;
+    @Autowired
+    private CurrentAuthentication currentAuthentication;
 
     @Subscribe
     private void onInit(final InitEvent event) {
@@ -52,13 +55,15 @@ public class UserDetailView extends StandardDetailView<User> {
     @Subscribe
     private void onInitEntity(final InitEntityEvent<User> event) {
         usernameField.setReadOnly(false);
-        passwordField.setVisible(true);
-        confirmPasswordField.setVisible(true);
     }
 
     @Subscribe
     private void onReady(final ReadyEvent event) {
+        boolean canUpdatePassword = isShowPasswordFields();
+        passwordField.setVisible(canUpdatePassword);
+
         if (entityStates.isNew(getEditedEntity())) {
+            confirmPasswordField.setVisible(true);
             usernameField.focus();
         }
     }
@@ -73,9 +78,10 @@ public class UserDetailView extends StandardDetailView<User> {
 
     @Subscribe
     private void onBeforeSave(final BeforeSaveEvent event) {
-        if (entityStates.isNew(getEditedEntity())) {
+        if (passwordField.isVisible()) {
             getEditedEntity().setPassword(passwordEncoder.encode(passwordField.getValue()));
-
+        }
+        if (entityStates.isNew(getEditedEntity())) {
             newEntity = true;
         }
     }
@@ -90,5 +96,9 @@ public class UserDetailView extends StandardDetailView<User> {
 
             newEntity = false;
         }
+    }
+
+    private boolean isShowPasswordFields() {
+        return getEditedEntity().equals(currentAuthentication.getUser());
     }
 }

@@ -4,6 +4,7 @@ import com.company.crm.model.client.Client;
 import com.company.crm.model.client.ClientRepository;
 import com.company.crm.model.user.User;
 import com.company.crm.view.client.ClientListView;
+import com.company.crm.view.user.UserDetailView;
 import com.google.common.base.Strings;
 import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.Component;
@@ -20,13 +21,16 @@ import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.Route;
 import io.jmix.core.Messages;
 import io.jmix.core.Metadata;
+import io.jmix.core.security.CurrentAuthentication;
 import io.jmix.core.usersubstitution.CurrentUserSubstitution;
+import io.jmix.flowui.DialogWindows;
 import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.ViewNavigators;
 import io.jmix.flowui.app.main.StandardMainView;
 import io.jmix.flowui.component.SupportsTypedValue.TypedValueChangeEvent;
 import io.jmix.flowui.component.textfield.TypedTextField;
 import io.jmix.flowui.component.virtuallist.JmixVirtualList;
+import io.jmix.flowui.kit.action.ActionPerformedEvent;
 import io.jmix.flowui.kit.component.button.JmixButton;
 import io.jmix.flowui.view.Install;
 import io.jmix.flowui.view.Subscribe;
@@ -57,6 +61,10 @@ public class MainView extends StandardMainView {
     @Autowired
     private ClientRepository clientRepository;
     @Autowired
+    private DialogWindows dialogWindows;
+    @Autowired
+    private CurrentAuthentication currentAuthentication;
+    @Autowired
     private CurrentUserSubstitution currentUserSubstitution;
 
     @ViewComponent
@@ -66,6 +74,13 @@ public class MainView extends StandardMainView {
 
     final Popover[] searchPopover = {null};
     final Popover[] notificationsPopover = {null};
+
+    @Subscribe("userMenu.profileItem.profileAction")
+    private void onUserMenuProfileItemProfileAction(final ActionPerformedEvent event) {
+        dialogWindows.detail(this, User.class)
+                .editEntity(((User) currentAuthentication.getUser()))
+                .open();
+    }
 
     @Install(to = "userMenu", subject = "buttonRenderer")
     private Component userMenuButtonRenderer(final UserDetails userDetails) {
@@ -171,7 +186,7 @@ public class MainView extends StandardMainView {
     }
 
     private void onNotificationButtonClick() {
-        Optional.ofNullable(notificationsPopover[0]).ifPresent(Popover::close);
+        Optional.ofNullable(notificationsPopover[0]).ifPresent(Popover::removeFromParent);
 
         HorizontalLayout layout = new HorizontalLayout(VaadinIcon.CHECK.create(), new Span("Notifications not found"));
         layout.setSizeFull();
@@ -191,7 +206,7 @@ public class MainView extends StandardMainView {
 
 
     private void onSearchFieldValueChange(TypedValueChangeEvent<TypedTextField<String>, String> event) {
-        Optional.ofNullable(searchPopover[0]).ifPresent(Popover::close);
+        Optional.ofNullable(searchPopover[0]).ifPresent(Popover::removeFromParent);
 
         if (StringUtils.isBlank(event.getValue()) || !event.isFromClient()) {
             return;

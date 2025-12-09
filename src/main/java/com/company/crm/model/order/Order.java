@@ -1,6 +1,7 @@
 package com.company.crm.model.order;
 
-import com.company.crm.model.base.VersionedEntity;
+import com.company.crm.app.annotation.TrackedByUserActivityRecorder;
+import com.company.crm.model.base.FullAuditEntity;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.datatype.PriceDataType;
 import io.jmix.core.metamodel.annotation.Composition;
@@ -23,12 +24,13 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
+@Entity(name = "Order_")
 @JmixEntity
 @Table(name = "ORDER_", indexes = {
         @Index(name = "IDX_ORDER__CLIENT", columnList = "CLIENT_ID")
 })
-@Entity(name = "Order_")
-public class Order extends VersionedEntity {
+@TrackedByUserActivityRecorder
+public class Order extends FullAuditEntity {
 
     @JoinColumn(name = "CLIENT_ID", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

@@ -1,6 +1,6 @@
 package com.company.crm.model.order;
 
-import com.company.crm.model.base.VersionedEntity;
+import com.company.crm.model.base.FullAuditEntity;
 import com.company.crm.model.catalog.item.CategoryItem;
 import com.company.crm.model.datatype.PriceDataType;
 import io.jmix.core.DeletePolicy;
@@ -25,7 +25,7 @@ import java.math.BigDecimal;
         @Index(name = "IDX_ORDER_ITEM_ORDER", columnList = "ORDER_ID")
 })
 @Entity
-public class OrderItem extends VersionedEntity {
+public class OrderItem extends FullAuditEntity {
 
     @OnDeleteInverse(DeletePolicy.UNLINK)
     @JoinColumn(name = "CATEGORY_ITEM_ID")

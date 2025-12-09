@@ -33,10 +33,23 @@
                              primaryKey="true"
                              primaryKeyName="PK_USER_TASK"/>
             </column>
+            <column name="CREATED_BY"
+                    type="VARCHAR(255)"/>
+            <column name="CREATED_DATE"
+                    type="${offsetDateTime.type}"/>
+            <column name="UPDATED_BY"
+                    type="VARCHAR(255)"/>
+            <column name="UPDATED_DATE"
+                    type="${offsetDateTime.type}"/>
+            <column name="DELETED_BY"
+                    type="VARCHAR(255)"/>
+            <column name="DELETED_DATE"
+                    type="${offsetDateTime.type}"/>
             <column name="VERSION"
                     type="INT">
                 <constraints nullable="false"/>
             </column>
+
             <column name="IS_COMPLETED"
                     type="BOOLEAN"/>
             <column name="TITLE"
@@ -55,28 +68,66 @@
             <column name="ID" type="UUID">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="PK_CLIENT"/>
             </column>
+            <column name="CREATED_BY"
+                    type="VARCHAR(255)"/>
+            <column name="CREATED_DATE"
+                    type="${offsetDateTime.type}"/>
+            <column name="UPDATED_BY"
+                    type="VARCHAR(255)"/>
+            <column name="UPDATED_DATE"
+                    type="${offsetDateTime.type}"/>
+            <column name="DELETED_BY"
+                    type="VARCHAR(255)"/>
+            <column name="DELETED_DATE"
+                    type="${offsetDateTime.type}"/>
             <column name="VERSION" type="INT">
                 <constraints nullable="false"/>
             </column>
+
             <column name="NAME" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
             <column name="FULL_NAME" type="VARCHAR(255)"/>
-            <column name="ADDRESS" type="VARCHAR(255)"/>
             <column name="TYPE_" type="VARCHAR(255)"/>
             <column name="VAT_NUMBER" type="VARCHAR(255)"/>
             <column name="REG_NUMBER" type="VARCHAR(255)"/>
             <column name="WEBSITE" type="VARCHAR(255)"/>
             <column name="ACCOUNT_MANAGER_ID" type="UUID"/>
+
+            <column name="APARTMENT"
+                    type="VARCHAR(255)"/>
+            <column name="CITY"
+                    type="VARCHAR(255)"/>
+            <column name="COUNTRY"
+                    type="VARCHAR(255)"/>
+            <column name="HOUSE"
+                    type="VARCHAR(255)"/>
+            <column name="POSTAL_CODE"
+                    type="VARCHAR(255)"/>
+            <column name="STREET"
+                    type="VARCHAR(255)"/>
         </createTable>
 
         <createTable tableName="CONTACT">
             <column name="ID" type="UUID">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="PK_CONTACT"/>
             </column>
+            <column name="CREATED_BY"
+                    type="VARCHAR(255)"/>
+            <column name="CREATED_DATE"
+                    type="${offsetDateTime.type}"/>
+            <column name="UPDATED_BY"
+                    type="VARCHAR(255)"/>
+            <column name="UPDATED_DATE"
+                    type="${offsetDateTime.type}"/>
+            <column name="DELETED_BY"
+                    type="VARCHAR(255)"/>
+            <column name="DELETED_DATE"
+                    type="${offsetDateTime.type}"/>
             <column name="VERSION" type="INT">
                 <constraints nullable="false"/>
             </column>
+
             <column name="CLIENT_ID" type="UUID">
                 <constraints nullable="false"/>
             </column>
@@ -94,9 +145,22 @@
             <column name="ID" type="UUID">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="PK_INVOICE"/>
             </column>
+            <column name="CREATED_BY"
+                    type="VARCHAR(255)"/>
+            <column name="CREATED_DATE"
+                    type="${offsetDateTime.type}"/>
+            <column name="UPDATED_BY"
+                    type="VARCHAR(255)"/>
+            <column name="UPDATED_DATE"
+                    type="${offsetDateTime.type}"/>
+            <column name="DELETED_BY"
+                    type="VARCHAR(255)"/>
+            <column name="DELETED_DATE"
+                    type="${offsetDateTime.type}"/>
             <column name="VERSION" type="INT">
                 <constraints nullable="false"/>
             </column>
+
             <column name="CLIENT_ID" type="UUID">
                 <constraints nullable="false"/>
             </column>
@@ -113,9 +177,22 @@
             <column name="ID" type="UUID">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="PK_ORDER_"/>
             </column>
+            <column name="CREATED_BY"
+                    type="VARCHAR(255)"/>
+            <column name="CREATED_DATE"
+                    type="${offsetDateTime.type}"/>
+            <column name="UPDATED_BY"
+                    type="VARCHAR(255)"/>
+            <column name="UPDATED_DATE"
+                    type="${offsetDateTime.type}"/>
+            <column name="DELETED_BY"
+                    type="VARCHAR(255)"/>
+            <column name="DELETED_DATE"
+                    type="${offsetDateTime.type}"/>
             <column name="VERSION" type="INT">
                 <constraints nullable="false"/>
             </column>
+
             <column name="CLIENT_ID" type="UUID">
                 <constraints nullable="false"/>
             </column>
@@ -132,9 +209,22 @@
             <column name="ID" type="UUID">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="PK_PAYMENT"/>
             </column>
+            <column name="CREATED_BY"
+                    type="VARCHAR(255)"/>
+            <column name="CREATED_DATE"
+                    type="${offsetDateTime.type}"/>
+            <column name="UPDATED_BY"
+                    type="VARCHAR(255)"/>
+            <column name="UPDATED_DATE"
+                    type="${offsetDateTime.type}"/>
+            <column name="DELETED_BY"
+                    type="VARCHAR(255)"/>
+            <column name="DELETED_DATE"
+                    type="${offsetDateTime.type}"/>
             <column name="VERSION" type="INT">
                 <constraints nullable="false"/>
             </column>
+
             <column name="INVOICE_ID" type="UUID">
                 <constraints nullable="false"/>
             </column>
@@ -148,11 +238,24 @@
                              primaryKey="true"
                              primaryKeyName="PK_CATEGORY"/>
             </column>
-            <column name="PARENT_ID" type="UUID"/>
+            <column name="CREATED_BY"
+            type="VARCHAR(255)"/>
+            <column name="CREATED_DATE"
+            type="${offsetDateTime.type}"/>
+            <column name="UPDATED_BY"
+            type="VARCHAR(255)"/>
+            <column name="UPDATED_DATE"
+            type="${offsetDateTime.type}"/>
+            <column name="DELETED_BY"
+                    type="VARCHAR(255)"/>
+            <column name="DELETED_DATE"
+                    type="${offsetDateTime.type}"/>
             <column name="VERSION"
                     type="INT">
                 <constraints nullable="false"/>
             </column>
+
+            <column name="PARENT_ID" type="UUID"/>
             <column name="NAME"
                     type="VARCHAR(255)">
                 <constraints nullable="false"/>
@@ -166,13 +269,26 @@
                              primaryKey="true"
                              primaryKeyName="PK_CATEGORY_ITEM"/>
             </column>
+            <column name="CREATED_BY"
+                    type="VARCHAR(255)"/>
+            <column name="CREATED_DATE"
+                    type="${offsetDateTime.type}"/>
+            <column name="UPDATED_BY"
+                    type="VARCHAR(255)"/>
+            <column name="UPDATED_DATE"
+                    type="${offsetDateTime.type}"/>
+            <column name="DELETED_BY"
+                    type="VARCHAR(255)"/>
+            <column name="DELETED_DATE"
+                    type="${offsetDateTime.type}"/>
+            <column name="VERSION" type="INT">
+                <constraints nullable="false"/>
+            </column>
+
             <column name="CODE" type="VARCHAR(255)">
                 <constraints nullable="false" unique="true"/>
             </column>
             <column name="UOM" type="VARCHAR(255)"/>
-            <column name="VERSION" type="INT">
-                <constraints nullable="false"/>
-            </column>
             <column name="CATEGORY_ID"
                     type="UUID"/>
             <column name="NAME"
@@ -192,6 +308,7 @@
                     type="VARCHAR(255)"/>
             <column name="CREATED_DATE"
                     type="${offsetDateTime.type}"/>
+
             <column name="CATEGORY_ITEM_ID" type="UUID">
                 <constraints nullable="false"/>
             </column>
@@ -209,10 +326,23 @@
                              primaryKey="true"
                              primaryKeyName="PK_ORDER_ITEM"/>
             </column>
+            <column name="CREATED_BY"
+                    type="VARCHAR(255)"/>
+            <column name="CREATED_DATE"
+                    type="${offsetDateTime.type}"/>
+            <column name="UPDATED_BY"
+                    type="VARCHAR(255)"/>
+            <column name="UPDATED_DATE"
+                    type="${offsetDateTime.type}"/>
+            <column name="DELETED_BY"
+                    type="VARCHAR(255)"/>
+            <column name="DELETED_DATE"
+                    type="${offsetDateTime.type}"/>
             <column name="VERSION"
                     type="INT">
                 <constraints nullable="false"/>
             </column>
+
             <column name="CATEGORY_ITEM_ID" type="UUID"/>
             <column name="QUANTITY"
                     type="DECIMAL(19, 2)">
@@ -247,19 +377,20 @@
                              primaryKey="true"
                              primaryKeyName="PK_CRM_SETTINGS"/>
             </column>
-            <column name="VERSION" type="INT">
-                <constraints nullable="false"/>
-            </column>
             <column name="CREATED_BY"
                     type="VARCHAR(255)"/>
-            <column name="NAVIGATION_BAR_TOUCH_OPTIMIZED"
-                    type="BOOLEAN"/>
             <column name="CREATED_DATE"
                     type="${offsetDateTime.type}"/>
             <column name="LAST_MODIFIED_BY"
                     type="VARCHAR(255)"/>
             <column name="LAST_MODIFIED_DATE"
                     type="${offsetDateTime.type}"/>
+            <column name="VERSION" type="INT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="NAVIGATION_BAR_TOUCH_OPTIMIZED"
+                    type="BOOLEAN"/>
         </createTable>
     </changeSet>
 

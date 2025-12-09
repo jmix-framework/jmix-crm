@@ -1,6 +1,6 @@
 package com.company.crm.model.user;
 
-import com.company.crm.model.base.VersionedEntity;
+import com.company.crm.model.base.FullAuditEntity;
 import io.jmix.core.HasTimeZone;
 import io.jmix.core.annotation.Secret;
 import io.jmix.core.entity.annotation.SystemLevel;
@@ -27,7 +27,7 @@ import java.util.List;
 @Table(name = "USER_", indexes = {
         @Index(name = "IDX_USER__ON_USERNAME", columnList = "USERNAME", unique = true)
 })
-public class User extends VersionedEntity implements JmixUserDetails, HasTimeZone {
+public class User extends FullAuditEntity implements JmixUserDetails, HasTimeZone {
 
     @Column(name = "USERNAME", nullable = false)
     private String username;

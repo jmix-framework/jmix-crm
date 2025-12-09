@@ -1,17 +1,20 @@
 package com.company.crm.model.client;
 
-import com.company.crm.model.base.VersionedEntity;
+import com.company.crm.app.annotation.TrackedByUserActivityRecorder;
+import com.company.crm.model.address.Address;
+import com.company.crm.model.base.FullAuditEntity;
 import com.company.crm.model.contact.Contact;
 import com.company.crm.model.invoice.Invoice;
 import com.company.crm.model.order.Order;
 import com.company.crm.model.payment.Payment;
 import com.company.crm.model.user.User;
+import io.jmix.core.entity.annotation.EmbeddedParameters;
 import io.jmix.core.metamodel.annotation.Composition;
 import io.jmix.core.metamodel.annotation.DependsOnProperties;
 import io.jmix.core.metamodel.annotation.InstanceName;
 import io.jmix.core.metamodel.annotation.JmixEntity;
-import io.jmix.core.metamodel.annotation.JmixProperty;
 import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
@@ -23,10 +26,11 @@ import jakarta.persistence.Table;
 import java.util.ArrayList;
 import java.util.List;
 
+@Entity
 @JmixEntity
 @Table(name = "CLIENT")
-@Entity
-public class Client extends VersionedEntity {
+@TrackedByUserActivityRecorder
+public class Client extends FullAuditEntity {
 
     @InstanceName
     @Column(name = "NAME", nullable = false)
@@ -43,8 +47,9 @@ public class Client extends VersionedEntity {
     @Column(name = "FULL_NAME")
     private String fullName;
 
-    @Column(name = "ADDRESS")
-    private String address;
+    @Embedded
+    @EmbeddedParameters(nullAllowed = false)
+    private Address address;
 
     @Column(name = "TYPE_")
     private String type;
@@ -145,11 +150,11 @@ public class Client extends VersionedEntity {
         this.vatNumber = vatNumber;
     }
 
-    public String getAddress() {
+    public Address getAddress() {
         return address;
     }
 
-    public void setAddress(String address) {
+    public void setAddress(Address address) {
         this.address = address;
     }
 

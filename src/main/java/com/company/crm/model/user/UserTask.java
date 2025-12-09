@@ -1,6 +1,6 @@
 package com.company.crm.model.user;
 
-import com.company.crm.model.base.VersionedEntity;
+import com.company.crm.model.base.FullAuditEntity;
 import io.jmix.core.DeletePolicy;
 import io.jmix.core.entity.annotation.OnDeleteInverse;
 import io.jmix.core.metamodel.annotation.InstanceName;
@@ -21,7 +21,7 @@ import java.time.LocalDate;
         @Index(name = "IDX_USER_TASK_AUTHOR", columnList = "AUTHOR_ID")
 })
 @Entity
-public class UserTask extends VersionedEntity {
+public class UserTask extends FullAuditEntity {
 
     @Column(name = "IS_COMPLETED")
     private Boolean isCompleted;

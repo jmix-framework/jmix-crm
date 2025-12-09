@@ -6,12 +6,14 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.MappedSuperclass;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.lang.Nullable;
 
 import java.time.OffsetDateTime;
 
 @JmixEntity
 @MappedSuperclass
 public class CreateAuditEntity extends UuidEntity {
+
     @CreatedBy
     @Column(name = "CREATED_BY")
     private String createdBy;
@@ -20,6 +22,7 @@ public class CreateAuditEntity extends UuidEntity {
     @Column(name = "CREATED_DATE")
     private OffsetDateTime createdDate;
 
+    @Nullable
     public OffsetDateTime getCreatedDate() {
         return createdDate;
     }
@@ -28,6 +31,7 @@ public class CreateAuditEntity extends UuidEntity {
         this.createdDate = createdDate;
     }
 
+    @Nullable
     public String getCreatedBy() {
         return createdBy;
     }

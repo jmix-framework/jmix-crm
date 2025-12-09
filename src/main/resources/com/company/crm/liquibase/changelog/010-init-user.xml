@@ -14,6 +14,16 @@
             <column name="ID" type="${uuid.type}">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
+            <column name="CREATED_BY"
+                    type="VARCHAR(255)"/>
+            <column name="CREATED_DATE"
+                    type="${offsetDateTime.type}"/>
+            <column name="UPDATED_BY"
+                    type="VARCHAR(255)"/>
+            <column name="UPDATED_DATE"
+                    type="${offsetDateTime.type}"/>
+            <column name="DELETED_BY" type="VARCHAR(255)"/>
+            <column name="DELETED_DATE" type="${offsetDateTime.type}"/>
             <column name="VERSION" type="int">
                 <constraints nullable="false"/>
             </column>

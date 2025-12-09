@@ -19,6 +19,7 @@ import javax.sql.DataSource;
 @PWA(name = "CRM", shortName = "CRM", offline = false)
 @SpringBootApplication
 @JsModule("./src/theme/color-scheme-switching-support.js")
+@JsModule("@vaadin/vaadin-lumo-styles/presets/compact.js")
 public class CRMApplication implements AppShellConfigurator {
 
     public static void main(String[] args) {

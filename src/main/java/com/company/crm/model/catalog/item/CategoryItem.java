@@ -1,6 +1,7 @@
 package com.company.crm.model.catalog.item;
 
-import com.company.crm.model.base.VersionedEntity;
+import com.company.crm.app.annotation.TrackedByUserActivityRecorder;
+import com.company.crm.model.base.FullAuditEntity;
 import com.company.crm.model.catalog.category.Category;
 import io.jmix.core.metamodel.annotation.Composition;
 import io.jmix.core.metamodel.annotation.InstanceName;
@@ -17,12 +18,13 @@ import jakarta.validation.constraints.NotNull;
 
 import java.util.List;
 
+@Entity
 @JmixEntity
 @Table(name = "CATEGORY_ITEM", indexes = {
         @Index(name = "IDX_CATEGORY_ITEM_CATEGORY", columnList = "CATEGORY_ID")
 })
-@Entity
-public class CategoryItem extends VersionedEntity {
+@TrackedByUserActivityRecorder
+public class CategoryItem extends FullAuditEntity {
 
     @InstanceName
     @Column(name = "NAME", nullable = false)

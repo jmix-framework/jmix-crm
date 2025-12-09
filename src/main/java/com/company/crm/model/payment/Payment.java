@@ -1,6 +1,7 @@
 package com.company.crm.model.payment;
 
-import com.company.crm.model.base.VersionedEntity;
+import com.company.crm.app.annotation.TrackedByUserActivityRecorder;
+import com.company.crm.model.base.FullAuditEntity;
 import com.company.crm.model.datatype.PriceDataType;
 import com.company.crm.model.invoice.Invoice;
 import io.jmix.core.metamodel.annotation.InstanceName;
@@ -17,12 +18,13 @@ import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+@Entity
 @JmixEntity
 @Table(name = "PAYMENT", indexes = {
         @Index(name = "IDX_PAYMENT_INVOICE", columnList = "INVOICE_ID")
 })
-@Entity
-public class Payment extends VersionedEntity {
+@TrackedByUserActivityRecorder
+public class Payment extends FullAuditEntity {
 
     @JoinColumn(name = "INVOICE_ID", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

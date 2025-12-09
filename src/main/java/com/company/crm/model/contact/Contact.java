@@ -1,6 +1,6 @@
 package com.company.crm.model.contact;
 
-import com.company.crm.model.base.VersionedEntity;
+import com.company.crm.model.base.FullAuditEntity;
 import com.company.crm.model.client.Client;
 import io.jmix.core.metamodel.annotation.InstanceName;
 import io.jmix.core.metamodel.annotation.JmixEntity;
@@ -20,7 +20,7 @@ import java.time.LocalDate;
         @Index(name = "IDX_CONTACT_CLIENT", columnList = "CLIENT_ID")
 })
 @Entity
-public class Contact extends VersionedEntity {
+public class Contact extends FullAuditEntity {
 
     @InstanceName
     @JoinColumn(name = "CLIENT_ID", nullable = false)

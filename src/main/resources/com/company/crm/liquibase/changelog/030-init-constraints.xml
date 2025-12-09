@@ -74,18 +74,12 @@
 
     <changeSet author="b2b-crm" id="2">
         <validCheckSum>ANY</validCheckSum>
-        <addForeignKeyConstraint baseColumnNames="USER_ID"
-                                 baseTableName="USER_ACTIVITY"
-                                 constraintName="FK_USER_ACTIVITY_ON_USER"
-                                 onDelete="CASCADE"
-                                 referencedColumnNames="ID"
+        <addForeignKeyConstraint baseColumnNames="USER_ID" baseTableName="USER_ACTIVITY"
+                                 constraintName="FK_USER_ACTIVITY_ON_USER" referencedColumnNames="ID"
                                  referencedTableName="USER_"/>
 
-        <addForeignKeyConstraint baseColumnNames="AUTHOR_ID"
-                                 baseTableName="USER_TASK"
-                                 constraintName="FK_USER_TASK_ON_AUTHOR"
-                                 onDelete="CASCADE"
-                                 referencedColumnNames="ID"
+        <addForeignKeyConstraint baseColumnNames="AUTHOR_ID" baseTableName="USER_TASK"
+                                 constraintName="FK_USER_TASK_ON_AUTHOR" referencedColumnNames="ID"
                                  referencedTableName="USER_"/>
 
         <addForeignKeyConstraint baseColumnNames="CATEGORY_ID"
@@ -116,32 +110,20 @@
                                  constraintName="FK_PAYMENT_ON_INVOICE" referencedColumnNames="ID"
                                  referencedTableName="INVOICE"/>
 
-        <addForeignKeyConstraint baseColumnNames="CATEGORY_ITEM_ID"
-                                 baseTableName="CATEGORY_ITEM_COMMENT"
-                                 constraintName="FK_CATEGORY_ITEM_COMMENT_ON_CATEGORY_ITEM"
-                                 onDelete="CASCADE"
-                                 referencedColumnNames="ID"
+        <addForeignKeyConstraint baseColumnNames="CATEGORY_ITEM_ID" baseTableName="CATEGORY_ITEM_COMMENT"
+                                 constraintName="FK_CATEGORY_ITEM_COMMENT_ON_CATEGORY_ITEM" referencedColumnNames="ID"
                                  referencedTableName="CATEGORY_ITEM"/>
 
-        <addForeignKeyConstraint baseColumnNames="SENDER_ID"
-                                 baseTableName="CATEGORY_ITEM_COMMENT"
-                                 constraintName="FK_CATEGORY_ITEM_COMMENT_ON_SENDER"
-                                 onDelete="SET NULL"
-                                 referencedColumnNames="ID"
+        <addForeignKeyConstraint baseColumnNames="SENDER_ID" baseTableName="CATEGORY_ITEM_COMMENT"
+                                 constraintName="FK_CATEGORY_ITEM_COMMENT_ON_SENDER" referencedColumnNames="ID"
                                  referencedTableName="USER_"/>
 
-        <addForeignKeyConstraint baseColumnNames="CATEGORY_ITEM_ID"
-                                 baseTableName="ORDER_ITEM"
-                                 constraintName="FK_ORDER_ITEM_ON_CATEGORY_ITEM"
-                                 onDelete="SET NULL"
-                                 referencedColumnNames="ID"
+        <addForeignKeyConstraint baseColumnNames="CATEGORY_ITEM_ID" baseTableName="ORDER_ITEM"
+                                 constraintName="FK_ORDER_ITEM_ON_CATEGORY_ITEM" referencedColumnNames="ID"
                                  referencedTableName="CATEGORY_ITEM"/>
 
-        <addForeignKeyConstraint baseColumnNames="ORDER_ID"
-                                 baseTableName="ORDER_ITEM"
-                                 constraintName="FK_ORDER_ITEM_ON_ORDER"
-                                 onDelete="CASCADE"
-                                 referencedColumnNames="ID"
+        <addForeignKeyConstraint baseColumnNames="ORDER_ID" baseTableName="ORDER_ITEM"
+                                 constraintName="FK_ORDER_ITEM_ON_ORDER" referencedColumnNames="ID"
                                  referencedTableName="ORDER_"/>
 
         <addForeignKeyConstraint baseColumnNames="PARENT_ID"
