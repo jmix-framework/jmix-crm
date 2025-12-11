@@ -24,9 +24,31 @@ public class Category extends FullAuditEntity {
     @Column(name = "NAME", nullable = false)
     private String name;
 
+    @Column(name = "CODE", nullable = false, unique = true)
+    private String code;
+
+    @Column(name = "DESCRIPTION")
+    private String description;
+
     @JoinColumn(name = "PARENT_ID")
     @ManyToOne(fetch = FetchType.LAZY)
     private Category parent;
+
+    public String getCode() {
+        return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
     public Category getParent() {
         return parent;

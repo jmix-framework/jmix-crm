@@ -1,5 +1,6 @@
 package com.company.crm.view.catalog;
 
+import com.company.crm.app.feature.queryparameters.filters.FieldValueQueryParameterBinder;
 import com.company.crm.app.service.order.OrderService;
 import com.company.crm.app.util.ui.component.chart.ChartsUtils;
 import com.company.crm.model.catalog.category.Category;
@@ -18,7 +19,6 @@ import io.jmix.chartsflowui.kit.component.model.DataSet;
 import io.jmix.chartsflowui.kit.data.chart.ListChartItems;
 import io.jmix.core.common.datastruct.Pair;
 import io.jmix.core.querycondition.LogicalCondition;
-import io.jmix.core.querycondition.PropertyCondition;
 import io.jmix.core.repository.JmixDataRepositoryContext;
 import io.jmix.flowui.component.formlayout.JmixFormLayout;
 import io.jmix.flowui.component.select.JmixSelect;
@@ -42,6 +42,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 import static io.jmix.core.querycondition.PropertyCondition.contains;
@@ -122,9 +123,16 @@ public class CategoryItemListView extends StandardListView<CategoryItem> {
     }
 
     private void initializeFilterFields() {
-        categorySelect.setItems(categoryRepository.findAll());
+        List<Category> categories = categoryRepository.findAll();
+        categorySelect.setItems(categories);
+
         List.<HasValue<?, ?>>of(searchField, categorySelect)
                 .forEach(field -> field.addValueChangeListener(e -> applyFilters()));
+
+        //noinspection unchecked
+        FieldValueQueryParameterBinder.builder(this)
+                .addStringBinding(searchField)
+                .addEntitySelectBinding(categorySelect, categories);
     }
 
     private void applyFilters() {

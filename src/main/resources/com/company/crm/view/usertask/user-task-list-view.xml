@@ -69,7 +69,8 @@
                 </hbox>
             </vbox>
             <vbox id="detailsLayout" height="100%">
-                <formLayout id="form" dataContainer="userTaskDc">
+                <formLayout id="form" dataContainer="userTaskDc" autoResponsive="true"
+                            maxColumns="1" expandColumns="true" expandFields="true">
                     <responsiveSteps>
                         <responsiveStep minWidth="0" columns="1"/>
                         <responsiveStep minWidth="40em" columns="2"/>

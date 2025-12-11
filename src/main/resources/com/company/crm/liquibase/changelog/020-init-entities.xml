@@ -239,13 +239,13 @@
                              primaryKeyName="PK_CATEGORY"/>
             </column>
             <column name="CREATED_BY"
-            type="VARCHAR(255)"/>
+                    type="VARCHAR(255)"/>
             <column name="CREATED_DATE"
-            type="${offsetDateTime.type}"/>
+                    type="${offsetDateTime.type}"/>
             <column name="UPDATED_BY"
-            type="VARCHAR(255)"/>
+                    type="VARCHAR(255)"/>
             <column name="UPDATED_DATE"
-            type="${offsetDateTime.type}"/>
+                    type="${offsetDateTime.type}"/>
             <column name="DELETED_BY"
                     type="VARCHAR(255)"/>
             <column name="DELETED_DATE"
@@ -256,10 +256,13 @@
             </column>
 
             <column name="PARENT_ID" type="UUID"/>
-            <column name="NAME"
-                    type="VARCHAR(255)">
+            <column name="NAME" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
+            <column name="CODE" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="DESCRIPTION" type="VARCHAR(255)"/>
         </createTable>
 
         <createTable tableName="CATEGORY_ITEM">

@@ -1,5 +1,6 @@
 package com.company.crm.view.user;
 
+import com.company.crm.app.util.role.RoleUtils;
 import com.company.crm.model.user.User;
 import com.company.crm.view.main.MainView;
 import com.vaadin.flow.component.combobox.ComboBox;
@@ -9,10 +10,14 @@ import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.router.Route;
 import io.jmix.core.EntityStates;
 import io.jmix.core.security.CurrentAuthentication;
+import io.jmix.flowui.DialogWindows;
 import io.jmix.flowui.Notifications;
 import io.jmix.flowui.component.textfield.TypedTextField;
+import io.jmix.flowui.kit.component.button.JmixButton;
 import io.jmix.flowui.view.*;
+import io.jmix.securityflowui.view.changepassword.ChangePasswordView;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
@@ -26,11 +31,15 @@ import java.util.TimeZone;
 public class UserDetailView extends StandardDetailView<User> {
 
     @Autowired
+    private RoleUtils roleUtils;
+    @Autowired
     private EntityStates entityStates;
     @Autowired
     private Notifications notifications;
     @Autowired
     private PasswordEncoder passwordEncoder;
+    @Autowired
+    private CurrentAuthentication currentAuthentication;
 
     @ViewComponent
     private TypedTextField<String> usernameField;
@@ -42,10 +51,12 @@ public class UserDetailView extends StandardDetailView<User> {
     private ComboBox<String> timeZoneField;
     @ViewComponent
     private MessageBundle messageBundle;
+    @ViewComponent
+    private JmixButton changePasswordButton;
 
     private boolean newEntity;
     @Autowired
-    private CurrentAuthentication currentAuthentication;
+    private DialogWindows dialogWindows;
 
     @Subscribe
     private void onInit(final InitEvent event) {
@@ -59,13 +70,29 @@ public class UserDetailView extends StandardDetailView<User> {
 
     @Subscribe
     private void onReady(final ReadyEvent event) {
-        boolean canUpdatePassword = isShowPasswordFields();
-        passwordField.setVisible(canUpdatePassword);
-
-        if (entityStates.isNew(getEditedEntity())) {
-            confirmPasswordField.setVisible(true);
+        User editedEntity = getEditedEntity();
+        if (entityStates.isNew(editedEntity)) {
+            showPasswordFields();
             usernameField.focus();
+        } else {
+            showChangePasswordButton(editedEntity);
         }
+    }
+
+    private void showChangePasswordButton(User editedEntity) {
+        UserDetails currentUser = currentAuthentication.getUser();
+        boolean canChangePassword = editedEntity.equals(currentUser) || roleUtils.isAdmin(currentUser);
+        changePasswordButton.setVisible(canChangePassword);
+        if (canChangePassword) {
+            changePasswordButton.addClickListener(e -> {
+                showChangePasswordDialog(editedEntity);
+            });
+        }
+    }
+
+    private void showPasswordFields() {
+        passwordField.setVisible(true);
+        confirmPasswordField.setVisible(true);
     }
 
     @Subscribe
@@ -78,10 +105,8 @@ public class UserDetailView extends StandardDetailView<User> {
 
     @Subscribe
     private void onBeforeSave(final BeforeSaveEvent event) {
-        if (passwordField.isVisible()) {
-            getEditedEntity().setPassword(passwordEncoder.encode(passwordField.getValue()));
-        }
         if (entityStates.isNew(getEditedEntity())) {
+            getEditedEntity().setPassword(passwordEncoder.encode(passwordField.getValue()));
             newEntity = true;
         }
     }
@@ -98,7 +123,13 @@ public class UserDetailView extends StandardDetailView<User> {
         }
     }
 
-    private boolean isShowPasswordFields() {
-        return getEditedEntity().equals(currentAuthentication.getUser());
+    private void showChangePasswordDialog(User editedEntity) {
+        DialogWindow<ChangePasswordView> dialog = dialogWindows
+                .view(this, ChangePasswordView.class)
+                .build();
+        ChangePasswordView view = dialog.getView();
+        view.setUsername(editedEntity.getUsername());
+        view.setCurrentPasswordRequired(true);
+        dialog.open();
     }
 }

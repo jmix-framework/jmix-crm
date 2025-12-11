@@ -1,40 +1,25 @@
 package com.company.crm.view.client;
 
+import com.company.crm.app.feature.queryparameters.filters.FieldValueQueryParameterBinder;
 import com.company.crm.app.service.client.ClientService;
+import com.company.crm.app.service.order.OrderService;
 import com.company.crm.app.service.user.UserService;
-import com.company.crm.app.util.ui.component.chart.ChartsUtils;
+import com.company.crm.app.util.ui.component.card.CrmCard;
 import com.company.crm.app.util.ui.listener.resize.WidthResizeListener;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.client.ClientRepository;
 import com.company.crm.model.client.ClientType;
+import com.company.crm.model.datatype.PriceDataType;
 import com.company.crm.model.user.User;
-import com.company.crm.view.util.SkeletonStyler;
-import com.company.crm.view.client.charts.buyers.ClientPurchasesSumItem;
-import com.company.crm.view.client.charts.buyers.ClientPurchasesSumValueDescription;
-import com.company.crm.view.client.charts.categories.ClientCategoryInfo;
-import com.company.crm.view.client.charts.categories.ClientCategoryItem;
-import com.company.crm.view.client.charts.categories.ClientCategoryValueDescription;
-import com.company.crm.view.client.charts.type.ClientTypeAmountItem;
-import com.company.crm.view.client.charts.type.ClientTypeAmountValueDescription;
 import com.company.crm.view.main.MainView;
 import com.vaadin.flow.component.AbstractField.ComponentValueChangeEvent;
-import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasValue;
-import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.router.Route;
-import io.jmix.chartsflowui.component.Chart;
-import io.jmix.chartsflowui.kit.component.model.DataSet;
-import io.jmix.chartsflowui.kit.data.chart.ListChartItems;
-import io.jmix.core.Messages;
-import io.jmix.core.common.datastruct.Pair;
 import io.jmix.core.querycondition.LogicalCondition;
 import io.jmix.core.repository.JmixDataRepositoryContext;
 import io.jmix.core.security.CurrentAuthentication;
-import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.component.checkbox.Switch;
-import io.jmix.flowui.component.details.JmixDetails;
-import io.jmix.flowui.component.genericfilter.GenericFilter;
-import io.jmix.flowui.component.pagination.SimplePagination;
 import io.jmix.flowui.component.select.JmixSelect;
 import io.jmix.flowui.component.textfield.TypedTextField;
 import io.jmix.flowui.model.CollectionLoader;
@@ -53,11 +38,7 @@ import org.springframework.data.domain.Pageable;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.Supplier;
 
 import static com.company.crm.app.util.ui.listener.resize.WidthResizeListener.isWidthChanged;
 import static io.jmix.core.querycondition.PropertyCondition.contains;
@@ -74,21 +55,10 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
     @Autowired
     private UserService userService;
     @Autowired
-    private ClientService clientService;
-    @Autowired
     private ClientRepository repository;
-
-    @Autowired
-    private Messages messages;
-    @Autowired
-    private ChartsUtils chartsUtils;
     @Autowired
     private CurrentAuthentication currentAuthentication;
 
-    @ViewComponent
-    private SimplePagination pagination;
-    @ViewComponent
-    private FormLayout chartsBlock;
     @ViewComponent
     private TypedTextField<String> searchField;
     @ViewComponent
@@ -101,12 +71,16 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
     private Switch showOnlyMyClientsCheckBox;
     @ViewComponent
     private JmixSelect<ClientCategory> categorySelect;
-    @ViewComponent
-    private GenericFilter advancedFilter;
 
     private volatile int lastWidth = -1;
     private static final int widthBreakpoint = 600;
     private final LogicalCondition filtersCondition = LogicalCondition.and();
+    @ViewComponent
+    private CrmCard ordersSumCard;
+    @Autowired
+    private ClientService clientService;
+    @Autowired
+    private OrderService orderService;
 
     @Override
     public void configureUiForWidth(int width) {
@@ -118,8 +92,8 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
 
     @Subscribe
     public void onInit(final InitEvent event) {
+        initializeStatsBlock();
         initializeFilterFields();
-        chartsUtils.initializeChartsAsync(getChartsLoaders());
     }
 
     @Install(to = "clientsDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
@@ -167,6 +141,16 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
         return new JmixDataRepositoryContext(context.fetchPlan(), resultCondition, context.hints());
     }
 
+    private void initializeStatsBlock() {
+        clientService.getBestBuyers(null);
+        updateTotalOrdersSumCard();
+    }
+
+    private void updateTotalOrdersSumCard() {
+        BigDecimal ordersTotalSum = orderService.getOrdersTotalSum();
+        ordersSumCard.fillAsStaticCard("Total Orders Value", new H1(PriceDataType.formatValue(ordersTotalSum)));
+    }
+
     private void initializeFilterFields() {
         List<User> accountManagers = new ArrayList<>(userService.loadAccountManagers());
         accountManagers.addFirst(getCurrentUser());
@@ -174,6 +158,15 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
 
         List.<HasValue<?, ?>>of(searchField, typeSelect, accountManagerSelect, categorySelect)
                 .forEach(field -> field.addValueChangeListener(e -> applyFilters()));
+
+        //noinspection unchecked
+        FieldValueQueryParameterBinder.builder(this)
+                .addStringBinding(searchField)
+                .addEnumBinding(ClientType.class, typeSelect)
+                .addEnumBinding(ClientCategory.class, categorySelect)
+                .addBooleanBinding(showOnlyMyClientsCheckBox)
+                .addEntitySelectBinding(accountManagerSelect, accountManagers)
+                .build();
     }
 
     private void applyFilters() {
@@ -220,96 +213,6 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
         } else {
             searchField.setWidth("50%");
         }
-    }
-
-    private Map<Chart, Supplier<DataSet>> getChartsLoaders() {
-        var chart2DataSetLoader = new HashMap<Chart, Supplier<DataSet>>();
-
-        new ArrayList<Pair<Chart, Supplier<DataSet>>>() {{
-            add(createBestBuyersChart());
-            add(createClientCategoriesChart());
-            add(createClientsTypesChart());
-        }}.forEach(chart2Initializer -> {
-            Chart chart = chart2Initializer.getFirst();
-            Supplier<DataSet> dataSetSupplier = chart2Initializer.getSecond();
-            chartsBlock.add(chart);
-            SkeletonStyler.apply(chart);
-            chart2DataSetLoader.put(chart, dataSetSupplier);
-        });
-        return chart2DataSetLoader;
-    }
-
-    private Pair<Chart, Supplier<DataSet>> createBestBuyersChart() {
-        Chart chart = chartsUtils.createDefaulListViewTopChart("Best Buyers");
-        return new Pair<>(chart, this::createBestBuyersChartDataSet);
-    }
-
-    private Pair<Chart, Supplier<DataSet>> createClientCategoriesChart() {
-        Chart chart = chartsUtils.createDefaulListViewTopChart("By Category");
-        return new Pair<>(chart, this::createClientsCategoriesDataSet);
-    }
-
-    private Pair<Chart, Supplier<DataSet>> createClientsTypesChart() {
-        Chart chart = chartsUtils.createDefaulListViewTopChart("By Type");
-        return new Pair<>(chart, this::createClientsByTypeChartDataSet);
-    }
-
-    private DataSet createBestBuyersChartDataSet() {
-        var dataItems = new ArrayList<ClientPurchasesSumItem>();
-
-        for (Map.Entry<Client, BigDecimal> entry : clientService.getBestBuyers(3).entrySet()) {
-            ClientPurchasesSumValueDescription valueDescription = new ClientPurchasesSumValueDescription(
-                    entry.getKey().getName(), entry.getValue());
-            dataItems.add(new ClientPurchasesSumItem(valueDescription));
-        }
-
-        return new DataSet().withSource(
-                new DataSet.Source<ClientPurchasesSumItem>()
-                        .withDataProvider(new ListChartItems<>(dataItems))
-                        .withCategoryField("clientName")
-                        .withValueField("purchasesSum")
-        );
-    }
-
-    private DataSet createClientsCategoriesDataSet() {
-        var dataItems = new ArrayList<ClientCategoryItem>();
-
-        for (ClientCategoryInfo category : getClientCategories()) {
-            ClientCategoryValueDescription valueDescription = new ClientCategoryValueDescription(category);
-            dataItems.add(new ClientCategoryItem(valueDescription));
-        }
-
-        return new DataSet().withSource(
-                new DataSet.Source<ClientCategoryItem>()
-                        .withDataProvider(new ListChartItems<>(dataItems))
-                        .withCategoryField("category")
-                        .withValueField("value")
-        );
-    }
-
-    private DataSet createClientsByTypeChartDataSet() {
-        var dataItems = new ArrayList<ClientTypeAmountItem>();
-
-        for (Map.Entry<ClientType, List<Client>> entry : clientService.loadClientsByType().entrySet()) {
-            ClientTypeAmountValueDescription valueDescription = new ClientTypeAmountValueDescription(
-                    messages.getMessage(entry.getKey()), entry.getValue().size());
-            dataItems.add(new ClientTypeAmountItem(valueDescription));
-        }
-
-        return new DataSet().withSource(
-                new DataSet.Source<ClientTypeAmountItem>()
-                        .withDataProvider(new ListChartItems<>(dataItems))
-                        .withCategoryField("type")
-                        .withValueField("amount")
-        );
-    }
-
-    private List<ClientCategoryInfo> getClientCategories() {
-        return new ArrayList<>() {{
-            add(new ClientCategoryInfo("Total", pagination.getPaginationLoader().getCount()));
-            add(new ClientCategoryInfo("With orders", clientService.loadClientsWithOrders().size()));
-            add(new ClientCategoryInfo("With payments", clientService.loadClientsWithPayments().size()));
-        }};
     }
 
     private User getCurrentUser() {

@@ -16,6 +16,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import jakarta.validation.constraints.Email;
+import org.springframework.lang.Nullable;
 import org.springframework.security.core.GrantedAuthority;
 
 import java.util.Collection;
@@ -93,6 +94,7 @@ public class User extends FullAuditEntity implements JmixUserDetails, HasTimeZon
         this.password = password;
     }
 
+    @Nullable
     public String getEmail() {
         return email;
     }
@@ -101,6 +103,7 @@ public class User extends FullAuditEntity implements JmixUserDetails, HasTimeZon
         this.email = email;
     }
 
+    @Nullable
     public String getFirstName() {
         return firstName;
     }
@@ -109,6 +112,7 @@ public class User extends FullAuditEntity implements JmixUserDetails, HasTimeZon
         this.firstName = firstName;
     }
 
+    @Nullable
     public String getLastName() {
         return lastName;
     }

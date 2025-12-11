@@ -25,31 +25,28 @@
         <action id="discardAction" type="lookup_discard"/>
     </actions>
     <layout>
-        <details id="chartsDetails" opened="true" summaryText="msg:///charts" width="100%">
-            <formLayout id="chartsBlock" width="100%" autoResponsive="true" autoRows="true" expandFields="true" expandColumns="true"/>
-        </details>
+        <formLayout id="chartsBlock" width="100%" autoResponsive="true" autoRows="true" expandFields="true"
+                    expandColumns="true"/>
 
-        <details id="filters" opened="true" summaryText="msg:///filters" width="50%" maxWidth="40em">
-            <div classNames="pl-m" width="100%">
-                <formLayout width="100%" classNames="gap-x-xl">
-                    <responsiveSteps>
-                        <responsiveStep minWidth="0" columns="1"/>
-                        <responsiveStep minWidth="20em" columns="2"/>
-                    </responsiveSteps>
-                    <textField id="searchField" placeholder="msg://searchField.placeholder" clearButtonVisible="true">
-                        <prefix>
-                            <icon icon="SEARCH"/>
-                        </prefix>
-                    </textField>
-                    <select id="categorySelect" label=" " placeholder="Category"
-                            emptySelectionAllowed="true"/>
-                </formLayout>
-                <genericFilter id="advancedFilter" dataLoader="categoryItemsDl"
-                               opened="false" summaryText="msg:///advanced" themeNames="filled">
-                    <properties include=".*"/>
-                </genericFilter>
-            </div>
-        </details>
+        <div width="100%">
+            <formLayout width="100%" classNames="gap-x-xl">
+                <responsiveSteps>
+                    <responsiveStep minWidth="0" columns="1"/>
+                    <responsiveStep minWidth="20em" columns="2"/>
+                </responsiveSteps>
+                <textField id="searchField" placeholder="msg://searchField.placeholder" clearButtonVisible="true">
+                    <prefix>
+                        <icon icon="SEARCH"/>
+                    </prefix>
+                </textField>
+                <select id="categorySelect" label=" " placeholder="Category"
+                        emptySelectionAllowed="true"/>
+            </formLayout>
+            <genericFilter id="advancedFilter" dataLoader="categoryItemsDl"
+                           opened="false" summaryText="msg:///advanced" themeNames="filled">
+                <properties include=".*"/>
+            </genericFilter>
+        </div>
 
         <hbox id="buttonsPanel" classNames="buttons-panel">
             <button id="createButton" action="categoryItemsDataGrid.createAction"/>

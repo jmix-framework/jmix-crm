@@ -6,9 +6,9 @@ import com.company.crm.app.service.datetime.DateTimeService;
 import com.company.crm.app.service.finance.InvoiceService;
 import com.company.crm.app.service.finance.PaymentService;
 import com.company.crm.app.service.order.OrderService;
-import com.company.crm.app.service.ui.CrmUiComponents;
-import com.company.crm.app.util.ui.component.model.card.CardModel;
-import com.company.crm.app.util.ui.component.model.card.CardPeriod;
+import com.company.crm.app.util.ui.component.card.CrmCard;
+import com.company.crm.app.util.ui.component.card.CardPeriod;
+import com.company.crm.app.util.ui.component.card.CrmCard.RangeStatCardInfo;
 import com.company.crm.app.util.ui.listener.resize.WidthResizeListener;
 import com.company.crm.model.datatype.PriceDataType;
 import com.company.crm.model.order.Order;
@@ -16,10 +16,6 @@ import com.company.crm.model.order.OrderStatus;
 import com.company.crm.model.payment.Payment;
 import com.company.crm.model.user.User;
 import com.company.crm.model.user.UserActivity;
-import com.company.crm.app.util.ui.component.model.card.CardModel.AbstractCardContentModel;
-import com.company.crm.app.util.ui.component.model.card.CardModel.CardContentModel;
-import com.company.crm.app.util.ui.component.model.card.CardModel.ComponentCardContentModel;
-import com.company.crm.app.util.ui.component.model.card.CardModel.DefaultCardContentModel;
 import com.company.crm.model.invoice.Invoice;
 import com.company.crm.view.main.MainView;
 import com.company.crm.view.usertask.UserTaskListView;
@@ -45,6 +41,7 @@ import io.jmix.chartsflowui.kit.component.model.DataSet;
 import io.jmix.chartsflowui.kit.component.model.Grid;
 import io.jmix.chartsflowui.kit.component.model.Title;
 import io.jmix.chartsflowui.kit.component.model.legend.Legend;
+import io.jmix.chartsflowui.kit.component.model.series.Label;
 import io.jmix.chartsflowui.kit.component.model.series.PieSeries;
 import io.jmix.chartsflowui.kit.component.model.shared.FontStyle;
 import io.jmix.chartsflowui.kit.component.model.shared.Orientation;
@@ -52,7 +49,6 @@ import io.jmix.chartsflowui.kit.component.model.toolbox.SaveAsImageFeature;
 import io.jmix.chartsflowui.kit.component.model.toolbox.Toolbox;
 import io.jmix.chartsflowui.kit.data.chart.ListChartItems;
 import io.jmix.core.Messages;
-import io.jmix.core.common.datastruct.Pair;
 import io.jmix.flowui.DialogWindows;
 import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.Views;
@@ -78,9 +74,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiFunction;
-import java.util.function.Function;
-import java.util.stream.Stream;
 
 import static com.company.crm.app.util.ui.listener.resize.WidthResizeListener.isWidthChanged;
 import static io.jmix.flowui.component.UiComponentUtils.traverseComponents;
@@ -89,12 +82,6 @@ import static io.jmix.flowui.component.UiComponentUtils.traverseComponents;
 @ViewController(id = "HomeView")
 @ViewDescriptor(path = "home-view.xml")
 public class HomeView extends StandardView implements WidthResizeListener {
-
-    private static final DateTimeFormatter DATE_WITHOUT_YEAR =
-            DateTimeFormatter.ofPattern("dd MMM");
-
-    private static final DateTimeFormatter DATE_WITH_YEAR =
-            DateTimeFormatter.ofPattern("dd MMM yyyy");
 
     private static final DateTimeFormatter DATE_WITH_YEAR_AND_TIME =
             DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm");
@@ -118,8 +105,6 @@ public class HomeView extends StandardView implements WidthResizeListener {
     private UiComponents uiComponents;
     @Autowired
     private DialogWindows dialogWindows;
-    @Autowired
-    private CrmUiComponents crmUiComponents;
 
     @ViewComponent
     private JmixSplitLayout split;
@@ -174,22 +159,29 @@ public class HomeView extends StandardView implements WidthResizeListener {
     }
 
     private void createLeftComponents() {
-        doCreateCards(getLeftCardsModels(), leftContent);
+        doCreateCards(getLeftCards(), leftContent);
         SortableFeature.makeSortable(leftContent);
     }
 
     private void createRightComponents() {
-        doCreateCards(getRightCardsModels(), rightContent);
+        doCreateCards(getRightCards(), rightContent);
         SortableFeature.makeSortable(rightContent);
     }
 
-    private List<CardModel> getLeftCardsModels() {
-        return List.of(
-                new CardModel("totalOrdersValue", 1, "Total Orders Value", this::createTotalOrdersValueComponent),
-                new CardModel("payments", 1, "Payments", this::createPaymentsComponent),
-                new CardModel("overdueInvoices", 2, "Overdue Invoices", this::createOverdueInvoicesComponent),
-                new CardModel("myTasks", 2, myTasksTitleComponent(), this::createMyTasksComponent)
-        );
+    private List<JmixCard> getLeftCards() {
+        var c1 = uiComponents.create(CrmCard.class);
+        c1.defaultRangeStatPeriodCard("Total Orders Value", this::createTotalOrdersValueComponent);
+
+        var c2 = uiComponents.create(CrmCard.class);
+        c2.defaultRangeStatPeriodCard("Payments", this::createPaymentsComponent);
+
+        var c3 = uiComponents.create(CrmCard.class);
+        c3.fillAsPeriodCard("Overdue Invoices", 2, this::createOverdueInvoicesComponent);
+
+        var c4 = uiComponents.create(CrmCard.class);
+        c4.fillAsPeriodCard("myTasks", 2, myTasksTitleComponent(), this::createMyTasksComponent);
+
+        return List.of(c1, c2, c3, c4);
     }
 
     private Component myTasksTitleComponent() {
@@ -222,127 +214,74 @@ public class HomeView extends StandardView implements WidthResizeListener {
         return hbox;
     }
 
-    private List<CardModel> getRightCardsModels() {
-        return List.of(
-                new CardModel("salesChart", 2, "Sales Chart", this::createSalesFunnelComponent),
-                new CardModel("recentActivities", 2, "Recent Activities", this::createRecentActivitiesComponent)
-        );
+    private List<JmixCard> getRightCards() {
+        var salesCard = uiComponents.create(CrmCard.class);
+        salesCard.fillAsPeriodCard("Sales Chart", 2, this::createSalesFunnelComponent);
+
+        var activitiesCard = uiComponents.create(CrmCard.class);
+        activitiesCard.fillAsStaticCard("Recent Activities", 2, createRecentActivitiesComponent());
+
+        return List.of(salesCard, activitiesCard);
     }
 
-    private void doCreateCards(List<CardModel> cardModels, JmixFormLayout form) {
-        for (CardModel cardModel : cardModels) {
-            JmixCard card = crmUiComponents.createCrmComponent(cardModel);
+    private void doCreateCards(List<JmixCard> cards, JmixFormLayout form) {
+        for (JmixCard card : cards) {
             card.addClassName(LumoUtility.Margin.Top.MEDIUM);
             form.add(card);
         }
     }
 
-    private CardContentModel createTotalOrdersValueComponent(CardPeriod period) {
-        return contentModelForPriceSum(period,
-                (startDate, endDate) ->
-                        orderService.loadOrders(startDate, endDate).stream().map(Order::getTotal),
-                sum -> {
-                    Pair<LocalDate, LocalDate> range = getDateRangeBy(period);
-                    Pair<LocalDate, LocalDate> previousRange = getPreviousDateRangeBy(range, period);
+    private RangeStatCardInfo createTotalOrdersValueComponent(CardPeriod period) {
+        var range = period.getDateRange(dateTimeService);
+        var previousRange = period.getPreviousDateRangeFor(range);
 
-                    var previousPeriodStart = previousRange.getFirst();
-                    var previousPeriodEnd = previousRange.getSecond();
+        var startDate = range.startDate();
+        var endDate = range.endDate();
 
-                    var previousSum = orderService.loadOrders(previousPeriodStart, previousPeriodEnd)
-                            .stream()
-                            .map(Order::getTotal)
-                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+        var previousPeriodStart = previousRange.startDate();
+        var previousPeriodEnd = previousRange.endDate();
 
-                    return getDeltaString(sum, previousSum);
-                });
-    }
+        var sum = orderService.getOrders(startDate, endDate).stream()
+                .map(Order::getTotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-    private CardContentModel createPaymentsComponent(CardPeriod period) {
-        return contentModelForPriceSum(period,
-                (startDate, endDate) ->
-                        paymentService.loadPayments(startDate, endDate).stream().map(Payment::getAmount),
-                sum -> {
-                    Pair<LocalDate, LocalDate> range = getDateRangeBy(period);
-                    Pair<LocalDate, LocalDate> previousRange = getPreviousDateRangeBy(range, period);
+        var previousSum = orderService.getOrders(previousPeriodStart, previousPeriodEnd)
+                .stream()
+                .map(Order::getTotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-                    var previousPeriodStart = previousRange.getFirst();
-                    var previousPeriodEnd = previousRange.getSecond();
-
-                    var previousSum = paymentService.loadPayments(previousPeriodStart, previousPeriodEnd)
-                            .stream()
-                            .map(Payment::getAmount)
-                            .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-                    return getDeltaString(sum, previousSum);
-                });
-    }
-
-    private String getDeltaString(BigDecimal actualValue, BigDecimal previousValue) {
-        if (previousValue.compareTo(BigDecimal.ZERO) == 0) {
-            return actualValue.compareTo(BigDecimal.ZERO) == 0 ? "0%" : "↑100%";
-        }
-
-        var percentChange = actualValue.subtract(previousValue)
-                .multiply(new BigDecimal("100"))
-                .divide(previousValue, 2, RoundingMode.HALF_UP);
-
-        return (percentChange.compareTo(BigDecimal.ZERO) >= 0 ? "↑" : "↓") + percentChange.abs() + "%";
-    }
-
-    private CardContentModel contentModelForPriceSum(CardPeriod period,
-                                                     BiFunction<LocalDate, LocalDate, Stream<BigDecimal>> pricesProvider,
-                                                     Function<BigDecimal, String> statInfoProvider) {
-        Pair<LocalDate, LocalDate> dateRange = getDateRangeBy(period);
-        LocalDate startDate = dateRange.getFirst();
-        LocalDate endDate = dateRange.getSecond();
-
-        var sum = BigDecimal.ZERO;
-        for (BigDecimal it : pricesProvider.apply(startDate, endDate).toList()) {
-            sum = sum.add(it);
-        }
-
-        var statInfo = statInfoProvider.apply(sum);
-
-        DefaultCardContentModel contentModel = new DefaultCardContentModel(
+        return new RangeStatCardInfo(
+                range,
                 PriceDataType.formatValue(sum),
-                "%s - %s".formatted(
-                        DATE_WITHOUT_YEAR.format(startDate),
-                        DATE_WITH_YEAR.format(endDate)),
-                statInfo
-        );
-
-        return withDefaultBackgroundCallback(contentModel, statInfo);
+                getDeltaString(sum, previousSum));
     }
 
-    private CardContentModel withDefaultBackgroundCallback(CardContentModel contentModel) {
-        return withDefaultBackgroundCallback(contentModel, "");
+    private RangeStatCardInfo createPaymentsComponent(CardPeriod period) {
+        var range = period.getDateRange(dateTimeService);
+        var previousRange = period.getPreviousDateRangeFor(range);
+
+        var startDate = range.startDate();
+        var endDate = range.endDate();
+
+        var previousPeriodStart = previousRange.startDate();
+        var previousPeriodEnd = previousRange.endDate();
+
+        var sum = paymentService.loadPayments(startDate, endDate).stream()
+                .map(Payment::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        var previousSum = paymentService.loadPayments(previousPeriodStart, previousPeriodEnd)
+                .stream()
+                .map(Payment::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        return new RangeStatCardInfo(
+                range,
+                PriceDataType.formatValue(sum),
+                getDeltaString(sum, previousSum));
     }
 
-    private CardContentModel withDefaultBackgroundCallback(CardContentModel contentModel, String statInfo) {
-        if (contentModel instanceof AbstractCardContentModel<?> abstractCardContentModel) {
-            return abstractCardContentModel.withCreationCallback(card -> {
-                if (statInfo.startsWith("↑")) {
-                    setLinearGradient(card, "var(--lumo-primary-color-10pct)");
-                } else if (statInfo.startsWith("↓")) {
-                    setLinearGradient(card, "var(--lumo-error-color-10pct)");
-                } else {
-                    setLinearGradient(card, "var(--lumo-contrast-10pct)");
-                }
-            });
-        } else {
-            return contentModel;
-        }
-    }
-
-    private void setLinearGradient(Component component, int deg, String color1, String color2) {
-        component.getStyle().set("background", "linear-gradient(%ddeg, %s, %s)".formatted(deg, color1, color2));
-    }
-
-    private void setLinearGradient(Component component, String color) {
-        setLinearGradient(component, 45, "var(--lumo-base-color)", color);
-    }
-
-    private CardContentModel createOverdueInvoicesComponent(CardPeriod period) {
+    private Component createOverdueInvoicesComponent(CardPeriod period) {
         DataGrid<Invoice> grid = uiComponents.create(DataGrid.class);
 
         grid.addColumn(new ComponentRenderer<>(r -> new Span(r.getClient().getName())))
@@ -359,55 +298,65 @@ public class HomeView extends StandardView implements WidthResizeListener {
         grid.setMaxHeight(15, Unit.EM);
         grid.setEmptyStateText("No overdue invoices");
 
-        return withDefaultBackgroundCallback(new ComponentCardContentModel(grid));
+        return grid;
     }
 
-    private CardContentModel createMyTasksComponent(CardPeriod period) {
+    private Component createMyTasksComponent(CardPeriod period) {
         UserTaskListView userTasksView = views.create(UserTaskListView.class).gridOnly();
         ViewLayout viewLayout = userTasksView.getContent();
         viewLayout.setPadding(false);
         viewLayout.setMaxHeight(15, Unit.EM);
-        return withDefaultBackgroundCallback(new ComponentCardContentModel(userTasksView));
+        return userTasksView;
     }
 
-    private CardContentModel createSalesFunnelComponent(CardPeriod period) {
-        Pair<LocalDate, LocalDate> dateRange = getDateRangeBy(period);
-        LocalDate startDate = dateRange.getFirst();
-        LocalDate endDate = dateRange.getSecond();
-
-        List<Order> orders = orderService.loadOrders(startDate, endDate);
-
-        Pair<LocalDate, LocalDate> previousRange = getPreviousDateRangeBy(dateRange, period);
-        List<Order> previousOrders = orderService.loadOrders(
-                previousRange.getFirst(),
-                previousRange.getSecond()
-        );
-
-        String statInfo;
-        if (previousOrders.isEmpty()) {
-            statInfo = orders.isEmpty() ? "0%" : "↑100%";
-        } else {
-            var percentChange = (orders.size() - previousOrders.size()) * 100.0 / previousOrders.size();
-            statInfo = (percentChange >= 0 ? "↑" : "↓") + String.format("%.2f", Math.abs(percentChange)) + "%";
+    private String getDeltaString(BigDecimal actualValue, BigDecimal previousValue) {
+        if (previousValue.compareTo(BigDecimal.ZERO) == 0) {
+            return actualValue.compareTo(BigDecimal.ZERO) == 0 ? "0%" : "↑100%";
         }
 
-        CardContentModel mainContent = new DefaultCardContentModel(
-                orders.size() + " orders",
-                "%s - %s".formatted(
-                        DATE_WITHOUT_YEAR.format(startDate),
-                        DATE_WITH_YEAR.format(endDate)),
-                statInfo
-        );
+        var percentChange = actualValue.subtract(previousValue)
+                .multiply(new BigDecimal("100"))
+                .divide(previousValue, 2, RoundingMode.HALF_UP);
 
-        CardContentModel chartContent = createSalesFunnelChartContent(orders);
-
-        return withDefaultBackgroundCallback(mainContent.composeWith(chartContent), statInfo);
+        return (percentChange.compareTo(BigDecimal.ZERO) >= 0 ? "↑" : "↓") + percentChange.abs() + "%";
     }
 
-    private CardContentModel createSalesFunnelChartContent(List<Order> orders) {
+    private Component createSalesFunnelComponent(CardPeriod period) {
+        var range = period.getDateRange(dateTimeService);
+        var previousRange = period.getPreviousDateRangeFor(range);
+
+        var startDate = range.startDate();
+        var endDate = range.endDate();
+
+        var previousPeriodStart = previousRange.startDate();
+        var previousPeriodEnd = previousRange.endDate();
+
+        List<Order> orders = orderService.getOrders(startDate, endDate);
+        List<Order> previousOrders = orderService.getOrders(previousPeriodStart, previousPeriodEnd);
+
+        String delta;
+        if (previousOrders.isEmpty()) {
+            delta = orders.isEmpty() ? "0%" : "↑100%";
+        } else {
+            var percentChange = (orders.size() - previousOrders.size()) * 100.0 / previousOrders.size();
+            delta = (percentChange >= 0 ? "↑" : "↓") + String.format("%.2f", Math.abs(percentChange)) + "%";
+        }
+
+        var statContent =
+                new RangeStatCardInfo(range, orders.size() + " orders", delta)
+                        .createDefaultContent();
+
+        var chartContent = createSalesFunnelChartContent(orders);
+
+        return new Div(statContent, chartContent);
+    }
+
+    private Component createSalesFunnelChartContent(List<Order> orders) {
         Chart chart = uiComponents.create(Chart.class)
                 .withDataSet(createSalesChartDataSet(orders))
                 .withSeries(new PieSeries()
+                        .withLabel(new Label().withShow(false))
+                        .withLabelLine(new PieSeries.LabelLine().withShow(false))
                         .withAnimation(true))
                 .withToolbox(new Toolbox()
                         .withShow(true)
@@ -431,7 +380,7 @@ public class HomeView extends StandardView implements WidthResizeListener {
         Div container = new Div(chart);
         container.getStyle().setMarginTop("1em");
 
-        return new ComponentCardContentModel(container);
+        return container;
     }
 
     private DataSet createSalesChartDataSet(List<Order> orders) {
@@ -453,26 +402,37 @@ public class HomeView extends StandardView implements WidthResizeListener {
         );
     }
 
-    private CardContentModel createRecentActivitiesComponent(CardPeriod period) {
+    private Component createRecentActivitiesComponent() {
         Div container = new Div();
 
         container.add(new H5("Today"));
         LocalDate todayStart = dateTimeService.getDayStart().toLocalDate();
-        for (UserActivity todayActivity : userService.loadActivities(todayStart, 3)) {
-            container.add(createActivityRow(todayActivity));
+        List<UserActivity> todayActivities = userService.loadActivities(todayStart, 3);
+        if (todayActivities.isEmpty()) {
+            container.add(new Span("No activities for today..."));
+        } else {
+            for (UserActivity todayActivity : todayActivities) {
+                container.add(createActivityRow(todayActivity));
+            }
         }
+
+        HorizontalLayout separator = new HorizontalLayout();
+        separator.setWidthFull();
+        separator.setHeight(1, Unit.EM);
+        container.add(separator);
 
         container.add(new H5("Yesterday"));
         LocalDate yesterdayStart = todayStart.minusDays(1);
-        for (UserActivity yesterdayActivity : userService.loadActivities(yesterdayStart, 3)) {
-            container.add(createActivityRow(yesterdayActivity));
+        List<UserActivity> yesterdayActivities = userService.loadActivities(yesterdayStart, 3);
+        if (yesterdayActivities.isEmpty()) {
+            container.add(new Span("No activities for yesterday..."));
+        } else {
+            for (UserActivity yesterdayActivity : yesterdayActivities) {
+                container.add(createActivityRow(yesterdayActivity));
+            }
         }
 
-        return withDefaultBackgroundCallback(
-                new ComponentCardContentModel(container)
-                        .withHasPeriodFilter(false)
-                        .withHasEllipsisButton(false)
-        );
+        return container;
     }
 
     private Component createActivityRow(UserActivity activity) {
@@ -480,7 +440,8 @@ public class HomeView extends StandardView implements WidthResizeListener {
         HorizontalLayout row = new HorizontalLayout();
         row.setAlignItems(FlexComponent.Alignment.CENTER);
 
-        Avatar avatar = new Avatar(user.getFirstName().substring(0, 1));
+
+        Avatar avatar = new Avatar(user.getUsername().substring(0, 1));
         row.add(avatar);
 
         Span userNameSpan = new Span(user.getFullNameName());
@@ -496,48 +457,5 @@ public class HomeView extends StandardView implements WidthResizeListener {
         row.add(activityInfoBlock);
 
         return row;
-    }
-
-    private Pair<LocalDate, LocalDate> getPreviousDateRangeBy(Pair<LocalDate, LocalDate> range, CardPeriod period) {
-        var startDate = range.getFirst();
-        var endDate = range.getSecond();
-
-        var previousPeriodStart = switch (period) {
-            case WEEK -> startDate.minusWeeks(1);
-            case MONTH -> startDate.minusMonths(1);
-            case YEAR -> startDate.minusYears(1);
-        };
-
-        var previousPeriodEnd = switch (period) {
-            case WEEK -> endDate.minusWeeks(1);
-            case MONTH -> endDate.minusMonths(1);
-            case YEAR -> endDate.minusYears(1);
-        };
-
-        return new Pair<>(previousPeriodStart, previousPeriodEnd);
-    }
-
-    private Pair<LocalDate, LocalDate> getDateRangeBy(CardPeriod period) {
-        switch (period) {
-            case WEEK -> {
-                return new Pair<>(
-                        dateTimeService.getWeekStart().toLocalDate(),
-                        dateTimeService.getWeekEnd().toLocalDate()
-                );
-            }
-            case MONTH -> {
-                return new Pair<>(
-                        dateTimeService.getMonthStart().toLocalDate(),
-                        dateTimeService.getMonthEnd().toLocalDate()
-                );
-            }
-            case YEAR -> {
-                return new Pair<>(
-                        dateTimeService.getYearStart().toLocalDate(),
-                        dateTimeService.getYearEnd().toLocalDate()
-                );
-            }
-            default -> throw new IllegalStateException("Unexpected value: " + period);
-        }
     }
 }

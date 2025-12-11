@@ -20,7 +20,7 @@
         <formLayout id="form" dataContainer="userDc">
             <textField id="usernameField" property="username" readOnly="true"/>
             <passwordField id="passwordField"
-                           label="msg://com.company.crm.entity/User.password"
+                           label="msg://com.company.crm.model.user/User.password"
                            required="true"
                            visible="false"/>
             <passwordField id="confirmPasswordField"
@@ -36,6 +36,7 @@
         <hbox id="detailActions">
             <button id="saveAndCloseButton" action="saveCloseAction"/>
             <button id="closeButton" action="closeAction"/>
+            <button id="changePasswordButton" visible="false" themeNames="warning" text="msg:///actions.changePassword" icon="vaadin:password"/>
         </hbox>
     </layout>
 </view>

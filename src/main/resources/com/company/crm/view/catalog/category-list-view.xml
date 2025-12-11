@@ -1,24 +1,19 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <view xmlns="http://jmix.io/schema/flowui/view"
       xmlns:c="http://jmix.io/schema/flowui/jpql-condition"
-      title="msg://com.company.crm.view.catalog/categoryListView.title">
+      title="msg://categoryListView.title"
+      focusComponent="categoriesDataGrid">
     <data>
         <collection id="categoriesDc"
                     class="com.company.crm.model.catalog.category.Category">
             <fetchPlan extends="_base">
                 <property name="parent" fetchPlan="_base"/>
             </fetchPlan>
-            <loader id="categoriesDl" readOnly="true"/>
+            <loader id="categoriesDl"/>
         </collection>
-        <instance id="categoryDc"
-                  class="com.company.crm.model.catalog.category.Category">
-            <fetchPlan extends="_base">
-                <property name="parent" fetchPlan="_base"/>
-            </fetchPlan>
-            <loader id="categoryDl"/>
-        </instance>
     </data>
     <facets>
+        <settings auto="true"/>
         <dataLoadCoordinator auto="true"/>
         <urlQueryParameters>
             <pagination component="pagination"/>
@@ -28,58 +23,38 @@
         <action id="selectAction" type="lookup_select"/>
         <action id="discardAction" type="lookup_discard"/>
     </actions>
-    <layout padding="false">
-        <formLayout id="layoutWrapper" classNames="master-detail-layout" height="100%">
-            <vbox id="listLayout" height="100%">
-                <hbox id="buttonsPanel" classNames="buttons-panel">
-                    <startSlot>
-                        <button id="createButton" action="categoriesDataGrid.createAction"/>
-                        <button id="editButton" action="categoriesDataGrid.editAction"/>
-                        <button id="removeButton" action="categoriesDataGrid.removeAction"/>
-                    </startSlot>
-                    <endSlot>
-                        <simplePagination id="pagination" dataLoader="categoriesDl"/>
-                    </endSlot>
-                </hbox>
-                <treeDataGrid id="categoriesDataGrid"
-                              hierarchyProperty="parent"
-                              width="100%"
-                              minHeight="20em"
-                              dataContainer="categoriesDc"
-                              columnReorderingAllowed="true">
-                    <actions>
-                        <action id="createAction" type="list_create"/>
-                        <action id="editAction" type="list_edit"/>
-                        <action id="removeAction" type="list_remove"/>
-                    </actions>
-                    <columns resizable="true">
-                        <column property="name" filterable="true"/>
-                    </columns>
-                </treeDataGrid>
-                <hbox id="lookupActions" visible="false">
-                    <button id="selectButton" action="selectAction"/>
-                    <button id="discardButton" action="discardAction"/>
-                </hbox>
-            </vbox>
-            <vbox id="detailsLayout" height="100%">
-                <formLayout id="form" dataContainer="categoryDc">
-                    <responsiveSteps>
-                        <responsiveStep minWidth="0" columns="1"/>
-                        <responsiveStep minWidth="40em" columns="2"/>
-                    </responsiveSteps>
-                    <textField id="nameField" property="name"/>
-                    <entityPicker id="parentField" property="parent">
-                        <actions>
-                            <action id="entityLookupAction" type="entity_lookup"/>
-                            <action id="entityClearAction" type="entity_clear"/>
-                        </actions>
-                    </entityPicker>
-                </formLayout>
-                <hbox id="detailActions">
-                    <button id="saveButton" text="msg:///actions.Save" icon="CHECK" themeNames="primary"/>
-                    <button id="cancelButton" text="msg:///actions.Cancel" icon="BAN"/>
-                </hbox>
-            </vbox>
-        </formLayout>
+    <layout>
+        <hbox id="buttonsPanel" classNames="buttons-panel">
+            <startSlot>
+                <button id="createButton" action="categoriesDataGrid.createAction"/>
+                <button id="editButton" action="categoriesDataGrid.editAction"/>
+                <button id="removeButton" action="categoriesDataGrid.removeAction"/>
+            </startSlot>
+            <endSlot>
+                <simplePagination id="pagination" dataLoader="categoriesDl"/>
+            </endSlot>
+        </hbox>
+        <treeDataGrid id="categoriesDataGrid"
+                      hierarchyProperty="parent"
+                      editorBuffered="false"
+                      width="100%"
+                      minHeight="20em"
+                      dataContainer="categoriesDc"
+                      columnReorderingAllowed="true">
+            <actions>
+                <action id="createAction" type="list_create"/>
+                <action id="editAction" type="list_edit"/>
+                <action id="removeAction" type="list_remove"/>
+            </actions>
+            <columns resizable="true">
+                <column property="code" filterable="true" editable="true"/>
+                <column property="name" filterable="true" editable="true"/>
+                <column property="description" filterable="true" editable="true"/>
+            </columns>
+        </treeDataGrid>
+        <hbox id="lookupActions" visible="false">
+            <button id="selectButton" action="selectAction"/>
+            <button id="discardButton" action="discardAction"/>
+        </hbox>
     </layout>
 </view>

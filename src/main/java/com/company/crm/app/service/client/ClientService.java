@@ -4,9 +4,12 @@ import com.company.crm.model.client.Client;
 import com.company.crm.model.client.ClientRepository;
 import com.company.crm.model.client.ClientType;
 import com.company.crm.model.order.Order;
+import io.jmix.core.DataManager;
 import io.jmix.core.FetchPlan;
 import io.jmix.core.FetchPlanBuilder;
 import io.jmix.core.FetchPlans;
+import io.jmix.core.entity.KeyValueEntity;
+import org.jspecify.annotations.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 import static java.util.Map.Entry.comparingByValue;
 import static java.util.stream.Collectors.toMap;
@@ -28,10 +32,12 @@ public class ClientService {
 
     private final FetchPlans fetchPlans;
     private final ClientRepository clientRepository;
+    private final DataManager dataManager;
 
-    public ClientService(FetchPlans fetchPlans, ClientRepository clientRepository) {
+    public ClientService(FetchPlans fetchPlans, ClientRepository clientRepository, DataManager dataManager) {
         this.fetchPlans = fetchPlans;
         this.clientRepository = clientRepository;
+        this.dataManager = dataManager;
     }
 
     /**
@@ -88,26 +94,34 @@ public class ClientService {
      * sorted by total purchase in descending order.
      *
      * @param amount the maximum number of top buyers to include in the result.
+     *               If {@param amount} is {@code null}, all available data will be returned
      * @return a map where the keys are the {@link Client} and the values are the total purchase amounts.
      */
-    public Map<Client, BigDecimal> getBestBuyers(int amount) {
-        if (amount <= 0) {
-            return new HashMap<>();
-        }
+    public Map<Client, BigDecimal> getBestBuyers(@Nullable Integer amount) {
+        Map<Client, BigDecimal> totalsByClient = new LinkedHashMap<>();
 
-        Map<Client, BigDecimal> totalsByClient = new HashMap<>();
+        dataManager.loadValues(
+                        "select distinct e.client as client, sum(e.total) as total " +
+                                "from Order_ e " +
+                                "group by e.client " +
+                                "order by total desc " +
+                                ((amount != null && amount > 0) ? ("limit " + amount) : ""))
+                .properties("client", "total")
+                .list().forEach(keyValue -> {
+                    Client client = keyValue.getValue("client");
+                    BigDecimal clientTotal = keyValue.getValue("total");
+                    totalsByClient.merge(client, clientTotal, BigDecimal::add);
+                });
 
-        loadClientsWithOrders().forEach(client -> {
-            BigDecimal total = client.getOrders().stream()
-                    .map(Order::getTotal)
-                    .filter(Objects::nonNull)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-            totalsByClient.put(client, total);
-        });
+        return totalsByClient;
+    }
 
-        return totalsByClient.entrySet().stream()
-                .limit(amount)
-                .sorted(comparingByValue(Comparator.reverseOrder()))
-                .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+    public BigDecimal getTotalOrdersValue(Client client) {
+        return dataManager.loadValue(
+                "select sum(e.total) as total " +
+                        "from Order_ e " +
+                        "where e.client = :client " +
+                        "order by total desc", BigDecimal.class
+        ).parameter("client", client).optional().orElse(BigDecimal.ZERO);
     }
 }

@@ -19,6 +19,7 @@ import com.company.crm.model.user.UserTask;
 import com.company.crm.security.FullAccessRole;
 import io.jmix.core.SaveContext;
 import io.jmix.core.UnconstrainedDataManager;
+import io.jmix.core.UuidProvider;
 import io.jmix.security.role.assignment.RoleAssignment;
 import io.jmix.security.role.assignment.RoleAssignmentRepository;
 import io.jmix.security.role.assignment.RoleAssignmentRoleType;
@@ -172,6 +173,8 @@ public class DemoDataInitializer {
         for (int i = 0; i < categoriesCount; i++) {
             Category category = dataManager.create(Category.class);
             category.setName("Category " + (i + 1));
+            category.setDescription("Category description");
+            category.setCode(UuidProvider.createUuidV7().toString());
             if (i > 0 && random.nextBoolean()) {
                 category.setParent(new ArrayList<>(result.keySet()).get(random.nextInt(result.size())));
             }

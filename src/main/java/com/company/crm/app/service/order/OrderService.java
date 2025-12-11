@@ -1,10 +1,10 @@
 package com.company.crm.app.service.order;
 
-import com.company.crm.model.client.Client;
 import com.company.crm.model.order.Order;
 import com.company.crm.model.order.OrderItem;
 import com.company.crm.model.order.OrderItemRepository;
 import com.company.crm.model.order.OrderRepository;
+import io.jmix.core.DataManager;
 import io.jmix.core.FetchPlan;
 import io.jmix.core.FetchPlans;
 import org.springframework.stereotype.Service;
@@ -16,7 +16,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import static java.util.Map.Entry.comparingByValue;
 import static java.util.stream.Collectors.toMap;
@@ -27,15 +26,25 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final FetchPlans fetchPlans;
+    private final DataManager dataManager;
 
-    public OrderService(OrderRepository orderRepository, OrderItemRepository orderItemRepository, FetchPlans fetchPlans) {
+    public OrderService(OrderRepository orderRepository, OrderItemRepository orderItemRepository, FetchPlans fetchPlans, DataManager dataManager) {
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.fetchPlans = fetchPlans;
+        this.dataManager = dataManager;
     }
 
-    public List<Order> loadOrders(LocalDate startDate, LocalDate endDate) {
+    public List<Order> getOrders(LocalDate startDate, LocalDate endDate) {
         return orderRepository.listByQuery("e.date >= ?1 and e.date <= ?2", startDate, endDate);
+    }
+
+    public BigDecimal getOrdersTotalSum() {
+        return dataManager.loadValue(
+                        "select sum(e.total) as total " +
+                                "from Order_ e " +
+                                "order by total desc", BigDecimal.class)
+                .optional().orElse(BigDecimal.ZERO);
     }
 
     public Map<OrderItem, BigDecimal> getBestOrderItems(int amount) {

@@ -27,13 +27,13 @@ public class FinanceView extends StandardView {
 
     @Subscribe
     private void onInit(final InitEvent event) {
-        TabIndexUrlQueryParameterBinder.register(this, tabSheet);
-
         InvoiceListView invoiceListView = views.create(InvoiceListView.class);
         PaymentListView paymentListView = views.create(PaymentListView.class);
         paymentListView.addAttachListener(e -> paymentListView.loadData());
 
         tabSheet.add("Invoices", invoiceListView);
         tabSheet.add("Payments", paymentListView);
+
+        TabIndexUrlQueryParameterBinder.register(this, tabSheet);
     }
 }
