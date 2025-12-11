@@ -39,14 +39,14 @@ public class CrmCard extends JmixCard implements ApplicationContextAware {
     private static final DateTimeFormatter DATE_WITHOUT_YEAR = DateTimeFormatter.ofPattern("dd MMM");
     private static final DateTimeFormatter DATE_WITH_YEAR = DateTimeFormatter.ofPattern("dd MMM yyyy");
 
-    private static final String STAT_CARD_PREVIOUS_RANGE_DELTA_COMPONENT_ID = "delta-value-component";
+    private static final String PREVIOUS_RANGE_DELTA_COMPONENT_ID = "delta-value-component";
 
     private String id;
     private Component title;
 
     private boolean hasPeriodFilter = false;
     private boolean hasEllipsisButton = false;
-    private boolean dynamicBackground = false;
+    private boolean dynamicBackground = true;
 
     private Function<CardPeriod, Component> contentProvider;
 
@@ -135,7 +135,7 @@ public class CrmCard extends JmixCard implements ApplicationContextAware {
                 horizontalLayout.add(dateRangeComponent);
 
                 var previousRangeDeltaComponent = new Span(info.previousRangeDelta());
-                previousRangeDeltaComponent.setId(STAT_CARD_PREVIOUS_RANGE_DELTA_COMPONENT_ID);
+                previousRangeDeltaComponent.setId(PREVIOUS_RANGE_DELTA_COMPONENT_ID);
                 horizontalLayout.add(previousRangeDeltaComponent);
 
                 return contentComponent;
@@ -235,20 +235,19 @@ public class CrmCard extends JmixCard implements ApplicationContextAware {
     private void setContent(Component content) {
         removeAll();
         add(content);
-        if (dynamicBackground) {
-            UiComponentUtils.findComponent(content, STAT_CARD_PREVIOUS_RANGE_DELTA_COMPONENT_ID)
-                    .ifPresent(this::updateDynamicBackground);
-        }
+        updateDynamicBackground();
     }
 
     private void refreshContent() {
         initHeaderAndContent();
     }
 
-    private void updateDynamicBackground(Component contentComponent) {
+    private void updateDynamicBackground() {
         if (!dynamicBackground) {
             return;
         }
+        var contentComponent = UiComponentUtils.findComponent(this,
+                PREVIOUS_RANGE_DELTA_COMPONENT_ID).orElse(this);
 
         var content = "";
         if (contentComponent instanceof HasText hasText) {

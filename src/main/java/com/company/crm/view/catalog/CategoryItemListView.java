@@ -78,7 +78,6 @@ public class CategoryItemListView extends StandardListView<CategoryItem> {
     @Subscribe
     public void onInit(final InitEvent event) {
         initializeFilterFields();
-        chartsUtils.initializeChartsAsync(getChartsLoaders());
     }
 
     @Install(to = "categoryItemsDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
@@ -138,54 +137,5 @@ public class CategoryItemListView extends StandardListView<CategoryItem> {
     private void applyFilters() {
         updateFiltersCondition();
         categoryItemsDl.load();
-    }
-
-    private Map<Chart, Supplier<DataSet>> getChartsLoaders() {
-        var chart2DataSetLoader = new HashMap<Chart, Supplier<DataSet>>();
-
-        new ArrayList<Pair<Chart, Supplier<DataSet>>>() {{
-            add(createBestOrderItemsChart());
-            add(createOrderedThisMonthChart());
-            add(createAvailableByCategoryChart());
-        }}.forEach(chart2Initializer -> {
-            Chart chart = chart2Initializer.getFirst();
-            Supplier<DataSet> dataSetSupplier = chart2Initializer.getSecond();
-            chartsBlock.add(chart);
-            SkeletonStyler.apply(chart);
-            chart2DataSetLoader.put(chart, dataSetSupplier);
-        });
-        return chart2DataSetLoader;
-    }
-
-    private Pair<Chart, Supplier<DataSet>> createBestOrderItemsChart() {
-        Chart chart = chartsUtils.createDefaulListViewTopChart("Best order items");
-        return new Pair<>(chart, this::createBestOrderItemsChartDataSet);
-    }
-
-    private Pair<Chart, Supplier<DataSet>> createOrderedThisMonthChart() {
-        Chart chart = chartsUtils.createDefaulListViewTopChart("Ordered this month");
-        return new Pair<>(chart, this::createBestOrderItemsChartDataSet);
-    }
-
-    private Pair<Chart, Supplier<DataSet>> createAvailableByCategoryChart() {
-        Chart chart = chartsUtils.createDefaulListViewTopChart("Available by category");
-        return new Pair<>(chart, this::createBestOrderItemsChartDataSet);
-    }
-
-    private DataSet createBestOrderItemsChartDataSet() {
-        var dataItems = new ArrayList<OrderItemOrdersAmountItem>();
-
-        for (Map.Entry<OrderItem, BigDecimal> entry : orderService.getBestOrderItems(3).entrySet()) {
-            OrderItemOrdersAmountValueDescription valueDescription = new OrderItemOrdersAmountValueDescription(
-                    entry.getKey().getCategoryItem().getName(), entry.getValue());
-            dataItems.add(new OrderItemOrdersAmountItem(valueDescription));
-        }
-
-        return new DataSet().withSource(
-                new DataSet.Source<OrderItemOrdersAmountItem>()
-                        .withDataProvider(new ListChartItems<>(dataItems))
-                        .withCategoryField("itemName")
-                        .withValueField("amount")
-        );
     }
 }

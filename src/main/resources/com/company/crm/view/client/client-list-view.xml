@@ -32,8 +32,8 @@
         <formLayout id="statBlock" width="100%"
                     autoResponsive="true" autoRows="true"
                     expandFields="true" expandColumns="true">
-            <component id="ordersSumCard" class="com.company.crm.app.util.ui.component.card.CrmCard"/>
-            <component id="paymentsSumCard" class="com.company.crm.app.util.ui.component.card.CrmCard"/>
+            <component id="ordersTotalSumCard" class="com.company.crm.app.util.ui.component.card.CrmCard"/>
+            <component id="paymentsTotalSumCard" class="com.company.crm.app.util.ui.component.card.CrmCard"/>
             <component id="averageBillCard" class="com.company.crm.app.util.ui.component.card.CrmCard"/>
         </formLayout>
         <div width="50%" maxWidth="40em">

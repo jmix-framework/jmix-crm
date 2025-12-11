@@ -12,6 +12,7 @@ import io.jmix.core.UnconstrainedDataManager;
 import io.jmix.core.event.EntityChangedEvent;
 import io.jmix.core.security.Authenticated;
 import io.jmix.core.security.SystemAuthenticator;
+import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -20,19 +21,27 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionalEventListener;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import static java.util.Arrays.stream;
 import static java.util.Collections.emptyList;
+import static org.apache.commons.collections4.CollectionUtils.union;
 import static org.springframework.core.annotation.AnnotationUtils.findAnnotation;
 
 @Service
 public class UserActivityRecorder {
 
     private static final Logger log = LoggerFactory.getLogger(UserActivityRecorder.class);
+
+    private static final List<String> defaultIgnoredUsernames = List.of("admin", "system");
+
     private final UnconstrainedDataManager dataManager;
     private final SystemAuthenticator systemAuthenticator;
+
 
     public UserActivityRecorder(DataManager dataManager, SystemAuthenticator systemAuthenticator) {
         this.dataManager = dataManager;
@@ -134,7 +143,7 @@ public class UserActivityRecorder {
                     : Optional.empty();
         };
 
-        return username.flatMap(this::findUser);
+        return username.filter(u -> !defaultIgnoredUsernames.contains(u)).flatMap(this::findUser);
     }
 
     private Optional<User> findUser(String username) {

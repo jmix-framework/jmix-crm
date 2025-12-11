@@ -2,6 +2,8 @@ package com.company.crm.model.base;
 
 import io.jmix.core.FetchPlan;
 import io.jmix.core.FluentLoader;
+import io.jmix.core.FluentValueLoader;
+import io.jmix.core.FluentValuesLoader;
 import io.jmix.core.repository.JmixDataRepository;
 import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.lang.Nullable;
@@ -25,6 +27,10 @@ public interface UuidEntityRepository<T extends UuidEntity> extends JmixDataRepo
 
     default T oneByQuery(String query, Object... params) {
         return queryLoader(query, params).maxResults(1).one();
+    }
+
+    default <V> Optional<V> loadOptionalValue(String queryString, Class<V> valueClass) {
+        return fluentValueLoader(queryString, valueClass).optional();
     }
 
     default List<T> findAll(long offset, long limit, @Nullable FetchPlan fetchPlan) {
@@ -51,6 +57,14 @@ public interface UuidEntityRepository<T extends UuidEntity> extends JmixDataRepo
 
     default FluentLoader<T> fluentLoader() {
         return getDataManager().load(getEntityClass());
+    }
+
+    default FluentValuesLoader fluentValuesLoader(String query) {
+        return getDataManager().loadValues(query);
+    }
+
+    default <V> FluentValueLoader<V> fluentValueLoader(String query, Class<V> valueClass) {
+        return getDataManager().loadValue(query, valueClass);
     }
 
     default Class<T> getEntityClass() {

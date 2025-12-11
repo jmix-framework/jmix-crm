@@ -20,6 +20,7 @@ import com.company.crm.security.FullAccessRole;
 import io.jmix.core.SaveContext;
 import io.jmix.core.UnconstrainedDataManager;
 import io.jmix.core.UuidProvider;
+import io.jmix.data.PersistenceHints;
 import io.jmix.security.role.assignment.RoleAssignment;
 import io.jmix.security.role.assignment.RoleAssignmentRepository;
 import io.jmix.security.role.assignment.RoleAssignmentRoleType;
@@ -131,7 +132,11 @@ public class DemoDataInitializer {
             List<?> entitiesToRemove = dataManager.load(entityClass).all().list();
             filterEntitiesToRemove(entityClass, entitiesToRemove);
             log.info("Removing {} entities of type {}", entitiesToRemove.size(), entityClass.getSimpleName());
-            dataManager.remove(entitiesToRemove.toArray());
+            SaveContext saveContext = new SaveContext()
+                    .setDiscardSaved(true)
+                    .setHint(PersistenceHints.SOFT_DELETION, false);
+            saveContext.removing(entitiesToRemove.toArray());
+            dataManager.save(saveContext);
         }
     }
 

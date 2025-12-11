@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <view xmlns="http://jmix.io/schema/flowui/view"
       xmlns:c="http://jmix.io/schema/flowui/jpql-condition"
-      title="msg://orderListView.title"
-      focusComponent="ordersDataGrid">
+      title="msg://orderListView.title">
     <data>
         <collection id="ordersDc"
                     class="com.company.crm.model.order.Order">

@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <view xmlns="http://jmix.io/schema/flowui/view"
       xmlns:c="http://jmix.io/schema/flowui/jpql-condition"
-      title="msg://categoryListView.title"
-      focusComponent="categoriesDataGrid">
+      title="msg://categoryListView.title">
     <data>
         <collection id="categoriesDc"
                     class="com.company.crm.model.catalog.category.Category">
