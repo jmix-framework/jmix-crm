@@ -153,7 +153,7 @@ public class User extends FullAuditEntity implements JmixUserDetails, HasTimeZon
 
 
     @DependsOnProperties({"firstName", "lastName"})
-    public String getFullNameName() {
+    public String getFullName() {
         return String.format("%s %s", (firstName != null ? firstName : ""),
                 (lastName != null ? lastName : "")).trim();
     }
@@ -161,7 +161,7 @@ public class User extends FullAuditEntity implements JmixUserDetails, HasTimeZon
     @InstanceName
     @DependsOnProperties({"firstName", "lastName", "username"})
     public String getDisplayName() {
-        return String.format("%s [%s]", getFullNameName(), username).trim();
+        return String.format("%s [%s]", getFullName(), username).trim();
     }
 
     @Override

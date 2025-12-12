@@ -5,17 +5,17 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import java.math.BigDecimal;
 import java.util.Objects;
 
-public class OrderItemOrdersAmountValueDescription {
-    private final String itemName;
+public class ItemOrdersAmountValueDescription {
+    private final String item;
     private final BigDecimal amount;
 
-    public OrderItemOrdersAmountValueDescription(String itemName, BigDecimal ordersAmount) {
-        this.itemName = itemName;
+    public ItemOrdersAmountValueDescription(String itemName, BigDecimal ordersAmount) {
+        this.item = itemName;
         this.amount = ordersAmount;
     }
 
-    public String getItemName() {
-        return itemName;
+    public String getItem() {
+        return item;
     }
 
     public BigDecimal getAmount() {
@@ -24,7 +24,7 @@ public class OrderItemOrdersAmountValueDescription {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj instanceof OrderItemOrdersAmountValueDescription) {
+        if (obj instanceof ItemOrdersAmountValueDescription) {
             return EqualsBuilder.reflectionEquals(this, obj);
         } else  {
             return false;
@@ -33,6 +33,6 @@ public class OrderItemOrdersAmountValueDescription {
 
     @Override
     public int hashCode() {
-        return Objects.hash(itemName, amount);
+        return Objects.hash(item, amount);
     }
 }

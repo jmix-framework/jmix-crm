@@ -3,6 +3,7 @@ package com.company.crm.model.invoice;
 import com.company.crm.app.annotation.TrackedByUserActivityRecorder;
 import com.company.crm.model.base.FullAuditEntity;
 import com.company.crm.model.client.Client;
+import com.company.crm.model.datatype.PriceDataType;
 import com.company.crm.model.order.Order;
 import com.company.crm.model.payment.Payment;
 import io.jmix.core.metamodel.annotation.DependsOnProperties;
@@ -51,14 +52,14 @@ public class Invoice extends FullAuditEntity {
     @Column(name = "DUE_DATE")
     private LocalDate dueDate;
 
-    @PropertyDatatype("price")
+    @PropertyDatatype(PriceDataType.NAME)
     @Column(name = "SUBTOTAL")
     private BigDecimal subtotal;
 
     @Column(name = "VAT", precision = 19, scale = 2)
     private BigDecimal vat;
 
-    @PropertyDatatype("price")
+    @PropertyDatatype(PriceDataType.NAME)
     @Column(name = "TOTAL")
     private BigDecimal total;
 

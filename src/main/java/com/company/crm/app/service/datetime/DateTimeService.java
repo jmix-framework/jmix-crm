@@ -1,21 +1,21 @@
 package com.company.crm.app.service.datetime;
 
+import com.company.crm.app.util.date.range.LocalDateRange;
+import io.jmix.core.TimeSource;
 import io.jmix.core.security.CurrentAuthentication;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.Year;
 import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.TimeZone;
 
+import static com.company.crm.app.util.ui.UiUtils.getCurrentUI;
 import static java.time.temporal.TemporalAdjusters.nextOrSame;
 import static java.time.temporal.TemporalAdjusters.previousOrSame;
 
@@ -24,32 +24,20 @@ public class DateTimeService {
 
     public static final TimeZone UTC_TIME_ZONE = TimeZone.getTimeZone(ZoneOffset.UTC);
 
+    private final TimeSource timeSource;
     private final CurrentAuthentication currentAuthentication;
 
-    public DateTimeService(CurrentAuthentication currentAuthentication) {
+    public DateTimeService(CurrentAuthentication currentAuthentication, TimeSource timeSource) {
         this.currentAuthentication = currentAuthentication;
-    }
-
-    public OffsetDateTime toOffsetDateTime(LocalDate date) {
-        return date.atStartOfDay().atOffset(ZoneOffset.UTC);
-    }
-
-    /**
-     * Get the date using the format "dd.MM.yy HH:mm".
-     */
-    public String defaultFormat(OffsetDateTime dateTime) {
-        return dateTime.format(DateTimeFormatter.ofPattern("dd.MM.yy HH:mm"));
-    }
-
-    /**
-     * Get the time in "HH:mm" format.
-     */
-    public String defaultTimeFormat(OffsetDateTime dateTime) {
-        return dateTime.format(DateTimeFormatter.ofPattern("HH:mm"));
+        this.timeSource = timeSource;
     }
 
     public OffsetDateTime now() {
-        return OffsetDateTime.now(ZoneOffset.UTC);
+        return timeSource.now().toOffsetDateTime();
+    }
+
+    public long currentTimeMillis() {
+        return timeSource.currentTimeMillis();
     }
 
     public OffsetDateTime getTimeForCurrentUser() {
@@ -57,20 +45,36 @@ public class DateTimeService {
     }
 
     public TimeZone getTimeZoneForCurrentUser() {
-        return currentAuthentication.getTimeZone();
+        return getCurrentUI().isPresent()
+                ? currentAuthentication.getTimeZone()
+                : UTC_TIME_ZONE;
     }
 
-    public OffsetDateTime transformForCurrentUser(OffsetDateTime dateTime) {
-        ZoneOffset offset = getTimeZoneForCurrentUser().toZoneId().getRules().getOffset(Instant.now());
-        return dateTime != null ? dateTime.withOffsetSameInstant(offset) : now().withOffsetSameInstant(offset);
+    public OffsetDateTime transformForCurrentUser(@Nullable OffsetDateTime dateTime) {
+        ZoneOffset zoneOffset = getTimeZoneForCurrentUser().toZoneId().getRules().getOffset(Instant.now());
+        return dateTime != null
+                ? dateTime.withOffsetSameInstant(zoneOffset)
+                : now().withOffsetSameInstant(zoneOffset);
     }
 
-    public OffsetDateTime fromUnixSeconds(Long unixSeconds) {
-        return OffsetDateTime.ofInstant(Instant.ofEpochSecond(unixSeconds), UTC_TIME_ZONE.toZoneId());
+    public OffsetDateTime toOffsetDateTime(LocalDate date) {
+        return date.atStartOfDay().atOffset(ZoneOffset.UTC);
     }
 
-    public long toUnixSeconds(OffsetDateTime offsetDateTime) {
-        return offsetDateTime.toEpochSecond();
+    public LocalDateRange getCurrentDayRange() {
+        return new LocalDateRange(getDayStart().toLocalDate(), getDayEnd().toLocalDate());
+    }
+
+    public LocalDateRange getCurrentWeekRange() {
+        return new LocalDateRange(getWeekStart().toLocalDate(), getWeekEnd().toLocalDate());
+    }
+
+    public LocalDateRange getCurrentMonthRange() {
+        return new LocalDateRange(getMonthStart().toLocalDate(), getMonthEnd().toLocalDate());
+    }
+
+    public LocalDateRange getCurrentYearRange() {
+        return new LocalDateRange(getYearStart().toLocalDate(), getYearEnd().toLocalDate());
     }
 
     public OffsetDateTime getDayStart() {

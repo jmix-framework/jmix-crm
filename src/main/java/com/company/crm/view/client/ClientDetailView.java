@@ -12,6 +12,7 @@ import io.jmix.core.LoadContext;
 import io.jmix.core.SaveContext;
 import io.jmix.core.repository.JmixDataRepositoryContext;
 import io.jmix.flowui.component.tabsheet.JmixTabSheet;
+import io.jmix.flowui.view.DialogMode;
 import io.jmix.flowui.view.EditedEntityContainer;
 import io.jmix.flowui.view.Install;
 import io.jmix.flowui.view.StandardDetailView;
@@ -32,6 +33,7 @@ import java.util.UUID;
 @ViewController(id = "Client.detail")
 @ViewDescriptor(path = "client-detail-view.xml")
 @EditedEntityContainer("clientDc")
+@DialogMode(width = "80%", height = "80%", resizable = true)
 public class ClientDetailView extends StandardDetailView<Client> {
 
     @Autowired

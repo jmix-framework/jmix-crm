@@ -5,7 +5,8 @@ import com.company.crm.app.service.client.ClientService;
 import com.company.crm.app.service.finance.PaymentService;
 import com.company.crm.app.service.order.OrderService;
 import com.company.crm.app.service.user.UserService;
-import com.company.crm.app.util.ui.component.card.CrmCard;
+import com.company.crm.app.ui.component.card.CrmCard;
+import com.company.crm.app.util.AsyncTasksRegistry;
 import com.company.crm.app.util.ui.listener.resize.WidthResizeListener;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.client.ClientRepository;
@@ -13,30 +14,42 @@ import com.company.crm.model.client.ClientType;
 import com.company.crm.model.datatype.PriceDataType;
 import com.company.crm.model.user.User;
 import com.company.crm.view.main.MainView;
+import com.company.crm.view.user.UserDetailView;
 import com.company.crm.view.util.SkeletonStyler;
 import com.vaadin.flow.component.AbstractField.ComponentValueChangeEvent;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasValue;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.card.Card;
-import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
+import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.data.selection.SelectionEvent;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.theme.lumo.LumoUtility;
 import io.jmix.core.querycondition.LogicalCondition;
 import io.jmix.core.repository.JmixDataRepositoryContext;
 import io.jmix.core.security.CurrentAuthentication;
+import io.jmix.flowui.DialogWindows;
+import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.asynctask.UiAsyncTasks;
+import io.jmix.flowui.asynctask.UiAsyncTasks.SupplierConfigurer;
 import io.jmix.flowui.component.checkbox.Switch;
+import io.jmix.flowui.component.formlayout.JmixFormLayout;
 import io.jmix.flowui.component.grid.DataGrid;
 import io.jmix.flowui.component.select.JmixSelect;
 import io.jmix.flowui.component.textfield.TypedTextField;
+import io.jmix.flowui.kit.component.button.JmixButton;
 import io.jmix.flowui.model.CollectionLoader;
 import io.jmix.flowui.view.DialogMode;
 import io.jmix.flowui.view.Install;
 import io.jmix.flowui.view.LookupComponent;
 import io.jmix.flowui.view.StandardListView;
 import io.jmix.flowui.view.Subscribe;
+import io.jmix.flowui.view.Supply;
 import io.jmix.flowui.view.Target;
 import io.jmix.flowui.view.ViewComponent;
 import io.jmix.flowui.view.ViewController;
@@ -48,8 +61,8 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
+import static com.company.crm.app.feature.sortable.SortableFeature.makeSortable;
 import static com.company.crm.app.util.ui.listener.resize.WidthResizeListener.isWidthChanged;
 import static io.jmix.core.querycondition.PropertyCondition.contains;
 import static io.jmix.core.querycondition.PropertyCondition.equal;
@@ -73,11 +86,17 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
     @Autowired
     private UiAsyncTasks uiAsyncTasks;
     @Autowired
+    private UiComponents uiComponents;
+    @Autowired
+    private DialogWindows dialogWindows;
+    @Autowired
     private ClientRepository repository;
     @Autowired
     private CurrentAuthentication currentAuthentication;
 
-    // cards
+    // stats
+    @ViewComponent
+    private JmixFormLayout statsBlock;
     @ViewComponent
     private CrmCard ordersTotalSumCard;
     @ViewComponent
@@ -105,7 +124,7 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
     private static volatile int lastWidth = -1;
     private static final int widthBreakpoint = 600;
 
-    private final List<CompletableFuture<?>> calculatingTasks = new ArrayList<>();
+    private final AsyncTasksRegistry asyncTasksRegistry = AsyncTasksRegistry.newInstance();
 
     private final LogicalCondition filtersCondition = LogicalCondition.and();
 
@@ -121,6 +140,7 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
     public void onInit(final InitEvent event) {
         initializeStatsBlock();
         initializeFilterFields();
+        addDetachListener(e -> asyncTasksRegistry.cancelAll());
     }
 
     @Install(to = "clientsDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
@@ -163,6 +183,41 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
         calculateCardsValues();
     }
 
+    @Supply(to = "clientsDataGrid.accountManager", subject = "renderer")
+    private Renderer<Client> clientsDataGridAccountManagerRenderer() {
+        return new ComponentRenderer<>(client -> {
+            User manager = client.getAccountManager();
+            JmixButton button = uiComponents.create(JmixButton.class);
+            button.setText(manager.getDisplayName());
+            button.setTooltipText(manager.getFullName());
+            button.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+            button.addClickListener(event ->
+                    dialogWindows.detail(this, User.class)
+                            .withViewClass(UserDetailView.class)
+                            .editEntity(manager)
+                            .withViewConfigurer(v -> v.setReadOnly(true))
+                            .open());
+            return button;
+        });
+    }
+
+    @Supply(to = "clientsDataGrid.name", subject = "renderer")
+    private Renderer<Client> clientsDataGridNameRenderer() {
+        return new ComponentRenderer<>(client -> {
+            JmixButton button = uiComponents.create(JmixButton.class);
+            button.setText(client.getName());
+            button.setTooltipText(client.getFullName());
+            button.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+            button.addClickListener(event ->
+                    dialogWindows.detail(this, Client.class)
+                            .withViewClass(ClientDetailView.class)
+                            .editEntity(client)
+                            .withViewConfigurer(v -> v.setReadOnly(true))
+                            .open());
+            return button;
+        });
+    }
+
     private JmixDataRepositoryContext wrapContext(JmixDataRepositoryContext context) {
         LogicalCondition resultCondition;
         if (context.condition() != null) {
@@ -174,85 +229,30 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
     }
 
     private void initializeStatsBlock() {
+        makeSortable(statsBlock);
         calculateCardsValues();
     }
 
     private void calculateCardsValues() {
-        cancelPreviousCalculating();
-        calculatingTasks.addAll(
-                List.of(
-                        updateOrdersTotalSumCard(),
-                        updatePaymentsTotalSumCard(),
-                        updateAverageBillCard()
-                )
-        );
+        Client[] selectedClients = getSelectedClients();
+        updateOrdersTotalSumCard(selectedClients);
+        updatePaymentsTotalSumCard(selectedClients);
+        updateAverageBillCard(selectedClients);
     }
 
-    private void cancelPreviousCalculating() {
-        calculatingTasks.forEach(task -> task.cancel(true));
-        calculatingTasks.clear();
-    }
-
-    private CompletableFuture<?> updateOrdersTotalSumCard() {
+    private void updateOrdersTotalSumCard(Client... clients) {
         installCardLoader(ordersTotalSumCard);
-        Client[] selectedClients = getSelectedClients();
-        return uiAsyncTasks.supplierConfigurer(() -> {
-                    BigDecimal ordersTotalSum;
-                    if (selectedClients.length > 0) {
-                        ordersTotalSum = clientService.getOrdersTotalSum(selectedClients);
-                    } else {
-                        ordersTotalSum = orderService.getOrdersTotalSum();
-                    }
-                    return ordersTotalSum;
-                })
-                .withExceptionHandler(e ->
-                        SkeletonStyler.remove(ordersTotalSumCard))
-                .withResultHandler(ordersTotalSum ->
-                        fillStatCard("Orders Total", ordersTotalSumCard, ordersTotalSum, selectedClients))
-                .supplyAsync();
+        scheduleOrdersTotalSumCalculating(clients);
     }
 
-    private CompletableFuture<?> updatePaymentsTotalSumCard() {
+    private void updatePaymentsTotalSumCard(Client... clients) {
         installCardLoader(paymentsTotalSumCard);
-        Client[] selectedClients = getSelectedClients();
-        return uiAsyncTasks.supplierConfigurer(() -> {
-                    BigDecimal paymentsTotalSum;
-                    if (selectedClients.length > 0) {
-                        paymentsTotalSum = clientService.getPaymentsTotalSum(selectedClients);
-                    } else {
-                        paymentsTotalSum = paymentService.getPaymentsTotalSum();
-                    }
-                    return paymentsTotalSum;
-                })
-                .withExceptionHandler(e ->
-                        SkeletonStyler.remove(paymentsTotalSumCard))
-                .withResultHandler(paymentsTotalSum ->
-                        fillStatCard("Payments Total", paymentsTotalSumCard, paymentsTotalSum, selectedClients))
-                .supplyAsync();
+        schedulePaymentsTotalSumCalculating(clients);
     }
 
-    private CompletableFuture<?> updateAverageBillCard() {
+    private void updateAverageBillCard(Client... clients) {
         installCardLoader(averageBillCard);
-        Client[] selectedClients = getSelectedClients();
-        return uiAsyncTasks.supplierConfigurer(() -> {
-                    BigDecimal averageBill;
-                    try {
-                        Thread.sleep(3_000);
-                    } catch (InterruptedException e) {
-
-                    }
-                    if (selectedClients.length > 0) {
-                        averageBill = clientService.getAverageBill(selectedClients);
-                    } else {
-                        averageBill = orderService.getOrdersAverageBill();
-                    }
-                    return averageBill;
-                })
-                .withExceptionHandler(e ->
-                        SkeletonStyler.remove(averageBillCard))
-                .withResultHandler(averageBill ->
-                        fillStatCard("Average Bill", averageBillCard, averageBill, selectedClients))
-                .supplyAsync();
+        scheduleAverageBillCalculating(clients);
     }
 
     private void installCardLoader(Card card) {
@@ -265,22 +265,95 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
         return clientsDataGrid.getSelectedItems().toArray(new Client[0]);
     }
 
+    private void scheduleOrdersTotalSumCalculating(Client... clients) {
+        SupplierConfigurer<?> task =
+                uiAsyncTasks.supplierConfigurer(() -> calculateOrdersTotalSum(clients))
+                        .withExceptionHandler(e -> SkeletonStyler.remove(ordersTotalSumCard))
+                        .withResultHandler(ordersTotalSum ->
+                                fillStatCard("Orders Total", ordersTotalSumCard, ordersTotalSum, clients));
+        asyncTasksRegistry.placeTask("ordersTotalSumTask", task);
+    }
+
+    private void schedulePaymentsTotalSumCalculating(Client... clients) {
+        SupplierConfigurer<BigDecimal> taskConfigurer =
+                uiAsyncTasks.supplierConfigurer(() -> calculatePaymentsTotalSum(clients))
+                        .withExceptionHandler(e -> SkeletonStyler.remove(paymentsTotalSumCard))
+                        .withResultHandler(paymentsTotalSum ->
+                                fillStatCard("Payments Total", paymentsTotalSumCard, paymentsTotalSum, clients));
+        asyncTasksRegistry.placeTask("paymentsTotalSumTask", taskConfigurer);
+    }
+
+    private void scheduleAverageBillCalculating(Client... clients) {
+        SupplierConfigurer<?> task = uiAsyncTasks.supplierConfigurer(() -> calculateAverageBill(clients))
+                .withExceptionHandler(e -> SkeletonStyler.remove(averageBillCard))
+                .withResultHandler(averageBill ->
+                        fillStatCard("Average Bill", averageBillCard, averageBill, clients));
+        asyncTasksRegistry.placeTask("averageBillTask", task);
+    }
+
+    private BigDecimal calculateOrdersTotalSum(Client[] selectedClients) {
+        BigDecimal ordersTotalSum;
+        if (selectedClients.length > 0) {
+            ordersTotalSum = clientService.getOrdersTotalSum(selectedClients);
+        } else {
+            ordersTotalSum = orderService.getOrdersTotalSum();
+        }
+        return ordersTotalSum;
+    }
+
+    private BigDecimal calculatePaymentsTotalSum(Client[] selectedClients) {
+        BigDecimal paymentsTotalSum;
+        if (selectedClients.length > 0) {
+            paymentsTotalSum = clientService.getPaymentsTotalSum(selectedClients);
+        } else {
+            paymentsTotalSum = paymentService.getPaymentsTotalSum();
+        }
+        return paymentsTotalSum;
+    }
+
+    private BigDecimal calculateAverageBill(Client[] selectedClients) {
+        BigDecimal averageBill;
+        if (selectedClients.length > 0) {
+            averageBill = clientService.getAverageBill(selectedClients);
+        } else {
+            averageBill = orderService.getOrdersAverageBill();
+        }
+        return averageBill;
+    }
+
     private void fillStatCard(String title, CrmCard card, BigDecimal content, Client[] selectedClients) {
-        Div component = new Div(new H1(PriceDataType.formatValue(content)));
-        component.add(createClientsSuffix(selectedClients));
+        VerticalLayout component = new VerticalLayout(new H1(PriceDataType.formatValue(content)));
+        component.setPadding(false);
+        component.add(createStatCardFooter(selectedClients));
         card.fillAsStaticCard(title, component);
         SkeletonStyler.remove(card);
     }
 
-    private Component createClientsSuffix(Client[] selectedClients) {
+    private Component createStatCardFooter(Client[] selectedClients) {
+        Span mainText;
         if (selectedClients.length > 0) {
             if (selectedClients.length == 1) {
-                return new Span("for " + selectedClients[0].getName());
+                mainText = new Span("for " + selectedClients[0].getName());
             } else {
-                return new Span("for %d selected clients".formatted(selectedClients.length));
+                mainText = new Span("for %d selected clients".formatted(selectedClients.length));
             }
+            mainText.getElement().getThemeList().addAll(List.of("badge", "default"));
+        } else {
+            mainText = new Span("for all clients");
+            mainText.getElement().getThemeList().addAll(List.of("badge", "success"));
         }
-        return new Span("for all clients");
+
+        mainText.addClassNames(LumoUtility.FontSize.LARGE, LumoUtility.FontWeight.MEDIUM);
+
+        Span hintText = new Span("Select clients in the table to show their statistics");
+        hintText.addClassNames(LumoUtility.FontSize.XSMALL, LumoUtility.FontWeight.THIN);
+
+        VerticalLayout layout = new VerticalLayout(mainText, hintText);
+        layout.setWidthFull();
+        layout.setPadding(false);
+        layout.setHorizontalComponentAlignment(FlexComponent.Alignment.CENTER, hintText);
+
+        return layout;
     }
 
     private void initializeFilterFields() {

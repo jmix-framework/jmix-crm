@@ -1,4 +1,4 @@
-package com.company.crm.app.util.ui.component.chart;
+package com.company.crm.app.util.ui.chart;
 
 import com.company.crm.view.util.SkeletonStyler;
 import com.vaadin.flow.component.Unit;
@@ -7,8 +7,19 @@ import io.jmix.chartsflowui.kit.component.model.DataSet;
 import io.jmix.chartsflowui.kit.component.model.Grid;
 import io.jmix.chartsflowui.kit.component.model.Title;
 import io.jmix.chartsflowui.kit.component.model.Tooltip;
+import io.jmix.chartsflowui.kit.component.model.axis.AxisType;
+import io.jmix.chartsflowui.kit.component.model.axis.XAxis;
+import io.jmix.chartsflowui.kit.component.model.axis.YAxis;
+import io.jmix.chartsflowui.kit.component.model.legend.Legend;
+import io.jmix.chartsflowui.kit.component.model.series.BarSeries;
+import io.jmix.chartsflowui.kit.component.model.series.Label;
 import io.jmix.chartsflowui.kit.component.model.series.PieSeries;
+import io.jmix.chartsflowui.kit.component.model.series.SeriesType;
 import io.jmix.chartsflowui.kit.component.model.shared.FontStyle;
+import io.jmix.chartsflowui.kit.component.model.shared.Orientation;
+import io.jmix.chartsflowui.kit.component.model.toolbox.MagicTypeFeature;
+import io.jmix.chartsflowui.kit.component.model.toolbox.SaveAsImageFeature;
+import io.jmix.chartsflowui.kit.component.model.toolbox.Toolbox;
 import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.asynctask.UiAsyncTasks;
 import org.slf4j.Logger;
@@ -53,23 +64,49 @@ public class ChartsUtils {
                 .supplyAsync();
     }
 
-    public Chart createDefaulListViewTopChart(String title) {
+    public Chart createViewStatPieChart(String title) {
+        return createViewStatChart(title, SeriesType.PIE);
+    }
+
+    public Chart createViewStatChart(String title, SeriesType seriesType) {
         Chart chart = uiComponents.create(Chart.class)
-                .withTooltip(new Tooltip())
-                .withSeries(new PieSeries()
-                        .withAnimation(true))
+                .withLegend(new Legend()
+                        .withTop("20")
+                        .withLeft("0")
+                        .withOrientation(Orientation.VERTICAL))
+                .withTooltip(new Tooltip()
+                        .withShow(true))
+                .withToolbox(new Toolbox()
+                        .withShow(true)
+                        .withFeatures(
+                                new SaveAsImageFeature()
+                                        .withType(SaveAsImageFeature.SaveType.PNG)))
                 .withTitle(new Title()
                         .withText(title)
-                        .withBottom("0%")
-                        .withRight(title.length() >= 10 ? "0" : "10%")
-                        .withTextAlign(Title.TextAlign.CENTER)
-                        .withTextVerticalAlign(Title.TextVerticalAlign.BOTTOM)
                         .withTextStyle(new Title.TextStyle()
                                 .withFontSize(12)
                                 .withFontStyle(FontStyle.NORMAL)))
                 .withGrid(new Grid()
                         .withWidth("100%")
                         .withShow(false));
+
+        switch (seriesType) {
+            case BAR -> {
+                chart.withSeries(
+                    new BarSeries()
+                            .withAnimation(true)
+                            .withLabel(new Label().withShow(false))
+                            .withYAxisIndex(0)
+                            .withXAxisIndex(0))
+                        .withXAxis(new XAxis().withType(AxisType.CATEGORY))
+                        .withYAxis(new YAxis().withType(AxisType.VALUE));
+            }
+            case PIE -> chart.withSeries(
+                    new PieSeries()
+                            .withLabel(new Label().withShow(false))
+                            .withAnimation(true));
+            default -> throw new IllegalArgumentException("SeriesType not supported");
+        }
 
         applyDefaultChartSettings(chart);
 

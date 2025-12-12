@@ -65,14 +65,24 @@
                                 <responsiveStep minWidth="0" columns="1"/>
                                 <responsiveStep minWidth="40em" columns="2"/>
                             </responsiveSteps>
-                            <entityPicker id="accountManagerField" property="accountManager" readOnly="true"/>
+                            <h3 text="Common" classNames="pt-l"/>
+                            <entityPicker id="accountManagerField" property="accountManager" readOnly="true" colspan="2"/>
                             <textField id="nameField" property="name"/>
                             <textField id="fullNameField" property="fullName"/>
-                            <textField id="addressField" property="address"/>
                             <select id="typeField" property="type"/>
                             <textField id="vatNumberField" property="vatNumber"/>
                             <textField id="regNumberField" property="regNumber"/>
                             <textField id="websiteField" property="website"/>
+
+                            <h3 text="msg://com.company.crm.model.address/Address" classNames="pt-l"/>
+                            <formLayout id="addressForm" expandColumns="true" expandFields="true" maxColumns="2" colspan="2" dataContainer="clientDc">
+                                <textField property="address.country"/>
+                                <textField property="address.postalCode"/>
+                                <textField property="address.city"/>
+                                <textField property="address.street"/>
+                                <textField property="address.building"/>
+                                <textField property="address.apartment"/>
+                            </formLayout>
                         </formLayout>
                     </tab>
                     <tab id="contactsTab" label="Contacts">

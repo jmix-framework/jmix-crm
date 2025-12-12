@@ -1,6 +1,6 @@
-package com.company.crm.app.util.ui.component.card;
+package com.company.crm.app.ui.component.card;
 
-import com.company.crm.app.util.date.DateRange;
+import com.company.crm.app.util.date.range.LocalDateRange;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasStyle;
 import com.vaadin.flow.component.HasText;
@@ -25,6 +25,7 @@ import io.jmix.flowui.kit.component.dropdownbutton.DropdownButtonVariant;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.lang.Nullable;
 
 import java.time.format.DateTimeFormatter;
 import java.util.Objects;
@@ -41,9 +42,7 @@ public class CrmCard extends JmixCard implements ApplicationContextAware {
 
     private static final String PREVIOUS_RANGE_DELTA_COMPONENT_ID = "delta-value-component";
 
-    private String id;
     private Component title;
-
     private boolean hasPeriodFilter = false;
     private boolean hasEllipsisButton = false;
     private boolean dynamicBackground = true;
@@ -94,22 +93,19 @@ public class CrmCard extends JmixCard implements ApplicationContextAware {
                                  int colspan,
                                  Component title,
                                  Function<CardPeriod, Component> contentProvider) {
-        this.id = id;
         this.title = title;
-        this.contentProvider = contentProvider;
-
-        this.dynamicBackground = true;
         this.hasPeriodFilter = true;
+        this.dynamicBackground = true;
+        this.contentProvider = contentProvider;
         setColspan(colspan);
-
-        initComponent();
+        initComponent(id);
     }
 
     public void defaultRangeStatPeriodCard(String title, Function<CardPeriod, RangeStatCardInfo> statInfoProvider) {
         fillAsPeriodCard(title, period -> statInfoProvider.apply(period).createDefaultContent());
     }
 
-    public record RangeStatCardInfo(DateRange range, String currentRangeValue, String previousRangeDelta) {
+    public record RangeStatCardInfo(LocalDateRange range, String currentRangeValue, String previousRangeDelta) {
 
         public Component createDefaultContent() {
             return defaultContentProvider().apply(this);
@@ -160,8 +156,10 @@ public class CrmCard extends JmixCard implements ApplicationContextAware {
         return this;
     }
 
-    private void initComponent() {
-        setId(defaultString(id));
+    private void initComponent(@Nullable String id) {
+        if (id != null) {
+            setId(id);
+        }
         addThemeVariants(CardVariant.LUMO_ELEVATED, CardVariant.LUMO_OUTLINED);
         initHeaderAndContent();
     }

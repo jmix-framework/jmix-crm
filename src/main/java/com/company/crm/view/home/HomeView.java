@@ -1,14 +1,13 @@
 package com.company.crm.view.home;
 
-import com.company.crm.app.feature.sortable.SortableFeature;
 import com.company.crm.app.service.user.UserService;
 import com.company.crm.app.service.datetime.DateTimeService;
 import com.company.crm.app.service.finance.InvoiceService;
 import com.company.crm.app.service.finance.PaymentService;
 import com.company.crm.app.service.order.OrderService;
-import com.company.crm.app.util.ui.component.card.CrmCard;
-import com.company.crm.app.util.ui.component.card.CardPeriod;
-import com.company.crm.app.util.ui.component.card.CrmCard.RangeStatCardInfo;
+import com.company.crm.app.ui.component.card.CrmCard;
+import com.company.crm.app.ui.component.card.CardPeriod;
+import com.company.crm.app.ui.component.card.CrmCard.RangeStatCardInfo;
 import com.company.crm.app.util.ui.listener.resize.WidthResizeListener;
 import com.company.crm.model.datatype.PriceDataType;
 import com.company.crm.model.order.Order;
@@ -75,6 +74,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.company.crm.app.feature.sortable.SortableFeature.makeSortable;
 import static com.company.crm.app.util.ui.listener.resize.WidthResizeListener.isWidthChanged;
 import static io.jmix.flowui.component.UiComponentUtils.traverseComponents;
 
@@ -160,12 +160,12 @@ public class HomeView extends StandardView implements WidthResizeListener {
 
     private void createLeftComponents() {
         doCreateCards(getLeftCards(), leftContent);
-        SortableFeature.makeSortable(leftContent);
+        makeSortable(leftContent);
     }
 
     private void createRightComponents() {
         doCreateCards(getRightCards(), rightContent);
-        SortableFeature.makeSortable(rightContent);
+        makeSortable(rightContent);
     }
 
     private List<JmixCard> getLeftCards() {
@@ -235,17 +235,11 @@ public class HomeView extends StandardView implements WidthResizeListener {
         var range = period.getDateRange(dateTimeService);
         var previousRange = period.getPreviousDateRangeFor(range);
 
-        var startDate = range.startDate();
-        var endDate = range.endDate();
-
-        var previousPeriodStart = previousRange.startDate();
-        var previousPeriodEnd = previousRange.endDate();
-
-        var sum = orderService.getOrders(startDate, endDate).stream()
+        var sum = orderService.getOrders(range).stream()
                 .map(Order::getTotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        var previousSum = orderService.getOrders(previousPeriodStart, previousPeriodEnd)
+        var previousSum = orderService.getOrders(previousRange)
                 .stream()
                 .map(Order::getTotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -260,17 +254,11 @@ public class HomeView extends StandardView implements WidthResizeListener {
         var range = period.getDateRange(dateTimeService);
         var previousRange = period.getPreviousDateRangeFor(range);
 
-        var startDate = range.startDate();
-        var endDate = range.endDate();
-
-        var previousPeriodStart = previousRange.startDate();
-        var previousPeriodEnd = previousRange.endDate();
-
-        var sum = paymentService.loadPayments(startDate, endDate).stream()
+        var sum = paymentService.loadPayments(range).stream()
                 .map(Payment::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        var previousSum = paymentService.loadPayments(previousPeriodStart, previousPeriodEnd)
+        var previousSum = paymentService.loadPayments(previousRange)
                 .stream()
                 .map(Payment::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -325,14 +313,8 @@ public class HomeView extends StandardView implements WidthResizeListener {
         var range = period.getDateRange(dateTimeService);
         var previousRange = period.getPreviousDateRangeFor(range);
 
-        var startDate = range.startDate();
-        var endDate = range.endDate();
-
-        var previousPeriodStart = previousRange.startDate();
-        var previousPeriodEnd = previousRange.endDate();
-
-        List<Order> orders = orderService.getOrders(startDate, endDate);
-        List<Order> previousOrders = orderService.getOrders(previousPeriodStart, previousPeriodEnd);
+        List<Order> orders = orderService.getOrders(range);
+        List<Order> previousOrders = orderService.getOrders(previousRange);
 
         String delta;
         if (previousOrders.isEmpty()) {
@@ -342,10 +324,7 @@ public class HomeView extends StandardView implements WidthResizeListener {
             delta = (percentChange >= 0 ? "↑" : "↓") + String.format("%.2f", Math.abs(percentChange)) + "%";
         }
 
-        var statContent =
-                new RangeStatCardInfo(range, orders.size() + " orders", delta)
-                        .createDefaultContent();
-
+        var statContent = new RangeStatCardInfo(range, orders.size() + " orders", delta).createDefaultContent();
         var chartContent = createSalesFunnelChartContent(orders);
 
         return new Div(statContent, chartContent);
@@ -444,7 +423,7 @@ public class HomeView extends StandardView implements WidthResizeListener {
         Avatar avatar = new Avatar(user.getUsername().substring(0, 1));
         row.add(avatar);
 
-        Span userNameSpan = new Span(user.getFullNameName());
+        Span userNameSpan = new Span(user.getFullName());
         userNameSpan.addClassNames(LumoUtility.TextColor.BODY);
 
         Span activityDescriptionSpan = new Span(activity.getActionDescription());

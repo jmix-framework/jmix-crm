@@ -4,10 +4,14 @@ import com.company.crm.model.base.FullAuditEntity;
 import com.company.crm.model.catalog.item.CategoryItem;
 import com.company.crm.model.datatype.PriceDataType;
 import io.jmix.core.DeletePolicy;
+import io.jmix.core.MetadataTools;
 import io.jmix.core.entity.annotation.OnDeleteInverse;
+import io.jmix.core.metamodel.annotation.DependsOnProperties;
+import io.jmix.core.metamodel.annotation.InstanceName;
 import io.jmix.core.metamodel.annotation.JmixEntity;
 import io.jmix.core.metamodel.annotation.JmixProperty;
 import io.jmix.core.metamodel.annotation.PropertyDatatype;
+import io.jmix.core.metamodel.datatype.DatatypeFormatter;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -15,7 +19,6 @@ import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
 
@@ -39,11 +42,11 @@ public class OrderItem extends FullAuditEntity {
     private BigDecimal discount;
 
     @PropertyDatatype(PriceDataType.NAME)
-    @Column(name = "NET_PRICE", nullable = false, precision = 19, scale = 2)
+    @Column(name = "NET_PRICE", nullable = false)
     private BigDecimal netPrice;
 
     @PropertyDatatype(PriceDataType.NAME)
-    @Column(name = "GROSS_PRICE", nullable = false, precision = 19, scale = 2)
+    @Column(name = "GROSS_PRICE", nullable = false)
     private BigDecimal grossPrice;
 
     @Column(name = "VAT_AMOUNT", nullable = false, precision = 19, scale = 2)
@@ -127,4 +130,11 @@ public class OrderItem extends FullAuditEntity {
         this.categoryItem = categoryItem;
     }
 
+    @InstanceName
+    @DependsOnProperties({"categoryItem", "quantity"})
+    public String getInstanceName(MetadataTools metadataTools, DatatypeFormatter datatypeFormatter) {
+        return String.format("%s %s",
+                metadataTools.format(categoryItem),
+                datatypeFormatter.formatBigDecimal(quantity));
+    }
 }

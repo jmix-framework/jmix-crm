@@ -10,7 +10,7 @@
             </fetchPlan>
             <loader id="clientsDl" readOnly="true">
                 <query>
-                    <![CDATA[select distinct c from Client c order by c.name]]>
+                    <![CDATA[select distinct c from Client c order by c.createdDate]]>
                 </query>
             </loader>
         </collection>
@@ -29,12 +29,12 @@
         <action id="discardAction" type="lookup_discard"/>
     </actions>
     <layout>
-        <formLayout id="statBlock" width="100%"
+        <formLayout id="statsBlock" width="100%"
                     autoResponsive="true" autoRows="true"
                     expandFields="true" expandColumns="true">
-            <component id="ordersTotalSumCard" class="com.company.crm.app.util.ui.component.card.CrmCard"/>
-            <component id="paymentsTotalSumCard" class="com.company.crm.app.util.ui.component.card.CrmCard"/>
-            <component id="averageBillCard" class="com.company.crm.app.util.ui.component.card.CrmCard"/>
+            <component id="ordersTotalSumCard" class="com.company.crm.app.ui.component.card.CrmCard"/>
+            <component id="paymentsTotalSumCard" class="com.company.crm.app.ui.component.card.CrmCard"/>
+            <component id="averageBillCard" class="com.company.crm.app.ui.component.card.CrmCard"/>
         </formLayout>
         <div width="50%" maxWidth="40em">
             <formLayout>

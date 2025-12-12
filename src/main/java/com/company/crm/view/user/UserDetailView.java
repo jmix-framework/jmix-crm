@@ -82,7 +82,7 @@ public class UserDetailView extends StandardDetailView<User> {
     private void showChangePasswordButton(User editedEntity) {
         UserDetails currentUser = currentAuthentication.getUser();
         boolean canChangePassword = editedEntity.equals(currentUser) || roleUtils.isAdmin(currentUser);
-        changePasswordButton.setVisible(canChangePassword);
+        changePasswordButton.setVisible(canChangePassword && !isReadOnly());
         if (canChangePassword) {
             changePasswordButton.addClickListener(e -> {
                 showChangePasswordDialog(editedEntity);
