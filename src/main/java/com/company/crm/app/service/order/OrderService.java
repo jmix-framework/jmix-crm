@@ -1,20 +1,62 @@
 package com.company.crm.app.service.order;
 
 import com.company.crm.app.util.date.range.LocalDateRange;
+import com.company.crm.model.client.Client;
+import com.company.crm.model.client.ClientType;
 import com.company.crm.model.order.Order;
 import com.company.crm.model.order.OrderRepository;
+import com.company.crm.model.order.OrderStatus;
+import io.jmix.core.entity.KeyValueEntity;
+import io.jmix.data.Sequence;
+import io.jmix.data.Sequences;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class OrderService {
 
+    private static final Sequence ORDER_NUMBER_SEQUENCE =
+            Sequence.withName("CRM_ORDER_NUMBER").setStartValue(1000);
+
+    private final Sequences sequences;
     private final OrderRepository orderRepository;
 
-    public OrderService(OrderRepository orderRepository) {
+    public OrderService(OrderRepository orderRepository, Sequences sequences) {
+        this.sequences = sequences;
         this.orderRepository = orderRepository;
+    }
+
+    public String getNextOrderNumber() {
+        return String.valueOf(sequences.createNextValue(ORDER_NUMBER_SEQUENCE));
+    }
+
+    public Map<OrderStatus, BigDecimal> getOrdersAmountByStatus() {
+        Map<OrderStatus, BigDecimal> result = new HashMap<>();
+        List<KeyValueEntity> list = orderRepository.fluentValuesLoader(
+                        "select e.status as status, count(e) as amount " +
+                                "from Order_ e " +
+                                "group by e.status")
+                .properties("status", "amount")
+                .list();
+        list.forEach(e -> {
+            OrderStatus status = OrderStatus.fromId(e.getValue("status"));
+            BigDecimal amount = BigDecimal.valueOf(e.getValue("amount"));
+            BigDecimal currentAmount = result.getOrDefault(status, BigDecimal.ZERO);
+            result.put(status, currentAmount.add(amount));
+        });
+        return result;
+    }
+
+    public Map<OrderStatus, List<Order>> getOrdersByStatus() {
+        Map<OrderStatus, List<Order>> ordersByStatus = new HashMap<>();
+        orderRepository.findAll().forEach(order ->
+                ordersByStatus.getOrDefault(order.getStatus(), new ArrayList<>()).add(order));
+        return ordersByStatus;
     }
 
     public List<Order> getOrders(LocalDateRange dateRange) {

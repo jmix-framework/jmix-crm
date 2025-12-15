@@ -3,6 +3,7 @@ package com.company.crm.view.catalog;
 import com.company.crm.app.feature.queryparameters.filters.FieldValueQueryParameterBinder;
 import com.company.crm.app.service.catalog.CatalogService;
 import com.company.crm.app.service.datetime.DateTimeService;
+import com.company.crm.app.ui.component.card.CrmCard;
 import com.company.crm.app.util.date.range.LocalDateRange;
 import com.company.crm.app.util.ui.chart.ChartsUtils;
 import com.company.crm.model.catalog.category.Category;
@@ -21,6 +22,8 @@ import io.jmix.chartsflowui.kit.data.chart.ListChartItems;
 import io.jmix.core.common.datastruct.Pair;
 import io.jmix.core.querycondition.LogicalCondition;
 import io.jmix.core.repository.JmixDataRepositoryContext;
+import io.jmix.flowui.UiComponents;
+import io.jmix.flowui.component.card.JmixCard;
 import io.jmix.flowui.component.formlayout.JmixFormLayout;
 import io.jmix.flowui.component.select.JmixSelect;
 import io.jmix.flowui.component.textfield.TypedTextField;
@@ -56,6 +59,8 @@ import static io.jmix.core.querycondition.PropertyCondition.equal;
 @DialogMode(width = "64em")
 public class CategoryItemListView extends StandardListView<CategoryItem> {
 
+    @Autowired
+    private UiComponents uiComponents;
     @Autowired
     private ChartsUtils chartsUtils;
     @Autowired
@@ -157,7 +162,9 @@ public class CategoryItemListView extends StandardListView<CategoryItem> {
         }}.forEach(chart2Initializer -> {
             Chart chart = chart2Initializer.getFirst();
             Supplier<DataSet> dataSetSupplier = chart2Initializer.getSecond();
-            chartsBlock.add(chart);
+            CrmCard card = uiComponents.create(CrmCard.class);
+            card.add(chart);
+            chartsBlock.add(card);
             SkeletonStyler.apply(chart);
             chart2DataSetLoader.put(chart, dataSetSupplier);
         });

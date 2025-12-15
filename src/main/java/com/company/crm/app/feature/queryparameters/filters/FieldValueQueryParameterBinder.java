@@ -1,18 +1,23 @@
 package com.company.crm.app.feature.queryparameters.filters;
 
 import com.company.crm.app.feature.queryparameters.SimpleUrlQueryParametersBinder;
+import com.company.crm.app.util.context.AppContext;
 import com.company.crm.model.base.UuidEntity;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasValue;
+import com.vaadin.flow.component.combobox.ComboBoxBase;
+import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.router.QueryParameters;
 import io.jmix.core.metamodel.datatype.EnumClass;
 import io.jmix.flowui.facet.UrlQueryParametersFacet;
 import io.jmix.flowui.facet.urlqueryparameters.AbstractUrlQueryParametersBinder;
 import io.jmix.flowui.view.View;
+import io.jmix.flowui.view.navigation.UrlParamSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -33,8 +38,8 @@ import static org.apache.commons.lang3.StringUtils.substringAfter;
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class FieldValueQueryParameterBinder extends AbstractUrlQueryParametersBinder {
 
-    private static final String QP_PREFIX = "value-for-";
     private static final Logger log = LoggerFactory.getLogger(FieldValueQueryParameterBinder.class);
+    private static final String QP_PREFIX = "value-for-";
 
     private final SimpleUrlQueryParametersBinder delegate;
 
@@ -157,6 +162,7 @@ public class FieldValueQueryParameterBinder extends AbstractUrlQueryParametersBi
 
         private final View<?> view;
         private final List<ComponentValueBinder> binders = new ArrayList<>();
+        private final UrlParamSerializer urlParamSerializer = AppContext.getBean(UrlParamSerializer.class);
 
         private Builder(View<?> view) {
             this.view = view;
@@ -170,11 +176,27 @@ public class FieldValueQueryParameterBinder extends AbstractUrlQueryParametersBi
         }
 
         public <V extends UuidEntity, C extends Select<V>> Builder addEntitySelectBinding(C select, Collection<V> items) {
-            binders.add(new ComponentValueBinder<>(select,
+            doAddListDataItemBinding(select, items);
+            return this;
+        }
+
+        public <V extends UuidEntity, C extends ComboBoxBase> Builder addComboboxBinding(C comboBox, Collection<V> items) {
+            doAddListDataItemBinding(comboBox, items);
+            return this;
+        }
+
+        private <V extends UuidEntity, C extends Component & HasValue<?, V>> void doAddListDataItemBinding(C listDataItem, Collection<V> items) {
+            binders.add(new ComponentValueBinder<>(listDataItem,
                     value -> Optional.ofNullable(value).map(entity -> entity.getId().toString()).orElse(""),
                     id -> items.stream()
                             .filter(entity -> entity.getId().toString().equals(id))
                             .findFirst().orElse(null)));
+        }
+
+        public <C extends DatePicker> Builder addDatePickerBinding(C picker) {
+            binders.add(new ComponentValueBinder<>(picker,
+                    value -> Optional.ofNullable(value).map(urlParamSerializer::serialize).orElse(""),
+                    date -> urlParamSerializer.deserialize(LocalDate.class, date)));
             return this;
         }
 

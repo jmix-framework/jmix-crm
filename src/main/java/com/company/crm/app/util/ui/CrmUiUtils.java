@@ -1,5 +1,6 @@
 package com.company.crm.app.util.ui;
 
+import com.vaadin.flow.component.HasStyle;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.page.BrowserWindowResizeEvent;
 import com.vaadin.flow.component.page.Page;
@@ -10,10 +11,18 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
-public final class UiUtils {
+public final class CrmUiUtils {
 
     private static final String GET_CLIENT_WIDTH_FUNC = "return window.innerWidth";
     private static final String GET_CLIENT_HEIGHT_FUNC = "return window.innerHeight";
+
+    public static void setCursorPointer(HasStyle hasStyle) {
+        setCursor(hasStyle, "pointer");
+    }
+
+    public static void setCursor(HasStyle hasStyle, String cursor) {
+        hasStyle.getStyle().set("cursor", cursor);
+    }
 
     public static Optional<UI> getCurrentUI() {
         return Optional.ofNullable(UI.getCurrent());
@@ -67,6 +76,6 @@ public final class UiUtils {
         return executeJs(GET_CLIENT_HEIGHT_FUNC);
     }
 
-    private UiUtils() {
+    private CrmUiUtils() {
     }
 }

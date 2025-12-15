@@ -6,6 +6,7 @@ import com.company.crm.model.client.ClientType;
 import io.jmix.core.FetchPlan;
 import io.jmix.core.FetchPlanBuilder;
 import io.jmix.core.FetchPlans;
+import io.jmix.core.FluentValueLoader;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 
@@ -58,7 +59,7 @@ public class ClientService {
     public List<Client> getClientsWithPayments() {
         return clientRepository.findAllWithPayments(clientWithPaymentsFetchPlan());
     }
-    
+
     /**
      * Returns a map of the top buyers and their corresponding total purchase amounts,
      * sorted by total purchase in descending order.
@@ -92,13 +93,21 @@ public class ClientService {
      * @param client the {@link Client}s whose total order value is to be calculated.
      * @return the total value of all orders associated with the specified client as a {@link BigDecimal}.
      */
-    public BigDecimal getOrdersTotalSum(Client...client) {
-        return clientRepository.fluentValueLoader(
+    public BigDecimal getOrdersTotalSum(Client... client) {
+        boolean clientsSpecified = client.length > 0;
+
+        var loader = clientRepository.fluentValueLoader(
                 "select sum(e.total) as total " +
                         "from Order_ e " +
-                        "where e.client in :clients " +
+                        (clientsSpecified ? "where e.client in :clients " : " ") +
                         "order by total desc", BigDecimal.class
-        ).parameter("clients", asList(client)).optional().orElse(BigDecimal.ZERO);
+        );
+
+        if (clientsSpecified) {
+            loader.parameter("clients", asList(client));
+        }
+
+        return loader.optional().orElse(BigDecimal.ZERO);
     }
 
     /**
@@ -107,12 +116,21 @@ public class ClientService {
      * @param client the {@link Client}s whose total payments value is to be calculated.
      * @return the total value of all payments associated with the specified client as a {@link BigDecimal}.
      */
-    public BigDecimal getPaymentsTotalSum(Client...client) {
-        return clientRepository.fluentValueLoader(
+    public BigDecimal getPaymentsTotalSum(Client... client) {
+        boolean clientSpecified = client.length > 0;
+
+        var loader = clientRepository.fluentValueLoader(
                 "select sum(p.amount) as total " +
                         "from Payment p " +
-                        "where p.invoice.client in :client", BigDecimal.class
-        ).parameter("client", asList(client)).optional().orElse(BigDecimal.ZERO);
+                        (clientSpecified ? "where p.invoice.client in :client" : ""),
+                BigDecimal.class
+        );
+
+        if (clientSpecified) {
+            loader.parameter("client", asList(client));
+        }
+
+        return loader.optional().orElse(BigDecimal.ZERO);
     }
 
     /**
@@ -121,12 +139,20 @@ public class ClientService {
      * @param client the {@link Client}s whose average bill is to be calculated.
      * @return the average bill for the specified client as a {@link BigDecimal}.
      */
-    public BigDecimal getAverageBill(Client...client) {
-        return clientRepository.fluentValueLoader(
+    public BigDecimal getAverageBill(Client... client) {
+        boolean clientSpecified = client.length > 0;
+
+        var loader = clientRepository.fluentValueLoader(
                 "select avg(e.total) as average " +
                         "from Order_ e " +
-                        "where e.client in :client", BigDecimal.class
-        ).parameter("client", asList(client)).optional().orElse(BigDecimal.ZERO);
+                        (clientSpecified ? "where e.client in :client" : ""), BigDecimal.class
+        );
+
+        if (clientSpecified) {
+            loader.parameter("client", asList(client));
+        }
+
+        return loader.optional().orElse(BigDecimal.ZERO);
     }
 
     private FetchPlan clientWithOrdersFetchPlan() {

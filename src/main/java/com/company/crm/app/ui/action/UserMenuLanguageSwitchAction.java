@@ -32,7 +32,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import static com.company.crm.app.util.ui.UiUtils.reloadCurrentPage;
+import static com.company.crm.app.util.ui.CrmUiUtils.reloadCurrentPage;
 
 @ActionType(UserMenuLanguageSwitchAction.ID)
 public class UserMenuLanguageSwitchAction extends UserMenuAction<UserMenuLanguageSwitchAction, UserMenu> {

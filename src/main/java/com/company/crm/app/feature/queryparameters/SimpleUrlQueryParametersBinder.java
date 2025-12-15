@@ -20,6 +20,11 @@ public class SimpleUrlQueryParametersBinder extends AbstractUrlQueryParametersBi
     private final Supplier<QueryParameters> parametersUpdater;
     private final Consumer<QueryParameters> parametersReader;
 
+    public static SimpleUrlQueryParametersBinder registerBinder(View<?> view, Supplier<QueryParameters> stateUpdateProvider,
+                                                                Consumer<QueryParameters> stateUpdateConsumer) {
+        return registerBinder(getUrlQueryParametersFacet(view), stateUpdateProvider, stateUpdateConsumer);
+    }
+
     public static SimpleUrlQueryParametersBinder registerBinder(UrlQueryParametersFacet facet,
                                                                 Supplier<QueryParameters> stateUpdateProvider,
                                                                 Consumer<QueryParameters> stateUpdateConsumer) {

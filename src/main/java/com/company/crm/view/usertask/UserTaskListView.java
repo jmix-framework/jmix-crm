@@ -1,5 +1,6 @@
 package com.company.crm.view.usertask;
 
+import com.company.crm.app.util.ui.renderer.CrmRenderers;
 import com.company.crm.model.user.User;
 import com.company.crm.model.user.UserTask;
 import com.company.crm.model.user.UserTaskRepository;
@@ -134,6 +135,8 @@ public class UserTaskListView extends StandardListView<UserTask> {
     private boolean modifiedAfterEdit;
 
     private Boolean gridOnly = null;
+    @Autowired
+    private CrmRenderers crmRenderers;
 
     public void reloadData() {
         userTasksDl.load();
@@ -320,8 +323,13 @@ public class UserTaskListView extends StandardListView<UserTask> {
     }
 
     @Install(target = Target.DATA_CONTEXT)
-    private Set<Object> saveDelegate(SaveContext saveContext) {
+    private Set<UserTask> saveDelegate(SaveContext saveContext) {
         return Set.of(repository.save(userTaskDc.getItem()));
+    }
+
+    @Supply(to = "userTasksDataGrid.dueDate", subject = "renderer")
+    private Renderer<UserTask> userTasksDataGridDueDateRenderer() {
+        return crmRenderers.taskDueDateRenderer();
     }
 
     private User getCurrentUser() {

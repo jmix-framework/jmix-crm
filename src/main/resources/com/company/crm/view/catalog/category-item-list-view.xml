@@ -28,8 +28,8 @@
         <formLayout id="chartsBlock" width="100%" autoResponsive="true" autoRows="true" expandFields="true"
                     expandColumns="true"/>
 
-        <div width="100%">
-            <formLayout width="100%" classNames="gap-x-xl">
+        <div width="100%" maxWidth="40em">
+            <formLayout width="100%">
                 <responsiveSteps>
                     <responsiveStep minWidth="0" columns="1"/>
                     <responsiveStep minWidth="20em" columns="2"/>
@@ -39,8 +39,7 @@
                         <icon icon="SEARCH"/>
                     </prefix>
                 </textField>
-                <select id="categorySelect" label=" " placeholder="Category"
-                        emptySelectionAllowed="true"/>
+                <select id="categorySelect" placeholder="Category" emptySelectionAllowed="true"/>
             </formLayout>
             <genericFilter id="advancedFilter" dataLoader="categoryItemsDl"
                            opened="false" summaryText="msg:///advanced" themeNames="filled">

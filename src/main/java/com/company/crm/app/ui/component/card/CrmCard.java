@@ -25,7 +25,6 @@ import io.jmix.flowui.kit.component.dropdownbutton.DropdownButtonVariant;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
-import org.springframework.lang.Nullable;
 
 import java.time.format.DateTimeFormatter;
 import java.util.Objects;
@@ -42,16 +41,20 @@ public class CrmCard extends JmixCard implements ApplicationContextAware {
 
     private static final String PREVIOUS_RANGE_DELTA_COMPONENT_ID = "delta-value-component";
 
-    private Component title;
+    private Component title = new Span("");
     private boolean hasPeriodFilter = false;
     private boolean hasEllipsisButton = false;
-    private boolean dynamicBackground = true;
 
     private Function<CardPeriod, Component> contentProvider;
 
     private CardPeriod currentPeriod = DEFAULT_INITIAL_PERIOD;
 
     private ApplicationContext applicationContext;
+
+    {
+        addThemeVariants(CardVariant.LUMO_ELEVATED, CardVariant.LUMO_OUTLINED);
+        updateBackground();
+    }
 
     public void fillAsStaticCard(String title,
                                  Component component) {
@@ -95,10 +98,12 @@ public class CrmCard extends JmixCard implements ApplicationContextAware {
                                  Function<CardPeriod, Component> contentProvider) {
         this.title = title;
         this.hasPeriodFilter = true;
-        this.dynamicBackground = true;
         this.contentProvider = contentProvider;
         setColspan(colspan);
-        initComponent(id);
+        if (id != null) {
+            setId(id);
+        }
+        refreshContent();
     }
 
     public void defaultRangeStatPeriodCard(String title, Function<CardPeriod, RangeStatCardInfo> statInfoProvider) {
@@ -151,22 +156,9 @@ public class CrmCard extends JmixCard implements ApplicationContextAware {
         return this;
     }
 
-    public CrmCard setDynamicBackground(boolean dynamicBackground) {
-        this.dynamicBackground = dynamicBackground;
-        return this;
-    }
-
-    private void initComponent(@Nullable String id) {
-        if (id != null) {
-            setId(id);
-        }
-        addThemeVariants(CardVariant.LUMO_ELEVATED, CardVariant.LUMO_OUTLINED);
-        initHeaderAndContent();
-    }
-
     private void initHeaderAndContent() {
         initHeader();
-        initContent();
+        updateContentIfNeeded();
     }
 
     private void setColspan(int colspan) {
@@ -218,7 +210,7 @@ public class CrmCard extends JmixCard implements ApplicationContextAware {
             item.addClickListener(e -> {
                 if (!Objects.equals(dropdownButton.getText(), localizedMessage)) {
                     currentPeriod = period;
-                    initContent();
+                    updateContentIfNeeded();
                     dropdownButton.setText(localizedMessage);
                 }
             });
@@ -226,63 +218,54 @@ public class CrmCard extends JmixCard implements ApplicationContextAware {
         dropdownButton.setText(messages.getMessage(CardPeriod.MONTH));
     }
 
-    private void initContent() {
-        setContent(contentProvider.apply(currentPeriod));
+    private void updateContentIfNeeded() {
+        if (contentProvider != null) {
+            setContent(contentProvider.apply(currentPeriod));
+        }
     }
 
     private void setContent(Component content) {
         removeAll();
         add(content);
-        updateDynamicBackground();
+        updateBackground();
     }
 
     private void refreshContent() {
         initHeaderAndContent();
     }
 
-    private void updateDynamicBackground() {
-        if (!dynamicBackground) {
-            return;
-        }
-        var contentComponent = UiComponentUtils.findComponent(this,
+    private void updateBackground() {
+        var deltaComponent = UiComponentUtils.findComponent(this,
                 PREVIOUS_RANGE_DELTA_COMPONENT_ID).orElse(this);
 
-        var content = "";
-        if (contentComponent instanceof HasText hasText) {
-            content = hasText.getText();
+        var delta = "";
+        if (deltaComponent instanceof HasText hasText) {
+            delta = hasText.getText();
         }
 
-        String themeName = "badge";
-        if (content.startsWith("↑")) {
-            themeName += " success";
+        String spanThemeName = "badge";
+        if (delta.startsWith("↑")) {
+            spanThemeName += " success";
             setLinearGradient("var(--lumo-primary-color-10pct)");
-        } else if (content.startsWith("↓")) {
-            themeName += " error";
+        } else if (delta.startsWith("↓")) {
+            spanThemeName += " error";
             setLinearGradient("var(--lumo-error-color-10pct)");
         } else {
-            themeName += " contrast";
+            spanThemeName += " default";
             setLinearGradient("var(--lumo-contrast-10pct)");
         }
 
-        if (contentComponent instanceof Span span) {
-            span.getElement().getThemeList().add(themeName);
+        if (deltaComponent instanceof Span span) {
+            span.getElement().getThemeList().add(spanThemeName);
         }
     }
 
-    private static void setLinearGradient(HasStyle component, String color) {
-        setLinearGradient(component, 45, "var(--lumo-base-color)", color);
+    private void setLinearGradient(String color) {
+        setLinearGradient(this, 45, "var(--lumo-shade-5pct)", color);
     }
 
     private static void setLinearGradient(HasStyle component, int deg, String color1, String color2) {
         component.getStyle().set("background", "linear-gradient(%ddeg, %s, %s)".formatted(deg, color1, color2));
-    }
-
-    private void setLinearGradient(String color) {
-        setLinearGradient(this, 45, "var(--lumo-base-color)", color);
-    }
-
-    private void setLinearGradient(int deg, String color1, String color2) {
-        setLinearGradient(this, deg, color1, color2);
     }
 
     @Override

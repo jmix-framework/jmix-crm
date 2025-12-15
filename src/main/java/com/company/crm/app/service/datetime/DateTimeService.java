@@ -15,7 +15,7 @@ import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.TimeZone;
 
-import static com.company.crm.app.util.ui.UiUtils.getCurrentUI;
+import static com.company.crm.app.util.ui.CrmUiUtils.getCurrentUI;
 import static java.time.temporal.TemporalAdjusters.nextOrSame;
 import static java.time.temporal.TemporalAdjusters.previousOrSame;
 

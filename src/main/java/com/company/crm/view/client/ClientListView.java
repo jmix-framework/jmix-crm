@@ -8,6 +8,7 @@ import com.company.crm.app.service.user.UserService;
 import com.company.crm.app.ui.component.card.CrmCard;
 import com.company.crm.app.util.AsyncTasksRegistry;
 import com.company.crm.app.util.ui.listener.resize.WidthResizeListener;
+import com.company.crm.app.util.ui.renderer.CrmRenderers;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.client.ClientRepository;
 import com.company.crm.model.client.ClientType;
@@ -127,6 +128,8 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
     private final AsyncTasksRegistry asyncTasksRegistry = AsyncTasksRegistry.newInstance();
 
     private final LogicalCondition filtersCondition = LogicalCondition.and();
+    @Autowired
+    private CrmRenderers crmRenderers;
 
     @Override
     public void configureUiForWidth(int width) {
@@ -180,42 +183,22 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
 
     @Subscribe("clientsDataGrid")
     private void onClientsDataGridSelection(final SelectionEvent<DataGrid<Client>, Client> event) {
-        calculateCardsValues();
+        calculateCardsValues(event.getAllSelectedItems().toArray(new Client[0]));
     }
 
     @Supply(to = "clientsDataGrid.accountManager", subject = "renderer")
     private Renderer<Client> clientsDataGridAccountManagerRenderer() {
-        return new ComponentRenderer<>(client -> {
-            User manager = client.getAccountManager();
-            JmixButton button = uiComponents.create(JmixButton.class);
-            button.setText(manager.getDisplayName());
-            button.setTooltipText(manager.getFullName());
-            button.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
-            button.addClickListener(event ->
-                    dialogWindows.detail(this, User.class)
-                            .withViewClass(UserDetailView.class)
-                            .editEntity(manager)
-                            .withViewConfigurer(v -> v.setReadOnly(true))
-                            .open());
-            return button;
-        });
+        return crmRenderers.accountManagerLink();
     }
 
     @Supply(to = "clientsDataGrid.name", subject = "renderer")
     private Renderer<Client> clientsDataGridNameRenderer() {
-        return new ComponentRenderer<>(client -> {
-            JmixButton button = uiComponents.create(JmixButton.class);
-            button.setText(client.getName());
-            button.setTooltipText(client.getFullName());
-            button.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
-            button.addClickListener(event ->
-                    dialogWindows.detail(this, Client.class)
-                            .withViewClass(ClientDetailView.class)
-                            .editEntity(client)
-                            .withViewConfigurer(v -> v.setReadOnly(true))
-                            .open());
-            return button;
-        });
+        return crmRenderers.clientLink();
+    }
+
+    @Supply(to = "clientsDataGrid.type", subject = "renderer")
+    private Renderer<Client> clientsDataGridTypeRenderer() {
+        return crmRenderers.clientType();
     }
 
     private JmixDataRepositoryContext wrapContext(JmixDataRepositoryContext context) {
@@ -234,7 +217,10 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
     }
 
     private void calculateCardsValues() {
-        Client[] selectedClients = getSelectedClients();
+        calculateCardsValues(getSelectedClients());
+    }
+
+    private void calculateCardsValues(Client... selectedClients) {
         updateOrdersTotalSumCard(selectedClients);
         updatePaymentsTotalSumCard(selectedClients);
         updateAverageBillCard(selectedClients);
@@ -270,7 +256,7 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
                 uiAsyncTasks.supplierConfigurer(() -> calculateOrdersTotalSum(clients))
                         .withExceptionHandler(e -> SkeletonStyler.remove(ordersTotalSumCard))
                         .withResultHandler(ordersTotalSum ->
-                                fillStatCard("Orders Total", ordersTotalSumCard, ordersTotalSum, clients));
+                                fillStatCard("Orders Total", ordersTotalSumCard, ordersTotalSum));
         asyncTasksRegistry.placeTask("ordersTotalSumTask", task);
     }
 
@@ -279,7 +265,7 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
                 uiAsyncTasks.supplierConfigurer(() -> calculatePaymentsTotalSum(clients))
                         .withExceptionHandler(e -> SkeletonStyler.remove(paymentsTotalSumCard))
                         .withResultHandler(paymentsTotalSum ->
-                                fillStatCard("Payments Total", paymentsTotalSumCard, paymentsTotalSum, clients));
+                                fillStatCard("Payments Total", paymentsTotalSumCard, paymentsTotalSum));
         asyncTasksRegistry.placeTask("paymentsTotalSumTask", taskConfigurer);
     }
 
@@ -287,32 +273,55 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
         SupplierConfigurer<?> task = uiAsyncTasks.supplierConfigurer(() -> calculateAverageBill(clients))
                 .withExceptionHandler(e -> SkeletonStyler.remove(averageBillCard))
                 .withResultHandler(averageBill ->
-                        fillStatCard("Average Bill", averageBillCard, averageBill, clients));
+                        fillStatCard("Average Bill", averageBillCard, averageBill));
         asyncTasksRegistry.placeTask("averageBillTask", task);
     }
 
     private BigDecimal calculateOrdersTotalSum(Client[] selectedClients) {
         BigDecimal ordersTotalSum;
+        if (selectedClients.length == 0 && !isFilterConditionEmpty()) {
+            selectedClients = loadFilteredClients();
+            if (selectedClients.length == 0) {
+                return BigDecimal.ZERO;
+            }
+        }
+
         if (selectedClients.length > 0) {
             ordersTotalSum = clientService.getOrdersTotalSum(selectedClients);
         } else {
             ordersTotalSum = orderService.getOrdersTotalSum();
         }
+
         return ordersTotalSum;
     }
 
     private BigDecimal calculatePaymentsTotalSum(Client[] selectedClients) {
         BigDecimal paymentsTotalSum;
+        if (selectedClients.length == 0 && !isFilterConditionEmpty()) {
+            selectedClients = loadFilteredClients();
+            if (selectedClients.length == 0) {
+                return BigDecimal.ZERO;
+            }
+        }
+
         if (selectedClients.length > 0) {
             paymentsTotalSum = clientService.getPaymentsTotalSum(selectedClients);
         } else {
             paymentsTotalSum = paymentService.getPaymentsTotalSum();
         }
+
         return paymentsTotalSum;
     }
 
     private BigDecimal calculateAverageBill(Client[] selectedClients) {
         BigDecimal averageBill;
+        if (selectedClients.length == 0 && !isFilterConditionEmpty()) {
+            selectedClients = loadFilteredClients();
+            if (selectedClients.length == 0) {
+                return BigDecimal.ZERO;
+            }
+        }
+
         if (selectedClients.length > 0) {
             averageBill = clientService.getAverageBill(selectedClients);
         } else {
@@ -321,28 +330,44 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
         return averageBill;
     }
 
-    private void fillStatCard(String title, CrmCard card, BigDecimal content, Client[] selectedClients) {
+    private void fillStatCard(String title, CrmCard card, BigDecimal content) {
         VerticalLayout component = new VerticalLayout(new H1(PriceDataType.formatValue(content)));
         component.setPadding(false);
-        component.add(createStatCardFooter(selectedClients));
+        component.add(createStatCardFooter());
         card.fillAsStaticCard(title, component);
         SkeletonStyler.remove(card);
     }
 
-    private Component createStatCardFooter(Client[] selectedClients) {
+    private Client[] loadFilteredClients() {
+        return repository.fluentLoader()
+                .condition(filtersCondition)
+                .list().toArray(new Client[0]);
+    }
+
+    private boolean isFilterConditionEmpty() {
+        return filtersCondition.getConditions().isEmpty();
+    }
+
+    private Component createStatCardFooter() {
         Span mainText;
-        if (selectedClients.length > 0) {
-            if (selectedClients.length == 1) {
-                mainText = new Span("for " + selectedClients[0].getName());
-            } else {
-                mainText = new Span("for %d selected clients".formatted(selectedClients.length));
-            }
-            mainText.getElement().getThemeList().addAll(List.of("badge", "default"));
-        } else {
+        String badge;
+        Client[] selectedClients = getSelectedClients();
+
+        if (selectedClients.length == 1) {
+            mainText = new Span("for " + selectedClients[0].getName());
+            badge = "warning";
+        } else if (selectedClients.length == 0 && isFilterConditionEmpty()) {
             mainText = new Span("for all clients");
-            mainText.getElement().getThemeList().addAll(List.of("badge", "success"));
+            badge = "default";
+        } else if (selectedClients.length > 0) {
+            mainText = new Span("for %d selected clients".formatted(selectedClients.length));
+            badge = "warning";
+        } else {
+            mainText = new Span("for filtered clients");
+            badge = "success";
         }
 
+        mainText.getElement().getThemeList().addAll(List.of("badge", badge));
         mainText.addClassNames(LumoUtility.FontSize.LARGE, LumoUtility.FontWeight.MEDIUM);
 
         Span hintText = new Span("Select clients in the table to show their statistics");
@@ -376,6 +401,7 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
 
     private void applyFilters() {
         updateFiltersCondition();
+        calculateCardsValues();
         clientsDl.load();
     }
 

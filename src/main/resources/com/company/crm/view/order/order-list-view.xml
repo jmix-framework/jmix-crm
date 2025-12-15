@@ -5,14 +5,22 @@
     <data>
         <collection id="ordersDc"
                     class="com.company.crm.model.order.Order">
-            <fetchPlan extends="_base"/>
+            <fetchPlan extends="_base">
+                <property name="client" fetchPlan="_base"/>
+            </fetchPlan>
             <loader id="ordersDl" readOnly="true"/>
+        </collection>
+        <collection id="clientsDc"
+                    class="com.company.crm.model.client.Client">
+            <loader id="clientsDl" readOnly="true"/>
         </collection>
     </data>
     <facets>
-        <dataLoadCoordinator auto="true"/>
+        <settings auto="true"/>
+        <dataLoadCoordinator/>
         <urlQueryParameters>
             <pagination component="pagination"/>
+            <genericFilter component="advancedFilter"/>
         </urlQueryParameters>
     </facets>
     <actions>
@@ -20,12 +28,40 @@
         <action id="discardAction" type="lookup_discard"/>
     </actions>
     <layout>
+        <div width="100%" maxWidth="40em">
+            <formLayout width="100%">
+                <responsiveSteps>
+                    <responsiveStep minWidth="0" columns="1"/>
+                    <responsiveStep minWidth="20em" columns="2"/>
+                </responsiveSteps>
+                <textField id="searchField" label="msg://com.company.crm.model.order/Order.number" placeholder="msg://searchField.placeholder" clearButtonVisible="true">
+                    <prefix>
+                        <icon icon="SEARCH"/>
+                    </prefix>
+                </textField>
+                <entityComboBox id="clientComboBox" label="msg://clientComboBox.placeholder" placeholder="msg://clientComboBox.placeholder" metaClass="Client" itemsContainer="clientsDc"/>
+                <datePicker id="fromDatePicker" label="msg://fromDatePicker.label" placeholder="msg://datePicker.placeholder" clearButtonVisible="true"/>
+                <datePicker id="toDatePicker" label="msg://toDatePicker.label" placeholder="msg://datePicker.placeholder" clearButtonVisible="true"/>
+            </formLayout>
+            <genericFilter id="advancedFilter" dataLoader="ordersDl" maxWidth="48em"
+                           opened="false" summaryText="msg:///advanced" themeNames="filled">
+                <properties include=".*"/>
+            </genericFilter>
+        </div>
+
         <hbox id="buttonsPanel" classNames="buttons-panel">
             <button id="createButton" action="ordersDataGrid.createAction"/>
             <button id="editButton" action="ordersDataGrid.editAction"/>
             <button id="removeButton" action="ordersDataGrid.removeAction"/>
             <simplePagination id="pagination" dataLoader="ordersDl"/>
         </hbox>
+        <formLayout id="pipeLineFilter">
+            <responsiveSteps>
+                <responsiveStep minWidth="0" columns="1"/>
+                <responsiveStep minWidth="35em" columns="2"/>
+                <responsiveStep minWidth="40em" columns="4"/>
+            </responsiveSteps>
+        </formLayout>
         <dataGrid id="ordersDataGrid"
                   width="100%"
                   minHeight="20em"
@@ -38,13 +74,13 @@
                 <action id="removeAction" type="list_remove"/>
             </actions>
             <columns resizable="true">
+                <column property="number"/>
                 <column property="date"/>
-                <column property="quote"/>
-                <column property="comment"/>
-                <column property="total"/>
-                <column property="discountValue"/>
-                <column property="discountPercent"/>
+                <column property="client"/>
                 <column property="status"/>
+                <column property="total"/>
+                <column key="paid"/>
+                <column key="leftOver"/>
             </columns>
         </dataGrid>
         <hbox id="lookupActions" visible="false">

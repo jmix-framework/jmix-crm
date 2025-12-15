@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <view xmlns="http://jmix.io/schema/flowui/view"
       xmlns:c="http://jmix.io/schema/flowui/jpql-condition"
-      title="msg://clientListView.title"
-      focusComponent="searchField">
+      title="msg://clientListView.title" focusMode="NO_FOCUS">
     <data>
         <collection id="clientsDc" class="com.company.crm.model.client.Client">
             <fetchPlan extends="_base">
@@ -31,13 +30,14 @@
     <layout>
         <formLayout id="statsBlock" width="100%"
                     autoResponsive="true" autoRows="true"
-                    expandFields="true" expandColumns="true">
+                    expandFields="true" expandColumns="true" rowSpacing="1em">
             <component id="ordersTotalSumCard" class="com.company.crm.app.ui.component.card.CrmCard"/>
             <component id="paymentsTotalSumCard" class="com.company.crm.app.ui.component.card.CrmCard"/>
             <component id="averageBillCard" class="com.company.crm.app.ui.component.card.CrmCard"/>
         </formLayout>
-        <div width="50%" maxWidth="40em">
-            <formLayout>
+
+        <div width="100%" maxWidth="40em" css="margin-top: 1em">
+            <formLayout width="100%">
                 <responsiveSteps>
                     <responsiveStep minWidth="0" columns="1"/>
                     <responsiveStep minWidth="30em" columns="2"/>
@@ -57,7 +57,7 @@
                 </responsiveSteps>
                 <select id="typeSelect" placeholder="msg://typePlaceholder"
                         itemsEnum="com.company.crm.model.client.ClientType" emptySelectionAllowed="true"/>
-                <select id="accountManagerSelect" label=" " placeholder="msg://accountManagerPlaceholder"
+                <select id="accountManagerSelect" placeholder="msg://accountManagerPlaceholder"
                         emptySelectionAllowed="true"/>
                 <select id="categorySelect" placeholder="msg://categoryPlaceholder"
                         itemsEnum="com.company.crm.view.client.ClientCategory" emptySelectionAllowed="true"/>

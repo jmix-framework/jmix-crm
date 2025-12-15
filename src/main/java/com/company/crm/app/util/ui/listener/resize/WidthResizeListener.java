@@ -1,6 +1,6 @@
 package com.company.crm.app.util.ui.listener.resize;
 
-import com.company.crm.app.util.ui.UiUtils;
+import com.company.crm.app.util.ui.CrmUiUtils;
 import com.vaadin.flow.shared.Registration;
 import io.jmix.flowui.view.Subscribe;
 import io.jmix.flowui.view.View;
@@ -42,18 +42,18 @@ public interface WidthResizeListener {
     }
 
     default void configureComponentsForWidthAsync() {
-        UiUtils.executeOnClientWidthAsync(this::configureUiForWidth);
+        CrmUiUtils.executeOnClientWidthAsync(this::configureUiForWidth);
     }
 
     default Optional<CompletableFuture<Integer>> onClientWidthFuture() {
-        return UiUtils.onClientWidthFuture();
+        return CrmUiUtils.onClientWidthFuture();
     }
 
     default void onClientWidthFuture(Consumer<Integer> onWidth) {
-        UiUtils.onClientWidthFuture(onWidth);
+        CrmUiUtils.onClientWidthFuture(onWidth);
     }
 
     default Optional<Registration> addAsyncWidthResizeListener() {
-        return UiUtils.addBrowserWindowResizeListener((l) -> configureComponentsForWidthAsync());
+        return CrmUiUtils.addBrowserWindowResizeListener((l) -> configureComponentsForWidthAsync());
     }
 }

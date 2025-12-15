@@ -25,4 +25,12 @@ public enum OrderStatus implements EnumClass<Integer> {
     public static OrderStatus fromId(Integer id) {
         return EnumUtils.fromId(OrderStatus.class, id);
     }
+
+    public static OrderStatus fromStringId(String id) {
+        try {
+            return fromId(Integer.valueOf(id));
+        } catch (Exception ignored) {
+        }
+        return null;
+    }
 }
