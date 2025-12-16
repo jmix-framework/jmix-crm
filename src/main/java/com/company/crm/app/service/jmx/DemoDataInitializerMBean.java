@@ -1,4 +1,4 @@
-package com.company.crm.app.jmx;
+package com.company.crm.app.service.jmx;
 
 import com.company.crm.app.annotation.DevProfile;
 import com.company.crm.app.util.init.DemoDataInitializer;

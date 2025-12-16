@@ -1,4 +1,4 @@
-package com.company.crm.config;
+package com.company.crm.app.config;
 
 import com.company.crm.CRMApplication;
 import io.jmix.core.repository.EnableJmixDataRepositories;
