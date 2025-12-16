@@ -8,10 +8,10 @@ public final class StatusColors {
 
     public static String getBackgroundClass(OrderStatus status) {
         return switch (status) {
-            case NEW -> LumoUtility.Background.CONTRAST_20;
-            case ACCEPTED -> LumoUtility.Background.PRIMARY_50;
+            case NEW -> LumoUtility.Background.CONTRAST_10;
+            case ACCEPTED -> LumoUtility.Background.PRIMARY;
             case IN_PROGRESS -> LumoUtility.Background.WARNING;
-            case DONE -> LumoUtility.Background.SUCCESS_50;
+            case DONE -> LumoUtility.Background.SUCCESS;
         };
     }
 

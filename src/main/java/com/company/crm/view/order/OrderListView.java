@@ -3,6 +3,8 @@ package com.company.crm.view.order;
 import com.company.crm.app.feature.queryparameters.SimpleUrlQueryParametersBinder;
 import com.company.crm.app.feature.queryparameters.filters.FieldValueQueryParameterBinder;
 import com.company.crm.app.service.order.OrderService;
+import com.company.crm.app.ui.component.OrderStatusPipeline;
+import com.company.crm.app.ui.component.OrderStatusPipeline.OrderStatusComponent;
 import com.company.crm.app.util.AsyncTasksRegistry;
 import com.company.crm.app.util.ui.renderer.CrmRenderers;
 import com.company.crm.model.client.Client;
@@ -14,6 +16,7 @@ import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasValue;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.formlayout.FormLayout.ResponsiveStep;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -71,8 +74,6 @@ import static org.apache.commons.lang3.StringUtils.substringBeforeLast;
 public class OrderListView extends StandardListView<Order> {
 
     @Autowired
-    private Messages messages;
-    @Autowired
     private OrderService orderService;
     @Autowired
     private CrmRenderers crmRenderers;
@@ -97,21 +98,25 @@ public class OrderListView extends StandardListView<Order> {
     @ViewComponent
     private TypedDatePicker<LocalDate> toDatePicker;
     @ViewComponent
-    private FormLayout pipeLineFilter;
-
-    private static final String STATUS_CONTAINER_COMPONENT_ID_PREFIX = "status_container_";
-    private static final String STATUS_TEXT_COMPONENT_ID_PREFIX = "status_text_";
+    private OrderStatusPipeline pipeLineFilter;
 
     private final LogicalCondition filtersCondition = LogicalCondition.and();
     private final AsyncTasksRegistry asyncTasksRegistry = AsyncTasksRegistry.newInstance();
 
     private Optional<OrderStatus> selectedStatus = Optional.empty();
+    private SimpleUrlQueryParametersBinder selectedStatusUrlParameterBinder;
 
     @Subscribe
     private void onInit(final InitEvent event) {
-        loadData();
-        initializeFilterFields();
+        clientsDl.load();
+        registerUrlQueryParametersBinders();
         addDetachListener(e -> asyncTasksRegistry.cancelAll());
+    }
+
+    @Subscribe
+    private void onBeforeShow(final BeforeShowEvent event) {
+        initializeFilterFields();
+        applyFilters();
     }
 
     @Install(to = "ordersDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
@@ -141,10 +146,11 @@ public class OrderListView extends StandardListView<Order> {
 
     private void initializeFilterFields() {
         initializePipelineFilter();
-
         List.<HasValue<?, ?>>of(searchField, clientComboBox, fromDatePicker, toDatePicker)
                 .forEach(field -> field.addValueChangeListener(e -> applyFilters()));
+    }
 
+    private void registerUrlQueryParametersBinders() {
         //noinspection unchecked
         FieldValueQueryParameterBinder.builder(this)
                 .addStringBinding(searchField)
@@ -153,16 +159,11 @@ public class OrderListView extends StandardListView<Order> {
                 .addDatePickerBinding(toDatePicker)
                 .build();
 
-        SimpleUrlQueryParametersBinder.registerBinder(this,
+        selectedStatusUrlParameterBinder = SimpleUrlQueryParametersBinder.registerBinder(this,
                 () -> QueryParameters.of("selected_status",
                         selectedStatus.map(s -> s.getId().toString()).orElse("")),
                 qp -> qp.getSingleParameter("selected_status").ifPresent(id ->
                         selectedStatus = Optional.ofNullable(OrderStatus.fromStringId(id))));
-    }
-
-    private void loadData() {
-        ordersDl.load();
-        clientsDl.load();
     }
 
     private JmixDataRepositoryContext wrapContext(JmixDataRepositoryContext context) {
@@ -223,43 +224,25 @@ public class OrderListView extends StandardListView<Order> {
     }
 
     private void initializePipelineFilter() {
-        for (OrderStatus status : OrderStatus.values()) {
-            Integer statusId = status.getId();
-
-            String textComponentId = STATUS_TEXT_COMPONENT_ID_PREFIX + statusId;
-            H3 statusTextComponent = new H3(messages.getMessage(status));
-            statusTextComponent.setId(textComponentId);
-
-            String containerComponentId = STATUS_CONTAINER_COMPONENT_ID_PREFIX + statusId;
-            HorizontalLayout statusContainer = new HorizontalLayout(statusTextComponent);
-            statusContainer.setId(containerComponentId);
-            statusContainer.setWidth(10, Unit.EM);
-            statusContainer.setHeight(2, Unit.EM);
-            statusContainer.setAlignItems(FlexComponent.Alignment.CENTER);
-            statusContainer.setJustifyContentMode(FlexComponent.JustifyContentMode.CENTER);
-            statusContainer.addClassNames(LumoUtility.Border.ALL, LumoUtility.BorderRadius.FULL);
-            statusContainer.addClickListener(e -> onStatusFilterClick(status, statusContainer));
-            setCursorPointer(statusContainer);
-
-            pipeLineFilter.add(statusContainer);
-        }
+        pipeLineFilter.selectStatus(selectedStatus.orElse(null));
+        pipeLineFilter.addStatusClickListener(this::onStatusFilterClick);
         calculateAmountForEachOrderStatus();
     }
 
-    private void onStatusFilterClick(OrderStatus status, HorizontalLayout statusContainer) {
-        Optional<OrderStatus> statusOpt = Optional.of(status);
-        statusContainer.addClassName(getBackgroundClass(status));
+    private void onStatusFilterClick(OrderStatusComponent component) {
+        Optional<OrderStatus> statusOpt = Optional.of(component.getStatus());
+
         if (selectedStatus.equals(statusOpt)) {
             selectedStatus = Optional.empty();
         } else {
             selectedStatus = statusOpt;
         }
-        pipeLineFilter.getChildren().forEach(child -> {
-            if (selectedStatus.isEmpty() || !child.equals(statusContainer)) {
-                child.getClassNames().clear();
-                child.addClassNames(LumoUtility.Border.ALL, LumoUtility.BorderRadius.FULL);
-            }
-        });
+
+        selectedStatusUrlParameterBinder.fireQueryParametersChanged();
+
+        pipeLineFilter.deselectAllStatuses();
+        selectedStatus.ifPresent(s -> pipeLineFilter.selectStatus(s));
+
         applyFilters();
     }
 
@@ -270,13 +253,11 @@ public class OrderListView extends StandardListView<Order> {
     }
 
     private void updateAmountForEachOrderStatus(Map<OrderStatus, BigDecimal> result) {
-        result.forEach((status, amount) -> {
-            String statusTextComponentId = STATUS_TEXT_COMPONENT_ID_PREFIX + status.getId();
-            UiComponentUtils.findComponent(pipeLineFilter, statusTextComponentId)
-                    .ifPresent(statusTextComponent -> {
-                        Element element = statusTextComponent.getElement();
-                        element.setText(element.getText() + " (" + amount + ")");
-                    });
-        });
+        result.forEach((status, amount) ->
+                pipeLineFilter.getStatusComponents().forEach(comp -> {
+                    if (comp.getStatus().equals(status)) {
+                        comp.setTitle(comp.getTitle() + " (" + amount + ")");
+                    }
+                }));
     }
 }

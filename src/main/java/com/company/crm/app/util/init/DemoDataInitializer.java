@@ -1,5 +1,6 @@
 package com.company.crm.app.util.init;
 
+import com.company.crm.app.util.price.PriceCalculator;
 import com.company.crm.model.address.Address;
 import com.company.crm.model.catalog.category.Category;
 import com.company.crm.model.catalog.item.CategoryItem;
@@ -46,6 +47,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
+
+import static com.company.crm.app.util.price.PriceCalculator.calculateTotal;
 
 /**
  * Loads demo data on first application startup.
@@ -400,15 +403,21 @@ public class DemoDataInitializer {
                 order.setDate(date);
                 order.setQuote("Q-" + date.getYear() + "-" + (1000 + random.nextInt(9000)));
                 if (random.nextBoolean()) order.setComment(orderComment(random));
-                BigDecimal total = BigDecimal.valueOf(100 + random.nextInt(9_000)).setScale(2);
-                order.setTotal(total);
-                if (random.nextInt(4) == 0) {
-                    // discount either value or percent
-                    if (random.nextBoolean()) order.setDiscountValue(BigDecimal.valueOf(random.nextInt(10, 100)));
-                    else order.setDiscountPercent(BigDecimal.valueOf(random.nextInt(1, 30)));
-                }
                 order.setStatus(OrderStatus.values()[random.nextInt(OrderStatus.values().length)]);
                 List<OrderItem> orderItems = generateOrderItems(order, categoryItems.subList(random.nextInt(1, categoryItemsSize - 1), categoryItemsSize));
+                BigDecimal itemsTotal = order.getItemsTotal();
+                if (random.nextInt(4) == 0) {
+                    // discount either value or percent
+                    if (random.nextBoolean()) {
+                        order.setDiscountValue(
+                                BigDecimal.valueOf(
+                                        random.nextInt(10, itemsTotal.subtract(BigDecimal.ONE).intValue())));
+                    } else {
+                        order.setDiscountPercent(
+                                BigDecimal.valueOf(random.nextInt(1, 30)));
+                    }
+                }
+                order.setTotal(calculateTotal(order));
                 saveContext.saving(order, orderItems);
                 result.add(order);
             }

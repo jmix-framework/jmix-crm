@@ -70,8 +70,7 @@ public class OrderItem extends FullAuditEntity {
 
     @JmixProperty
     public BigDecimal getTotal() {
-        quantity = quantity == null ? BigDecimal.ZERO : quantity;
-        return netPrice.multiply(quantity).subtract(discount);
+        return netPrice.multiply(getQuantity()).subtract(getDiscount());
     }
 
     public Boolean getVatIncluded() {
@@ -111,7 +110,7 @@ public class OrderItem extends FullAuditEntity {
     }
 
     public BigDecimal getDiscount() {
-        return discount;
+        return discount == null ? BigDecimal.ZERO : discount;
     }
 
     public void setQuantity(BigDecimal quantity) {
@@ -119,7 +118,7 @@ public class OrderItem extends FullAuditEntity {
     }
 
     public BigDecimal getQuantity() {
-        return quantity;
+        return quantity == null ? BigDecimal.ZERO : quantity;
     }
 
     public CategoryItem getCategoryItem() {

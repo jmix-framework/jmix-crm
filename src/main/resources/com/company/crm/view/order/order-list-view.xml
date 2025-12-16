@@ -55,19 +55,12 @@
             <button id="removeButton" action="ordersDataGrid.removeAction"/>
             <simplePagination id="pagination" dataLoader="ordersDl"/>
         </hbox>
-        <formLayout id="pipeLineFilter">
-            <responsiveSteps>
-                <responsiveStep minWidth="0" columns="1"/>
-                <responsiveStep minWidth="35em" columns="2"/>
-                <responsiveStep minWidth="40em" columns="4"/>
-            </responsiveSteps>
-        </formLayout>
+        <component id="pipeLineFilter" class="com.company.crm.app.ui.component.OrderStatusPipeline"/>
         <dataGrid id="ordersDataGrid"
                   width="100%"
                   minHeight="20em"
                   dataContainer="ordersDc"
-                  columnReorderingAllowed="true"
-                  selectionMode="MULTI">
+                  columnReorderingAllowed="true">
             <actions>
                 <action id="createAction" type="list_create"/>
                 <action id="editAction" type="list_edit"/>

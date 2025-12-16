@@ -10,6 +10,7 @@ import io.jmix.core.metamodel.annotation.Composition;
 import io.jmix.core.metamodel.annotation.DependsOnProperties;
 import io.jmix.core.metamodel.annotation.InstanceName;
 import io.jmix.core.metamodel.annotation.JmixEntity;
+import io.jmix.core.metamodel.annotation.JmixProperty;
 import io.jmix.core.metamodel.annotation.PropertyDatatype;
 import io.jmix.core.metamodel.datatype.DatatypeFormatter;
 import jakarta.persistence.Column;
@@ -89,7 +90,7 @@ public class Order extends FullAuditEntity {
     }
 
     public BigDecimal getDiscountPercent() {
-        return discountPercent;
+        return discountPercent == null ? BigDecimal.ZERO : discountPercent;
     }
 
     public void setDiscountPercent(BigDecimal discountPercent) {
@@ -97,7 +98,7 @@ public class Order extends FullAuditEntity {
     }
 
     public BigDecimal getDiscountValue() {
-        return discountValue;
+        return discountValue == null ? BigDecimal.ZERO : discountValue;
     }
 
     public void setDiscountValue(BigDecimal discountValue) {
@@ -110,6 +111,16 @@ public class Order extends FullAuditEntity {
 
     public void setTotal(BigDecimal total) {
         this.total = total;
+    }
+
+    @JmixProperty
+    @DependsOnProperties("orderItems")
+    public BigDecimal getItemsTotal() {
+        BigDecimal total = BigDecimal.ZERO;
+        for (OrderItem orderItem : getOrderItems()) {
+            total = total.add(orderItem.getTotal());
+        }
+        return total;
     }
 
     public String getComment() {
