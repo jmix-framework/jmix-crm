@@ -479,7 +479,7 @@ public class DemoDataInitializer {
         ThreadLocalRandom random = ThreadLocalRandom.current();
         List<Payment> result = new ArrayList<>();
         for (Invoice invoice : invoices) {
-            int n = random.nextInt(0, 5); // 0..4
+            int n = random.nextInt(0, 9); // 0..8
             BigDecimal remaining = invoice.getTotal() != null ? invoice.getTotal() : BigDecimal.ZERO;
             for (int i = 0; i < n && remaining.compareTo(BigDecimal.ZERO) > 0; i++) {
                 Payment payment = dataManager.create(Payment.class);
