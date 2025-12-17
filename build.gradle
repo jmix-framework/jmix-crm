@@ -104,30 +104,4 @@ idea {
 
 vaadin {
     optimizeBundle = false
-    productionMode = true
-}
-
-// Workaround for https://github.com/jmix-framework/jmix/issues/3938
-def entityEnhancingTask = tasks.register("entityEnhancing", Task) {
-    group = 'build'
-}
-
-entityEnhancingTask.configure {
-    doLast {
-        def enhancingAction = compileJava.actions.find {
-            try {
-                return it.action.getClass().canonicalName == 'io.jmix.gradle.EnhancingAction'
-            } catch (ignored) {
-                return false
-            }
-        }
-
-        enhancingAction.execute(compileJava)
-        enhancingAction.action.copyGeneratedFiles(project, 'main')
-        enhancingAction.action.copyGeneratedFiles(project, 'test')
-    }
-}
-
-compileJava.configure {
-    finalizedBy entityEnhancingTask
 }

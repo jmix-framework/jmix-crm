@@ -93,10 +93,10 @@ public class DemoDataInitializer {
         generateUserTasks(users);
         generateUserActivity(users);
 
-        List<Client> clients = generateClients(20, users);
+        List<Client> clients = generateClients(60, users);
         generateContacts(clients);
 
-        Map<Category, List<CategoryItem>> catalog = generateCatalog(5, 5);
+        Map<Category, List<CategoryItem>> catalog = generateCatalog(10, 10);
         List<Order> orders = generateOrders(clients, catalog);
 
         List<Invoice> invoices = generateInvoices(orders);
@@ -395,7 +395,7 @@ public class DemoDataInitializer {
         List<Order> result = new ArrayList<>();
         SaveContext saveContext = new SaveContext().setDiscardSaved(true);
         for (Client client : clients) {
-            int n = random.nextInt(0, 6); // 0..5
+            int n = random.nextInt(0, 9); // 0..8
             for (int i = 0; i < n; i++) {
                 Order order = dataManager.create(Order.class);
                 order.setClient(client);
@@ -404,7 +404,7 @@ public class DemoDataInitializer {
                 order.setQuote("Q-" + date.getYear() + "-" + (1000 + random.nextInt(9000)));
                 if (random.nextBoolean()) order.setComment(orderComment(random));
                 order.setStatus(OrderStatus.values()[random.nextInt(OrderStatus.values().length)]);
-                List<OrderItem> orderItems = generateOrderItems(order, categoryItems.subList(random.nextInt(1, categoryItemsSize / 2), categoryItemsSize));
+                List<OrderItem> orderItems = generateOrderItems(order, categoryItems.subList(random.nextInt(1, categoryItemsSize - 1), categoryItemsSize));
                 BigDecimal itemsTotal = order.getItemsTotal();
                 if (random.nextInt(4) == 0) {
                     // discount either value or percent
