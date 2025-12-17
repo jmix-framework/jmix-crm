@@ -404,7 +404,7 @@ public class DemoDataInitializer {
                 order.setQuote("Q-" + date.getYear() + "-" + (1000 + random.nextInt(9000)));
                 if (random.nextBoolean()) order.setComment(orderComment(random));
                 order.setStatus(OrderStatus.values()[random.nextInt(OrderStatus.values().length)]);
-                List<OrderItem> orderItems = generateOrderItems(order, categoryItems.subList(random.nextInt(1, categoryItemsSize - 1), categoryItemsSize));
+                List<OrderItem> orderItems = generateOrderItems(order, categoryItems.subList(random.nextInt(1, categoryItemsSize / 2), categoryItemsSize));
                 BigDecimal itemsTotal = order.getItemsTotal();
                 if (random.nextInt(4) == 0) {
                     // discount either value or percent
