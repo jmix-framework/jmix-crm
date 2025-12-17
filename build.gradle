@@ -106,3 +106,22 @@ vaadin {
     optimizeBundle = false
     productionMode = true
 }
+
+// Workaround for https://github.com/jmix-framework/jmix/issues/3938
+tasks.register("jmixEnhancingFix") {
+    group = "build"
+    description = "Forces Jmix entity enhancing"
+}
+
+tasks.named("compileJava") {
+    finalizedBy("jmixEnhancingFix")
+}
+
+tasks.named("jmixEnhancingFix") {
+    doLast {
+        def enhanceTask = tasks.findByName("jmixEnhance")
+        if (enhanceTask != null) {
+            enhanceTask.actions.each { it.execute(enhanceTask) }
+        }
+    }
+}
