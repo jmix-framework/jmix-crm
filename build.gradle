@@ -105,3 +105,11 @@ idea {
 vaadin {
     optimizeBundle = false
 }
+
+def vaadinProd = project.findProperty("vaadinProductionMode") == "true"
+
+gradle.taskGraph.whenReady {
+    if (vaadinProd) {
+        System.setProperty("vaadin.productionMode", "true")
+    }
+}
