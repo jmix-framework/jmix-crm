@@ -42,6 +42,7 @@ public class CrmCard extends JmixCard implements ApplicationContextAware {
     private static final String PREVIOUS_RANGE_DELTA_COMPONENT_ID = "delta-value-component";
 
     private Component title = new Span("");
+    private boolean withoutBackground = false;
     private boolean hasPeriodFilter = false;
     private boolean hasEllipsisButton = false;
 
@@ -65,7 +66,7 @@ public class CrmCard extends JmixCard implements ApplicationContextAware {
                                  int colspan,
                                  Component component) {
         fillAsPeriodCard(title, colspan, p -> component);
-        setHasPeriodFilter(false);
+        withPeriodFilter(false);
     }
 
     public void fillAsPeriodCard(String title,
@@ -144,13 +145,19 @@ public class CrmCard extends JmixCard implements ApplicationContextAware {
         }
     }
 
-    public CrmCard setHasEllipsisButton(boolean hasEllipsisButton) {
+    public CrmCard withoutBackground(boolean withoutBackground) {
+        this.withoutBackground = withoutBackground;
+        getStyle().setBackground(null);
+        return this;
+    }
+
+    public CrmCard withEllipsisButton(boolean hasEllipsisButton) {
         this.hasEllipsisButton = hasEllipsisButton;
         refreshContent();
         return this;
     }
 
-    public CrmCard setHasPeriodFilter(boolean hasPeriodFilter) {
+    public CrmCard withPeriodFilter(boolean hasPeriodFilter) {
         this.hasPeriodFilter = hasPeriodFilter;
         refreshContent();
         return this;
@@ -235,6 +242,10 @@ public class CrmCard extends JmixCard implements ApplicationContextAware {
     }
 
     private void updateBackground() {
+        if (withoutBackground) {
+            return;
+        }
+
         var deltaComponent = UiComponentUtils.findComponent(this,
                 PREVIOUS_RANGE_DELTA_COMPONENT_ID).orElse(this);
 
@@ -261,7 +272,7 @@ public class CrmCard extends JmixCard implements ApplicationContextAware {
     }
 
     private void setLinearGradient(String color) {
-        setLinearGradient(this, 45, "var(--lumo-shade-5pct)", color);
+        setLinearGradient(this, 45, "var(--lumo-base-color)", color);
     }
 
     private static void setLinearGradient(HasStyle component, int deg, String color1, String color2) {

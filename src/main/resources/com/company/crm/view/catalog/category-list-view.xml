@@ -16,6 +16,7 @@
         <dataLoadCoordinator auto="true"/>
         <urlQueryParameters>
             <pagination component="pagination"/>
+            <genericFilter component="genericFilter"/>
         </urlQueryParameters>
     </facets>
     <actions>
@@ -23,6 +24,9 @@
         <action id="discardAction" type="lookup_discard"/>
     </actions>
     <layout>
+        <genericFilter id="genericFilter" dataLoader="categoriesDl">
+            <properties include=".*"/>
+        </genericFilter>
         <hbox id="buttonsPanel" classNames="buttons-panel">
             <startSlot>
                 <button id="createButton" action="categoriesDataGrid.createAction"/>

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<view xmlns="http://jmix.io/schema/flowui/view"
+<view xmlns="http://jmix.io/schema/flowui/view" xmlns:dynattr="http://jmix.io/schema/dynattr/flowui"
       title="msg://orderDetailView.title" focusMode="NO_FOCUS">
     <data>
         <instance id="orderDc"
@@ -14,6 +14,7 @@
     </data>
     <facets>
         <dataLoadCoordinator auto="true"/>
+        <dynattr:dynamicAttributes/>
     </facets>
     <actions>
         <action id="saveCloseAction" type="detail_saveClose"/>

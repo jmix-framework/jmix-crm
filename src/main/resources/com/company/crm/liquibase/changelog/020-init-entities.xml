@@ -20,8 +20,7 @@
                     type="${offsetDateTime.type}"/>
             <column name="USER_ID"
                     type="UUID"/>
-            <column name="ACTION_DESCRIPTION"
-                    type="CLOB">
+            <column name="ACTION_DESCRIPTION" type="CLOB">
                 <constraints nullable="false"/>
             </column>
         </createTable>
@@ -50,18 +49,13 @@
                 <constraints nullable="false"/>
             </column>
 
-            <column name="IS_COMPLETED"
-                    type="BOOLEAN"/>
-            <column name="TITLE"
-                    type="VARCHAR(255)">
+            <column name="IS_COMPLETED" type="BOOLEAN"/>
+            <column name="TITLE" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
-            <column name="DESCRIPTION"
-                    type="CLOB"/>
-            <column name="DUE_DATE"
-                    type="DATE"/>
-            <column name="AUTHOR_ID"
-                    type="UUID"/>
+            <column name="DESCRIPTION" type="CLOB"/>
+            <column name="DUE_DATE" type="DATE"/>
+            <column name="AUTHOR_ID" type="UUID"/>
         </createTable>
 
         <createTable tableName="CLIENT">
@@ -266,12 +260,11 @@
             <column name="CODE" type="VARCHAR(255)">
                 <constraints nullable="false" unique="true"/>
             </column>
-            <column name="DESCRIPTION" type="VARCHAR(255)"/>
+            <column name="DESCRIPTION" type="CLOB"/>
         </createTable>
 
         <createTable tableName="CATEGORY_ITEM">
-            <column name="ID"
-                    type="UUID">
+            <column name="ID" type="UUID">
                 <constraints nullable="false"
                              primaryKey="true"
                              primaryKeyName="PK_CATEGORY_ITEM"/>
@@ -292,16 +285,16 @@
                 <constraints nullable="false"/>
             </column>
 
+            <column name="CATEGORY_ID" type="UUID"/>
+            <column name="NAME" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
             <column name="CODE" type="VARCHAR(255)">
                 <constraints nullable="false" unique="true"/>
             </column>
+            <column name="IMAGE" type="VARCHAR(1024)"/>
+            <column name="DESCRIPTION" type="CLOB"/>
             <column name="UOM" type="VARCHAR(255)"/>
-            <column name="CATEGORY_ID"
-                    type="UUID"/>
-            <column name="NAME"
-                    type="VARCHAR(255)">
-                <constraints nullable="false"/>
-            </column>
         </createTable>
 
         <createTable tableName="CATEGORY_ITEM_COMMENT">

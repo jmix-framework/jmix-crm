@@ -3,6 +3,7 @@ package com.company.crm.model.catalog.item;
 import com.company.crm.app.annotation.TrackedByUserActivityRecorder;
 import com.company.crm.model.base.FullAuditEntity;
 import com.company.crm.model.catalog.category.Category;
+import io.jmix.core.FileRef;
 import io.jmix.core.metamodel.annotation.Composition;
 import io.jmix.core.metamodel.annotation.InstanceName;
 import io.jmix.core.metamodel.annotation.JmixEntity;
@@ -11,6 +12,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
@@ -34,10 +36,15 @@ public class CategoryItem extends FullAuditEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     private Category category;
 
-    @Column(name = "CODE", nullable = false, unique = true)
-    @NotNull
-    private String code;
+    @Column(name = "IMAGE", length = 1024)
+    private FileRef image;
 
+    @Lob
+    @Column(name = "DESCRIPTION")
+    private String description;
+
+    @Column(name = "CODE", nullable = false, unique = true)
+    private String code;
 
     @Column(name = "UOM")
     private String uom;
@@ -45,6 +52,22 @@ public class CategoryItem extends FullAuditEntity {
     @Composition
     @OneToMany(mappedBy = "categoryItem")
     private List<CategoryItemComment> comments;
+
+    public FileRef getImage() {
+        return image;
+    }
+
+    public void setImage(FileRef image) {
+        this.image = image;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
     public List<CategoryItemComment> getComments() {
         return comments;
@@ -85,5 +108,4 @@ public class CategoryItem extends FullAuditEntity {
     public void setCategory(Category category) {
         this.category = category;
     }
-
 }

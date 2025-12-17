@@ -9,6 +9,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
@@ -27,6 +28,7 @@ public class Category extends FullAuditEntity {
     @Column(name = "CODE", nullable = false, unique = true)
     private String code;
 
+    @Lob
     @Column(name = "DESCRIPTION")
     private String description;
 

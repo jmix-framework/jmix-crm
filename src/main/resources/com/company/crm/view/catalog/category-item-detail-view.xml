@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<view xmlns="http://jmix.io/schema/flowui/view"
+<view xmlns="http://jmix.io/schema/flowui/view" xmlns:dynattr="http://jmix.io/schema/dynattr/flowui"
       title="msg://categoryItemDetailView.title">
     <data>
         <instance id="categoryItemDc"
@@ -12,27 +12,38 @@
     </data>
     <facets>
         <dataLoadCoordinator auto="true"/>
+        <dynattr:dynamicAttributes/>
     </facets>
     <actions>
         <action id="saveCloseAction" type="detail_saveClose"/>
         <action id="closeAction" type="detail_close"/>
     </actions>
     <layout>
-        <formLayout id="form" dataContainer="categoryItemDc">
-            <responsiveSteps>
-                <responsiveStep minWidth="0" columns="1"/>
-                <responsiveStep minWidth="40em" columns="2"/>
-            </responsiveSteps>
-            <entityPicker property="category" colspan="2">
-                <actions>
-                    <action id="lookupAction" type="entity_lookup"/>
-                    <action id="clearAction" type="entity_clear"/>
-                </actions>
-            </entityPicker>
-            <textField property="name"/>
-            <textField property="code"/>
-            <textField property="uom"/>
-        </formLayout>
+        <split id="split" width="100%" height="100%">
+            <vbox>
+                <formLayout id="form" dataContainer="categoryItemDc" maxWidth="30em" minWidth="20em">
+                    <responsiveSteps>
+                        <responsiveStep minWidth="0" columns="1"/>
+                        <responsiveStep minWidth="40em" columns="2"/>
+                    </responsiveSteps>
+                    <entityPicker property="category" colspan="2">
+                        <actions>
+                            <action id="lookupAction" type="entity_lookup"/>
+                            <action id="clearAction" type="entity_clear"/>
+                        </actions>
+                    </entityPicker>
+                    <textField property="name"/>
+                    <textField property="code"/>
+                    <textField property="uom"/>
+                    <textArea property="description" height="15em"/>
+                </formLayout>
+            </vbox>
+            <vbox alignItems="CENTER" maxWidth="40em" minWidth="30em" classNames="pt-xl">
+                <image id="image" classNames="border rounded-l" resource="images/no_image.svg" width="20em" height="20em"/>
+                <fileStorageUploadField id="imageUpload" dataContainer="categoryItemDc" property="image"
+                                        dropAllowed="true" clearButtonVisible="true" fileNameVisible="true"/>
+            </vbox>
+        </split>
         <hbox id="detailActions">
             <button id="saveAndCloseButton" action="saveCloseAction"/>
             <button id="closeButton" action="closeAction"/>

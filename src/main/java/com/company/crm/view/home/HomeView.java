@@ -5,6 +5,7 @@ import com.company.crm.app.service.datetime.DateTimeService;
 import com.company.crm.app.service.finance.InvoiceService;
 import com.company.crm.app.service.finance.PaymentService;
 import com.company.crm.app.service.order.OrderService;
+import com.company.crm.app.ui.component.RecentActivitiesBlock;
 import com.company.crm.app.ui.component.card.CrmCard;
 import com.company.crm.app.ui.component.card.CardPeriod;
 import com.company.crm.app.ui.component.card.CrmCard.RangeStatCardInfo;
@@ -32,6 +33,7 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility;
@@ -57,6 +59,7 @@ import io.jmix.flowui.component.formlayout.JmixFormLayout;
 import io.jmix.flowui.component.grid.DataGrid;
 import io.jmix.flowui.component.layout.ViewLayout;
 import io.jmix.flowui.component.splitlayout.JmixSplitLayout;
+import io.jmix.flowui.view.MessageBundle;
 import io.jmix.flowui.view.StandardOutcome;
 import io.jmix.flowui.view.StandardView;
 import io.jmix.flowui.view.Subscribe;
@@ -83,11 +86,6 @@ import static io.jmix.flowui.component.UiComponentUtils.traverseComponents;
 @ViewDescriptor(path = "home-view.xml")
 public class HomeView extends StandardView implements WidthResizeListener {
 
-    private static final DateTimeFormatter DATE_WITH_YEAR_AND_TIME =
-            DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm");
-
-    @Autowired
-    private UserService userService;
     @Autowired
     private OrderService orderService;
     @Autowired
@@ -105,6 +103,8 @@ public class HomeView extends StandardView implements WidthResizeListener {
     private UiComponents uiComponents;
     @Autowired
     private DialogWindows dialogWindows;
+    @Autowired
+    private DateFormatter<LocalDate> localDateFormatter;
 
     @ViewComponent
     private JmixSplitLayout split;
@@ -116,11 +116,11 @@ public class HomeView extends StandardView implements WidthResizeListener {
     private JmixFormLayout rightContent;
     @ViewComponent
     private JmixFormLayout leftContent;
+    @ViewComponent
+    private MessageBundle messageBundle;
 
     private volatile int lastWidth = -1;
     private static final int widthBreakpoint = 1000;
-    @Autowired
-    private DateFormatter<LocalDate> localDateFormatter;
 
     @Override
     public void configureUiForWidth(int width) {
@@ -169,19 +169,19 @@ public class HomeView extends StandardView implements WidthResizeListener {
     }
 
     private List<JmixCard> getLeftCards() {
-        var c1 = uiComponents.create(CrmCard.class);
-        c1.defaultRangeStatPeriodCard("Total Orders Value", this::createTotalOrdersValueComponent);
+        var totalOrdersCard = uiComponents.create(CrmCard.class);
+        totalOrdersCard.defaultRangeStatPeriodCard(messageBundle.getMessage("card.totalOrdersValue"), this::createTotalOrdersValueComponent);
 
-        var c2 = uiComponents.create(CrmCard.class);
-        c2.defaultRangeStatPeriodCard("Payments", this::createPaymentsComponent);
+        var paymentsCard = uiComponents.create(CrmCard.class);
+        paymentsCard.defaultRangeStatPeriodCard(messageBundle.getMessage("cards.payments"), this::createPaymentsComponent);
 
-        var c3 = uiComponents.create(CrmCard.class);
-        c3.fillAsPeriodCard("Overdue Invoices", 2, this::createOverdueInvoicesComponent);
+        var overdueInvoicesCard = uiComponents.create(CrmCard.class).withoutBackground(true);
+        overdueInvoicesCard.fillAsPeriodCard(messageBundle.getMessage("cards.overdueInvoices"), 2, this::createOverdueInvoicesComponent);
 
-        var c4 = uiComponents.create(CrmCard.class);
-        c4.fillAsPeriodCard("myTasks", 2, myTasksTitleComponent(), this::createMyTasksComponent);
+        var myTasksCard = uiComponents.create(CrmCard.class).withoutBackground(true);
+        myTasksCard.fillAsPeriodCard("myTasks", 2, myTasksTitleComponent(), this::createMyTasksComponent);
 
-        return List.of(c1, c2, c3, c4);
+        return List.of(totalOrdersCard, paymentsCard, overdueInvoicesCard, myTasksCard);
     }
 
     private Component myTasksTitleComponent() {
@@ -218,7 +218,7 @@ public class HomeView extends StandardView implements WidthResizeListener {
         var salesCard = uiComponents.create(CrmCard.class);
         salesCard.fillAsPeriodCard("Sales Chart", 2, this::createSalesFunnelComponent);
 
-        var activitiesCard = uiComponents.create(CrmCard.class);
+        var activitiesCard = uiComponents.create(CrmCard.class).withoutBackground(true);
         activitiesCard.fillAsStaticCard("Recent Activities", 2, createRecentActivitiesComponent());
 
         return List.of(salesCard, activitiesCard);
@@ -382,59 +382,6 @@ public class HomeView extends StandardView implements WidthResizeListener {
     }
 
     private Component createRecentActivitiesComponent() {
-        Div container = new Div();
-
-        container.add(new H5("Today"));
-        LocalDate todayStart = dateTimeService.getDayStart().toLocalDate();
-        List<UserActivity> todayActivities = userService.loadActivities(todayStart, 3);
-        if (todayActivities.isEmpty()) {
-            container.add(new Span("No activities for today..."));
-        } else {
-            for (UserActivity todayActivity : todayActivities) {
-                container.add(createActivityRow(todayActivity));
-            }
-        }
-
-        HorizontalLayout separator = new HorizontalLayout();
-        separator.setWidthFull();
-        separator.setHeight(1, Unit.EM);
-        container.add(separator);
-
-        container.add(new H5("Yesterday"));
-        LocalDate yesterdayStart = todayStart.minusDays(1);
-        List<UserActivity> yesterdayActivities = userService.loadActivities(yesterdayStart, 3);
-        if (yesterdayActivities.isEmpty()) {
-            container.add(new Span("No activities for yesterday..."));
-        } else {
-            for (UserActivity yesterdayActivity : yesterdayActivities) {
-                container.add(createActivityRow(yesterdayActivity));
-            }
-        }
-
-        return container;
-    }
-
-    private Component createActivityRow(UserActivity activity) {
-        User user = activity.getUser();
-        HorizontalLayout row = new HorizontalLayout();
-        row.setAlignItems(FlexComponent.Alignment.CENTER);
-
-
-        Avatar avatar = new Avatar(user.getUsername().substring(0, 1));
-        row.add(avatar);
-
-        Span userNameSpan = new Span(user.getFullName());
-        userNameSpan.addClassNames(LumoUtility.TextColor.BODY);
-
-        Span activityDescriptionSpan = new Span(activity.getActionDescription());
-        activityDescriptionSpan.addClassNames(LumoUtility.TextColor.TERTIARY);
-
-        Span dateSpan = new Span(DATE_WITH_YEAR_AND_TIME.format(activity.getCreatedDate()));
-        dateSpan.addClassNames(LumoUtility.TextColor.TERTIARY);
-
-        Div activityInfoBlock = new Div(new HorizontalLayout(userNameSpan, activityDescriptionSpan), dateSpan);
-        row.add(activityInfoBlock);
-
-        return row;
+        return uiComponents.create(RecentActivitiesBlock.class);
     }
 }
