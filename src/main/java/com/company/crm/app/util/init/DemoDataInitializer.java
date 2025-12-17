@@ -93,10 +93,10 @@ public class DemoDataInitializer {
         generateUserTasks(users);
         generateUserActivity(users);
 
-        List<Client> clients = generateClients(60, users);
+        List<Client> clients = generateClients(20, users);
         generateContacts(clients);
 
-        Map<Category, List<CategoryItem>> catalog = generateCatalog(10, 10);
+        Map<Category, List<CategoryItem>> catalog = generateCatalog(5, 5);
         List<Order> orders = generateOrders(clients, catalog);
 
         List<Invoice> invoices = generateInvoices(orders);
@@ -395,7 +395,7 @@ public class DemoDataInitializer {
         List<Order> result = new ArrayList<>();
         SaveContext saveContext = new SaveContext().setDiscardSaved(true);
         for (Client client : clients) {
-            int n = random.nextInt(0, 9); // 0..8
+            int n = random.nextInt(0, 6); // 0..5
             for (int i = 0; i < n; i++) {
                 Order order = dataManager.create(Order.class);
                 order.setClient(client);
