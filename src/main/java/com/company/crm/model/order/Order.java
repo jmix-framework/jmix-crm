@@ -1,6 +1,5 @@
 package com.company.crm.model.order;
 
-import com.company.crm.app.annotation.TrackedByUserActivityRecorder;
 import com.company.crm.app.service.order.OrderService;
 import com.company.crm.app.util.context.AppContext;
 import com.company.crm.model.base.FullAuditEntity;
@@ -34,7 +33,6 @@ import java.util.List;
 @Table(name = "ORDER_", indexes = {
         @Index(name = "IDX_ORDER__CLIENT", columnList = "CLIENT_ID")
 })
-@TrackedByUserActivityRecorder
 public class Order extends FullAuditEntity {
 
     @Column(name = "NUMBER", nullable = false, unique = true)

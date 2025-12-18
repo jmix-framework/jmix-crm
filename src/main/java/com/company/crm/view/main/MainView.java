@@ -1,18 +1,26 @@
 package com.company.crm.view.main;
 
+import com.company.crm.app.ui.component.CrmLoader;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.client.ClientRepository;
 import com.company.crm.model.user.User;
 import com.company.crm.view.client.ClientListView;
+import com.company.crm.view.home.HomeView;
 import com.company.crm.view.user.UserDetailView;
 import com.google.common.base.Strings;
 import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.ComponentUtil;
+import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.avatar.AvatarVariant;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.icon.SvgIcon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -27,7 +35,9 @@ import io.jmix.flowui.DialogWindows;
 import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.ViewNavigators;
 import io.jmix.flowui.app.main.StandardMainView;
+import io.jmix.flowui.asynctask.UiAsyncTasks;
 import io.jmix.flowui.component.SupportsTypedValue.TypedValueChangeEvent;
+import io.jmix.flowui.component.UiComponentUtils;
 import io.jmix.flowui.component.textfield.TypedTextField;
 import io.jmix.flowui.component.virtuallist.JmixVirtualList;
 import io.jmix.flowui.kit.action.ActionPerformedEvent;
@@ -74,6 +84,8 @@ public class MainView extends StandardMainView {
 
     final Popover[] searchPopover = {null};
     final Popover[] notificationsPopover = {null};
+    @Autowired
+    private UiAsyncTasks uiAsyncTasks;
 
     @Subscribe("userMenu.profileItem.profileAction")
     private void onUserMenuProfileItemProfileAction(final ActionPerformedEvent event) {
@@ -162,6 +174,25 @@ public class MainView extends StandardMainView {
         onNotificationButtonClick();
     }
 
+    @Subscribe(id = "applicationTitle", subject = "clickListener")
+    private void onApplicationTitleClick(final ClickEvent<H2> event) {
+        UI currentUI = UI.getCurrent();
+        if (currentUI == null) {
+            return;
+        }
+
+        Component currentView = currentUI.getCurrentView();
+        if (currentView == null) {
+            return;
+        }
+
+        if (currentView instanceof HomeView homeView) {
+            homeView.getUI().ifPresent(ui -> ui.getPage().reload());
+        } else {
+            viewNavigators.view(this, HomeView.class).navigate();
+        }
+    }
+
     private Avatar createAvatar(String fullName) {
         Avatar avatar = uiComponents.create(Avatar.class);
         avatar.setName(fullName);
@@ -204,42 +235,57 @@ public class MainView extends StandardMainView {
         notificationsPopover[0] = popover;
     }
 
-
     private void onSearchFieldValueChange(TypedValueChangeEvent<TypedTextField<String>, String> event) {
         Optional.ofNullable(searchPopover[0]).ifPresent(Popover::removeFromParent);
 
-        if (StringUtils.isBlank(event.getValue()) || !event.isFromClient()) {
+        String searchText = event.getValue();
+        if (StringUtils.isBlank(searchText) || !event.isFromClient()) {
             return;
         }
 
-        var clientsSize = 10;
-        List<Client> clients = searchClientsByName(event.getValue(), clientsSize);
+        searchPopover[0] = showSearchFieldPopover(searchText);
+    }
 
+    private Popover showSearchFieldPopover(String searchText) {
+        CrmLoader loader = new CrmLoader();
+        loader.setSizeFull();
+        Popover popover = new Popover(loader);
+        popover.setTarget(searchField);
+        popover.setWidth("25em");
+        popover.setHeight("10em");
+        popover.setCloseOnEsc(true);
+        popover.setCloseOnOutsideClick(true);
+        popover.open();
+        loader.startLoading();
+
+        var clientsSize = 10;
+        uiAsyncTasks.supplierConfigurer(() -> searchClientsByName(searchText, clientsSize))
+                .withResultHandler(clients -> updateSearchPopover(clients, clientsSize, popover))
+                .withExceptionHandler(e -> {
+                    popover.removeAll();
+                    popover.add(new Span("Something went wrong"));
+                })
+                .supplyAsync();
+
+        return popover;
+    }
+
+    private void updateSearchPopover(List<Client> clients, int clientsSize, Popover popover) {
         Client showAll = metadata.create(Client.class);
         showAll.setName("Show all...");
         if (clients.size() <= clientsSize) {
             clients.add(showAll);
         }
 
-        Popover popover = showSearchFieldPopover(clients, showAll);
-        searchPopover[0] = popover;
-    }
-
-    private Popover showSearchFieldPopover(List<Client> clients, Client showAll) {
         JmixVirtualList<Client> virtualList = uiComponents.create(JmixVirtualList.class);
         virtualList.setItems(clients);
 
-        Popover popover = new Popover(virtualList);
-        popover.setTarget(searchField);
+        popover.removeAll();
+        popover.add(virtualList);
         popover.setWidth("25em");
         popover.setHeight(Math.min(clients.size() * 1.8, 25) + "em");
-        popover.setCloseOnEsc(true);
-        popover.setCloseOnOutsideClick(true);
-        popover.open();
 
         virtualList.setRenderer(createClientsListRenderer(showAll, popover));
-
-        return popover;
     }
 
     private ComponentRenderer<Component, Client> createClientsListRenderer(Client showAll, Popover popover) {

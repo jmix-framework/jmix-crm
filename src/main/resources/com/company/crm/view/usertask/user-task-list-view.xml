@@ -4,14 +4,14 @@
       title="msg://userTaskListView.title">
     <data>
         <collection id="userTasksDc"
-                    class="com.company.crm.model.user.UserTask">
+                    class="com.company.crm.model.user.task.UserTask">
             <fetchPlan extends="_base">
                 <property name="author" fetchPlan="_base"/>
             </fetchPlan>
             <loader id="userTasksDl"/>
         </collection>
         <instance id="userTaskDc"
-                  class="com.company.crm.model.user.UserTask">
+                  class="com.company.crm.model.user.task.UserTask">
             <fetchPlan extends="_base">
                 <property name="author" fetchPlan="_base"/>
             </fetchPlan>

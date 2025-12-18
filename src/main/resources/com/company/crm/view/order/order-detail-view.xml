@@ -17,22 +17,28 @@
         <dynattr:dynamicAttributes/>
     </facets>
     <actions>
-        <action id="saveCloseAction" type="detail_saveClose"/>
-        <action id="closeAction" type="detail_close"/>
+        <action id="saveCloseAction" type="detail_saveClose" text="msg:///actions.Save"/>
+        <action id="closeAction" type="detail_close" text="msg:///actions.Close" icon="vaadin:close"/>
+        <action id="cloneAction" text="Clone" icon="vaadin:copy"/>
+        <action id="emailAction" text="E-Mail" icon="vaadin:envelope-o"/>
+        <action id="downloadAction" text="Download" icon="vaadin:download-alt" actionVariant="SUCCESS"/>
     </actions>
     <layout>
+        <hbox width="100%" padding="true" justifyContent="BETWEEN" alignItems="CENTER">
+            <hbox>
+                <h2 text="msg://com.company.crm.model.order/Order"/>
+                <h2 dataContainer="orderDc" property="number"/>
+            </hbox>
+            <hbox>
+                <button id="saveAndCloseButton" action="saveCloseAction"/>
+                <button id="closeButton" action="closeAction"/>
+                <button action="cloneAction" themeNames="contrast"/>
+                <button action="emailAction" themeNames="warning"/>
+                <button action="downloadAction"/>
+            </hbox>
+        </hbox>
         <scroller width="100%" height="100%">
             <div width="100%">
-                <hbox width="100%" padding="true">
-                    <h2 text="msg://com.company.crm.model.order/Order"/>
-                    <h2 dataContainer="orderDc" property="number"/>
-                    <hbox justifyContent="END" width="100%">
-                        <button text="Delete" themeNames="error" icon="vaadin:ban"/>
-                        <button text="Clone" icon="vaadin:copy"/>
-                        <button text="E-Mail" icon="vaadin:envelope-o"/>
-                        <button text="Download" themeNames="primary" icon="vaadin:download"/>
-                    </hbox>
-                </hbox>
                 <component id="statusPipeline" class="com.company.crm.app.ui.component.OrderStatusPipeline"/>
                 <formLayout id="form" dataContainer="orderDc">
                     <responsiveSteps>
@@ -41,8 +47,8 @@
                     </responsiveSteps>
                     <entityPicker property="client" readOnly="true"/>
                     <select id="statusSelect" property="status"/>
-                    <datePicker id="dateField" property="date" readOnly="true"/>
-                    <textField id="quoteField" property="quote" readOnly="true"/>
+                    <datePicker id="dateField" property="date"/>
+                    <textField id="quoteField" property="quote"/>
                     <textField id="discountValueField" property="discountValue">
                         <validators>
                             <decimalMin value="0"/>
@@ -59,10 +65,12 @@
                 </formLayout>
 
                 <h2 text="msg://com.company.crm.model.order/OrderItems" classNames="mb-s mt-l"/>
-                <hbox id="buttonsPanel" classNames="buttons-panel">
-                    <button id="createButton" action="orderItemsGrid.createAction"/>
-                    <button id="editButton" action="orderItemsGrid.editAction"/>
-                    <button id="removeButton" action="orderItemsGrid.removeAction"/>
+                <hbox id="buttonsPanel" classNames="buttons-panel mb-s">
+                    <startSlot>
+                        <button id="createButton" action="orderItemsGrid.createAction"/>
+                        <button id="editButton" action="orderItemsGrid.editAction"/>
+                        <button id="removeButton" action="orderItemsGrid.removeAction"/>
+                    </startSlot>
                 </hbox>
                 <dataGrid id="orderItemsGrid" dataContainer="orderItemsDc" width="100%" minHeight="15em">
                     <actions>
@@ -73,9 +81,8 @@
                     <columns>
                         <column property="categoryItem.name"/>
                         <column property="categoryItem.code"/>
-                        <column property="quantity"/>
-                        <column property="grossPrice"/>
                         <column property="netPrice"/>
+                        <column property="quantity"/>
                         <column property="discount"/>
                         <column property="total"/>
                     </columns>
@@ -94,10 +101,6 @@
             <span text="Cost"/>
             <h3 dataContainer="orderDc" property="total"/>
             <h3 text="$"/>
-        </hbox>
-        <hbox id="detailActions">
-            <button id="saveAndCloseButton" action="saveCloseAction"/>
-            <button id="closeButton" action="closeAction"/>
         </hbox>
     </layout>
 </view>

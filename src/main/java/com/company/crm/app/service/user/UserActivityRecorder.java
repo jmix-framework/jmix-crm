@@ -1,119 +1,122 @@
 package com.company.crm.app.service.user;
 
-import com.company.crm.app.annotation.TrackedByUserActivityRecorder;
 import com.company.crm.model.base.CreateAuditEntity;
 import com.company.crm.model.base.CreateUpdateAuditEntity;
 import com.company.crm.model.base.FullAuditEntity;
 import com.company.crm.model.base.UuidEntity;
+import com.company.crm.model.client.Client;
+import com.company.crm.model.order.Order;
 import com.company.crm.model.user.User;
-import com.company.crm.model.user.UserActivity;
+import com.company.crm.model.user.activity.client.ClientUserActivity;
+import com.company.crm.model.user.activity.userprofile.UserProfileUserActivity;
 import io.jmix.core.DataManager;
 import io.jmix.core.UnconstrainedDataManager;
 import io.jmix.core.event.EntityChangedEvent;
 import io.jmix.core.security.Authenticated;
-import io.jmix.core.security.SystemAuthenticator;
-import org.apache.commons.collections4.CollectionUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionalEventListener;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
 import static java.util.Arrays.stream;
-import static java.util.Collections.emptyList;
-import static org.apache.commons.collections4.CollectionUtils.union;
 import static org.springframework.core.annotation.AnnotationUtils.findAnnotation;
 
 @Service
 public class UserActivityRecorder {
 
-    private static final Logger log = LoggerFactory.getLogger(UserActivityRecorder.class);
-
-    private static final List<String> defaultIgnoredUsernames = List.of("admin", "system");
-
     private final UnconstrainedDataManager dataManager;
-    private final SystemAuthenticator systemAuthenticator;
 
-
-    public UserActivityRecorder(DataManager dataManager, SystemAuthenticator systemAuthenticator) {
+    public UserActivityRecorder(DataManager dataManager) {
         this.dataManager = dataManager;
-        this.systemAuthenticator = systemAuthenticator;
     }
 
+    @Authenticated
     @TransactionalEventListener
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void onEntityChanged(final EntityChangedEvent<? extends UuidEntity> event) {
-        systemAuthenticator.runWithSystem(() -> recordUserActivitiesIfNeeded(event));
-    }
-
-    private void recordUserActivitiesIfNeeded(EntityChangedEvent<? extends UuidEntity> event) {
-        List<UserActivity> userActivities = new ArrayList<>();
-        userActivities.addAll(checkTrackedEntity(event));
-        userActivities.addAll(checkUserProfileUpdate(event));
-        userActivities.forEach(userActivity -> {
-            String logMsg = "%s '%s' has been created for %s".formatted(
-                    UserActivity.class.getSimpleName(),
-                    userActivity.getActionDescription(),
-                    userActivity.getUser());
-            log.info(logMsg);
-        });
-    }
-
-    private List<UserActivity> checkTrackedEntity(EntityChangedEvent<? extends UuidEntity> event) {
         Optional<? extends UuidEntity> entityOpt = getEntityFromEvent(event);
+
         if (entityOpt.isEmpty()) {
-            return emptyList();
+            return;
         }
 
-        UuidEntity entity = entityOpt.get();
-
-        if (findAnnotation(entity.getClass(), TrackedByUserActivityRecorder.class) == null) {
-            return emptyList();
+        switch (entityOpt.get()) {
+            case User user -> processUserChanges(event, user);
+            case Order order -> processOrderChanges(event, order);
+            case Client client -> processClientChanges(event, client);
+            default -> {}
         }
-
-        String entityClassName = entity.getClass().getSimpleName();
-
-        List<UserActivity> userActivities = new ArrayList<>();
-        if (isEntityCreatedEvent(event)) {
-            getCreatedBy(entity).ifPresent(createdBy ->
-                    userActivities.add(createUserActivity(createdBy, "Create the %s".formatted(entityClassName))));
-        } else if (isEntityUpdatedEvent(event)) {
-            getUpdatedBy(entity).ifPresent(updatedBy ->
-                    userActivities.add(createUserActivity(updatedBy, "Update the %s".formatted(entityClassName))));
-        } else if (isEntityDeletedEvent(event)) {
-            getDeletedBy(entity).ifPresent(deletedBy ->
-                    userActivities.add(createUserActivity(deletedBy, "Delete the %s".formatted(entityClassName))));
-        }
-
-        return userActivities;
     }
 
-    private List<UserActivity> checkUserProfileUpdate(EntityChangedEvent<? extends UuidEntity> event) {
-        if (!isEntityDeletedEvent(event)) {
-            Optional<? extends UuidEntity> entityOpt = getEntityFromEvent(event);
-            if (entityOpt.isEmpty()) {
-                return emptyList();
-            }
-
-            UuidEntity entity = entityOpt.get();
-
-            if (entity instanceof User updatedUser) {
-                User updatedBy = getUpdatedBy(entity).orElse(null);
-                if (isEntityUpdatedEvent(event) && Objects.equals(updatedUser, updatedBy)) {
-                    return List.of(createUserActivity(updatedUser, "Update profile"));
-                }
+    private void processUserChanges(EntityChangedEvent<?> event, User user) {
+        if (isEntityUpdatedEvent(event)) {
+            User updatedBy = getUpdatedBy(user).orElse(null);
+            if (Objects.equals(user, updatedBy)) {
+                UserProfileUserActivity userActivity = dataManager.create(UserProfileUserActivity.class);
+                userActivity.setUser(user);
+                userActivity.setActionDescription("Update profile info");
+                dataManager.save(userActivity);
             }
         }
+    }
 
-        return emptyList();
+    private void processClientChanges(EntityChangedEvent<?> event, Client client) {
+        ClientUserActivity userActivity = dataManager.create(ClientUserActivity.class);
+        userActivity.setClient(client);
+
+        if (isEntityCreatedEvent(event)) {
+            getCreatedBy(client).ifPresent(createdBy -> {
+                userActivity.setUser(createdBy);
+                userActivity.setActionDescription("Add new client to system");
+            });
+        } else if (isEntityUpdatedEvent(event)) {
+            getUpdatedBy(client).ifPresent(updatedBy -> {
+                userActivity.setUser(updatedBy);
+                userActivity.setActionDescription("Update client profile");
+            });
+        } else if (isEntityDeletedEvent(event)) {
+            getDeletedBy(client).ifPresent(deletedBy -> {
+                userActivity.setUser(deletedBy);
+                userActivity.setActionDescription("Delete client from system");
+            });
+        }
+
+        if (userActivity.getUser() != null) {
+            dataManager.save(userActivity);
+        }
+    }
+
+    private void processOrderChanges(EntityChangedEvent<?> event, Order order) {
+        ClientUserActivity userActivity = dataManager.create(ClientUserActivity.class);
+        Client client = order.getClient();
+        userActivity.setClient(client);
+
+        String orderNumber = order.getNumber();
+
+        if (isEntityCreatedEvent(event)) {
+            getCreatedBy(order).ifPresent(createdBy -> {
+                userActivity.setUser(createdBy);
+                userActivity.setActionDescription("Create order %s".formatted(orderNumber));
+            });
+        } else if (isEntityUpdatedEvent(event)) {
+            getUpdatedBy(order).ifPresent(updatedBy -> {
+                userActivity.setUser(updatedBy);
+                userActivity.setActionDescription("Update order %s".formatted(orderNumber));
+            });
+        } else if (isEntityDeletedEvent(event)) {
+            getDeletedBy(order).ifPresent(deletedBy -> {
+                userActivity.setUser(deletedBy);
+                userActivity.setActionDescription("Delete order %s".formatted(orderNumber));
+            });
+        }
+
+        if (userActivity.getUser() != null) {
+            dataManager.save(userActivity);
+        }
     }
 
     private Optional<User> getCreatedBy(UuidEntity entity) {
@@ -143,7 +146,8 @@ public class UserActivityRecorder {
                     : Optional.empty();
         };
 
-        return username.filter(u -> !defaultIgnoredUsernames.contains(u)).flatMap(this::findUser);
+        return username.filter(u -> !List.of("admin", "system").contains(u))
+                .flatMap(this::findUser);
     }
 
     private Optional<User> findUser(String username) {
@@ -155,13 +159,6 @@ public class UserActivityRecorder {
 
     private enum Trait {
         CREATED_BY, UPDATED_BY, DELETED_BY
-    }
-
-    private UserActivity createUserActivity(User user, String activity) {
-        UserActivity userActivity = dataManager.create(UserActivity.class);
-        userActivity.setUser(user);
-        userActivity.setActionDescription(activity);
-        return dataManager.save(userActivity);
     }
 
     private boolean isEntityDeletedEvent(EntityChangedEvent<?> event) {

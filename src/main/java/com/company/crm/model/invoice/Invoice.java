@@ -1,6 +1,5 @@
 package com.company.crm.model.invoice;
 
-import com.company.crm.app.annotation.TrackedByUserActivityRecorder;
 import com.company.crm.model.base.FullAuditEntity;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.datatype.PriceDataType;
@@ -31,7 +30,6 @@ import java.util.List;
         @Index(name = "IDX_INVOICE_ORDER", columnList = "ORDER_ID"),
         @Index(name = "IDX_INVOICE_CLIENT", columnList = "CLIENT_ID")
 })
-@TrackedByUserActivityRecorder
 public class Invoice extends FullAuditEntity {
 
     @JoinColumn(name = "CLIENT_ID", nullable = false)

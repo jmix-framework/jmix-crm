@@ -1,6 +1,5 @@
 package com.company.crm.model.client;
 
-import com.company.crm.app.annotation.TrackedByUserActivityRecorder;
 import com.company.crm.model.address.Address;
 import com.company.crm.model.base.FullAuditEntity;
 import com.company.crm.model.contact.Contact;
@@ -29,7 +28,6 @@ import java.util.List;
 @Entity
 @JmixEntity
 @Table(name = "CLIENT")
-@TrackedByUserActivityRecorder
 public class Client extends FullAuditEntity {
 
     @InstanceName

@@ -7,7 +7,7 @@ import com.company.crm.model.client.ClientType;
 import com.company.crm.model.order.Order;
 import com.company.crm.model.order.OrderStatus;
 import com.company.crm.model.user.User;
-import com.company.crm.model.user.UserTask;
+import com.company.crm.model.user.task.UserTask;
 import com.company.crm.view.client.ClientDetailView;
 import com.company.crm.view.user.UserDetailView;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -60,21 +60,26 @@ public class CrmRenderers {
     public Renderer<Client> clientType() {
         return new ComponentRenderer<>(client -> {
             ClientType type = client.getType();
-            String typeText = messages.getMessage(type);
-            Span span = new Span(typeText);
-            span.getElement().getThemeList().add("badge " + getBadgeVariant(type));
-            return span;
+            return createBadge(messages.getMessage(type), getBadgeVariant(type));
         });
     }
 
     public Renderer<Order> orderStatus() {
-        return new ComponentRenderer<>(order -> {
-            OrderStatus status = order.getStatus();
-            String statusText = messages.getMessage(status);
-            Span span = new Span(statusText);
-            span.getElement().getThemeList().add("badge " + getBadgeVariant(status));
-            return span;
-        });
+        return new ComponentRenderer<>(order -> createOrderStatusBadge(order.getStatus()));
+    }
+
+    public ComponentRenderer<Span, OrderStatus> orderStatusEnum() {
+        return new ComponentRenderer<>(this::createOrderStatusBadge);
+    }
+
+    public Span createOrderStatusBadge(OrderStatus status) {
+        return createBadge(messages.getMessage(status), getBadgeVariant(status));
+    }
+
+    public Span createBadge(String text, String badgeVariant) {
+        Span span = new Span(text);
+        span.getElement().getThemeList().add("badge " + badgeVariant);
+        return span;
     }
 
     public Renderer<UserTask> taskDueDateRenderer() {

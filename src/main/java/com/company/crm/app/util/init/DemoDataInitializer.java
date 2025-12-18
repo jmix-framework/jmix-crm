@@ -1,6 +1,5 @@
 package com.company.crm.app.util.init;
 
-import com.company.crm.app.util.price.PriceCalculator;
 import com.company.crm.model.address.Address;
 import com.company.crm.model.catalog.category.Category;
 import com.company.crm.model.catalog.item.CategoryItem;
@@ -15,8 +14,9 @@ import com.company.crm.model.order.OrderItem;
 import com.company.crm.model.order.OrderStatus;
 import com.company.crm.model.payment.Payment;
 import com.company.crm.model.user.User;
-import com.company.crm.model.user.UserActivity;
-import com.company.crm.model.user.UserTask;
+import com.company.crm.model.user.activity.client.ClientUserActivity;
+import com.company.crm.model.user.activity.userprofile.UserProfileUserActivity;
+import com.company.crm.model.user.task.UserTask;
 import com.company.crm.security.FullAccessRole;
 import io.jmix.core.SaveContext;
 import io.jmix.core.UnconstrainedDataManager;
@@ -40,12 +40,10 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static com.company.crm.app.util.price.PriceCalculator.calculateTotal;
@@ -91,7 +89,6 @@ public class DemoDataInitializer {
         List<User> users = generateUsers();
         assignRoles(users);
         generateUserTasks(users);
-        generateUserActivity(users);
 
         List<Client> clients = generateClients(60, users);
         generateContacts(clients);
@@ -101,6 +98,8 @@ public class DemoDataInitializer {
 
         List<Invoice> invoices = generateInvoices(orders);
         generatePayments(invoices);
+
+        generateUserActivities(users, clients, orders);
 
         log.info("Demo data initialization finished: " +
                         "categories={}, categoriesItems={}, " +
@@ -125,7 +124,8 @@ public class DemoDataInitializer {
                 Contact.class,
                 Client.class,
                 RoleAssignmentEntity.class,
-                UserActivity.class,
+                UserProfileUserActivity.class,
+                ClientUserActivity.class,
                 CategoryItem.class,
                 Category.class,
                 User.class
@@ -187,7 +187,7 @@ public class DemoDataInitializer {
                 category.setParent(new ArrayList<>(result.keySet()).get(random.nextInt(result.size())));
             }
 
-            dataManager.save(category);
+            dataManager.saveWithoutReload(category);
 
             List<CategoryItem> categoryItems = new ArrayList<>();
             for (int j = 0; j < categoryItemsCount; j++) {
@@ -228,7 +228,7 @@ public class DemoDataInitializer {
         );
     }
 
-    private List<UserTask> generateUserTasks(List<User> users) {
+    private void generateUserTasks(List<User> users) {
         log.info("Generating user tasks...");
         ThreadLocalRandom random = ThreadLocalRandom.current();
 
@@ -245,27 +245,24 @@ public class DemoDataInitializer {
                 "Status update", "Send weekly status update to stakeholders"
         );
 
-        List<UserTask> generatedTasks = new ArrayList<>();
         users.forEach(user ->
                 tasks.forEach((title, description) -> {
                     if (random.nextBoolean()) {
                         LocalDate dueDate = randomDateWithinDays(30, random).toLocalDate();
                         boolean completed = random.nextBoolean();
-                        generatedTasks.add(saveUserTask(title, description, dueDate, user, completed));
+                        saveUserTask(title, description, dueDate, user, completed);
                     }
                 }));
-
-        return generatedTasks;
     }
 
-    private UserTask saveUserTask(String title, String description, LocalDate dueDate, User user, boolean completed) {
+    private void saveUserTask(String title, String description, LocalDate dueDate, User user, boolean completed) {
         UserTask userTask = dataManager.create(UserTask.class);
         userTask.setTitle(title);
         userTask.setDescription(description);
         userTask.setDueDate(dueDate);
         userTask.setAuthor(user);
         userTask.setIsCompleted(completed);
-        return dataManager.save(userTask);
+        dataManager.saveWithoutReload(userTask);
     }
 
     private User saveUser(String username, String firstName, String lastName) {
@@ -286,36 +283,34 @@ public class DemoDataInitializer {
             roleAssignment.setUsername(user.getUsername());
             roleAssignment.setRoleCode(isManager ? "manager" : "employee");
             roleAssignment.setRoleType(RoleAssignmentRoleType.RESOURCE);
-            dataManager.save(roleAssignment);
+            dataManager.saveWithoutReload(roleAssignment);
         }
     }
 
-    private void generateUserActivity(List<User> users) {
-        log.info("Generating user activity...");
+    private void generateUserActivities(List<User> users, List<Client> clients, List<Order> orders) {
+        log.info("Generating user activities...");
 
         ThreadLocalRandom random = ThreadLocalRandom.current();
 
-        var activities = new ArrayList<>(List.of(
-                "updated account settings",
-                "logged in",
-                "logged out",
-                "created new order",
-                "created new invoice",
-                "created new payment",
-                "added a new task",
-                "transferred funds to emergency fund"
-        ));
+        OffsetDateTime now = OffsetDateTime.now();
 
-        for (User user : users) {
-            Collections.shuffle(activities);
-            for (String activity : activities.subList(0, random.nextInt(activities.size()))) {
-                UserActivity userActivity = dataManager.create(UserActivity.class);
-                userActivity.setUser(user);
-                userActivity.setActionDescription(activity);
-                userActivity.setCreatedDate(randomDateWithinDays(random.nextInt(2), random));
-                dataManager.save(userActivity);
-            }
-        }
+        clients.forEach(client -> {
+            ClientUserActivity userActivity = dataManager.create(ClientUserActivity.class);
+            userActivity.setClient(client);
+            userActivity.setUser(users.get(random.nextInt(users.size())));
+            userActivity.setActionDescription("Update client profile");
+            userActivity.setCreatedDate(random.nextBoolean() ? now.minusDays(1) : now);
+            dataManager.saveWithoutReload(userActivity);
+        });
+
+        orders.forEach(order -> {
+            ClientUserActivity userActivity = dataManager.create(ClientUserActivity.class);
+            userActivity.setClient(order.getClient());
+            userActivity.setUser(users.get(random.nextInt(users.size())));
+            userActivity.setActionDescription("Update order " + order.getNumber());
+            userActivity.setCreatedDate(random.nextBoolean() ? now.minusDays(1) : now);
+            dataManager.saveWithoutReload(userActivity);
+        });
     }
 
     private List<Client> generateClients(int count, List<User> users) {
@@ -338,7 +333,6 @@ public class DemoDataInitializer {
 
             result.add(dataManager.save(client));
         }
-        log.info("Generated {} clients", result.size());
         return result;
     }
 
@@ -381,8 +375,7 @@ public class DemoDataInitializer {
                 toSave.add(contact);
             }
         }
-        dataManager.save(toSave.toArray());
-        log.info("Generated {} contacts", toSave.size());
+        dataManager.saveWithoutReload(toSave.toArray());
     }
 
     private List<Order> generateOrders(List<Client> clients, Map<Category, List<CategoryItem>> catalog) {
@@ -404,7 +397,7 @@ public class DemoDataInitializer {
                 order.setQuote("Q-" + date.getYear() + "-" + (1000 + random.nextInt(9000)));
                 if (random.nextBoolean()) order.setComment(orderComment(random));
                 order.setStatus(OrderStatus.values()[random.nextInt(OrderStatus.values().length)]);
-                List<OrderItem> orderItems = generateOrderItems(order, categoryItems.subList(random.nextInt(1, categoryItemsSize - 1), categoryItemsSize));
+                List<OrderItem> orderItems = generateOrderItems(order, categoryItems.subList(0, random.nextInt(1, categoryItemsSize / 3)));
                 BigDecimal itemsTotal = order.getItemsTotal();
                 if (random.nextInt(4) == 0) {
                     // discount either value or percent
@@ -423,7 +416,6 @@ public class DemoDataInitializer {
             }
         }
         dataManager.save(saveContext);
-        log.info("Generated {} orders", result.size());
         return result;
     }
 
@@ -471,13 +463,11 @@ public class DemoDataInitializer {
                 result.add(dataManager.save(invoice));
             }
         }
-        log.info("Generated {} invoices", result.size());
         return result;
     }
 
     private void generatePayments(List<Invoice> invoices) {
         ThreadLocalRandom random = ThreadLocalRandom.current();
-        List<Payment> result = new ArrayList<>();
         for (Invoice invoice : invoices) {
             int n = random.nextInt(0, 9); // 0..8
             BigDecimal remaining = invoice.getTotal() != null ? invoice.getTotal() : BigDecimal.ZERO;
@@ -490,10 +480,9 @@ public class DemoDataInitializer {
                 if (part.compareTo(remaining) > 0) part = remaining;
                 payment.setAmount(part);
                 remaining = remaining.subtract(part);
-                result.add(dataManager.save(payment));
+                dataManager.saveWithoutReload(payment);
             }
         }
-        log.info("Generated {} payments", result.size());
     }
 
     private String createPassword() {
@@ -538,8 +527,6 @@ public class DemoDataInitializer {
         if (comments == null) comments = new ArrayList<>();
         comments.add(comment);
         categoryItem.setComments(comments);
-
-        log.info("Generated comment for category item {}", categoryItem.getId());
 
         return comment;
     }

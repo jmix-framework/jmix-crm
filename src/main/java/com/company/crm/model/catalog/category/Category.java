@@ -1,6 +1,5 @@
 package com.company.crm.model.catalog.category;
 
-import com.company.crm.app.annotation.TrackedByUserActivityRecorder;
 import com.company.crm.model.base.FullAuditEntity;
 import io.jmix.core.metamodel.annotation.InstanceName;
 import io.jmix.core.metamodel.annotation.JmixEntity;
@@ -18,7 +17,6 @@ import jakarta.persistence.Table;
 @Table(name = "CATEGORY", indexes = {
         @Index(name = "IDX_CATEGORY", columnList = "PARENT_ID")
 })
-@TrackedByUserActivityRecorder
 public class Category extends FullAuditEntity {
 
     @InstanceName

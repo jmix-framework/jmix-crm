@@ -39,7 +39,7 @@
                 </query>
             </loader>
         </collection>
-        <collection id="activitiesDc" class="com.company.crm.model.user.UserActivity">
+        <collection id="activitiesDc" class="com.company.crm.model.user.activity.UserActivity">
             <fetchPlan extends="_base">
                 <property name="user" fetchPlan="_base"/>
             </fetchPlan>
@@ -52,55 +52,99 @@
         <dynattr:dynamicAttributes/>
     </facets>
     <actions>
-        <action id="saveCloseAction" type="detail_saveClose"/>
-        <action id="closeAction" type="detail_close"/>
+        <action id="saveCloseAction" type="detail_saveClose" text="msg:///actions.Save"/>
+        <action id="closeAction" type="detail_close" text="msg:///actions.Close" icon="vaadin:close"/>
+        <action id="downloadProfile" text="msg://downloadProfile" icon="vaadin:download-alt" actionVariant="SUCCESS"/>
     </actions>
     <layout>
-        <h2 id="companyName" dataContainer="clientDc" property="name" classNames="ml-m"/>
+        <hbox padding="true" width="100%" justifyContent="BETWEEN" alignItems="CENTER">
+            <h2 id="companyName" dataContainer="clientDc" property="name" classNames="ml-m"/>
+            <hbox id="detailActions">
+                <button id="saveAndCloseButton" action="saveCloseAction"/>
+                <button id="closeButton" action="closeAction"/>
+                <button id="downloadProfileButton" action="downloadProfile"/>
+            </hbox>
+        </hbox>
         <scroller width="100%" height="100%">
             <div width="100%" height="100%">
                 <tabSheet id="tabSheet">
                     <tab id="infoTab" label="Info">
-                        <formLayout id="form" dataContainer="clientDc">
-                            <responsiveSteps>
-                                <responsiveStep minWidth="0" columns="1"/>
-                                <responsiveStep minWidth="40em" columns="2"/>
-                            </responsiveSteps>
-                            <h3 text="Common" classNames="pt-l"/>
-                            <entityPicker id="accountManagerField" property="accountManager" readOnly="true"
-                                          colspan="2"/>
-                            <textField id="nameField" property="name"/>
-                            <textField id="fullNameField" property="fullName"/>
-                            <select id="typeField" property="type"/>
-                            <textField id="vatNumberField" property="vatNumber"/>
-                            <textField id="regNumberField" property="regNumber"/>
-                            <textField id="websiteField" property="website"/>
+                        <div>
+                            <formLayout id="chartsBlock" width="100%" autoResponsive="true" autoRows="true"
+                                        expandFields="true" expandColumns="true"/>
+                            <split id="formSplit" themeNames="minimal small" splitterPosition="70">
+                                <vbox padding="false" classNames="pr-m" maxWidth="55em">
+                                    <formLayout id="form" dataContainer="clientDc">
+                                        <responsiveSteps>
+                                            <responsiveStep minWidth="0" columns="1"/>
+                                            <responsiveStep minWidth="40em" columns="2"/>
+                                        </responsiveSteps>
+                                        <h3 text="Common" classNames="pt-l" colspan="2"/>
+                                        <textField id="nameField" property="name"/>
+                                        <select id="typeField" property="type"/>
+                                        <textField id="fullNameField" property="fullName"/>
+                                        <textField id="vatNumberField" property="vatNumber"/>
+                                        <textField id="websiteField" property="website"/>
+                                        <textField id="regNumberField" property="regNumber"/>
 
-                            <h3 text="msg://com.company.crm.model.address/Address" classNames="pt-l"/>
-                            <formLayout id="addressForm" expandColumns="true" expandFields="true" maxColumns="2"
-                                        colspan="2" dataContainer="clientDc">
-                                <textField property="address.country"/>
-                                <textField property="address.postalCode"/>
-                                <textField property="address.city"/>
-                                <textField property="address.street"/>
-                                <textField property="address.building"/>
-                                <textField property="address.apartment"/>
-                            </formLayout>
-                        </formLayout>
+                                        <h3 text="msg://com.company.crm.model.address/Address" classNames="pt-l"
+                                            colspan="2"/>
+                                        <formLayout id="addressForm" expandColumns="true" expandFields="true"
+                                                    maxColumns="2"
+                                                    colspan="2" dataContainer="clientDc">
+                                            <textField property="address.country"/>
+                                            <textField property="address.building"/>
+                                            <textField property="address.city"/>
+                                            <textField property="address.apartment"/>
+                                            <textField property="address.street"/>
+                                            <textField property="address.postalCode"/>
+                                        </formLayout>
+                                    </formLayout>
+                                </vbox>
+                                <vbox padding="false" classNames="pl-m" maxWidth="30em">
+                                    <formLayout dataContainer="clientDc">
+                                        <responsiveSteps>
+                                            <responsiveStep minWidth="0" columns="1"/>
+                                        </responsiveSteps>
+                                        <h3 text="msg://managementTitle" classNames="pt-l"/>
+                                        <entityPicker id="accountManagerField" property="accountManager"
+                                                      readOnly="true" classNames="pb-l"/>
+                                        <component id="recentActivities"
+                                                   class="com.company.crm.app.ui.component.RecentActivitiesBlock">
+                                            <properties>
+                                                <property name="border" value="true"/>
+                                            </properties>
+                                        </component>
+                                    </formLayout>
+                                </vbox>
+                            </split>
+                        </div>
                     </tab>
                     <tab id="contactsTab" label="Contacts">
-                        <div width="100%" height="100%">
+                        <vbox width="100%" height="100%">
+                            <hbox id="buttonsPanel" classNames="buttons-panel">
+                                <startSlot>
+                                    <button id="createButton" action="contactsDataGrid.createAction"/>
+                                    <button id="editButton" action="contactsDataGrid.editAction"/>
+                                    <button id="removeButton" action="contactsDataGrid.removeAction"/>
+                                </startSlot>
+                            </hbox>
                             <dataGrid id="contactsDataGrid" dataContainer="contactsDc">
+                                <actions>
+                                    <action id="createAction" type="list_create"/>
+                                    <action id="editAction" type="list_edit"/>
+                                    <action id="removeAction" type="list_remove"/>
+                                </actions>
                                 <columns sortable="true">
                                     <column property="position"/>
                                     <column property="email"/>
                                     <column property="phone"/>
                                 </columns>
                             </dataGrid>
-                        </div>
+                        </vbox>
                     </tab>
                     <tab id="ordersTab" label="Orders">
-                        <div width="100%" height="100%">
+                        <vbox width="100%" height="100%">
                             <dataGrid id="ordersDataGrid" dataContainer="ordersDc">
                                 <columns sortable="true">
                                     <column property="status" filterable="true"/>
@@ -108,10 +152,10 @@
                                     <column property="total"/>
                                 </columns>
                             </dataGrid>
-                        </div>
+                        </vbox>
                     </tab>
                     <tab id="invoicesTab" label="Invoices">
-                        <div width="100%" height="100%">
+                        <vbox width="100%" height="100%">
                             <dataGrid id="invoicesDataGrid" dataContainer="invoicesDc">
                                 <columns sortable="true">
                                     <column property="status" filterable="true"/>
@@ -119,10 +163,10 @@
                                     <column property="dueDate" filterable="true"/>
                                 </columns>
                             </dataGrid>
-                        </div>
+                        </vbox>
                     </tab>
                     <tab id="paymentsTab" label="Payments">
-                        <div width="100%" height="100%">
+                        <vbox width="100%" height="100%">
                             <dataGrid id="paymentsDataGrid" dataContainer="paymentsDc">
                                 <columns sortable="true">
                                     <column property="invoice" filterable="true"/>
@@ -130,23 +174,19 @@
                                     <column property="amount" filterable="true"/>
                                 </columns>
                             </dataGrid>
-                        </div>
+                        </vbox>
                     </tab>
                     <tab id="activitiesTab" label="Activities">
-                        <div width="100%" height="100%">
+                        <vbox width="100%" height="100%">
                             <dataGrid id="activitiesDataGrid" dataContainer="activitiesDc">
                                 <columns sortable="true">
                                     <column property="actionDescription" filterable="true"/>
                                 </columns>
                             </dataGrid>
-                        </div>
+                        </vbox>
                     </tab>
                 </tabSheet>
             </div>
         </scroller>
-        <hbox id="detailActions">
-            <button id="saveAndCloseButton" action="saveCloseAction"/>
-            <button id="closeButton" action="closeAction"/>
-        </hbox>
     </layout>
 </view>

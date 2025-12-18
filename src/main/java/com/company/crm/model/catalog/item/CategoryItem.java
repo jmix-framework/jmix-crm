@@ -1,6 +1,5 @@
 package com.company.crm.model.catalog.item;
 
-import com.company.crm.app.annotation.TrackedByUserActivityRecorder;
 import com.company.crm.model.base.FullAuditEntity;
 import com.company.crm.model.catalog.category.Category;
 import io.jmix.core.FileRef;
@@ -25,7 +24,6 @@ import java.util.List;
 @Table(name = "CATEGORY_ITEM", indexes = {
         @Index(name = "IDX_CATEGORY_ITEM_CATEGORY", columnList = "CATEGORY_ID")
 })
-@TrackedByUserActivityRecorder
 public class CategoryItem extends FullAuditEntity {
 
     @InstanceName

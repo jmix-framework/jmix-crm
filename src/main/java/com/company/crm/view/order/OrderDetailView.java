@@ -1,15 +1,27 @@
 package com.company.crm.view.order;
 
+import com.company.crm.app.ui.component.CrmLoader;
 import com.company.crm.app.ui.component.OrderStatusPipeline;
-import com.company.crm.app.util.price.PriceCalculator;
+import com.company.crm.app.util.ui.renderer.CrmRenderers;
+import com.company.crm.model.datatype.PriceDataType;
 import com.company.crm.model.order.Order;
+import com.company.crm.model.order.OrderItem;
 import com.company.crm.model.order.OrderRepository;
+import com.company.crm.model.order.OrderStatus;
 import com.company.crm.view.main.MainView;
+import com.vaadin.flow.component.AbstractField;
+import com.vaadin.flow.component.AbstractField.ComponentValueChangeEvent;
 import com.vaadin.flow.component.html.H3;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
+import com.vaadin.flow.data.renderer.Renderer;
+import com.vaadin.flow.dom.Style;
 import com.vaadin.flow.router.Route;
 import io.jmix.core.FetchPlan;
 import io.jmix.core.SaveContext;
+import io.jmix.core.credits.CreditsLoader;
 import io.jmix.flowui.component.SupportsTypedValue.TypedValueChangeEvent;
+import io.jmix.flowui.component.select.JmixSelect;
 import io.jmix.flowui.component.textfield.TypedTextField;
 import io.jmix.flowui.exception.ValidationException;
 import io.jmix.flowui.model.InstanceContainer;
@@ -17,6 +29,7 @@ import io.jmix.flowui.view.EditedEntityContainer;
 import io.jmix.flowui.view.Install;
 import io.jmix.flowui.view.StandardDetailView;
 import io.jmix.flowui.view.Subscribe;
+import io.jmix.flowui.view.Supply;
 import io.jmix.flowui.view.Target;
 import io.jmix.flowui.view.ViewComponent;
 import io.jmix.flowui.view.ViewController;
@@ -38,7 +51,10 @@ import static com.company.crm.app.util.price.PriceCalculator.calculateTotal;
 public class OrderDetailView extends StandardDetailView<Order> {
 
     @Autowired
+    private CrmRenderers crmRenderers;
+    @Autowired
     private OrderRepository repository;
+
     @ViewComponent
     private OrderStatusPipeline statusPipeline;
     @ViewComponent
@@ -80,6 +96,31 @@ public class OrderDetailView extends StandardDetailView<Order> {
     @Subscribe("discountValueField")
     private void onDiscountValueFieldTypedValueChange(final TypedValueChangeEvent<TypedTextField<BigDecimal>, BigDecimal> event) {
         recalculateTotalIfNeeded(event);
+    }
+
+    @Supply(to = "orderItemsGrid.[categoryItem.code]", subject = "renderer")
+    private Renderer<OrderItem> orderItemsGridCategoryItemCodeRenderer() {
+        return new ComponentRenderer<>(orderItem -> {
+            Span span = new Span(orderItem.getCategoryItem().getCode());
+            span.getElement().getThemeList().add("badge contrast");
+            return span;
+        });
+    }
+
+    @Supply(to = "orderItemsGrid.total", subject = "renderer")
+    private Renderer<OrderItem> orderItemsGridTotalRenderer() {
+        return new ComponentRenderer<>(orderItem ->
+                crmRenderers.createBadge(PriceDataType.formatValue(orderItem.getTotal()), "default"));
+    }
+
+    @Supply(to = "statusSelect", subject = "renderer")
+    private ComponentRenderer<Span, OrderStatus> statusSelectRenderer() {
+        return crmRenderers.orderStatusEnum();
+    }
+
+    @Install(to = "statusSelect", subject = "itemLabelGenerator")
+    private String statusSelectItemLabelGenerator(final OrderStatus item) {
+        return "";
     }
 
     private void selectStatusInPipeline() {

@@ -7,22 +7,46 @@
         objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
     <changeSet id="1" author="crm">
         <validCheckSum>ANY</validCheckSum>
-        <createTable tableName="USER_ACTIVITY">
+        <createTable tableName="CLIENT_USER_ACITIVTY">
             <column name="ID"
                     type="UUID">
                 <constraints nullable="false"
                              primaryKey="true"
-                             primaryKeyName="PK_USER_ACTIVITY"/>
+                             primaryKeyName="PK_CLIENT_USER_ACITIVTY"/>
+            </column>
+            <column name="USER_ID"
+                    type="UUID"/>
+            <column name="ACTION_DESCRIPTION"
+                    type="CLOB">
+                <constraints nullable="false"/>
             </column>
             <column name="CREATED_BY"
                     type="VARCHAR(255)"/>
             <column name="CREATED_DATE"
                     type="${offsetDateTime.type}"/>
-            <column name="USER_ID"
-                    type="UUID"/>
-            <column name="ACTION_DESCRIPTION" type="CLOB">
+            <column name="CLIENT_ID"
+                    type="UUID">
                 <constraints nullable="false"/>
             </column>
+        </createTable>
+
+        <createTable tableName="USER_PROFILE_USER_ACITIVTY">
+            <column name="ID"
+                    type="UUID">
+                <constraints nullable="false"
+                             primaryKey="true"
+                             primaryKeyName="PK_USER_PROFILE_USER_ACITIVTY"/>
+            </column>
+            <column name="USER_ID"
+                    type="UUID"/>
+            <column name="ACTION_DESCRIPTION"
+                    type="CLOB">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CREATED_BY"
+                    type="VARCHAR(255)"/>
+            <column name="CREATED_DATE"
+                    type="${offsetDateTime.type}"/>
         </createTable>
 
         <createTable tableName="USER_TASK">

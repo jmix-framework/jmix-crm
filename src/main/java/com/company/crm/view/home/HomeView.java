@@ -1,6 +1,5 @@
 package com.company.crm.view.home;
 
-import com.company.crm.app.service.user.UserService;
 import com.company.crm.app.service.datetime.DateTimeService;
 import com.company.crm.app.service.finance.InvoiceService;
 import com.company.crm.app.service.finance.PaymentService;
@@ -14,26 +13,21 @@ import com.company.crm.model.datatype.PriceDataType;
 import com.company.crm.model.order.Order;
 import com.company.crm.model.order.OrderStatus;
 import com.company.crm.model.payment.Payment;
-import com.company.crm.model.user.User;
-import com.company.crm.model.user.UserActivity;
 import com.company.crm.model.invoice.Invoice;
 import com.company.crm.view.main.MainView;
 import com.company.crm.view.usertask.UserTaskListView;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Unit;
-import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H4;
-import com.vaadin.flow.component.html.H5;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility;
@@ -71,7 +65,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -219,7 +212,7 @@ public class HomeView extends StandardView implements WidthResizeListener {
         salesCard.fillAsPeriodCard("Sales Chart", 2, this::createSalesFunnelComponent);
 
         var activitiesCard = uiComponents.create(CrmCard.class).withoutBackground(true);
-        activitiesCard.fillAsStaticCard("Recent Activities", 2, createRecentActivitiesComponent());
+        activitiesCard.fillAsStaticCard("", 2, createRecentActivitiesComponent());
 
         return List.of(salesCard, activitiesCard);
     }

@@ -1,6 +1,7 @@
 package com.company.crm.model.user;
 
 import com.company.crm.model.base.FullAuditEntity;
+import com.company.crm.model.user.task.UserTask;
 import io.jmix.core.HasTimeZone;
 import io.jmix.core.annotation.Secret;
 import io.jmix.core.entity.annotation.SystemLevel;

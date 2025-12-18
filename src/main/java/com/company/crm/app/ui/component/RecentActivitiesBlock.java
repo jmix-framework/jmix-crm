@@ -1,23 +1,28 @@
 package com.company.crm.app.ui.component;
 
 import com.company.crm.app.service.datetime.DateTimeService;
+import com.company.crm.app.service.user.UserActivityService;
 import com.company.crm.app.service.user.UserService;
+import com.company.crm.model.client.Client;
 import com.company.crm.model.user.User;
-import com.company.crm.model.user.UserActivity;
+import com.company.crm.model.user.activity.UserActivity;
 import com.company.crm.view.util.SkeletonStyler;
+import com.google.common.base.Preconditions;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasComponents;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.H1;
+import com.vaadin.flow.component.html.H4;
 import com.vaadin.flow.component.html.H5;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.theme.lumo.LumoUtility;
+import io.jmix.core.Messages;
 import io.jmix.flowui.asynctask.UiAsyncTasks;
-import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -28,8 +33,11 @@ import org.springframework.context.ApplicationContextAware;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 public class RecentActivitiesBlock extends Div implements ApplicationContextAware, InitializingBean {
 
@@ -38,30 +46,79 @@ public class RecentActivitiesBlock extends Div implements ApplicationContextAwar
     private static final DateTimeFormatter DATE_WITH_YEAR_AND_TIME =
             DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm");
 
-    private final Map<String, LocalDate> loadedActivities = new LinkedHashMap<>();
-    private int activitiesMaxCount = 3;
+    private static final String[] BORDER_CLASSNAMES = new String[]{
+            LumoUtility.BorderRadius.LARGE,
+            LumoUtility.Border.ALL,
+            LumoUtility.Padding.MEDIUM
+    };
 
-    private UserService userService;
+    private final Map<String, LocalDate> loadedActivities = new LinkedHashMap<>();
+
+    private Messages messages;
     private UiAsyncTasks uiAsyncTasks;
     private DateTimeService dateTimeService;
+    private UserActivityService userActivityService;
+
+    private User user = null;
+    private Client client = null;
+
+    private int activitiesInBlockMaxCount = 3;
+
+    public void setBorder(boolean border) {
+        if (border) {
+            withBorder();
+        } else {
+            withoutBorder();
+        }
+    }
+
+    public RecentActivitiesBlock withBorder() {
+        addClassNames(BORDER_CLASSNAMES);
+        return this;
+    }
+
+    public RecentActivitiesBlock withoutBorder() {
+        removeClassNames(BORDER_CLASSNAMES);
+        return this;
+    }
+
+    public void setClient(Client client) {
+        this.client = client;
+        reloadContent();
+    }
+
+    public void showForUser(User user) {
+        this.user = user;
+        reloadContent();
+    }
+
+    public void setActivitiesInBlockMaxCount(int maxCount) {
+        checkArgument(maxCount > 0, "max count should be greater than 0");
+        this.activitiesInBlockMaxCount = maxCount;
+        reloadContent();
+    }
 
     public void addActivities(String title, LocalDate date) {
-        addSeparator();
         addActivitiesBlock(title, date);
     }
 
-    public void setActivitiesMaxCount(int activitiesMaxCount) {
-        this.activitiesMaxCount = activitiesMaxCount;
+    private void reloadContent() {
         removeAll();
         initComponent();
     }
 
     private void initComponent() {
+        addTitle();
         if (loadedActivities.isEmpty()) {
             loadDefaultActivities();
         } else {
             reloadActivities();
         }
+    }
+
+    private void addTitle() {
+        H4 title = new H4(messages.getMessage("recentActivitiesTitle"));
+        add(title);
     }
 
     private void reloadActivities() {
@@ -83,27 +140,16 @@ public class RecentActivitiesBlock extends Div implements ApplicationContextAwar
         addActivities("Yesterday", yesterdayStart);
     }
 
-    private void addSeparator() {
-        if (getComponentCount() == 0) {
-            return;
-        }
-        HorizontalLayout separator = new HorizontalLayout();
-        separator.setWidthFull();
-        separator.setHeight(1, Unit.EM);
-        add(separator);
-    }
-
     private void addActivitiesBlock(String title, LocalDate date) {
         H5 titleComponent = new H5(title);
-        titleComponent.addClassNames(LumoUtility.Padding.Bottom.SMALL);
+        titleComponent.addClassNames(LumoUtility.Padding.Bottom.SMALL, LumoUtility.Padding.Top.MEDIUM);
         add(titleComponent);
 
         Div scrollerContent = new Div();
         scrollerContent.addClassNames(LumoUtility.Padding.Left.MEDIUM);
 
         Scroller scroller = new Scroller(scrollerContent);
-        scroller.setWidthFull();
-        scroller.setMaxHeight(10, Unit.EM);
+        scroller.setMaxHeight(activitiesInBlockMaxCount * 4, Unit.EM);
         add(scroller);
 
         loadActivitiesAsync(title, date, scroller);
@@ -113,7 +159,7 @@ public class RecentActivitiesBlock extends Div implements ApplicationContextAwar
                                                         LocalDate date,
                                                         Scroller scroller) {
         SkeletonStyler.apply(scroller);
-        return uiAsyncTasks.supplierConfigurer(() -> userService.loadActivities(date, activitiesMaxCount))
+        return uiAsyncTasks.supplierConfigurer(() -> doLoadActivities(date))
                 .withResultHandler(activities -> {
                     SkeletonStyler.remove(scroller);
                     HasComponents scrollerContent = (HasComponents) scroller.getContent();
@@ -131,6 +177,18 @@ public class RecentActivitiesBlock extends Div implements ApplicationContextAwar
                     SkeletonStyler.remove(scroller);
                     log.warn("Error when loading activities", e);
                 }).supplyAsync();
+    }
+
+    private List<? extends UserActivity> doLoadActivities(LocalDate date) {
+        if (user == null && client == null) {
+            return userActivityService.loadActivities(date, activitiesInBlockMaxCount);
+        } else if (user == null) {
+            return userActivityService.loadClientActivities(client, date, activitiesInBlockMaxCount);
+        } else if (client == null) {
+            return userActivityService.loadActivities(user, date, activitiesInBlockMaxCount);
+        } else {
+            return userActivityService.loadClientActivities(user, client, date, activitiesInBlockMaxCount);
+        }
     }
 
     private static Component createEmptyRow(String title) {
@@ -174,8 +232,9 @@ public class RecentActivitiesBlock extends Div implements ApplicationContextAwar
     }
 
     private void autowireDependencies(ApplicationContext applicationContext) {
-        userService = applicationContext.getBean(UserService.class);
+        messages = applicationContext.getBean(Messages.class);
         uiAsyncTasks = applicationContext.getBean(UiAsyncTasks.class);
         dateTimeService = applicationContext.getBean(DateTimeService.class);
+        userActivityService = applicationContext.getBean(UserActivityService.class);
     }
 }

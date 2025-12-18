@@ -1,6 +1,5 @@
 package com.company.crm.model.payment;
 
-import com.company.crm.app.annotation.TrackedByUserActivityRecorder;
 import com.company.crm.model.base.FullAuditEntity;
 import com.company.crm.model.datatype.PriceDataType;
 import com.company.crm.model.invoice.Invoice;
@@ -23,7 +22,6 @@ import java.time.LocalDate;
 @Table(name = "PAYMENT", indexes = {
         @Index(name = "IDX_PAYMENT_INVOICE", columnList = "INVOICE_ID")
 })
-@TrackedByUserActivityRecorder
 public class Payment extends FullAuditEntity {
 
     @JoinColumn(name = "INVOICE_ID", nullable = false)

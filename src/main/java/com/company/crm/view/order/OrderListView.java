@@ -74,6 +74,8 @@ import static org.apache.commons.lang3.StringUtils.substringBeforeLast;
 public class OrderListView extends StandardListView<Order> {
 
     @Autowired
+    private Messages messages;
+    @Autowired
     private OrderService orderService;
     @Autowired
     private CrmRenderers crmRenderers;
@@ -256,7 +258,7 @@ public class OrderListView extends StandardListView<Order> {
         result.forEach((status, amount) ->
                 pipeLineFilter.getStatusComponents().forEach(comp -> {
                     if (comp.getStatus().equals(status)) {
-                        comp.setTitle(comp.getTitle() + " (" + amount + ")");
+                        comp.setTitle(messages.getMessage(status) + " (" + amount + ")");
                     }
                 }));
     }

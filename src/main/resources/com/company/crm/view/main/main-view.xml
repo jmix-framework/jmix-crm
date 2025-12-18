@@ -8,11 +8,11 @@
         <drawerLayout>
             <section id="section" classNames="jmix-main-view-section">
                 <h2 id="applicationTitle"
-                    classNames="jmix-main-view-application-title">
-                    <anchor id="baseLink"
-                            href="./home"
-                            text="msg://applicationTitle.text"
-                            classNames="jmix-main-view-application-title-base-link"/>
+                    classNames="jmix-main-view-application-title" css="cursor: pointer">
+                    <svgIcon id="logo" size="40px" resource="icons/icon.svg" classNames="pr-m"/>
+                    <h3 id="baseLink"
+                        text="msg://applicationTitle.text"
+                        classNames="jmix-main-view-application-title-base-link font-black"/>
                 </h2>
                 <nav id="navigation"
                      classNames="jmix-main-view-navigation"
@@ -31,8 +31,8 @@
                 <h1 id="viewTitle" classNames="jmix-main-view-title"/>
 
                 <textField id="searchField" valueChangeMode="EAGER" valueChangeTimeout="500"
-                            placeholder="Search for clients..." clearButtonVisible="true"
-                            classNames="ms-auto me-l" minWidth="20em">
+                           placeholder="msg://searchFieldPlaceholder" clearButtonVisible="true"
+                           classNames="ms-auto me-l" minWidth="20em">
                     <suffix>
                         <icon icon="SEARCH"/>
                     </suffix>

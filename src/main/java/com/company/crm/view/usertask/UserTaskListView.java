@@ -2,8 +2,8 @@ package com.company.crm.view.usertask;
 
 import com.company.crm.app.util.ui.renderer.CrmRenderers;
 import com.company.crm.model.user.User;
-import com.company.crm.model.user.UserTask;
-import com.company.crm.model.user.UserTaskRepository;
+import com.company.crm.model.user.task.UserTask;
+import com.company.crm.model.user.task.UserTaskRepository;
 import com.company.crm.view.main.MainView;
 import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.HasValidation;
