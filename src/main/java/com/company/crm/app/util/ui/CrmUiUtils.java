@@ -1,15 +1,26 @@
 package com.company.crm.app.util.ui;
 
+import com.company.crm.model.datatype.PriceDataType;
+import com.company.crm.model.order.Order;
 import com.vaadin.flow.component.HasStyle;
 import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.page.BrowserWindowResizeEvent;
 import com.vaadin.flow.component.page.Page;
 import com.vaadin.flow.component.page.PendingJavaScriptResult;
+import com.vaadin.flow.data.selection.MultiSelect;
+import com.vaadin.flow.data.selection.SingleSelect;
 import com.vaadin.flow.shared.Registration;
+import io.jmix.flowui.component.grid.DataGrid;
+import io.jmix.flowui.component.grid.DataGridColumn;
 
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
+
+import static com.company.crm.model.datatype.PriceDataType.getCurrencySuffix;
+import static com.company.crm.model.datatype.PriceDataType.getCurrencySymbol;
 
 public final class CrmUiUtils {
 
@@ -66,6 +77,44 @@ public final class CrmUiUtils {
 
     public Optional<CompletableFuture<Integer>> onClientHeightFuture(Consumer<Integer> onHeight) {
         return onClientHeightFuture().map(c -> c.whenComplete((width, t) -> onHeight.accept(width)));
+    }
+
+    public static void addColumnHeaderCurrencySuffix(DataGrid<?> grid, String...columnKey) {
+        for (String key : columnKey) {
+            DataGridColumn<?> column = grid.getColumnByKey(key);
+            if (column != null) {
+                column.setHeader(column.getHeaderText() + ", " + getCurrencySymbol());
+            }
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> void addRowSelectionInMultiSelectMode(DataGrid<T> grid, String...ignoredColumn) {
+        if (grid.isMultiSelect()) {
+            grid.addItemClickListener(e -> {
+                String columnKey = e.getColumn().getKey();
+                if (Arrays.asList(ignoredColumn).contains(columnKey)) {
+                    return;
+                }
+
+                T item = e.getItem();
+                try {
+                    MultiSelect<Grid<T>, T> multiSelect = grid.asMultiSelect();
+                    if (multiSelect.isSelected(item)) {
+                        multiSelect.deselect(item);
+                    } else {
+                        multiSelect.select(item);
+                    }
+                } catch (IllegalStateException mayBeNotMultiSelect) {
+                    try {
+                        SingleSelect<Grid<T>, T> singleSelect = grid.asSingleSelect();
+                        singleSelect.setValue(item);
+                    } catch (Exception ignored) {
+                        throw mayBeNotMultiSelect;
+                    }
+                }
+            });
+        }
     }
 
     private static Optional<PendingJavaScriptResult> executeGetClientWidthJs() {

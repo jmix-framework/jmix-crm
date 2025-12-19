@@ -67,12 +67,12 @@
         </hbox>
         <scroller width="100%" height="100%">
             <div width="100%" height="100%">
-                <tabSheet id="tabSheet">
-                    <tab id="infoTab" label="Info">
-                        <div>
+                <tabSheet id="tabSheet" width="100%">
+                    <tab id="infoTab" label="msg://infoTabLabel">
+                        <div width="100%">
                             <formLayout id="chartsBlock" width="100%" autoResponsive="true" autoRows="true"
                                         expandFields="true" expandColumns="true"/>
-                            <split id="formSplit" themeNames="minimal small" splitterPosition="70">
+                            <split width="100%" id="formSplit" themeNames="minimal small" splitterPosition="70">
                                 <vbox padding="false" classNames="pr-m" maxWidth="55em">
                                     <formLayout id="form" dataContainer="clientDc">
                                         <responsiveSteps>
@@ -101,8 +101,8 @@
                                         </formLayout>
                                     </formLayout>
                                 </vbox>
-                                <vbox padding="false" classNames="pl-m" maxWidth="30em">
-                                    <formLayout dataContainer="clientDc">
+                                <vbox width="100%" padding="false" alignItems="CENTER" classNames="pl-m" maxWidth="30em">
+                                    <formLayout dataContainer="clientDc" alignSelf="CENTER">
                                         <responsiveSteps>
                                             <responsiveStep minWidth="0" columns="1"/>
                                         </responsiveSteps>
@@ -120,7 +120,7 @@
                             </split>
                         </div>
                     </tab>
-                    <tab id="contactsTab" label="Contacts">
+                    <tab id="contactsTab" label="msg://contactsTabLabel">
                         <vbox width="100%" height="100%">
                             <hbox id="buttonsPanel" classNames="buttons-panel">
                                 <startSlot>
@@ -143,7 +143,7 @@
                             </dataGrid>
                         </vbox>
                     </tab>
-                    <tab id="ordersTab" label="Orders">
+                    <tab id="ordersTab" label="msg://ordersTabLabel">
                         <vbox width="100%" height="100%">
                             <dataGrid id="ordersDataGrid" dataContainer="ordersDc">
                                 <columns sortable="true">
@@ -154,7 +154,7 @@
                             </dataGrid>
                         </vbox>
                     </tab>
-                    <tab id="invoicesTab" label="Invoices">
+                    <tab id="invoicesTab" label="msg://invoicesTabLabel">
                         <vbox width="100%" height="100%">
                             <dataGrid id="invoicesDataGrid" dataContainer="invoicesDc">
                                 <columns sortable="true">
@@ -165,7 +165,7 @@
                             </dataGrid>
                         </vbox>
                     </tab>
-                    <tab id="paymentsTab" label="Payments">
+                    <tab id="paymentsTab" label="msg://paymentsTabLabel">
                         <vbox width="100%" height="100%">
                             <dataGrid id="paymentsDataGrid" dataContainer="paymentsDc">
                                 <columns sortable="true">
@@ -176,7 +176,7 @@
                             </dataGrid>
                         </vbox>
                     </tab>
-                    <tab id="activitiesTab" label="Activities">
+                    <tab id="activitiesTab" label="msg://activitiesTabLabel">
                         <vbox width="100%" height="100%">
                             <dataGrid id="activitiesDataGrid" dataContainer="activitiesDc">
                                 <columns sortable="true">

@@ -20,29 +20,50 @@ public class PriceDataType implements Datatype<BigDecimal> {
     public static final String NAME = "price";
 
     private static final String PATTERN = "#,##0";
+    private static final CurrencyPosition DEFAULT_CURRENCY_POSITION = CurrencyPosition.END;
 
-    public static final PriceDataType INSTANCE = new PriceDataType();
-
-    public static String formatValue(BigDecimal value) {
-        return INSTANCE.format(value);
+    public static String formatWithoutCurrency(Object value) {
+        return doFormatValueWithoutCurrency(value);
     }
 
-    @Override
-    public String format(@Nullable Object value) {
+    public static String formatStartingCurrency(Object value) {
+        return doFormatValueWithCurrency(value, CurrencyPosition.START);
+    }
+
+    public static String formatEndingCurrency(Object value) {
+        return doFormatValueWithCurrency(value, CurrencyPosition.END);
+    }
+
+    private static String doFormatValueWithCurrency(Object value, CurrencyPosition currencyPosition) {
+        String withoutCurrency = formatWithoutCurrency(value);
+        return switch (currencyPosition) {
+            case START -> getCurrencyPrefix() + withoutCurrency;
+            case END -> withoutCurrency + getCurrencySuffix();
+        };
+    }
+
+    private static String doFormatValueWithoutCurrency(Object value) {
         if (value == null) {
             return "";
         }
-
         try {
             final NumberFormat numberInstance = NumberFormat.getNumberInstance();
             DecimalFormat decimalFormat = (DecimalFormat) numberInstance;
             decimalFormat.setParseBigDecimal(true);
             decimalFormat.applyPattern(PATTERN);
-
-            return decimalFormat.format(value) + getCurrencyPostfix();
+            return decimalFormat.format(value);
         } catch (Exception e) {
-            return value.toString();
+            return "[NaN]";
         }
+    }
+
+    public enum CurrencyPosition {
+        START, END
+    }
+
+    @Override
+    public String format(@Nullable Object value) {
+        return doFormatValueWithCurrency(value, DEFAULT_CURRENCY_POSITION);
     }
 
     @Override
@@ -74,7 +95,15 @@ public class PriceDataType implements Datatype<BigDecimal> {
         return parse(value);
     }
 
-    private String getCurrencyPostfix() {
-        return " " + "$";
+    public static String getCurrencySuffix() {
+        return " " + getCurrencySymbol();
+    }
+
+    public static String getCurrencyPrefix() {
+        return getCurrencySymbol() + " ";
+    }
+
+    public static String getCurrencySymbol() {
+        return "$";
     }
 }

@@ -6,6 +6,7 @@ import com.company.crm.app.service.datetime.DateTimeService;
 import com.company.crm.app.ui.component.card.CrmCard;
 import com.company.crm.app.util.date.range.LocalDateRange;
 import com.company.crm.app.util.ui.chart.ChartsUtils;
+import com.company.crm.app.util.ui.renderer.CrmRenderers;
 import com.company.crm.model.catalog.category.Category;
 import com.company.crm.model.catalog.category.CategoryRepository;
 import com.company.crm.model.catalog.item.CategoryItem;
@@ -14,7 +15,11 @@ import com.company.crm.view.catalog.charts.ItemOrdersAmountItem;
 import com.company.crm.view.catalog.charts.ItemOrdersAmountValueDescription;
 import com.company.crm.view.main.MainView;
 import com.company.crm.view.util.SkeletonStyler;
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasValue;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
+import com.vaadin.flow.data.renderer.Renderer;
+import com.vaadin.flow.data.renderer.TextRenderer;
 import com.vaadin.flow.router.Route;
 import io.jmix.chartsflowui.component.Chart;
 import io.jmix.chartsflowui.kit.component.model.DataSet;
@@ -25,14 +30,17 @@ import io.jmix.core.repository.JmixDataRepositoryContext;
 import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.component.card.JmixCard;
 import io.jmix.flowui.component.formlayout.JmixFormLayout;
+import io.jmix.flowui.component.grid.DataGrid;
 import io.jmix.flowui.component.select.JmixSelect;
 import io.jmix.flowui.component.textfield.TypedTextField;
 import io.jmix.flowui.model.CollectionLoader;
 import io.jmix.flowui.view.DialogMode;
 import io.jmix.flowui.view.Install;
 import io.jmix.flowui.view.LookupComponent;
+import io.jmix.flowui.view.MessageBundle;
 import io.jmix.flowui.view.StandardListView;
 import io.jmix.flowui.view.Subscribe;
+import io.jmix.flowui.view.Supply;
 import io.jmix.flowui.view.Target;
 import io.jmix.flowui.view.ViewComponent;
 import io.jmix.flowui.view.ViewController;
@@ -49,6 +57,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
+import static com.company.crm.app.util.ui.CrmUiUtils.addRowSelectionInMultiSelectMode;
 import static io.jmix.core.querycondition.PropertyCondition.contains;
 import static io.jmix.core.querycondition.PropertyCondition.equal;
 
@@ -60,9 +69,11 @@ import static io.jmix.core.querycondition.PropertyCondition.equal;
 public class CategoryItemListView extends StandardListView<CategoryItem> {
 
     @Autowired
-    private UiComponents uiComponents;
-    @Autowired
     private ChartsUtils chartsUtils;
+    @Autowired
+    private CrmRenderers crmRenderers;
+    @Autowired
+    private UiComponents uiComponents;
     @Autowired
     private CategoryItemRepository repository;
     @Autowired
@@ -80,6 +91,8 @@ public class CategoryItemListView extends StandardListView<CategoryItem> {
     private JmixSelect<Category> categorySelect;
     @ViewComponent
     private CollectionLoader<CategoryItem> categoryItemsDl;
+    @ViewComponent
+    private DataGrid<CategoryItem> categoryItemsDataGrid;
 
     private final LogicalCondition filtersCondition = LogicalCondition.and();
 
@@ -87,6 +100,7 @@ public class CategoryItemListView extends StandardListView<CategoryItem> {
     public void onInit(final InitEvent event) {
         initializeChartsBlock();
         initializeFilterFields();
+        addRowSelectionInMultiSelectMode(categoryItemsDataGrid, "code");
     }
 
     @Install(to = "categoryItemsDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
@@ -102,6 +116,11 @@ public class CategoryItemListView extends StandardListView<CategoryItem> {
     @Install(to = "pagination", subject = "totalCountByRepositoryDelegate")
     private Long paginationTotalCountByRepositoryDelegate(final JmixDataRepositoryContext context) {
         return repository.count(wrapContext(context));
+    }
+
+    @Supply(to = "categoryItemsDataGrid.code", subject = "renderer")
+    private Renderer<CategoryItem> categoryItemsDataGridCodeRenderer() {
+        return crmRenderers.categoryItemCode();
     }
 
     private JmixDataRepositoryContext wrapContext(JmixDataRepositoryContext context) {
@@ -207,5 +226,4 @@ public class CategoryItemListView extends StandardListView<CategoryItem> {
     private DataSet createAvailableByCategoryChartDataSet() {
         return null;
     }
-
 }

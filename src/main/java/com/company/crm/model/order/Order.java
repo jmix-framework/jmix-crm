@@ -104,7 +104,7 @@ public class Order extends FullAuditEntity {
     }
 
     public BigDecimal getTotal() {
-        return total;
+        return total == null ? BigDecimal.ZERO : total;
     }
 
     public void setTotal(BigDecimal total) {

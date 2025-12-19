@@ -56,11 +56,13 @@
                     <responsiveStep minWidth="30em" columns="3"/>
                 </responsiveSteps>
                 <select id="typeSelect" placeholder="msg://typePlaceholder"
-                        itemsEnum="com.company.crm.model.client.ClientType" emptySelectionAllowed="true"/>
+                        itemsEnum="com.company.crm.model.client.ClientType"
+                        emptySelectionAllowed="true" emptySelectionCaption="msg://allTypes"/>
                 <select id="accountManagerSelect" placeholder="msg://accountManagerPlaceholder"
-                        emptySelectionAllowed="true"/>
+                        emptySelectionAllowed="true" emptySelectionCaption="msg://allManagers"/>
                 <select id="categorySelect" placeholder="msg://categoryPlaceholder"
-                        itemsEnum="com.company.crm.view.client.ClientCategory" emptySelectionAllowed="true"/>
+                        itemsEnum="com.company.crm.view.client.ClientCategory"
+                        emptySelectionAllowed="true" emptySelectionCaption="msg://allClients"/>
             </formLayout>
             <genericFilter id="advancedFilter" dataLoader="clientsDl"
                            opened="false" summaryText="msg:///advanced" themeNames="filled">
@@ -86,10 +88,10 @@
                 <action id="removeAction" type="list_remove"/>
             </actions>
             <columns resizable="true" sortable="true">
-                <column property="name" autoWidth="true"/>
-                <column property="type"/>
-                <column property="accountManager"/>
-                <column property="vatNumber"/>
+                <column property="name" autoWidth="true" flexGrow="0"/>
+                <column property="type" autoWidth="true" flexGrow="0"/>
+                <column property="accountManager" autoWidth="true" flexGrow="0"/>
+                <column property="vatNumber" autoWidth="true" flexGrow="0"/>
                 <column property="regNumber"/>
             </columns>
         </dataGrid>

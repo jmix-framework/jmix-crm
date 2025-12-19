@@ -9,6 +9,7 @@ import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.HasValidation;
 import com.vaadin.flow.component.HasValueAndElement;
 import com.vaadin.flow.component.Unit;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -82,7 +83,7 @@ import static io.jmix.flowui.component.delegate.AbstractFieldDelegate.PROPERTY_I
 @ViewController(id = "UserTask.list")
 @ViewDescriptor(path = "user-task-list-view.xml")
 @LookupComponent("userTasksDataGrid")
-@DialogMode(width = "64em")
+@DialogMode(width = "64em", resizable = true, closeOnOutsideClick = true, closeOnEsc = true)
 public class UserTaskListView extends StandardListView<UserTask> {
 
     @Autowired
@@ -91,6 +92,8 @@ public class UserTaskListView extends StandardListView<UserTask> {
     private DataManager dataManager;
     @Autowired
     private UiComponents uiComponents;
+    @Autowired
+    private CrmRenderers crmRenderers;
     @Autowired
     private EntityStates entityStates;
     @Autowired
@@ -135,8 +138,6 @@ public class UserTaskListView extends StandardListView<UserTask> {
     private boolean modifiedAfterEdit;
 
     private Boolean gridOnly = null;
-    @Autowired
-    private CrmRenderers crmRenderers;
 
     public void reloadData() {
         userTasksDl.load();
@@ -159,6 +160,15 @@ public class UserTaskListView extends StandardListView<UserTask> {
             return;
         }
 
+        Dialog dialog = UiComponentUtils.findDialog(this);
+        if (dialog != null) {
+            dialog.setMaxWidth(30, Unit.EM);
+        }
+
+        layoutWrapper.setAutoResponsive(true);
+        layoutWrapper.setMaxColumns(1);
+        layoutWrapper.setColumnWidth(100, Unit.PERCENTAGE);
+
         listLayout.setPadding(!gridOnly);
         listLayout.setVisible(gridOnly);
         listLayout.setHeight(getContent().getHeight());
@@ -166,16 +176,11 @@ public class UserTaskListView extends StandardListView<UserTask> {
 
         detailsLayout.setVisible(!gridOnly);
         buttonsPanel.setVisible(!gridOnly);
-        layoutWrapper.setAutoResponsive(gridOnly);
 
         if (gridOnly) {
             listLayout.setWidthFull();
-            layoutWrapper.setColumnWidth(100, Unit.PERCENTAGE);
-            layoutWrapper.setMaxColumns(1);
         } else {
             listLayout.setWidth(null);
-            layoutWrapper.setColumnWidth(null);
-            layoutWrapper.setMaxColumns(2);
         }
     }
 

@@ -39,7 +39,7 @@ import java.util.UUID;
 @ViewController(id = "Client.detail")
 @ViewDescriptor(path = "client-detail-view.xml")
 @EditedEntityContainer("clientDc")
-@DialogMode(width = "80%", height = "80%", resizable = true)
+@DialogMode(width = "90%", height = "90%", resizable = true, closeOnEsc = true, closeOnOutsideClick = true)
 public class ClientDetailView extends StandardDetailView<Client> implements WidthResizeListener {
 
     @Autowired

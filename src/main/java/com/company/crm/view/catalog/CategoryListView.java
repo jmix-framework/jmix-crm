@@ -1,11 +1,13 @@
 package com.company.crm.view.catalog;
 
+import com.company.crm.app.util.ui.renderer.CrmRenderers;
 import com.company.crm.model.catalog.category.Category;
 import com.company.crm.model.catalog.category.CategoryRepository;
 import com.company.crm.view.main.MainView;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.grid.editor.EditorCloseEvent;
+import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.router.Route;
 import io.jmix.core.DataManager;
 import io.jmix.core.repository.JmixDataRepositoryContext;
@@ -21,6 +23,7 @@ import io.jmix.flowui.view.Install;
 import io.jmix.flowui.view.LookupComponent;
 import io.jmix.flowui.view.StandardListView;
 import io.jmix.flowui.view.Subscribe;
+import io.jmix.flowui.view.Supply;
 import io.jmix.flowui.view.Target;
 import io.jmix.flowui.view.ViewComponent;
 import io.jmix.flowui.view.ViewController;
@@ -41,14 +44,16 @@ public class CategoryListView extends StandardListView<Category> {
     @Autowired
     private DataManager dataManager;
     @Autowired
+    private UiComponents uiComponents;
+    @Autowired
+    private CrmRenderers crmRenderers;
+    @Autowired
     private CategoryRepository repository;
 
     @ViewComponent
     private CollectionContainer<Category> categoriesDc;
     @ViewComponent
     private TreeDataGrid<Category> categoriesDataGrid;
-    @Autowired
-    private UiComponents uiComponents;
 
     @Subscribe
     public void onInit(InitEvent event) {
@@ -124,5 +129,10 @@ public class CategoryListView extends StandardListView<Category> {
             component.focus();
         }
         return component;
+    }
+
+    @Supply(to = "categoriesDataGrid.code", subject = "renderer")
+    private Renderer<Category> categoriesDataGridCodeRenderer() {
+        return crmRenderers.categoryCode();
     }
 }

@@ -148,7 +148,8 @@ vaadin-menu-bar[jmix-role='jmix-user-menu']:not([theme~='substituted']) .user-me
 }
 
 .jmix-list-menu a[highlight][class*='jmix-menu-item-link'] {
-    background-color: var(--lumo-contrast-10pct);
+    background-color: var(--lumo-primary-color-50pct);
+    color: var(--lumo-primary-contrast-color);
     border-radius: 10px;
 }
 
@@ -161,7 +162,7 @@ vaadin-menu-bar[jmix-role='jmix-user-menu']:not([theme~='substituted']) .user-me
 }
 
 .jmix-menubar-item vaadin-details-summary:hover .jmix-menubar-summary-icon-container {
-    background-color: var(--lumo-contrast-10pct);
+    background-color: var(--lumo-primary-color-10pct);
     color: var(--lumo-primary-text-color);
 }
 
@@ -174,7 +175,7 @@ vaadin-menu-bar[jmix-role='jmix-user-menu']:not([theme~='substituted']) .user-me
 }
 
 .jmix-menu-item-link:hover {
-    background-color: var(--lumo-contrast-10pct);
+    background-color: var(--lumo-primary-color-10pct);
     color: var(--lumo-primary-text-color);
     border-radius: 10px;
 }
@@ -191,7 +192,7 @@ vaadin-menu-bar[jmix-role='jmix-user-menu']:not([theme~='substituted']) .user-me
 }
 
 .jmix-menubar-item:focus {
-    background-color: var(--lumo-primary-color-50pct);
+    background-color: var(--lumo-primary-color);
     color: var(--lumo-primary-contrast-color);
     border-radius: 10px;
 }

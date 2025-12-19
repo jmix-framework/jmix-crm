@@ -5,11 +5,14 @@ import com.company.crm.model.invoice.InvoiceRepository;
 import com.company.crm.view.main.MainView;
 import com.vaadin.flow.router.Route;
 import io.jmix.core.repository.JmixDataRepositoryContext;
+import io.jmix.flowui.component.grid.DataGrid;
 import io.jmix.flowui.view.DialogMode;
 import io.jmix.flowui.view.Install;
 import io.jmix.flowui.view.LookupComponent;
 import io.jmix.flowui.view.StandardListView;
+import io.jmix.flowui.view.Subscribe;
 import io.jmix.flowui.view.Target;
+import io.jmix.flowui.view.ViewComponent;
 import io.jmix.flowui.view.ViewController;
 import io.jmix.flowui.view.ViewDescriptor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +20,8 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.Collection;
 import java.util.List;
+
+import static com.company.crm.app.util.ui.CrmUiUtils.addRowSelectionInMultiSelectMode;
 
 @Route(value = "invoices", layout = MainView.class)
 @ViewController(id = "Invoice.list")
@@ -27,6 +32,13 @@ public class InvoiceListView extends StandardListView<Invoice> {
 
     @Autowired
     private InvoiceRepository repository;
+    @ViewComponent
+    private DataGrid<Invoice> invoicesDataGrid;
+
+    @Subscribe
+    private void onInit(final InitEvent event) {
+        addRowSelectionInMultiSelectMode(invoicesDataGrid);
+    }
 
     @Install(to = "invoicesDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
     private List<Invoice> loadDelegate(Pageable pageable, JmixDataRepositoryContext context) {

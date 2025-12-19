@@ -6,32 +6,27 @@ import com.company.crm.app.service.order.OrderService;
 import com.company.crm.app.ui.component.OrderStatusPipeline;
 import com.company.crm.app.ui.component.OrderStatusPipeline.OrderStatusComponent;
 import com.company.crm.app.util.AsyncTasksRegistry;
+import com.company.crm.app.util.ui.CrmUiUtils;
 import com.company.crm.app.util.ui.renderer.CrmRenderers;
 import com.company.crm.model.client.Client;
+import com.company.crm.model.datatype.PriceDataType;
 import com.company.crm.model.order.Order;
 import com.company.crm.model.order.OrderRepository;
 import com.company.crm.model.order.OrderStatus;
 import com.company.crm.view.main.MainView;
-import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasValue;
-import com.vaadin.flow.component.Unit;
-import com.vaadin.flow.component.formlayout.FormLayout;
-import com.vaadin.flow.component.formlayout.FormLayout.ResponsiveStep;
-import com.vaadin.flow.component.html.H3;
-import com.vaadin.flow.component.orderedlayout.FlexComponent;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.data.renderer.Renderer;
-import com.vaadin.flow.dom.Element;
+import com.vaadin.flow.data.renderer.TextRenderer;
 import com.vaadin.flow.router.QueryParameters;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 import io.jmix.core.Messages;
 import io.jmix.core.querycondition.LogicalCondition;
 import io.jmix.core.repository.JmixDataRepositoryContext;
 import io.jmix.flowui.asynctask.UiAsyncTasks;
-import io.jmix.flowui.component.UiComponentUtils;
 import io.jmix.flowui.component.combobox.EntityComboBox;
 import io.jmix.flowui.component.datepicker.TypedDatePicker;
+import io.jmix.flowui.component.grid.DataGrid;
+import io.jmix.flowui.component.grid.DataGridColumn;
 import io.jmix.flowui.component.textfield.TypedTextField;
 import io.jmix.flowui.model.CollectionContainer;
 import io.jmix.flowui.model.CollectionLoader;
@@ -45,7 +40,6 @@ import io.jmix.flowui.view.Target;
 import io.jmix.flowui.view.ViewComponent;
 import io.jmix.flowui.view.ViewController;
 import io.jmix.flowui.view.ViewDescriptor;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 
@@ -54,17 +48,13 @@ import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 
-import static com.company.crm.app.util.ui.CrmUiUtils.setCursorPointer;
-import static com.company.crm.app.util.ui.color.StatusColors.getBackgroundClass;
+import static com.company.crm.app.util.ui.CrmUiUtils.addColumnHeaderCurrencySuffix;
 import static io.jmix.core.querycondition.PropertyCondition.equal;
 import static io.jmix.core.querycondition.PropertyCondition.greaterOrEqual;
 import static io.jmix.core.querycondition.PropertyCondition.lessOrEqual;
-import static io.jmix.core.querycondition.PropertyCondition.startsWith;
 import static org.apache.commons.lang3.StringUtils.substringAfterLast;
-import static org.apache.commons.lang3.StringUtils.substringBeforeLast;
 
 @Route(value = "orders", layout = MainView.class)
 @ViewController(id = "Order.list")
@@ -107,9 +97,12 @@ public class OrderListView extends StandardListView<Order> {
 
     private Optional<OrderStatus> selectedStatus = Optional.empty();
     private SimpleUrlQueryParametersBinder selectedStatusUrlParameterBinder;
+    @ViewComponent
+    private DataGrid<Order> ordersDataGrid;
 
     @Subscribe
     private void onInit(final InitEvent event) {
+        addColumnHeaderCurrencySuffix(ordersDataGrid, "total", "paid", "leftOver");
         clientsDl.load();
         registerUrlQueryParametersBinders();
         addDetachListener(e -> asyncTasksRegistry.cancelAll());
@@ -144,6 +137,24 @@ public class OrderListView extends StandardListView<Order> {
     @Supply(to = "ordersDataGrid.status", subject = "renderer")
     private Renderer<Order> ordersDataGridStatusRenderer() {
         return crmRenderers.orderStatus();
+    }
+
+    @Supply(to = "ordersDataGrid.total", subject = "renderer")
+    private Renderer<Order> ordersDataGridTotalRenderer() {
+        return new TextRenderer<>(order ->
+                PriceDataType.formatWithoutCurrency(order.getTotal()));
+    }
+
+    @Supply(to = "ordersDataGrid.paid", subject = "renderer")
+    private Renderer<Order> ordersDataGridPaidRenderer() {
+        return new TextRenderer<>(order ->
+                PriceDataType.formatWithoutCurrency(orderService.getOrderPaymentsSum(order)));
+    }
+
+    @Supply(to = "ordersDataGrid.leftOver", subject = "renderer")
+    private Renderer<Order> ordersDataGridLeftOverRenderer() {
+        return new TextRenderer<>(order ->
+                PriceDataType.formatWithoutCurrency(orderService.getOrderLeftOverSum(order)));
     }
 
     private void initializeFilterFields() {

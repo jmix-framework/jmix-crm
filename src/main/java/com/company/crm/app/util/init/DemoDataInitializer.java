@@ -35,6 +35,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -179,10 +180,11 @@ public class DemoDataInitializer {
 
         Map<Category, List<CategoryItem>> result = new HashMap<>();
         for (int i = 0; i < categoriesCount; i++) {
+            int categoryNumber = i + 1;
             Category category = dataManager.create(Category.class);
-            category.setName("Category " + (i + 1));
+            category.setName("Category " + categoryNumber);
             category.setDescription("Category description");
-            category.setCode(UuidProvider.createUuidV7().toString());
+            category.setCode(generateUniqueHumanReadableCode(random) + categoryNumber);
             if (i > 0 && random.nextBoolean()) {
                 category.setParent(new ArrayList<>(result.keySet()).get(random.nextInt(result.size())));
             }
@@ -191,10 +193,11 @@ public class DemoDataInitializer {
 
             List<CategoryItem> categoryItems = new ArrayList<>();
             for (int j = 0; j < categoryItemsCount; j++) {
+                int itemNumber = j + 1;
                 CategoryItem categoryItem = dataManager.create(CategoryItem.class);
                 categoryItem.setCategory(category);
-                categoryItem.setName("Item " + (i + 1) + " " + (j + 1));
-                categoryItem.setCode("C-" + categoryItem.getName().toLowerCase());
+                categoryItem.setName("Product %d in category %d".formatted(itemNumber, categoryNumber));
+                categoryItem.setCode(generateUniqueHumanReadableCode(random) + itemNumber);
                 categoryItem.setUom(random.nextBoolean() ? "kg" : "pcs");
                 categoryItems.add(dataManager.save(categoryItem));
                 if (random.nextBoolean()) categoryItemComment(categoryItem);
@@ -204,6 +207,16 @@ public class DemoDataInitializer {
         }
 
         return result;
+    }
+
+    private String generateUniqueHumanReadableCode(ThreadLocalRandom random) {
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        StringBuilder code = new StringBuilder();
+        int length = 6 + random.nextInt(3); // 6-8 characters
+        for (int i = 0; i < length; i++) {
+            code.append(chars.charAt(random.nextInt(chars.length())));
+        }
+        return code.toString();
     }
 
     private boolean shouldInitializeDemoData() {
@@ -454,9 +467,10 @@ public class DemoDataInitializer {
                 LocalDate date = order.getDate() != null ? order.getDate().plusDays(random.nextInt(1, 15)) : randomDateWithinYears(2, random);
                 invoice.setDate(date);
                 invoice.setDueDate(date.plusDays(random.nextInt(7, 45)));
-                BigDecimal subtotal = order.getTotal() != null ? order.getTotal() : BigDecimal.valueOf(500 + random.nextInt(5000));
+                BigDecimal subtotal = order.getTotal();
                 invoice.setSubtotal(subtotal);
-                BigDecimal vat = subtotal.multiply(BigDecimal.valueOf(0.2)).setScale(2, BigDecimal.ROUND_HALF_UP);
+                BigDecimal vat = subtotal.multiply(BigDecimal.valueOf(0.2))
+                        .setScale(2, RoundingMode.HALF_UP);
                 invoice.setVat(vat);
                 invoice.setTotal(subtotal.add(vat));
                 invoice.setStatus(InvoiceStatus.values()[random.nextInt(InvoiceStatus.values().length)]);
@@ -470,7 +484,7 @@ public class DemoDataInitializer {
         ThreadLocalRandom random = ThreadLocalRandom.current();
         for (Invoice invoice : invoices) {
             int n = random.nextInt(0, 9); // 0..8
-            BigDecimal remaining = invoice.getTotal() != null ? invoice.getTotal() : BigDecimal.ZERO;
+            BigDecimal remaining = invoice.getTotal();
             for (int i = 0; i < n && remaining.compareTo(BigDecimal.ZERO) > 0; i++) {
                 Payment payment = dataManager.create(Payment.class);
                 payment.setInvoice(invoice);

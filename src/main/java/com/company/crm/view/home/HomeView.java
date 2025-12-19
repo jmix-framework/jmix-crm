@@ -239,7 +239,7 @@ public class HomeView extends StandardView implements WidthResizeListener {
 
         return new RangeStatCardInfo(
                 range,
-                PriceDataType.formatValue(sum),
+                PriceDataType.formatEndingCurrency(sum),
                 getDeltaString(sum, previousSum));
     }
 
@@ -258,7 +258,7 @@ public class HomeView extends StandardView implements WidthResizeListener {
 
         return new RangeStatCardInfo(
                 range,
-                PriceDataType.formatValue(sum),
+                PriceDataType.formatEndingCurrency(sum),
                 getDeltaString(sum, previousSum));
     }
 
@@ -266,18 +266,18 @@ public class HomeView extends StandardView implements WidthResizeListener {
         DataGrid<Invoice> grid = uiComponents.create(DataGrid.class);
 
         grid.addColumn(new ComponentRenderer<>(r -> new Span(r.getClient().getName())))
-                .setHeader("Client");
+                .setHeader(messages.getMessage("com.company.crm.model.client/Client"));
         localDateFormatter.setUseUserTimezone(true);
         localDateFormatter.setFormat(messages.getMessage("dateFormat"));
         grid.addColumn(new ComponentRenderer<>(r -> new Span(localDateFormatter.apply(r.getDueDate()))))
-                .setHeader("Due Date");
+                .setHeader(messages.getMessage("com.company.crm.model.invoice/Invoice.dueDate"));
 
         grid.setItems(invoiceService.getOverdueInvoices());
 
         grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         grid.setMinHeight(10, Unit.EM);
         grid.setMaxHeight(15, Unit.EM);
-        grid.setEmptyStateText("No overdue invoices");
+        grid.setEmptyStateText(messageBundle.getMessage("noOverdueInvoices"));
 
         return grid;
     }

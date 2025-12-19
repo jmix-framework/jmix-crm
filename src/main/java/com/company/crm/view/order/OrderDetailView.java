@@ -1,6 +1,5 @@
 package com.company.crm.view.order;
 
-import com.company.crm.app.ui.component.CrmLoader;
 import com.company.crm.app.ui.component.OrderStatusPipeline;
 import com.company.crm.app.util.ui.renderer.CrmRenderers;
 import com.company.crm.model.datatype.PriceDataType;
@@ -9,19 +8,14 @@ import com.company.crm.model.order.OrderItem;
 import com.company.crm.model.order.OrderRepository;
 import com.company.crm.model.order.OrderStatus;
 import com.company.crm.view.main.MainView;
-import com.vaadin.flow.component.AbstractField;
-import com.vaadin.flow.component.AbstractField.ComponentValueChangeEvent;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.Renderer;
-import com.vaadin.flow.dom.Style;
 import com.vaadin.flow.router.Route;
 import io.jmix.core.FetchPlan;
 import io.jmix.core.SaveContext;
-import io.jmix.core.credits.CreditsLoader;
 import io.jmix.flowui.component.SupportsTypedValue.TypedValueChangeEvent;
-import io.jmix.flowui.component.select.JmixSelect;
 import io.jmix.flowui.component.textfield.TypedTextField;
 import io.jmix.flowui.exception.ValidationException;
 import io.jmix.flowui.model.InstanceContainer;
@@ -43,6 +37,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import static com.company.crm.app.util.price.PriceCalculator.calculateTotal;
+import static com.company.crm.model.datatype.PriceDataType.formatWithoutCurrency;
 
 @Route(value = "orders/:id", layout = MainView.class)
 @ViewController(id = "Order_.detail")
@@ -109,8 +104,8 @@ public class OrderDetailView extends StandardDetailView<Order> {
 
     @Supply(to = "orderItemsGrid.total", subject = "renderer")
     private Renderer<OrderItem> orderItemsGridTotalRenderer() {
-        return new ComponentRenderer<>(orderItem ->
-                crmRenderers.createBadge(PriceDataType.formatValue(orderItem.getTotal()), "default"));
+        return crmRenderers.badgeRenderer(item ->
+                formatWithoutCurrency(item.getTotal()), "default");
     }
 
     @Supply(to = "statusSelect", subject = "renderer")

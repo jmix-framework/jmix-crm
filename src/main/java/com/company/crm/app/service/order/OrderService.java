@@ -1,8 +1,7 @@
 package com.company.crm.app.service.order;
 
+import com.company.crm.app.service.finance.PaymentService;
 import com.company.crm.app.util.date.range.LocalDateRange;
-import com.company.crm.model.client.Client;
-import com.company.crm.model.client.ClientType;
 import com.company.crm.model.order.Order;
 import com.company.crm.model.order.OrderRepository;
 import com.company.crm.model.order.OrderStatus;
@@ -25,10 +24,24 @@ public class OrderService {
 
     private final Sequences sequences;
     private final OrderRepository orderRepository;
+    private final PaymentService paymentService;
 
-    public OrderService(OrderRepository orderRepository, Sequences sequences) {
+    public OrderService(OrderRepository orderRepository, Sequences sequences, PaymentService paymentService) {
         this.sequences = sequences;
         this.orderRepository = orderRepository;
+        this.paymentService = paymentService;
+    }
+
+    public BigDecimal getOrderPaymentsSum(Order order) {
+        return paymentService.getPaymentsTotalSum(order);
+    }
+
+    public BigDecimal getOrderLeftOverSum(Order order) {
+        BigDecimal result = order.getTotal().subtract(getOrderPaymentsSum(order));
+        if (result.compareTo(BigDecimal.ZERO) < 0) {
+            return BigDecimal.ZERO;
+        }
+        return result;
     }
 
     public String getNextOrderNumber() {

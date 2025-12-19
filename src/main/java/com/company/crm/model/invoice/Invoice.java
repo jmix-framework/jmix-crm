@@ -81,7 +81,7 @@ public class Invoice extends FullAuditEntity {
     }
 
     public BigDecimal getTotal() {
-        return total;
+        return total != null ? total : BigDecimal.ZERO;
     }
 
     public void setTotal(BigDecimal total) {

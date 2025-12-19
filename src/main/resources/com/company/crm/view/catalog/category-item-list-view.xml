@@ -39,7 +39,8 @@
                         <icon icon="SEARCH"/>
                     </prefix>
                 </textField>
-                <select id="categorySelect" placeholder="Category" emptySelectionAllowed="true"/>
+                <select id="categorySelect" placeholder="Category" emptySelectionAllowed="true"
+                        emptySelectionCaption="msg://allCategories"/>
             </formLayout>
             <genericFilter id="advancedFilter" dataLoader="categoryItemsDl"
                            opened="false" summaryText="msg:///advanced" themeNames="filled">
@@ -65,9 +66,9 @@
                 <action id="removeAction" type="list_remove"/>
             </actions>
             <columns resizable="true">
-                <column property="name" filterable="true"/>
-                <column property="code" filterable="true"/>
-                <column property="category" filterable="true"/>
+                <column property="name"/>
+                <column property="code"/>
+                <column property="category"/>
             </columns>
         </dataGrid>
         <hbox id="lookupActions" visible="false">

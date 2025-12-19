@@ -39,8 +39,13 @@
                         <icon icon="SEARCH"/>
                     </prefix>
                 </textField>
-                <entityComboBox id="clientComboBox" label="msg://clientComboBox.placeholder" placeholder="msg://clientComboBox.placeholder" metaClass="Client" itemsContainer="clientsDc"/>
-                <datePicker id="fromDatePicker" label="msg://fromDatePicker.label" placeholder="msg://datePicker.placeholder" clearButtonVisible="true"/>
+                <entityComboBox id="clientComboBox" label="msg://clientComboBox.placeholder" placeholder="msg://clientComboBox.placeholder" metaClass="Client" itemsContainer="clientsDc">
+                    <actions>
+                        <action id="clear" type="value_clear"/>
+                    </actions>
+                </entityComboBox>
+                <datePicker id="fromDatePicker" label="msg://fromDatePicker.label"
+                            placeholder="msg://datePicker.placeholder" clearButtonVisible="true"/>
                 <datePicker id="toDatePicker" label="msg://toDatePicker.label" placeholder="msg://datePicker.placeholder" clearButtonVisible="true"/>
             </formLayout>
             <genericFilter id="advancedFilter" dataLoader="ordersDl" maxWidth="48em"
@@ -67,13 +72,13 @@
                 <action id="removeAction" type="list_remove"/>
             </actions>
             <columns resizable="true">
-                <column property="number"/>
-                <column property="date"/>
-                <column property="client"/>
-                <column property="status"/>
-                <column property="total"/>
-                <column key="paid"/>
-                <column key="leftOver"/>
+                <column property="number" autoWidth="true" flexGrow="0"/>
+                <column property="date" autoWidth="true" flexGrow="0"/>
+                <column property="client" autoWidth="true" flexGrow="0"/>
+                <column property="status" autoWidth="true" flexGrow="0"/>
+                <column property="total" autoWidth="true" flexGrow="0"/>
+                <column key="paid" header="msg://paidColumnHeader" autoWidth="true" flexGrow="0"/>
+                <column key="leftOver" header="msg://leftOverColumnHeader"/>
             </columns>
         </dataGrid>
         <hbox id="lookupActions" visible="false">

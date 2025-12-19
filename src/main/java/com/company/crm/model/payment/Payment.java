@@ -3,8 +3,11 @@ package com.company.crm.model.payment;
 import com.company.crm.model.base.FullAuditEntity;
 import com.company.crm.model.datatype.PriceDataType;
 import com.company.crm.model.invoice.Invoice;
+import com.company.crm.model.order.Order;
+import io.jmix.core.metamodel.annotation.DependsOnProperties;
 import io.jmix.core.metamodel.annotation.InstanceName;
 import io.jmix.core.metamodel.annotation.JmixEntity;
+import io.jmix.core.metamodel.annotation.JmixProperty;
 import io.jmix.core.metamodel.annotation.PropertyDatatype;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -35,9 +38,15 @@ public class Payment extends FullAuditEntity {
     @Column(name = "AMOUNT", precision = 19, scale = 2)
     private BigDecimal amount;
 
+    @JmixProperty
+    @DependsOnProperties("invoice")
+    public Order getOrder() {
+        return invoice.getOrder();
+    }
+
     @InstanceName
     public String getInstanceName() {
-        return String.format("%s from %s", PriceDataType.formatValue(amount), date);
+        return String.format("%s from %s", PriceDataType.formatEndingCurrency(amount), date);
     }
 
     public BigDecimal getAmount() {

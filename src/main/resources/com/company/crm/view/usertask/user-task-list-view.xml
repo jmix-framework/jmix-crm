@@ -30,7 +30,7 @@
     </actions>
     <layout padding="false">
         <formLayout id="layoutWrapper" classNames="master-detail-layout" width="100%" height="100%">
-            <vbox id="listLayout" height="100%">
+            <vbox id="listLayout" height="100%" colspan="1">
                 <hbox id="buttonsPanel" classNames="buttons-panel">
                     <startSlot>
                         <button id="createButton" action="userTasksDataGrid.createAction"/>
@@ -68,7 +68,7 @@
                     <button id="discardButton" action="discardAction"/>
                 </hbox>
             </vbox>
-            <vbox id="detailsLayout" height="100%">
+            <vbox id="detailsLayout" height="100%" colspan="1">
                 <formLayout id="form" dataContainer="userTaskDc" autoResponsive="true"
                             maxColumns="1" expandColumns="true" expandFields="true">
                     <responsiveSteps>

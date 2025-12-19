@@ -5,6 +5,7 @@ import com.company.crm.app.service.client.ClientService;
 import com.company.crm.app.service.finance.PaymentService;
 import com.company.crm.app.service.order.OrderService;
 import com.company.crm.app.service.user.UserService;
+import com.company.crm.app.ui.component.CrmLoader;
 import com.company.crm.app.ui.component.card.CrmCard;
 import com.company.crm.app.util.AsyncTasksRegistry;
 import com.company.crm.app.util.ui.listener.resize.WidthResizeListener;
@@ -15,18 +16,17 @@ import com.company.crm.model.client.ClientType;
 import com.company.crm.model.datatype.PriceDataType;
 import com.company.crm.model.user.User;
 import com.company.crm.view.main.MainView;
-import com.company.crm.view.user.UserDetailView;
 import com.company.crm.view.util.SkeletonStyler;
 import com.vaadin.flow.component.AbstractField.ComponentValueChangeEvent;
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.HasSize;
 import com.vaadin.flow.component.HasValue;
-import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.card.Card;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.data.selection.SelectionEvent;
 import com.vaadin.flow.router.Route;
@@ -34,8 +34,6 @@ import com.vaadin.flow.theme.lumo.LumoUtility;
 import io.jmix.core.querycondition.LogicalCondition;
 import io.jmix.core.repository.JmixDataRepositoryContext;
 import io.jmix.core.security.CurrentAuthentication;
-import io.jmix.flowui.DialogWindows;
-import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.asynctask.UiAsyncTasks;
 import io.jmix.flowui.asynctask.UiAsyncTasks.SupplierConfigurer;
 import io.jmix.flowui.component.checkbox.Switch;
@@ -43,7 +41,6 @@ import io.jmix.flowui.component.formlayout.JmixFormLayout;
 import io.jmix.flowui.component.grid.DataGrid;
 import io.jmix.flowui.component.select.JmixSelect;
 import io.jmix.flowui.component.textfield.TypedTextField;
-import io.jmix.flowui.kit.component.button.JmixButton;
 import io.jmix.flowui.model.CollectionLoader;
 import io.jmix.flowui.view.DialogMode;
 import io.jmix.flowui.view.Install;
@@ -64,6 +61,8 @@ import java.util.Collection;
 import java.util.List;
 
 import static com.company.crm.app.feature.sortable.SortableFeature.makeSortable;
+import static com.company.crm.app.util.demo.DemoUtils.defaultSleepForStatisticLoading;
+import static com.company.crm.app.util.ui.CrmUiUtils.addRowSelectionInMultiSelectMode;
 import static com.company.crm.app.util.ui.listener.resize.WidthResizeListener.isWidthChanged;
 import static io.jmix.core.querycondition.PropertyCondition.contains;
 import static io.jmix.core.querycondition.PropertyCondition.equal;
@@ -81,15 +80,13 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
     @Autowired
     private OrderService orderService;
     @Autowired
+    private CrmRenderers crmRenderers;
+    @Autowired
     private ClientService clientService;
     @Autowired
     private PaymentService paymentService;
     @Autowired
     private UiAsyncTasks uiAsyncTasks;
-    @Autowired
-    private UiComponents uiComponents;
-    @Autowired
-    private DialogWindows dialogWindows;
     @Autowired
     private ClientRepository repository;
     @Autowired
@@ -128,8 +125,6 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
     private final AsyncTasksRegistry asyncTasksRegistry = AsyncTasksRegistry.newInstance();
 
     private final LogicalCondition filtersCondition = LogicalCondition.and();
-    @Autowired
-    private CrmRenderers crmRenderers;
 
     @Override
     public void configureUiForWidth(int width) {
@@ -144,6 +139,7 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
         initializeStatsBlock();
         initializeFilterFields();
         addDetachListener(e -> asyncTasksRegistry.cancelAll());
+        addRowSelectionInMultiSelectMode(clientsDataGrid, "vatNumber", "regNumber");
     }
 
     @Install(to = "clientsDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
@@ -193,12 +189,22 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
 
     @Supply(to = "clientsDataGrid.name", subject = "renderer")
     private Renderer<Client> clientsDataGridNameRenderer() {
-        return crmRenderers.clientLink();
+        return crmRenderers.clientNameLink();
     }
 
     @Supply(to = "clientsDataGrid.type", subject = "renderer")
     private Renderer<Client> clientsDataGridTypeRenderer() {
         return crmRenderers.clientType();
+    }
+
+    @Supply(to = "clientsDataGrid.vatNumber", subject = "renderer")
+    private Renderer<Client> clientsDataGridVatNumberRenderer() {
+        return crmRenderers.clientVatNumber();
+    }
+
+    @Supply(to = "clientsDataGrid.regNumber", subject = "renderer")
+    private Renderer<Client> clientsDataGridRegNumberRenderer() {
+        return crmRenderers.clientRegNumber();
     }
 
     private JmixDataRepositoryContext wrapContext(JmixDataRepositoryContext context) {
@@ -213,7 +219,16 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
 
     private void initializeStatsBlock() {
         makeSortable(statsBlock);
+        configureCardsSize();
         calculateCardsValues();
+    }
+
+    private void configureCardsSize() {
+        statsBlock.getChildren().forEach(card -> {
+            if (card instanceof HasSize hasSize) {
+                hasSize.setMaxHeight(10, Unit.EM);
+            }
+        });
     }
 
     private void calculateCardsValues() {
@@ -243,7 +258,9 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
 
     private void installCardLoader(Card card) {
         card.removeAll();
-        card.add("Loading...");
+        CrmLoader loader = new CrmLoader();
+        loader.startLoading();
+        card.add(loader);
         SkeletonStyler.apply(card);
     }
 
@@ -252,32 +269,30 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
     }
 
     private void scheduleOrdersTotalSumCalculating(Client... clients) {
-        SupplierConfigurer<?> task =
-                uiAsyncTasks.supplierConfigurer(() -> calculateOrdersTotalSum(clients))
-                        .withExceptionHandler(e -> SkeletonStyler.remove(ordersTotalSumCard))
-                        .withResultHandler(ordersTotalSum ->
-                                fillStatCard("Orders Total", ordersTotalSumCard, ordersTotalSum));
+        SupplierConfigurer<?> task = uiAsyncTasks.supplierConfigurer(() -> calculateOrdersTotalSum(clients))
+                .withExceptionHandler(e -> SkeletonStyler.remove(ordersTotalSumCard))
+                .withResultHandler(ordersTotalSum ->
+                        fillStatCard("Orders Total", ordersTotalSumCard, ordersTotalSum));
         asyncTasksRegistry.placeTask("ordersTotalSumTask", task);
     }
 
     private void schedulePaymentsTotalSumCalculating(Client... clients) {
-        SupplierConfigurer<BigDecimal> taskConfigurer =
-                uiAsyncTasks.supplierConfigurer(() -> calculatePaymentsTotalSum(clients))
-                        .withExceptionHandler(e -> SkeletonStyler.remove(paymentsTotalSumCard))
-                        .withResultHandler(paymentsTotalSum ->
-                                fillStatCard("Payments Total", paymentsTotalSumCard, paymentsTotalSum));
+        SupplierConfigurer<BigDecimal> taskConfigurer = uiAsyncTasks.supplierConfigurer(() -> calculatePaymentsTotalSum(clients))
+                .withExceptionHandler(e -> SkeletonStyler.remove(paymentsTotalSumCard))
+                .withResultHandler(paymentsTotalSum ->
+                        fillStatCard("Payments Total", paymentsTotalSumCard, paymentsTotalSum));
         asyncTasksRegistry.placeTask("paymentsTotalSumTask", taskConfigurer);
     }
 
     private void scheduleAverageBillCalculating(Client... clients) {
         SupplierConfigurer<?> task = uiAsyncTasks.supplierConfigurer(() -> calculateAverageBill(clients))
                 .withExceptionHandler(e -> SkeletonStyler.remove(averageBillCard))
-                .withResultHandler(averageBill ->
-                        fillStatCard("Average Bill", averageBillCard, averageBill));
+                .withResultHandler(averageBill -> fillStatCard("Average Bill", averageBillCard, averageBill));
         asyncTasksRegistry.placeTask("averageBillTask", task);
     }
 
     private BigDecimal calculateOrdersTotalSum(Client[] selectedClients) {
+        defaultSleepForStatisticLoading();
         BigDecimal ordersTotalSum;
         if (selectedClients.length == 0 && !isFilterConditionEmpty()) {
             selectedClients = loadFilteredClients();
@@ -296,6 +311,7 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
     }
 
     private BigDecimal calculatePaymentsTotalSum(Client[] selectedClients) {
+        defaultSleepForStatisticLoading();
         BigDecimal paymentsTotalSum;
         if (selectedClients.length == 0 && !isFilterConditionEmpty()) {
             selectedClients = loadFilteredClients();
@@ -314,6 +330,7 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
     }
 
     private BigDecimal calculateAverageBill(Client[] selectedClients) {
+        defaultSleepForStatisticLoading();
         BigDecimal averageBill;
         if (selectedClients.length == 0 && !isFilterConditionEmpty()) {
             selectedClients = loadFilteredClients();
@@ -331,7 +348,7 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
     }
 
     private void fillStatCard(String title, CrmCard card, BigDecimal content) {
-        VerticalLayout component = new VerticalLayout(new H1(PriceDataType.formatValue(content)));
+        VerticalLayout component = new VerticalLayout(new H1(PriceDataType.formatEndingCurrency(content)));
         component.setPadding(false);
         component.add(createStatCardFooter());
         card.fillAsStaticCard(title, component);
