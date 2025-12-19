@@ -10,6 +10,7 @@ RUN mkdir -p /heapdumps
 ENV JAVA_TOOL_OPTIONS="-Xmx2g -Xms1g -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/heapdumps/heapdump.hprof"
 
 COPY --from=builder /application/build/libs/crm.jar crm.jar
+VOLUME /application
 
 RUN apt update
 RUN apt install -y curl
