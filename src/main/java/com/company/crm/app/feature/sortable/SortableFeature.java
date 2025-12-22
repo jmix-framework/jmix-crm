@@ -18,7 +18,10 @@ import java.util.Optional;
 public final class SortableFeature {
 
     public static void makeSortable(Component component) {
-        makeSortable(component, new SortableConfig());
+        var defaultConfig = new SortableConfig();
+        defaultConfig.setDelayOnTouchOnly(true);
+        defaultConfig.setDelay(1_000);
+        makeSortable(component, defaultConfig);
     }
 
     public static SortableLayout makeSortable(Component component, SortableConfig config) {

@@ -16,6 +16,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
@@ -27,7 +28,9 @@ import java.util.List;
 
 @Entity
 @JmixEntity
-@Table(name = "CLIENT")
+@Table(name = "CLIENT", indexes = {
+        @Index(name = "IDX_CLIENT_ACCOUNT_MANAGER", columnList = "ACCOUNT_MANAGER_ID")
+})
 public class Client extends FullAuditEntity {
 
     @InstanceName

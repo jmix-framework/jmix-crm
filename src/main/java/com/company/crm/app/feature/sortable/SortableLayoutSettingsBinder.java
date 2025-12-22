@@ -1,6 +1,7 @@
 package com.company.crm.app.feature.sortable;
 
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.spring.annotation.SpringComponent;
 import io.jmix.core.JmixOrder;
 import io.jmix.flowui.facet.settings.Settings;
 import io.jmix.flowui.facet.settings.component.binder.ComponentSettingsBinder;
@@ -11,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-@org.springframework.stereotype.Component
+@SpringComponent
 @Order(JmixOrder.LOWEST_PRECEDENCE)
 public class SortableLayoutSettingsBinder implements ComponentSettingsBinder<SortableLayout, SortableLayoutSettings> {
 
@@ -29,7 +30,8 @@ public class SortableLayoutSettingsBinder implements ComponentSettingsBinder<Sor
     public void applySettings(SortableLayout sortableLayout, SortableLayoutSettings settings) {
         if (isOrderChanged(sortableLayout, settings)) {
             List<String> expectedChain = settings.getComponentIdChain();
-            SortableFeature.reorder(sortableLayout, sortComponents(new ArrayList<>(sortableLayout.getComponents()), expectedChain));
+            List<Component> expectedOrder = sortComponents(sortableLayout.getComponents(), expectedChain);
+            SortableFeature.reorder(sortableLayout, expectedOrder);
         }
     }
 

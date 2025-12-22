@@ -50,7 +50,7 @@
 
     <changeSet id="3" author="crm" context="!cuba">
         <validCheckSum>ANY</validCheckSum>
-        <insert tableName="USER_" dbms="postgresql, mssql, hsqldb">
+        <insert tableName="USER_" dbms="postgresql, mssql, hsqldb, h2">
             <column name="ID" value="60885987-1b61-4247-94c7-dff348347f93"/>
             <column name="VERSION" value="1"/>
             <column name="USERNAME" value="admin"/>
@@ -70,7 +70,7 @@
 
     <changeSet id="4" author="crm" context="!cuba">
         <validCheckSum>ANY</validCheckSum>
-        <insert tableName="SEC_ROLE_ASSIGNMENT" dbms="postgresql, mssql, hsqldb">
+        <insert tableName="SEC_ROLE_ASSIGNMENT" dbms="postgresql, mssql, hsqldb, h2">
             <column name="ID" value="6c9e420a-2b7a-4c42-8654-a9027ee14083"/>
             <column name="VERSION" value="1"/>
             <column name="USERNAME" value="admin"/>
