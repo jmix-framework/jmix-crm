@@ -31,7 +31,7 @@ import static com.company.crm.app.util.ui.CrmUiUtils.addRowSelectionInMultiSelec
 public class InvoiceListView extends StandardListView<Invoice> {
 
     @Autowired
-    private InvoiceRepository repository;
+    private InvoiceRepository invoiceRepository;
     @ViewComponent
     private DataGrid<Invoice> invoicesDataGrid;
 
@@ -42,16 +42,16 @@ public class InvoiceListView extends StandardListView<Invoice> {
 
     @Install(to = "invoicesDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
     private List<Invoice> loadDelegate(Pageable pageable, JmixDataRepositoryContext context) {
-        return repository.findAll(pageable, context).getContent();
+        return invoiceRepository.findAll(pageable, context).getContent();
     }
 
     @Install(to = "invoicesDataGrid.removeAction", subject = "delegate")
     private void invoicesDataGridRemoveDelegate(final Collection<Invoice> collection) {
-        repository.deleteAll(collection);
+        invoiceRepository.deleteAll(collection);
     }
 
     @Install(to = "pagination", subject = "totalCountByRepositoryDelegate")
     private Long paginationTotalCountByRepositoryDelegate(final JmixDataRepositoryContext context) {
-        return repository.count(context);
+        return invoiceRepository.count(context);
     }
 }

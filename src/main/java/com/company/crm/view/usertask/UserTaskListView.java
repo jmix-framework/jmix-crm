@@ -87,7 +87,7 @@ import static io.jmix.flowui.component.delegate.AbstractFieldDelegate.PROPERTY_I
 public class UserTaskListView extends StandardListView<UserTask> {
 
     @Autowired
-    private UserTaskRepository repository;
+    private UserTaskRepository userTaskRepository;
     @Autowired
     private DataManager dataManager;
     @Autowired
@@ -294,12 +294,12 @@ public class UserTaskListView extends StandardListView<UserTask> {
         query.setCondition(LogicalCondition.and(PropertyCondition.equal("author", getCurrentUser())));
         query.setSort(Sort.by(Sort.Direction.ASC, "isCompleted", "dueDate"));
         context.setQuery(query);
-        return repository.findAll(buildPageRequest(context), buildRepositoryContext(context)).getContent();
+        return userTaskRepository.findAll(buildPageRequest(context), buildRepositoryContext(context)).getContent();
     }
 
     @Install(to = "userTasksDataGrid.removeAction", subject = "delegate")
     private void userTasksDataGridRemoveDelegate(final Collection<UserTask> collection) {
-        repository.deleteAll(collection);
+        userTaskRepository.deleteAll(collection);
     }
 
     @Supply(to = "userTasksDataGrid.isCompleted", subject = "renderer")
@@ -324,12 +324,12 @@ public class UserTaskListView extends StandardListView<UserTask> {
 
     @Install(to = "userTaskDl", target = Target.DATA_LOADER)
     private UserTask detailLoadDelegate(LoadContext<UserTask> context) {
-        return repository.getById(extractEntityId(context), context.getFetchPlan());
+        return userTaskRepository.getById(extractEntityId(context), context.getFetchPlan());
     }
 
     @Install(target = Target.DATA_CONTEXT)
     private Set<UserTask> saveDelegate(SaveContext saveContext) {
-        return Set.of(repository.save(userTaskDc.getItem()));
+        return Set.of(userTaskRepository.save(userTaskDc.getItem()));
     }
 
     @Supply(to = "userTasksDataGrid.dueDate", subject = "renderer")

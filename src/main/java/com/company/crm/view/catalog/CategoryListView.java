@@ -48,7 +48,7 @@ public class CategoryListView extends StandardListView<Category> {
     @Autowired
     private CrmRenderers crmRenderers;
     @Autowired
-    private CategoryRepository repository;
+    private CategoryRepository categoryRepository;
 
     @ViewComponent
     private CollectionContainer<Category> categoriesDc;
@@ -62,7 +62,7 @@ public class CategoryListView extends StandardListView<Category> {
 
     @Install(to = "categoriesDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
     private List<Category> loadDelegate(Pageable pageable, JmixDataRepositoryContext context) {
-        return repository.findAll(pageable, context).getContent();
+        return categoryRepository.findAll(pageable, context).getContent();
     }
 
     @Subscribe("categoriesDataGrid.editAction")
@@ -72,12 +72,12 @@ public class CategoryListView extends StandardListView<Category> {
 
     @Install(to = "categoriesDataGrid.removeAction", subject = "delegate")
     private void categoriesDataGridRemoveDelegate(final Collection<Category> collection) {
-        repository.deleteAll(collection);
+        categoryRepository.deleteAll(collection);
     }
 
     @Install(to = "pagination", subject = "totalCountByRepositoryDelegate")
     private Long paginationTotalCountByRepositoryDelegate(final JmixDataRepositoryContext context) {
-        return repository.count(context);
+        return categoryRepository.count(context);
     }
 
     @Install(to = "categoriesDataGrid.@editor", subject = "closeListener")

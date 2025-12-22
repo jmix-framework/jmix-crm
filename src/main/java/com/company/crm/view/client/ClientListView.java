@@ -14,6 +14,7 @@ import com.company.crm.model.client.Client;
 import com.company.crm.model.client.ClientRepository;
 import com.company.crm.model.client.ClientType;
 import com.company.crm.model.datatype.PriceDataType;
+import com.company.crm.model.order.OrderStatus;
 import com.company.crm.model.user.User;
 import com.company.crm.view.main.MainView;
 import com.company.crm.view.util.SkeletonStyler;
@@ -88,7 +89,7 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
     @Autowired
     private UiAsyncTasks uiAsyncTasks;
     @Autowired
-    private ClientRepository repository;
+    private ClientRepository clientRepository;
     @Autowired
     private CurrentAuthentication currentAuthentication;
 
@@ -144,17 +145,17 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
 
     @Install(to = "clientsDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
     private List<Client> loadDelegate(Pageable pageable, JmixDataRepositoryContext context) {
-        return repository.findAll(pageable, wrapContext(context)).getContent();
+        return clientRepository.findAll(pageable, wrapContext(context)).getContent();
     }
 
     @Install(to = "clientsDataGrid.removeAction", subject = "delegate")
     private void clientsDataGridRemoveDelegate(final Collection<Client> collection) {
-        repository.deleteAll(collection);
+        clientRepository.deleteAll(collection);
     }
 
     @Install(to = "pagination", subject = "totalCountByRepositoryDelegate")
     private Long paginationTotalCountByRepositoryDelegate(final JmixDataRepositoryContext context) {
-        return repository.count(wrapContext(context));
+        return clientRepository.count(wrapContext(context));
     }
 
     @Subscribe("showOnlyMyClientsCheckBox")
@@ -302,7 +303,7 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
         }
 
         if (selectedClients.length > 0) {
-            ordersTotalSum = clientService.getOrdersTotalSum(selectedClients);
+            ordersTotalSum = clientService.getOrdersTotalSum(OrderStatus.values(), selectedClients);
         } else {
             ordersTotalSum = orderService.getOrdersTotalSum();
         }
@@ -356,7 +357,7 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
     }
 
     private Client[] loadFilteredClients() {
-        return repository.fluentLoader()
+        return clientRepository.fluentLoader()
                 .condition(filtersCondition)
                 .list().toArray(new Client[0]);
     }

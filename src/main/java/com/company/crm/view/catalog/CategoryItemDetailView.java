@@ -9,7 +9,6 @@ import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.streams.DownloadHandler;
 import com.vaadin.flow.server.streams.DownloadResponse;
-import com.vaadin.flow.server.streams.InputStreamDownloadHandler;
 import io.jmix.core.FetchPlan;
 import io.jmix.core.FileRef;
 import io.jmix.core.FileStorage;
@@ -41,7 +40,7 @@ import static com.vaadin.flow.server.streams.DownloadHandler.fromInputStream;
 public class CategoryItemDetailView extends StandardDetailView<CategoryItem> implements WidthResizeListener {
 
     @Autowired
-    private CategoryItemRepository repository;
+    private CategoryItemRepository itemRepository;
     @ViewComponent
     private JmixSplitLayout split;
     @ViewComponent
@@ -82,11 +81,11 @@ public class CategoryItemDetailView extends StandardDetailView<CategoryItem> imp
 
     @Install(to = "categoryItemDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
     private Optional<CategoryItem> loadDelegate(UUID id, FetchPlan fetchPlan) {
-        return repository.findById(id, fetchPlan);
+        return itemRepository.findById(id, fetchPlan);
     }
 
     @Install(target = Target.DATA_CONTEXT)
     private Set<Object> saveDelegate(SaveContext saveContext) {
-        return Set.of(repository.save(getEditedEntity()));
+        return Set.of(itemRepository.save(getEditedEntity()));
     }
 }

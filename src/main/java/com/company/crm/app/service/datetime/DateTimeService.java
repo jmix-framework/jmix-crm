@@ -3,6 +3,7 @@ package com.company.crm.app.service.datetime;
 import com.company.crm.app.util.date.range.LocalDateRange;
 import io.jmix.core.TimeSource;
 import io.jmix.core.security.CurrentAuthentication;
+import org.jspecify.annotations.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 
@@ -32,6 +33,7 @@ public class DateTimeService {
         this.timeSource = timeSource;
     }
 
+    // common
     public OffsetDateTime now() {
         return timeSource.now().toOffsetDateTime();
     }
@@ -61,55 +63,88 @@ public class DateTimeService {
         return date.atStartOfDay().atOffset(ZoneOffset.UTC);
     }
 
+    // current time ranges
     public LocalDateRange getCurrentDayRange() {
-        return new LocalDateRange(getDayStart().toLocalDate(), getDayEnd().toLocalDate());
+        return new LocalDateRange(getCurrentDayStart().toLocalDate(), getCurrentDayEnd().toLocalDate());
     }
 
     public LocalDateRange getCurrentWeekRange() {
-        return new LocalDateRange(getWeekStart().toLocalDate(), getWeekEnd().toLocalDate());
+        return new LocalDateRange(getCurrentWeekStart().toLocalDate(), getCurrentWeekEnd().toLocalDate());
     }
 
     public LocalDateRange getCurrentMonthRange() {
-        return new LocalDateRange(getMonthStart().toLocalDate(), getMonthEnd().toLocalDate());
+        return new LocalDateRange(getCurrentMonthStart().toLocalDate(), getCurrentMonthEnd().toLocalDate());
     }
 
     public LocalDateRange getCurrentYearRange() {
-        return new LocalDateRange(getYearStart().toLocalDate(), getYearEnd().toLocalDate());
+        return new LocalDateRange(getCurrentYearStart().toLocalDate(), getCurrentYearEnd().toLocalDate());
     }
 
-    public OffsetDateTime getDayStart() {
-        return getTimeForCurrentUser().truncatedTo(ChronoUnit.DAYS);
+    // start of time
+    public OffsetDateTime getCurrentDayStart() {
+        return getStartOfDay(getTimeForCurrentUser());
     }
 
-    public OffsetDateTime getDayEnd() {
-        return getDayStart().withHour(23).withMinute(59).withSecond(59);
+    public OffsetDateTime getCurrentWeekStart() {
+        return getStartOfWeek(getTimeForCurrentUser());
     }
 
-    public OffsetDateTime getWeekStart() {
-        return getTimeForCurrentUser().with(previousOrSame(DayOfWeek.MONDAY)).truncatedTo(ChronoUnit.DAYS);
+    public OffsetDateTime getCurrentMonthStart() {
+        return getStartOfMonth(getTimeForCurrentUser());
     }
 
-    public OffsetDateTime getWeekEnd() {
-        return getTimeForCurrentUser().with(nextOrSame(DayOfWeek.SUNDAY)).withHour(23).withMinute(59).withSecond(59);
+    public OffsetDateTime getCurrentYearStart() {
+        return getStartOfYear(getTimeForCurrentUser());
     }
 
-    public OffsetDateTime getMonthStart() {
-        return getTimeForCurrentUser().withDayOfMonth(1).truncatedTo(ChronoUnit.DAYS);
+    public OffsetDateTime getStartOfDay(OffsetDateTime timeForCurrentUser) {
+        return timeForCurrentUser.truncatedTo(ChronoUnit.DAYS);
     }
 
-    public OffsetDateTime getMonthEnd() {
-        var currentDate = getTimeForCurrentUser();
+    public OffsetDateTime getStartOfWeek(OffsetDateTime currentTIme) {
+        return getStartOfDay(currentTIme.with(previousOrSame(DayOfWeek.MONDAY)));
+    }
+
+    public OffsetDateTime getStartOfMonth(OffsetDateTime currentTime) {
+        return getStartOfDay(currentTime.withDayOfMonth(1));
+    }
+
+    public OffsetDateTime getStartOfYear(OffsetDateTime currentTime) {
+        return getStartOfDay(currentTime.withDayOfYear(1));
+    }
+
+    // end of time
+    public OffsetDateTime getCurrentDayEnd() {
+        return getEndOfDay(getCurrentDayStart());
+    }
+
+    public OffsetDateTime getCurrentWeekEnd() {
+        return getEndOfWeek(getTimeForCurrentUser());
+    }
+
+    public OffsetDateTime getCurrentMonthEnd() {
+        return getEndOfMonth(getTimeForCurrentUser());
+    }
+
+    public OffsetDateTime getCurrentYearEnd() {
+        return getEndOfYear(getTimeForCurrentUser());
+    }
+
+    public OffsetDateTime getEndOfDay(OffsetDateTime currentDayStart) {
+        return currentDayStart.withHour(23).withMinute(59).withSecond(59);
+    }
+
+    public OffsetDateTime getEndOfWeek(OffsetDateTime currentTime) {
+        return getEndOfDay(currentTime.with(nextOrSame(DayOfWeek.SUNDAY)));
+    }
+
+    public OffsetDateTime getEndOfMonth(OffsetDateTime currentDate) {
         var daysInMonth = currentDate.getMonth().length(Year.of(currentDate.getYear()).isLeap());
-        return currentDate.withDayOfMonth(daysInMonth).withHour(23).withMinute(59).withSecond(59);
+        return getEndOfDay(currentDate.withDayOfMonth(daysInMonth));
     }
 
-    public OffsetDateTime getYearStart() {
-        return getTimeForCurrentUser().withDayOfYear(1).truncatedTo(ChronoUnit.DAYS);
-    }
-
-    public OffsetDateTime getYearEnd() {
-        var currentDate = getTimeForCurrentUser();
+    public OffsetDateTime getEndOfYear(OffsetDateTime currentDate) {
         var daysInYear = Year.of(currentDate.getYear()).isLeap() ? 366 : 365;
-        return currentDate.withDayOfYear(daysInYear).withHour(23).withMinute(59).withSecond(59);
+        return getEndOfDay(currentDate.withDayOfYear(daysInYear));
     }
 }

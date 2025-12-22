@@ -2,7 +2,6 @@ package com.company.crm.view.order;
 
 import com.company.crm.app.ui.component.OrderStatusPipeline;
 import com.company.crm.app.util.ui.renderer.CrmRenderers;
-import com.company.crm.model.datatype.PriceDataType;
 import com.company.crm.model.order.Order;
 import com.company.crm.model.order.OrderItem;
 import com.company.crm.model.order.OrderRepository;
@@ -48,7 +47,7 @@ public class OrderDetailView extends StandardDetailView<Order> {
     @Autowired
     private CrmRenderers crmRenderers;
     @Autowired
-    private OrderRepository repository;
+    private OrderRepository orderRepository;
 
     @ViewComponent
     private OrderStatusPipeline statusPipeline;
@@ -75,12 +74,12 @@ public class OrderDetailView extends StandardDetailView<Order> {
 
     @Install(to = "orderDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
     private Optional<Order> loadDelegate(UUID id, FetchPlan fetchPlan) {
-        return repository.findById(id, fetchPlan);
+        return orderRepository.findById(id, fetchPlan);
     }
 
     @Install(target = Target.DATA_CONTEXT)
     private Set<Object> saveDelegate(SaveContext saveContext) {
-        return Set.of(repository.save(getEditedEntity()));
+        return Set.of(orderRepository.save(getEditedEntity()));
     }
 
     @Subscribe("discountPercentField")

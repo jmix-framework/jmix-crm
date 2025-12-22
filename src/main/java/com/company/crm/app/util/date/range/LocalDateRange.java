@@ -1,12 +1,14 @@
 package com.company.crm.app.util.date.range;
 
-import org.jspecify.annotations.NonNull;
-
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 
 public record LocalDateRange(LocalDate startDate, LocalDate endDate) implements DateRange {
+
+    public static LocalDateRange from(LocalDate startDate, LocalDate endDate) {
+        return new LocalDateRange(startDate, endDate);
+    }
 
     public LocalDateRange(LocalDate dayRange) {
         this(dayRange, dayRange);

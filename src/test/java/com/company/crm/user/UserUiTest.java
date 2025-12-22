@@ -1,5 +1,6 @@
 package com.company.crm.user;
 
+import com.company.crm.AbstractUiTest;
 import com.company.crm.CRMApplication;
 import com.company.crm.model.user.User;
 import com.company.crm.view.user.UserDetailView;
@@ -23,9 +24,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 /**
  * Sample UI integration test for the User entity.
  */
-@UiTest
-@SpringBootTest(classes = {CRMApplication.class, FlowuiTestAssistConfiguration.class})
-public class UserUiTest {
+public class UserUiTest extends AbstractUiTest {
 
     @Autowired
     DataManager dataManager;

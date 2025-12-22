@@ -15,11 +15,8 @@ import com.company.crm.view.catalog.charts.ItemOrdersAmountItem;
 import com.company.crm.view.catalog.charts.ItemOrdersAmountValueDescription;
 import com.company.crm.view.main.MainView;
 import com.company.crm.view.util.SkeletonStyler;
-import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasValue;
-import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.Renderer;
-import com.vaadin.flow.data.renderer.TextRenderer;
 import com.vaadin.flow.router.Route;
 import io.jmix.chartsflowui.component.Chart;
 import io.jmix.chartsflowui.kit.component.model.DataSet;
@@ -28,7 +25,6 @@ import io.jmix.core.common.datastruct.Pair;
 import io.jmix.core.querycondition.LogicalCondition;
 import io.jmix.core.repository.JmixDataRepositoryContext;
 import io.jmix.flowui.UiComponents;
-import io.jmix.flowui.component.card.JmixCard;
 import io.jmix.flowui.component.formlayout.JmixFormLayout;
 import io.jmix.flowui.component.grid.DataGrid;
 import io.jmix.flowui.component.select.JmixSelect;
@@ -37,7 +33,6 @@ import io.jmix.flowui.model.CollectionLoader;
 import io.jmix.flowui.view.DialogMode;
 import io.jmix.flowui.view.Install;
 import io.jmix.flowui.view.LookupComponent;
-import io.jmix.flowui.view.MessageBundle;
 import io.jmix.flowui.view.StandardListView;
 import io.jmix.flowui.view.Subscribe;
 import io.jmix.flowui.view.Supply;
@@ -75,7 +70,7 @@ public class CategoryItemListView extends StandardListView<CategoryItem> {
     @Autowired
     private UiComponents uiComponents;
     @Autowired
-    private CategoryItemRepository repository;
+    private CategoryItemRepository itemRepository;
     @Autowired
     private CategoryRepository categoryRepository;
     @Autowired
@@ -105,17 +100,17 @@ public class CategoryItemListView extends StandardListView<CategoryItem> {
 
     @Install(to = "categoryItemsDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
     private List<CategoryItem> loadDelegate(Pageable pageable, JmixDataRepositoryContext context) {
-        return repository.findAll(pageable, wrapContext(context)).getContent();
+        return itemRepository.findAll(pageable, wrapContext(context)).getContent();
     }
 
     @Install(to = "categoryItemsDataGrid.removeAction", subject = "delegate")
     private void categoryItemsDataGridRemoveDelegate(final Collection<CategoryItem> collection) {
-        repository.deleteAll(collection);
+        itemRepository.deleteAll(collection);
     }
 
     @Install(to = "pagination", subject = "totalCountByRepositoryDelegate")
     private Long paginationTotalCountByRepositoryDelegate(final JmixDataRepositoryContext context) {
-        return repository.count(wrapContext(context));
+        return itemRepository.count(wrapContext(context));
     }
 
     @Supply(to = "categoryItemsDataGrid.code", subject = "renderer")

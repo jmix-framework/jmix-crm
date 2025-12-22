@@ -25,15 +25,15 @@ import java.util.UUID;
 public class PaymentDetailView extends StandardDetailView<Payment> {
 
     @Autowired
-    private PaymentRepository repository;
+    private PaymentRepository paymentRepository;
 
     @Install(to = "paymentDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
     private Optional<Payment> loadDelegate(UUID id, FetchPlan fetchPlan) {
-        return repository.findById(id, fetchPlan);
+        return paymentRepository.findById(id, fetchPlan);
     }
 
     @Install(target = Target.DATA_CONTEXT)
     private Set<Object> saveDelegate(SaveContext saveContext) {
-        return Set.of(repository.save(getEditedEntity()));
+        return Set.of(paymentRepository.save(getEditedEntity()));
     }
 }

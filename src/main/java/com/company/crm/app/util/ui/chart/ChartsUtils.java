@@ -13,6 +13,7 @@ import io.jmix.chartsflowui.kit.component.model.axis.YAxis;
 import io.jmix.chartsflowui.kit.component.model.legend.Legend;
 import io.jmix.chartsflowui.kit.component.model.series.BarSeries;
 import io.jmix.chartsflowui.kit.component.model.series.Label;
+import io.jmix.chartsflowui.kit.component.model.series.LineSeries;
 import io.jmix.chartsflowui.kit.component.model.series.PieSeries;
 import io.jmix.chartsflowui.kit.component.model.series.SeriesType;
 import io.jmix.chartsflowui.kit.component.model.shared.FontStyle;
@@ -91,20 +92,29 @@ public class ChartsUtils {
                         .withShow(false));
 
         switch (seriesType) {
-            case BAR -> {
-                chart.withSeries(
-                    new BarSeries()
-                            .withAnimation(true)
-                            .withLabel(new Label().withShow(false))
-                            .withYAxisIndex(0)
-                            .withXAxisIndex(0))
-                        .withXAxis(new XAxis().withType(AxisType.CATEGORY))
-                        .withYAxis(new YAxis().withType(AxisType.VALUE));
-            }
+            case BAR -> chart.withSeries(
+                            new BarSeries()
+                                    .withAnimation(true)
+                                    .withLabel(new Label().withShow(false))
+                                    .withYAxisIndex(0)
+                                    .withXAxisIndex(0))
+                    .withXAxis(new XAxis().withType(AxisType.CATEGORY).withInterval(1))
+                    .withYAxis(new YAxis().withType(AxisType.VALUE).withInterval(1));
+
+            case LINE -> chart.withSeries(
+                            new LineSeries()
+                                    .withAnimation(true)
+                                    .withLabel(new Label().withShow(false))
+                                    .withYAxisIndex(0)
+                                    .withXAxisIndex(0))
+                    .withXAxis(new XAxis().withType(AxisType.CATEGORY).withInterval(1))
+                    .withYAxis(new YAxis().withType(AxisType.VALUE).withInterval(1));
+
             case PIE -> chart.withSeries(
                     new PieSeries()
                             .withLabel(new Label().withShow(false))
                             .withAnimation(true));
+
             default -> throw new IllegalArgumentException("SeriesType not supported");
         }
 

@@ -25,15 +25,15 @@ import java.util.UUID;
 public class InvoiceDetailView extends StandardDetailView<Invoice> {
 
     @Autowired
-    private InvoiceRepository repository;
+    private InvoiceRepository invoiceRepository;
 
     @Install(to = "invoiceDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
     private Optional<Invoice> loadDelegate(UUID id, FetchPlan fetchPlan) {
-        return repository.findById(id, fetchPlan);
+        return invoiceRepository.findById(id, fetchPlan);
     }
 
     @Install(target = Target.DATA_CONTEXT)
     private Set<Object> saveDelegate(SaveContext saveContext) {
-        return Set.of(repository.save(getEditedEntity()));
+        return Set.of(invoiceRepository.save(getEditedEntity()));
     }
 }

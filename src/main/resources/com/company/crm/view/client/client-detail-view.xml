@@ -70,9 +70,13 @@
                 <tabSheet id="tabSheet" width="100%">
                     <tab id="infoTab" label="msg://infoTabLabel">
                         <div width="100%">
-                            <formLayout id="chartsBlock" width="100%" autoResponsive="true" autoRows="true"
-                                        expandFields="true" expandColumns="true"/>
-                            <split width="100%" id="formSplit" themeNames="minimal small" splitterPosition="70">
+                            <formLayout id="chartsBlock" width="100%" classNames="mb-m mt-m">
+                                <responsiveSteps>
+                                    <responsiveStep minWidth="0" columns="1"/>
+                                    <responsiveStep minWidth="60em" columns="3"/>
+                                </responsiveSteps>
+                            </formLayout>
+                            <split width="100%" id="formSplit" themeNames="minimal" splitterPosition="70">
                                 <vbox padding="false" classNames="pr-m" maxWidth="55em">
                                     <formLayout id="form" dataContainer="clientDc">
                                         <responsiveSteps>

@@ -1,18 +1,23 @@
 package com.company.crm.app.service.client;
 
+import com.company.crm.app.util.date.range.LocalDateRange;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.client.ClientRepository;
 import com.company.crm.model.client.ClientType;
+import com.company.crm.model.order.OrderStatus;
 import io.jmix.core.FetchPlan;
 import io.jmix.core.FetchPlanBuilder;
 import io.jmix.core.FetchPlans;
 import io.jmix.core.FluentValueLoader;
+import org.jspecify.annotations.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -32,6 +37,168 @@ public class ClientService {
     public ClientService(FetchPlans fetchPlans, ClientRepository clientRepository) {
         this.fetchPlans = fetchPlans;
         this.clientRepository = clientRepository;
+    }
+
+
+    public List<CompletedOrdersInfo> getCompletedOrdersInfo(@Nullable LocalDateRange dateRange, Client... clients) {
+        boolean clientsSpecified = clients.length > 0;
+
+        StringBuilder query = new StringBuilder(
+                "select e.date as orderDate, count(e) as amount, sum(e.total) as total " +
+                        "from Order_ e ");
+
+        List<String> conditions = new ArrayList<>();
+
+        conditions.add("e.status = :status");
+
+        if (clientsSpecified) {
+            conditions.add("e.client in :clients");
+        }
+
+        if (dateRange != null) {
+            conditions.add("e.date >= :startDate");
+            conditions.add("e.date <= :endDate");
+        }
+
+        query.append("where ").append(String.join(" and ", conditions));
+        query.append(" group by e.date order by e.date");
+
+        var loader = clientRepository.fluentValuesLoader(query.toString())
+                .properties("orderDate", "amount", "total")
+                .parameter("status", OrderStatus.DONE);
+
+        if (clientsSpecified) {
+            loader.parameter("clients", asList(clients));
+        }
+
+        if (dateRange != null) {
+            loader.parameter("startDate", dateRange.startDate())
+                    .parameter("endDate", dateRange.endDate());
+        }
+
+        Long rangeTotalAmount = getCompletedOrdersAmount(dateRange, clients).longValue();
+        var rangeTotalSum = ordersTotalSumLoader(new OrderStatus[]{OrderStatus.DONE}, clients)
+                .optional().orElse(BigDecimal.ZERO);
+        var salesCycleLength = getSalesCycleLength(dateRange, clients);
+
+        return loader.list().stream().map(keyValue -> {
+            LocalDate date = keyValue.getValue("orderDate");
+            BigDecimal dateTotalSum = keyValue.getValue("total");
+            Long dateAmount = keyValue.getValue("amount");
+            return new CompletedOrdersInfo(date, dateRange, dateAmount, dateTotalSum, rangeTotalAmount, rangeTotalSum, salesCycleLength);
+        }).toList();
+    }
+
+    /**
+     * Calculates the total number of completed orders based on the provided date range and clients.
+     *
+     * @param dateRange an optional date range to filter the orders; if null, no date range filtering is applied
+     * @param clients   optional list of clients to filter the orders; if no clients are provided, all clients are considered
+     * @return the total number of orders that match the specified criteria, or {@code BigDecimal.ZERO} if no orders are matched
+     */
+    public BigDecimal getCompletedOrdersAmount(@Nullable LocalDateRange dateRange,
+                                               Client... clients) {
+        boolean clientsSpecified = clients.length > 0;
+
+        StringBuilder query = new StringBuilder("select count(e) from Order_ e");
+        List<String> conditions = new ArrayList<>();
+
+        conditions.add("e.status = :status");
+
+        if (clientsSpecified) {
+            conditions.add("e.client in :clients");
+        }
+
+        if (dateRange != null) {
+            conditions.add("e.date >= :from");
+            conditions.add("e.date <= :to");
+        }
+
+        query.append(" where ").append(String.join(" and ", conditions));
+
+        var loader = clientRepository
+                .fluentValueLoader(query.toString(), BigDecimal.class)
+                .parameter("status", OrderStatus.DONE);
+
+        if (clientsSpecified) {
+            loader.parameter("clients", asList(clients));
+        }
+
+        if (dateRange != null) {
+            loader.parameter("from", dateRange.startDate());
+            loader.parameter("to", dateRange.endDate());
+        }
+
+        return loader.optional().orElse(BigDecimal.ZERO);
+    }
+
+    /**
+     * Calculates the average sales cycle length in days.
+     * The sales cycle length is defined as the period between order creation and the final payment.
+     * Only for completed orders.
+     *
+     * @param dateRange optional date range to filter orders. If {@code null}, no date filtering is applied.
+     * @param clients   the clients whose orders should be considered. If empty, all clients are included.
+     * @return the average sales cycle length in days as a {@link Integer}, or zero if no data is available.
+     */
+    public Integer getSalesCycleLength(@Nullable LocalDateRange dateRange,
+                                       Client... clients) {
+        boolean clientsSpecified = clients.length > 0;
+
+        StringBuilder query = new StringBuilder(
+                "select e.date as orderDate, max(p.date) as lastPaymentDate " +
+                        "from Payment p " +
+                        "join p.invoice inv " +
+                        "join inv.order e ");
+
+        List<String> conditions = new ArrayList<>();
+        conditions.add("e.status = :status");
+        conditions.add("e.date is not null");
+        conditions.add("p.date is not null");
+
+        if (clientsSpecified) {
+            conditions.add("e.client in :clients");
+        }
+
+        if (dateRange != null) {
+            conditions.add("e.date >= :startDate");
+            conditions.add("e.date <= :endDate");
+        }
+
+        query.append("where ").append(String.join(" and ", conditions));
+        query.append(" group by e.id, e.date");
+
+        var loader = clientRepository.fluentValuesLoader(query.toString())
+                .properties("orderDate", "lastPaymentDate")
+                .parameter("status", OrderStatus.DONE);
+
+        if (clientsSpecified) {
+            loader.parameter("clients", asList(clients));
+        }
+
+        if (dateRange != null) {
+            loader.parameter("startDate", dateRange.startDate());
+            loader.parameter("endDate", dateRange.endDate());
+        }
+
+        long sumDays = 0;
+        long ordersCount = 0;
+        for (var keyValue : loader.list()) {
+            LocalDate orderDate = keyValue.getValue("orderDate");
+            LocalDate lastPaymentDate = keyValue.getValue("lastPaymentDate");
+            if (orderDate == null || lastPaymentDate == null) {
+                continue;
+            }
+
+            sumDays += ChronoUnit.DAYS.between(orderDate, lastPaymentDate);
+            ordersCount++;
+        }
+
+        if (ordersCount == 0) {
+            return 0;
+        }
+
+        return (int) (sumDays / ordersCount);
     }
 
     /**
@@ -90,24 +257,12 @@ public class ClientService {
     /**
      * Calculates the total value of all orders associated with the specified client.
      *
-     * @param client the {@link Client}s whose total order value is to be calculated.
+     * @param statuses the {@link OrderStatus}es to include in the total calculation.
+     * @param client   the {@link Client}s whose total order value is to be calculated.
      * @return the total value of all orders associated with the specified client as a {@link BigDecimal}.
      */
-    public BigDecimal getOrdersTotalSum(Client... client) {
-        boolean clientsSpecified = client.length > 0;
-
-        var loader = clientRepository.fluentValueLoader(
-                "select sum(e.total) as total " +
-                        "from Order_ e " +
-                        (clientsSpecified ? "where e.client in :clients " : " ") +
-                        "order by total desc", BigDecimal.class
-        );
-
-        if (clientsSpecified) {
-            loader.parameter("clients", asList(client));
-        }
-
-        return loader.optional().orElse(BigDecimal.ZERO);
+    public BigDecimal getOrdersTotalSum(OrderStatus[] statuses, Client... client) {
+        return ordersTotalSumLoader(statuses, client).optional().orElse(BigDecimal.ZERO);
     }
 
     /**
@@ -140,6 +295,42 @@ public class ClientService {
      * @return the average bill for the specified client as a {@link BigDecimal}.
      */
     public BigDecimal getAverageBill(Client... client) {
+        return averageBillLoader(client).optional().orElse(BigDecimal.ZERO);
+    }
+
+    private FluentValueLoader<BigDecimal> ordersTotalSumLoader(@Nullable OrderStatus[] statuses, Client[] client) {
+        boolean clientsSpecified = client.length > 0;
+        boolean statusesSpecified = statuses != null && statuses.length > 0;
+
+        StringBuilder query = new StringBuilder("select sum(e.total) from Order_ e");
+        List<String> conditions = new ArrayList<>();
+
+        if (clientsSpecified) {
+            conditions.add("e.client in :clients");
+        }
+
+        if (statusesSpecified) {
+            conditions.add("e.status in :statuses");
+        }
+
+        if (!conditions.isEmpty()) {
+            query.append(" where ").append(String.join(" and ", conditions));
+        }
+
+        var loader = clientRepository.fluentValueLoader(query.toString(), BigDecimal.class);
+
+        if (clientsSpecified) {
+            loader.parameter("clients", asList(client));
+        }
+
+        if (statusesSpecified) {
+            loader.parameter("statuses", asList(statuses));
+        }
+
+        return loader;
+    }
+
+    private FluentValueLoader<BigDecimal> averageBillLoader(Client... client) {
         boolean clientSpecified = client.length > 0;
 
         var loader = clientRepository.fluentValueLoader(
@@ -151,8 +342,7 @@ public class ClientService {
         if (clientSpecified) {
             loader.parameter("client", asList(client));
         }
-
-        return loader.optional().orElse(BigDecimal.ZERO);
+        return loader;
     }
 
     private FetchPlan clientWithOrdersFetchPlan() {

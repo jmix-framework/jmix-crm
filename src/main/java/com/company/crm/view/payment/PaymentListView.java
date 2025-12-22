@@ -28,7 +28,7 @@ import java.util.List;
 public class PaymentListView extends StandardListView<Payment> {
 
     @Autowired
-    private PaymentRepository repository;
+    private PaymentRepository paymentRepository;
     @ViewComponent
     private CollectionLoader<Payment> paymentsDl;
 
@@ -38,16 +38,16 @@ public class PaymentListView extends StandardListView<Payment> {
 
     @Install(to = "paymentsDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
     private List<Payment> loadDelegate(Pageable pageable, JmixDataRepositoryContext context) {
-        return repository.findAll(pageable, context).getContent();
+        return paymentRepository.findAll(pageable, context).getContent();
     }
 
     @Install(to = "paymentsDataGrid.removeAction", subject = "delegate")
     private void paymentsDataGridRemoveDelegate(final Collection<Payment> collection) {
-        repository.deleteAll(collection);
+        paymentRepository.deleteAll(collection);
     }
 
     @Install(to = "pagination", subject = "totalCountByRepositoryDelegate")
     private Long paginationTotalCountByRepositoryDelegate(final JmixDataRepositoryContext context) {
-        return repository.count(context);
+        return paymentRepository.count(context);
     }
 }

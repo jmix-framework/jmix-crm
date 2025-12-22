@@ -6,7 +6,6 @@ import com.company.crm.app.service.order.OrderService;
 import com.company.crm.app.ui.component.OrderStatusPipeline;
 import com.company.crm.app.ui.component.OrderStatusPipeline.OrderStatusComponent;
 import com.company.crm.app.util.AsyncTasksRegistry;
-import com.company.crm.app.util.ui.CrmUiUtils;
 import com.company.crm.app.util.ui.renderer.CrmRenderers;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.datatype.PriceDataType;
@@ -26,7 +25,6 @@ import io.jmix.flowui.asynctask.UiAsyncTasks;
 import io.jmix.flowui.component.combobox.EntityComboBox;
 import io.jmix.flowui.component.datepicker.TypedDatePicker;
 import io.jmix.flowui.component.grid.DataGrid;
-import io.jmix.flowui.component.grid.DataGridColumn;
 import io.jmix.flowui.component.textfield.TypedTextField;
 import io.jmix.flowui.model.CollectionContainer;
 import io.jmix.flowui.model.CollectionLoader;
@@ -70,7 +68,7 @@ public class OrderListView extends StandardListView<Order> {
     @Autowired
     private CrmRenderers crmRenderers;
     @Autowired
-    private OrderRepository repository;
+    private OrderRepository orderRepository;
     @Autowired
     private UiAsyncTasks uiAsyncTasks;
 
@@ -116,17 +114,17 @@ public class OrderListView extends StandardListView<Order> {
 
     @Install(to = "ordersDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
     private List<Order> loadDelegate(Pageable pageable, JmixDataRepositoryContext context) {
-        return repository.findAll(pageable, wrapContext(context)).getContent();
+        return orderRepository.findAll(pageable, wrapContext(context)).getContent();
     }
 
     @Install(to = "ordersDataGrid.removeAction", subject = "delegate")
     private void ordersDataGridRemoveDelegate(final Collection<Order> collection) {
-        repository.deleteAll(collection);
+        orderRepository.deleteAll(collection);
     }
 
     @Install(to = "pagination", subject = "totalCountByRepositoryDelegate")
     private Long paginationTotalCountByRepositoryDelegate(final JmixDataRepositoryContext context) {
-        return repository.count(wrapContext(context));
+        return orderRepository.count(wrapContext(context));
     }
 
     @Supply(to = "ordersDataGrid.client", subject = "renderer")

@@ -2,18 +2,15 @@ package com.company.crm.app.ui.component;
 
 import com.company.crm.app.service.datetime.DateTimeService;
 import com.company.crm.app.service.user.UserActivityService;
-import com.company.crm.app.service.user.UserService;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.user.User;
 import com.company.crm.model.user.activity.UserActivity;
 import com.company.crm.view.util.SkeletonStyler;
-import com.google.common.base.Preconditions;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasComponents;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.H4;
 import com.vaadin.flow.component.html.H5;
 import com.vaadin.flow.component.html.Span;
@@ -131,12 +128,12 @@ public class RecentActivitiesBlock extends Div implements ApplicationContextAwar
     }
 
     private void addTodayActivities() {
-        LocalDate todayStart = dateTimeService.getDayStart().toLocalDate();
+        LocalDate todayStart = dateTimeService.getCurrentDayStart().toLocalDate();
         addActivities("Today", todayStart);
     }
 
     private void addYesterdayActivities() {
-        LocalDate yesterdayStart = dateTimeService.getDayStart().toLocalDate().minusDays(1);
+        LocalDate yesterdayStart = dateTimeService.getCurrentDayStart().toLocalDate().minusDays(1);
         addActivities("Yesterday", yesterdayStart);
     }
 

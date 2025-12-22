@@ -1,5 +1,6 @@
 package com.company.crm.user;
 
+import com.company.crm.AbstractTest;
 import com.company.crm.model.user.User;
 import com.company.crm.test_support.AuthenticatedAsAdmin;
 import io.jmix.core.DataManager;
@@ -17,9 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Sample integration test for the User entity.
  */
-@SpringBootTest
-@ExtendWith(AuthenticatedAsAdmin.class)
-public class UserTest {
+public class UserTest extends AbstractTest {
 
     @Autowired
     DataManager dataManager;
