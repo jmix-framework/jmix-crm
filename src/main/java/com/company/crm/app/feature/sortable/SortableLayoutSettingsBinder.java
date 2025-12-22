@@ -5,6 +5,8 @@ import com.vaadin.flow.spring.annotation.SpringComponent;
 import io.jmix.core.JmixOrder;
 import io.jmix.flowui.facet.settings.Settings;
 import io.jmix.flowui.facet.settings.component.binder.ComponentSettingsBinder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
 import org.vaadin.jchristophe.SortableLayout;
 
@@ -15,6 +17,8 @@ import java.util.Optional;
 @SpringComponent
 @Order(JmixOrder.LOWEST_PRECEDENCE)
 public class SortableLayoutSettingsBinder implements ComponentSettingsBinder<SortableLayout, SortableLayoutSettings> {
+
+    private static final Logger log = LoggerFactory.getLogger(SortableLayoutSettingsBinder.class);
 
     @Override
     public Class<? extends Component> getComponentClass() {
@@ -27,27 +31,20 @@ public class SortableLayoutSettingsBinder implements ComponentSettingsBinder<Sor
     }
 
     @Override
+    public SortableLayoutSettings getSettings(SortableLayout sortableLayout) {
+        SortableLayoutSettings settings = new SortableLayoutSettings();
+        settings.setId(sortableLayout.getId().orElse(null));
+        settings.setComponentIdChainFrom(sortableLayout.getComponents());
+        return settings;
+    }
+
+    @Override
     public void applySettings(SortableLayout sortableLayout, SortableLayoutSettings settings) {
         if (isOrderChanged(sortableLayout, settings)) {
             List<String> expectedChain = settings.getComponentIdChain();
             List<Component> expectedOrder = sortComponents(sortableLayout.getComponents(), expectedChain);
             SortableFeature.reorder(sortableLayout, expectedOrder);
         }
-    }
-
-    private List<Component> sortComponents(List<Component> components, List<String> expectedChain) {
-        components.sort((c1, c2) -> {
-            Optional<String> c1Id = c1.getId();
-            Optional<String> c2Id = c2.getId();
-            if (c1Id.isEmpty() && c2Id.isPresent()) {
-                return -1;
-            } else if (c1Id.isPresent() && c2Id.isEmpty()) {
-                return 1;
-            } else {
-                return c1Id.map(s -> Integer.compare(expectedChain.indexOf(s), expectedChain.indexOf(c2Id.get()))).orElse(0);
-            }
-        });
-        return components;
     }
 
     @Override
@@ -58,14 +55,6 @@ public class SortableLayoutSettingsBinder implements ComponentSettingsBinder<Sor
         } else {
             return false;
         }
-    }
-
-    @Override
-    public SortableLayoutSettings getSettings(SortableLayout sortableLayout) {
-        SortableLayoutSettings settings = new SortableLayoutSettings();
-        settings.setId(sortableLayout.getId().orElse(null));
-        settings.setComponentIdChainFrom(sortableLayout.getComponents());
-        return settings;
     }
 
     private boolean isOrderChanged(SortableLayout component, SortableLayoutSettings settings) {
@@ -87,10 +76,29 @@ public class SortableLayoutSettingsBinder implements ComponentSettingsBinder<Sor
         return false;
     }
 
+    private List<Component> sortComponents(List<Component> components, List<String> expectedChain) {
+        components = new ArrayList<>(components);
+        components.sort((c1, c2) -> {
+            Optional<String> c1Id = c1.getId();
+            Optional<String> c2Id = c2.getId();
+            if (c1Id.isEmpty() && c2Id.isPresent()) {
+                return -1;
+            } else if (c1Id.isPresent() && c2Id.isEmpty()) {
+                return 1;
+            } else {
+                return c1Id.map(s -> Integer.compare(expectedChain.indexOf(s), expectedChain.indexOf(c2Id.get()))).orElse(0);
+            }
+        });
+        return components;
+    }
+
     private List<String> getChain(SortableLayout component) {
         List<String> actualChain = new ArrayList<>();
         for (Component c : component.getComponents()) {
-            c.getId().ifPresent(actualChain::add);
+            c.getId().ifPresentOrElse(actualChain::add,
+                    () -> log.warn("Component {} does not have an ID. " +
+                                    "Sortable state will ignore this component",
+                            c.getClass().getSimpleName()));
         }
         return actualChain;
     }

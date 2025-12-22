@@ -163,13 +163,16 @@ public class HomeView extends StandardView implements WidthResizeListener {
 
     private List<JmixCard> getLeftCards() {
         var totalOrdersCard = uiComponents.create(CrmCard.class);
+        totalOrdersCard.setId("totalOrdersCard");
         totalOrdersCard.defaultRangeStatPeriodCard(messageBundle.getMessage("card.totalOrdersValue"), this::createTotalOrdersValueComponent);
 
         var paymentsCard = uiComponents.create(CrmCard.class);
+        paymentsCard.setId("paymentsCard");
         paymentsCard.defaultRangeStatPeriodCard(messageBundle.getMessage("cards.payments"), this::createPaymentsComponent);
 
         var overdueInvoicesCard = uiComponents.create(CrmCard.class).withoutBackground(true);
-        overdueInvoicesCard.fillAsPeriodCard(messageBundle.getMessage("cards.overdueInvoices"), 2, this::createOverdueInvoicesComponent);
+        overdueInvoicesCard.fillAsPeriodCard("overdueInvoicesCard", 2,
+                messageBundle.getMessage("cards.overdueInvoices"), this::createOverdueInvoicesComponent);
 
         var myTasksCard = uiComponents.create(CrmCard.class).withoutBackground(true);
         myTasksCard.fillAsPeriodCard("myTasks", 2, myTasksTitleComponent(), this::createMyTasksComponent);
@@ -178,13 +181,13 @@ public class HomeView extends StandardView implements WidthResizeListener {
     }
 
     private Component myTasksTitleComponent() {
-        var hbox = new HorizontalLayout();
-        hbox.setWidthFull();
-        hbox.setAlignItems(FlexComponent.Alignment.CENTER);
-        hbox.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
+        var container = new HorizontalLayout();
+        container.setWidthFull();
+        container.setAlignItems(FlexComponent.Alignment.CENTER);
+        container.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
 
         var title = new H4("My Tasks");
-        hbox.add(title);
+        container.add(title);
 
         var newTaskButton = new Button("New Task");
         newTaskButton.setIcon(VaadinIcon.PLUS.create());
@@ -202,16 +205,18 @@ public class HomeView extends StandardView implements WidthResizeListener {
                         }
                     }).open();
         });
-        hbox.add(newTaskButton);
+        container.add(newTaskButton);
 
-        return hbox;
+        return container;
     }
 
     private List<JmixCard> getRightCards() {
         var salesCard = uiComponents.create(CrmCard.class);
+        salesCard.setId("salesCard");
         salesCard.fillAsPeriodCard("Sales Chart", 2, this::createSalesFunnelComponent);
 
         var activitiesCard = uiComponents.create(CrmCard.class).withoutBackground(true);
+        activitiesCard.setId("activitiesCard");
         activitiesCard.fillAsStaticCard("", 2, createRecentActivitiesComponent());
 
         return List.of(salesCard, activitiesCard);
