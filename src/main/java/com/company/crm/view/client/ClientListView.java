@@ -8,6 +8,7 @@ import com.company.crm.app.service.user.UserService;
 import com.company.crm.app.ui.component.CrmLoader;
 import com.company.crm.app.ui.component.card.CrmCard;
 import com.company.crm.app.util.AsyncTasksRegistry;
+import com.company.crm.app.util.ui.CrmUiUtils;
 import com.company.crm.app.util.ui.listener.resize.WidthResizeListener;
 import com.company.crm.app.util.ui.renderer.CrmRenderers;
 import com.company.crm.model.client.Client;
@@ -53,6 +54,7 @@ import io.jmix.flowui.view.Target;
 import io.jmix.flowui.view.ViewComponent;
 import io.jmix.flowui.view.ViewController;
 import io.jmix.flowui.view.ViewDescriptor;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 
@@ -64,10 +66,12 @@ import java.util.List;
 import static com.company.crm.app.feature.sortable.SortableFeature.makeSortable;
 import static com.company.crm.app.util.demo.DemoUtils.defaultSleepForStatisticLoading;
 import static com.company.crm.app.util.ui.CrmUiUtils.addRowSelectionInMultiSelectMode;
+import static com.company.crm.app.util.ui.CrmUiUtils.openLink;
 import static com.company.crm.app.util.ui.listener.resize.WidthResizeListener.isWidthChanged;
 import static io.jmix.core.querycondition.PropertyCondition.contains;
 import static io.jmix.core.querycondition.PropertyCondition.equal;
 import static io.jmix.core.querycondition.PropertyCondition.isCollectionEmpty;
+import static org.apache.commons.lang3.StringUtils.substringAfter;
 
 @Route(value = "clients", layout = MainView.class)
 @ViewController(id = "Client.list")
@@ -206,6 +210,19 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
     @Supply(to = "clientsDataGrid.regNumber", subject = "renderer")
     private Renderer<Client> clientsDataGridRegNumberRenderer() {
         return crmRenderers.clientRegNumber();
+    }
+
+    @Supply(to = "clientsDataGrid.website", subject = "renderer")
+    private Renderer<Client> clientsDataGridWebsiteRenderer() {
+        return crmRenderers.longTextRenderer(20, c -> {
+            String website = c.getWebsite();
+            if (StringUtils.isBlank(website)) {
+                return "";
+            } else {
+                String withoutProtocol = substringAfter(c.getWebsite(), "://").trim();
+                return withoutProtocol.isBlank() ? website : withoutProtocol;
+            }
+        }, c -> openLink(c.getWebsite()));
     }
 
     private JmixDataRepositoryContext wrapContext(JmixDataRepositoryContext context) {

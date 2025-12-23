@@ -8,17 +8,24 @@ import com.company.crm.model.catalog.category.Category;
 import com.company.crm.model.catalog.item.CategoryItem;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.client.ClientType;
+import com.company.crm.model.invoice.Invoice;
 import com.company.crm.model.order.Order;
+import com.company.crm.model.order.OrderItem;
 import com.company.crm.model.order.OrderStatus;
 import com.company.crm.model.user.User;
 import com.company.crm.model.user.task.UserTask;
 import com.company.crm.view.client.ClientDetailView;
 import com.company.crm.view.user.UserDetailView;
 import com.vaadin.flow.component.Text;
+import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.popover.Popover;
 import com.vaadin.flow.component.shared.Tooltip;
+import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.Renderer;
 import io.jmix.core.Messages;
@@ -29,10 +36,13 @@ import io.jmix.flowui.asynctask.UiAsyncTasks;
 import io.jmix.flowui.component.UiComponentUtils;
 import io.jmix.flowui.kit.component.button.JmixButton;
 import io.jmix.flowui.view.StandardDetailView;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.time.Period;
+import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static com.company.crm.app.util.ui.color.StatusColors.getBadgeVariant;
@@ -56,6 +66,77 @@ public class CrmRenderers {
         this.datatypeFormatter = datatypeFormatter;
         this.dateTimeService = dateTimeService;
         this.uiAsyncTasks = uiAsyncTasks;
+    }
+
+    public <SOURCE> ComponentRenderer<Button, SOURCE> longTextRenderer(
+            int maxLength, Function<SOURCE, String> textProvider) {
+        return longTextRenderer(maxLength, textProvider, null);
+    }
+
+    public <SOURCE> ComponentRenderer<Button, SOURCE> longTextRenderer(
+            int maxLength, Function<SOURCE, String> textProvider,
+            @Nullable Consumer<SOURCE> fullTextClickListener) {
+        return new ComponentRenderer<>(source -> {
+            String fullMsg = Optional.ofNullable(textProvider.apply(source)).orElse("");
+            int fullMsgLength = fullMsg.length();
+            boolean isWithinLimit = fullMsgLength <= maxLength;
+            String shortMsg = fullMsgLength > maxLength ? fullMsg.substring(0, maxLength) + "..." : fullMsg;
+
+            Button button = uiComponents.create(JmixButton.class);
+            button.setText(shortMsg);
+            button.getElement().setAttribute("title", fullMsg);
+            button.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+            if (isWithinLimit && fullTextClickListener == null) {
+                button.addThemeVariants(ButtonVariant.LUMO_CONTRAST);
+            }
+
+            button.addClickListener(event -> {
+                if (isWithinLimit) {
+                    if (fullTextClickListener != null) {
+                        fullTextClickListener.accept(source);
+                    }
+                    return;
+                }
+
+                Scroller scroller = new Scroller();
+                scroller.setWidthFull();
+                scroller.setScrollDirection(Scroller.ScrollDirection.VERTICAL);
+
+                Paragraph text = uiComponents.create(Paragraph.class);
+                text.getStyle().set("word-break", "break-all");
+                text.setText(fullMsg);
+                text.setSizeFull();
+
+                if (fullTextClickListener != null) {
+                    CrmUiUtils.setCursorPointer(text);
+                    text.addClickListener(__ -> fullTextClickListener.accept(source));
+                }
+
+                scroller.setContent(text);
+
+                Popover popover = new Popover();
+                popover.add(scroller);
+                popover.setTarget(button);
+                popover.setCloseOnEsc(true);
+                popover.setModal(true);
+
+                int popoverWidth = fullMsgLength > 600 ? 600 : Math.max(fullMsgLength, 300);
+                popover.setWidth(popoverWidth + "px");
+
+                popover.open();
+                popover.addOpenedChangeListener(e -> {
+                    if (!e.isOpened()) {
+                        popover.removeFromParent();
+                    }
+                });
+            });
+
+            return button;
+        });
+    }
+
+    public Renderer<Invoice> invoiceClientLink() {
+        return new ComponentRenderer<>(invoice -> clientLinkButton(invoice.getClient()));
     }
 
     public Renderer<Order> orderClientLink() {
@@ -83,6 +164,10 @@ public class CrmRenderers {
 
     public Renderer<CategoryItem> categoryItemCode() {
         return badgeWithCopyRenderer(CategoryItem::getCode);
+    }
+
+    public Renderer<OrderItem> orderItemItemCode() {
+        return badgeWithCopyRenderer(item -> item.getCategoryItem().getCode());
     }
 
     public Renderer<Client> clientVatNumber() {

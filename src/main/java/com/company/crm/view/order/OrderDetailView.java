@@ -12,11 +12,13 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.spring.annotation.UIScope;
 import io.jmix.core.FetchPlan;
 import io.jmix.core.SaveContext;
 import io.jmix.flowui.component.SupportsTypedValue.TypedValueChangeEvent;
 import io.jmix.flowui.component.textfield.TypedTextField;
 import io.jmix.flowui.exception.ValidationException;
+import io.jmix.flowui.model.DataContext;
 import io.jmix.flowui.model.InstanceContainer;
 import io.jmix.flowui.view.EditedEntityContainer;
 import io.jmix.flowui.view.Install;
@@ -28,6 +30,7 @@ import io.jmix.flowui.view.ViewComponent;
 import io.jmix.flowui.view.ViewController;
 import io.jmix.flowui.view.ViewDescriptor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -77,11 +80,6 @@ public class OrderDetailView extends StandardDetailView<Order> {
         return orderRepository.findById(id, fetchPlan);
     }
 
-    @Install(target = Target.DATA_CONTEXT)
-    private Set<Object> saveDelegate(SaveContext saveContext) {
-        return Set.of(orderRepository.save(getEditedEntity()));
-    }
-
     @Subscribe("discountPercentField")
     private void onDiscountPercentFieldTypedValueChange(final TypedValueChangeEvent<TypedTextField<BigDecimal>, BigDecimal> event) {
         recalculateTotalIfNeeded(event);
@@ -94,11 +92,7 @@ public class OrderDetailView extends StandardDetailView<Order> {
 
     @Supply(to = "orderItemsGrid.[categoryItem.code]", subject = "renderer")
     private Renderer<OrderItem> orderItemsGridCategoryItemCodeRenderer() {
-        return new ComponentRenderer<>(orderItem -> {
-            Span span = new Span(orderItem.getCategoryItem().getCode());
-            span.getElement().getThemeList().add("badge contrast");
-            return span;
-        });
+        return crmRenderers.orderItemItemCode();
     }
 
     @Supply(to = "orderItemsGrid.total", subject = "renderer")

@@ -10,6 +10,7 @@ import com.vaadin.flow.component.page.Page;
 import com.vaadin.flow.component.page.PendingJavaScriptResult;
 import com.vaadin.flow.data.selection.MultiSelect;
 import com.vaadin.flow.data.selection.SingleSelect;
+import com.vaadin.flow.dom.Style;
 import com.vaadin.flow.shared.Registration;
 import io.jmix.flowui.component.grid.DataGrid;
 import io.jmix.flowui.component.grid.DataGridColumn;
@@ -26,6 +27,35 @@ public final class CrmUiUtils {
 
     private static final String GET_CLIENT_WIDTH_FUNC = "return window.innerWidth";
     private static final String GET_CLIENT_HEIGHT_FUNC = "return window.innerHeight";
+
+    public static void openLink(String link) {
+        getCurrentUI().ifPresent(ui -> ui.getPage().open(link, "_blank"));
+    }
+
+    public static <T extends HasStyle> T makeResizable(T hasStyle) {
+        return makeResizable(hasStyle, ResizeMode.BOTH);
+    }
+
+    public static <T extends HasStyle> T makeResizable(T hasStyle, ResizeMode resizeMode) {
+        Style style = hasStyle.getStyle();
+        style.setOverflow(Style.Overflow.AUTO);
+        switch (resizeMode) {
+            case VERTICAL:
+                style.set("resize", "vertical");
+                break;
+            case HORIZONTAL:
+                style.set("resize", "horizontal");
+                break;
+            case BOTH:
+                style.set("resize", "both");
+                break;
+        }
+        return hasStyle;
+    }
+
+    public enum ResizeMode {
+        VERTICAL, HORIZONTAL, BOTH
+    }
 
     public static void setCursorPointer(HasStyle hasStyle) {
         setCursor(hasStyle, "pointer");

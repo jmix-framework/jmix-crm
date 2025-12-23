@@ -21,9 +21,11 @@ import com.vaadin.flow.router.Route;
 import io.jmix.chartsflowui.component.Chart;
 import io.jmix.chartsflowui.data.item.SimpleDataItem;
 import io.jmix.chartsflowui.kit.component.model.DataSet;
+import io.jmix.chartsflowui.kit.component.model.axis.AxisLine;
 import io.jmix.chartsflowui.kit.component.model.axis.SplitLine;
 import io.jmix.chartsflowui.kit.component.model.legend.Legend;
 import io.jmix.chartsflowui.kit.component.model.series.SeriesType;
+import io.jmix.chartsflowui.kit.component.model.shared.LineStyle;
 import io.jmix.chartsflowui.kit.data.chart.ListChartItems;
 import io.jmix.core.FetchPlan;
 import io.jmix.core.SaveContext;
@@ -129,39 +131,34 @@ public class ClientDetailView extends StandardDetailView<Client> implements Widt
             add(createSalesCycleLengthChart());
         }}.forEach(chart2Initializer -> {
             Chart chart = chart2Initializer.getFirst();
-            Supplier<DataSet> dataSetSupplier = chart2Initializer.getSecond();
+            chart.withLegend(new Legend().withShow(false))
+                    .getYAxes().getFirst()
+                    .withInterval(0)
+                    .withSplitLine(new SplitLine().withShow(false));
+
             CrmCard card = uiComponents.create(CrmCard.class);
             card.add(chart);
             chartsBlock.add(card);
+
             SkeletonStyler.apply(chart);
+            Supplier<DataSet> dataSetSupplier = chart2Initializer.getSecond();
             chart2DataSetLoader.put(chart, dataSetSupplier);
         });
         return chart2DataSetLoader;
     }
 
     private Pair<Chart, Supplier<DataSet>> createOrdersByLastYearsChart() {
-        Chart chart = chartsUtils.createViewStatChart("Purchase Frequency", SeriesType.BAR)
-                .withLegend(new Legend().withShow(false));
-        chart.getYAxes().getFirst()
-                .withInterval(5).withMaxInterval(10)
-                .withSplitLine(new SplitLine().withShow(false));
+        Chart chart = chartsUtils.createViewStatChart("Purchase Frequency", SeriesType.BAR);
         return new Pair<>(chart, this::createOrdersByLastYearsChartDataSet);
     }
 
     private Pair<Chart, Supplier<DataSet>> createAverageOrderValueChart() {
-        Chart chart = chartsUtils.createViewStatChart("Average Order Value", SeriesType.BAR)
-                .withLegend(new Legend().withShow(false));
-        chart.getYAxes().getFirst()
-                .withSplitLine(new SplitLine().withShow(false));
+        Chart chart = chartsUtils.createViewStatChart("Average Order Value", SeriesType.BAR);
         return new Pair<>(chart, this::createAverageOrderValueChartDataSet);
     }
 
     private Pair<Chart, Supplier<DataSet>> createSalesCycleLengthChart() {
-        Chart chart = chartsUtils.createViewStatChart("Sales Cycle Length", SeriesType.BAR)
-                .withLegend(new Legend().withShow(false));
-        chart.getYAxes().getFirst()
-                .withInterval(10).withMax(String.valueOf(30))
-                .withSplitLine(new SplitLine().withShow(false));
+        Chart chart = chartsUtils.createViewStatChart("Sales Cycle Length", SeriesType.BAR);
         return new Pair<>(chart, this::createSalesCycleLengthChartDataSet);
     }
 
@@ -225,7 +222,7 @@ public class ClientDetailView extends StandardDetailView<Client> implements Widt
         var result = new HashMap<Integer, List<CompletedOrdersInfo>>();
         LocalDate currentYearStart = dateTimeService.getCurrentYearStart().toLocalDate();
         for (int i = 0; i < loadStatsForLastYearsAmount; i++) {
-            currentYearStart = currentYearStart.minusYears(1);
+            currentYearStart = currentYearStart.minusYears(i > 0 ? 1 : 0);
             var currentYearEnd = dateTimeService.getEndOfYear(dateTimeService.toOffsetDateTime(currentYearStart)).toLocalDate();
             var dateRange = LocalDateRange.from(currentYearStart, currentYearEnd);
             result.put(currentYearStart.getYear(), clientService.getCompletedOrdersInfo(dateRange, getEditedEntity()));

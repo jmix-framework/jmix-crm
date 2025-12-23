@@ -8,7 +8,9 @@ import com.company.crm.app.ui.component.RecentActivitiesBlock;
 import com.company.crm.app.ui.component.card.CrmCard;
 import com.company.crm.app.ui.component.card.CardPeriod;
 import com.company.crm.app.ui.component.card.CrmCard.RangeStatCardInfo;
+import com.company.crm.app.util.ui.CrmUiUtils;
 import com.company.crm.app.util.ui.listener.resize.WidthResizeListener;
+import com.company.crm.app.util.ui.renderer.CrmRenderers;
 import com.company.crm.model.datatype.PriceDataType;
 import com.company.crm.model.order.Order;
 import com.company.crm.model.order.OrderStatus;
@@ -28,9 +30,11 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility;
+import com.vaadin.flow.theme.lumo.LumoUtility.Margin;
 import io.jmix.chartsflowui.component.Chart;
 import io.jmix.chartsflowui.kit.component.model.DataSet;
 import io.jmix.chartsflowui.kit.component.model.Grid;
@@ -71,6 +75,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.company.crm.app.feature.sortable.SortableFeature.makeSortable;
+import static com.company.crm.app.util.ui.CrmUiUtils.makeResizable;
 import static com.company.crm.app.util.ui.listener.resize.WidthResizeListener.isWidthChanged;
 import static io.jmix.flowui.component.UiComponentUtils.traverseComponents;
 
@@ -94,6 +99,8 @@ public class HomeView extends StandardView implements WidthResizeListener {
     private Messages messages;
     @Autowired
     private UiComponents uiComponents;
+    @Autowired
+    private CrmRenderers crmRenderers;
     @Autowired
     private DialogWindows dialogWindows;
     @Autowired
@@ -224,7 +231,7 @@ public class HomeView extends StandardView implements WidthResizeListener {
 
     private void doCreateCards(List<JmixCard> cards, JmixFormLayout form) {
         for (JmixCard card : cards) {
-            card.addClassName(LumoUtility.Margin.Top.MEDIUM);
+            makeResizable(card).addClassName(Margin.Top.MEDIUM);
             form.add(card);
         }
     }
@@ -271,7 +278,8 @@ public class HomeView extends StandardView implements WidthResizeListener {
         DataGrid<Invoice> grid = uiComponents.create(DataGrid.class);
 
         grid.addColumn(new ComponentRenderer<>(r -> new Span(r.getClient().getName())))
-                .setHeader(messages.getMessage("com.company.crm.model.client/Client"));
+                .setHeader(messages.getMessage("com.company.crm.model.client/Client"))
+                .setRenderer(crmRenderers.invoiceClientLink());
         localDateFormatter.setUseUserTimezone(true);
         localDateFormatter.setFormat(messages.getMessage("dateFormat"));
         grid.addColumn(new ComponentRenderer<>(r -> new Span(localDateFormatter.apply(r.getDueDate()))))

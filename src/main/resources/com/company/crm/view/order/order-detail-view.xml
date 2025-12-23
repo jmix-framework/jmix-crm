@@ -74,16 +74,24 @@
                 </hbox>
                 <dataGrid id="orderItemsGrid" dataContainer="orderItemsDc" width="100%" minHeight="15em">
                     <actions>
-                        <action id="createAction" type="list_create"/>
-                        <action id="editAction" type="list_edit"/>
+                        <action id="createAction" type="list_create">
+                            <properties>
+                                <property name="openMode" value="DIALOG"/>
+                            </properties>
+                        </action>
+                        <action id="editAction" type="list_edit">
+                            <properties>
+                                <property name="openMode" value="DIALOG"/>
+                            </properties>
+                        </action>
                         <action id="removeAction" type="list_remove"/>
                     </actions>
                     <columns>
-                        <column property="categoryItem.name"/>
-                        <column property="categoryItem.code"/>
-                        <column property="netPrice"/>
-                        <column property="quantity"/>
-                        <column property="discount"/>
+                        <column property="categoryItem.name" autoWidth="true" flexGrow="0"/>
+                        <column property="categoryItem.code" autoWidth="true" flexGrow="0"/>
+                        <column property="netPrice" autoWidth="true" flexGrow="0"/>
+                        <column property="quantity" autoWidth="true" flexGrow="0"/>
+                        <column property="discount" autoWidth="true" flexGrow="0"/>
                         <column property="total"/>
                     </columns>
                 </dataGrid>
