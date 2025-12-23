@@ -8,9 +8,8 @@ import java.time.LocalDate;
 import java.time.Month;
 import java.time.Year;
 
-public final class CompletedOrdersInfo {
+public final class CompletedOrdersByDateRangeInfo {
 
-    // fields
     private final LocalDate date;
     private final LocalDateRange range;
     private final Long dateOrders;
@@ -19,10 +18,10 @@ public final class CompletedOrdersInfo {
     private final BigDecimal rangeTotal;
     private final Integer rangeSalesLifeCycleLength;
 
-    public CompletedOrdersInfo(LocalDate date, LocalDateRange range,
-                               Long dateOrders, BigDecimal dateTotal,
-                               Long rangeOrders, BigDecimal rangeTotal,
-                               Integer rangeSalesLifeCycleLength) {
+    public CompletedOrdersByDateRangeInfo(LocalDate date, LocalDateRange range,
+                                          Long dateOrders, BigDecimal dateTotal,
+                                          Long rangeOrders, BigDecimal rangeTotal,
+                                          Integer rangeSalesLifeCycleLength) {
         this.date = date;
         this.range = range;
 

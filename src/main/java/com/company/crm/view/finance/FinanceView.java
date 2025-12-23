@@ -29,7 +29,6 @@ public class FinanceView extends StandardView {
     private void onInit(final InitEvent event) {
         InvoiceListView invoiceListView = views.create(InvoiceListView.class);
         PaymentListView paymentListView = views.create(PaymentListView.class);
-        paymentListView.addAttachListener(e -> paymentListView.loadData());
 
         tabSheet.add("Invoices", invoiceListView);
         tabSheet.add("Payments", paymentListView);

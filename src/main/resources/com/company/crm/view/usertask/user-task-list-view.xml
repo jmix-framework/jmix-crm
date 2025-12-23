@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <view xmlns="http://jmix.io/schema/flowui/view"
-      xmlns:c="http://jmix.io/schema/flowui/jpql-condition"
       title="msg://userTaskListView.title">
     <data>
         <collection id="userTasksDc"
@@ -44,6 +43,7 @@
                 <dataGrid id="userTasksDataGrid"
                           width="100%"
                           minHeight="10em"
+                          multiSort="true"
                           themeNames="row-stripes"
                           dataContainer="userTasksDc"
                           columnReorderingAllowed="true">

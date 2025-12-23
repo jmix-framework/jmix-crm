@@ -27,7 +27,6 @@ import java.util.function.Function;
 import static com.company.crm.app.feature.queryparameters.SimpleUrlQueryParametersBinder.getUrlQueryParametersFacet;
 import static com.company.crm.app.feature.queryparameters.SimpleUrlQueryParametersBinder.validateId;
 import static com.company.crm.app.feature.queryparameters.SimpleUrlQueryParametersBinder.validateIds;
-import static com.company.crm.app.util.enums.EnumUtils.fromId;
 import static java.util.Arrays.stream;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
@@ -168,9 +167,17 @@ public class FieldValueQueryParameterBinder extends AbstractUrlQueryParametersBi
             this.view = view;
         }
 
-        public <E extends Enum<?> & EnumClass<String>, C extends Select<E>> Builder addEnumBinding(Class<E> enumType, C... component) {
+        public <E extends Enum<?> & EnumClass<?>, C extends Select<E>> Builder addEnumBinding(Class<E> enumType, C... component) {
             for (C select : component) {
-                binders.add(new ComponentValueBinder<>(select, EnumClass::getId, id -> fromId(enumType, id)));
+                binders.add(new ComponentValueBinder<>(select,
+                        value -> value != null ? urlParamSerializer.serialize(value) : "",
+                        id -> {
+                            try {
+                                return urlParamSerializer.deserialize(enumType, id);
+                            } catch (Throwable ignored) {
+                                return null;
+                            }
+                        }));
             }
             return this;
         }

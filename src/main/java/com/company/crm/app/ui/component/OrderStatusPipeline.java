@@ -20,7 +20,7 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import static com.company.crm.app.util.ui.CrmUiUtils.setCursorPointer;
-import static com.company.crm.app.util.ui.color.StatusColors.getBackgroundClass;
+import static com.company.crm.app.util.ui.color.EnumClassColors.getBackgroundClass;
 import static java.lang.Math.divideExact;
 
 public class OrderStatusPipeline extends FormLayout implements ApplicationContextAware, InitializingBean {

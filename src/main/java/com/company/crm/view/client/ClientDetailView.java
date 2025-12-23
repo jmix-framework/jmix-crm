@@ -1,8 +1,8 @@
 package com.company.crm.view.client;
 
 import com.company.crm.app.feature.queryparameters.tab.TabIndexUrlQueryParameterBinder;
-import com.company.crm.app.service.client.CompletedOrdersInfo;
 import com.company.crm.app.service.client.ClientService;
+import com.company.crm.app.service.client.CompletedOrdersByDateRangeInfo;
 import com.company.crm.app.service.datetime.DateTimeService;
 import com.company.crm.app.ui.component.RecentActivitiesBlock;
 import com.company.crm.app.ui.component.card.CrmCard;
@@ -21,11 +21,9 @@ import com.vaadin.flow.router.Route;
 import io.jmix.chartsflowui.component.Chart;
 import io.jmix.chartsflowui.data.item.SimpleDataItem;
 import io.jmix.chartsflowui.kit.component.model.DataSet;
-import io.jmix.chartsflowui.kit.component.model.axis.AxisLine;
 import io.jmix.chartsflowui.kit.component.model.axis.SplitLine;
 import io.jmix.chartsflowui.kit.component.model.legend.Legend;
 import io.jmix.chartsflowui.kit.component.model.series.SeriesType;
-import io.jmix.chartsflowui.kit.component.model.shared.LineStyle;
 import io.jmix.chartsflowui.kit.data.chart.ListChartItems;
 import io.jmix.core.FetchPlan;
 import io.jmix.core.SaveContext;
@@ -168,7 +166,7 @@ public class ClientDetailView extends StandardDetailView<Client> implements Widt
         var dataItems = new ArrayList<SimpleDataItem>();
         for (var entry : ordersByFiveLastYears.entrySet()) {
             var stat = entry.getValue().stream().findFirst()
-                    .map(CompletedOrdersInfo::getRangeOrders).orElse(0L);
+                    .map(CompletedOrdersByDateRangeInfo::getRangeOrders).orElse(0L);
             dataItems.add(new SimpleDataItem(new YearNumberStatisticItemValue(entry.getKey(), stat)));
         }
 
@@ -186,7 +184,7 @@ public class ClientDetailView extends StandardDetailView<Client> implements Widt
         var dataItems = new ArrayList<SimpleDataItem>();
         for (var entry : ordersInfoForLastYears.entrySet()) {
             var stat = entry.getValue().stream().findFirst()
-                    .map(CompletedOrdersInfo::getRangeAverageBill).orElse(BigDecimal.ZERO);
+                    .map(CompletedOrdersByDateRangeInfo::getRangeAverageBill).orElse(BigDecimal.ZERO);
             dataItems.add(new SimpleDataItem(new YearNumberStatisticItemValue(entry.getKey(), stat)));
         }
 
@@ -204,7 +202,7 @@ public class ClientDetailView extends StandardDetailView<Client> implements Widt
         var dataItems = new ArrayList<SimpleDataItem>();
         for (var entry : ordersInfoForLastYears.entrySet()) {
             var stat = entry.getValue().stream().findFirst()
-                    .map(CompletedOrdersInfo::getRangeSalesLifeCycleLength).orElse(0);
+                    .map(CompletedOrdersByDateRangeInfo::getRangeSalesLifeCycleLength).orElse(0);
             dataItems.add(new SimpleDataItem(new YearNumberStatisticItemValue(entry.getKey(), stat)));
         }
 
@@ -218,8 +216,8 @@ public class ClientDetailView extends StandardDetailView<Client> implements Widt
 
     // FIXME: need to load orders info for years async
     //  for example on init event and cache it
-    private Map<Integer, List<CompletedOrdersInfo>> loadOrdersInfoForLastYears() {
-        var result = new HashMap<Integer, List<CompletedOrdersInfo>>();
+    private Map<Integer, List<CompletedOrdersByDateRangeInfo>> loadOrdersInfoForLastYears() {
+        var result = new HashMap<Integer, List<CompletedOrdersByDateRangeInfo>>();
         LocalDate currentYearStart = dateTimeService.getCurrentYearStart().toLocalDate();
         for (int i = 0; i < loadStatsForLastYearsAmount; i++) {
             currentYearStart = currentYearStart.minusYears(i > 0 ? 1 : 0);

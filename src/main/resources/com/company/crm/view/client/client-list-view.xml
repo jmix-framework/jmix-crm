@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <view xmlns="http://jmix.io/schema/flowui/view"
-      xmlns:c="http://jmix.io/schema/flowui/jpql-condition"
       title="msg://clientListView.title" focusMode="NO_FOCUS">
     <data>
         <collection id="clientsDc" class="com.company.crm.model.client.Client">
@@ -76,10 +75,11 @@
             <button id="removeButton" action="clientsDataGrid.removeAction"/>
             <simplePagination id="pagination" dataLoader="clientsDl" autoLoad="true"/>
         </hbox>
-        <dataGrid id="clientsDataGrid"
+        <dataGrid id="clientsDataGrid" dataContainer="clientsDc"
                   width="100%"
                   minHeight="30em"
-                  dataContainer="clientsDc"
+                  multiSort="true"
+                  themeNames="column-borders"
                   columnReorderingAllowed="true"
                   selectionMode="MULTI">
             <actions>

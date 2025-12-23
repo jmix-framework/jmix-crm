@@ -9,26 +9,27 @@ import com.company.crm.model.catalog.item.CategoryItem;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.client.ClientType;
 import com.company.crm.model.invoice.Invoice;
+import com.company.crm.model.invoice.InvoiceStatus;
 import com.company.crm.model.order.Order;
 import com.company.crm.model.order.OrderItem;
 import com.company.crm.model.order.OrderStatus;
 import com.company.crm.model.user.User;
 import com.company.crm.model.user.task.UserTask;
 import com.company.crm.view.client.ClientDetailView;
+import com.company.crm.view.order.OrderDetailView;
 import com.company.crm.view.user.UserDetailView;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.popover.Popover;
 import com.vaadin.flow.component.shared.Tooltip;
-import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.Renderer;
 import io.jmix.core.Messages;
+import io.jmix.core.MetadataTools;
 import io.jmix.core.metamodel.datatype.DatatypeFormatter;
 import io.jmix.flowui.DialogWindows;
 import io.jmix.flowui.UiComponents;
@@ -45,9 +46,8 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import static com.company.crm.app.util.ui.color.StatusColors.getBadgeVariant;
+import static com.company.crm.app.util.ui.color.EnumClassColors.getBadgeVariant;
 import static io.jmix.flowui.component.UiComponentUtils.getCurrentView;
-import static java.util.concurrent.CompletableFuture.delayedExecutor;
 
 @Component
 public class CrmRenderers {
@@ -58,14 +58,16 @@ public class CrmRenderers {
     private final DatatypeFormatter datatypeFormatter;
     private final DateTimeService dateTimeService;
     private final UiAsyncTasks uiAsyncTasks;
+    private final MetadataTools metadataTools;
 
-    public CrmRenderers(UiComponents uiComponents, DialogWindows dialogWindows, Messages messages, DatatypeFormatter datatypeFormatter, DateTimeService dateTimeService, UiAsyncTasks uiAsyncTasks) {
+    public CrmRenderers(UiComponents uiComponents, DialogWindows dialogWindows, Messages messages, DatatypeFormatter datatypeFormatter, DateTimeService dateTimeService, UiAsyncTasks uiAsyncTasks, MetadataTools metadataTools) {
         this.messages = messages;
         this.uiComponents = uiComponents;
         this.dialogWindows = dialogWindows;
         this.datatypeFormatter = datatypeFormatter;
         this.dateTimeService = dateTimeService;
         this.uiAsyncTasks = uiAsyncTasks;
+        this.metadataTools = metadataTools;
     }
 
     public <SOURCE> ComponentRenderer<Button, SOURCE> longTextRenderer(
@@ -135,12 +137,39 @@ public class CrmRenderers {
         });
     }
 
+    public <E extends UuidEntity, LINK extends UuidEntity> Renderer<E> entityLink(Function<E, LINK> linkGetter) {
+        return entityLink(linkGetter, metadataTools::getInstanceName);
+    }
+
+    public <E extends UuidEntity, LINK extends UuidEntity> Renderer<E> entityLink(Function<E, LINK> linkGetter,
+                                                                                  Function<LINK, String> textProvider) {
+        return new ComponentRenderer<>(entity -> {
+            LINK link = linkGetter.apply(entity);
+            JmixButton button = entityLinkButton(link, textProvider, textProvider);
+            button.addClickListener(e -> {
+                //noinspection unchecked
+                dialogWindows.detail(UiComponentUtils.getCurrentView(), ((Class<LINK>) link.getClass()))
+                        .editEntity(link)
+                        .withViewConfigurer(v -> {
+                            if (v instanceof StandardDetailView<?> detailView) {
+                                detailView.setReadOnly(true);
+                            }
+                        }).open();
+            });
+            return button;
+        });
+    }
+
     public Renderer<Invoice> invoiceClientLink() {
         return new ComponentRenderer<>(invoice -> clientLinkButton(invoice.getClient()));
     }
 
     public Renderer<Order> orderClientLink() {
         return new ComponentRenderer<>(order -> clientLinkButton(order.getClient()));
+    }
+
+    public Renderer<Invoice> invoiceOrderLink() {
+        return new ComponentRenderer<>(invoice -> orderLinkButton(invoice.getOrder()));
     }
 
     public Renderer<Client> accountManagerLink() {
@@ -190,11 +219,19 @@ public class CrmRenderers {
         return new ComponentRenderer<>(order -> createOrderStatusBadge(order.getStatus()));
     }
 
+    public Renderer<Invoice> invoiceStatus() {
+        return new ComponentRenderer<>(invoice -> createInvoiceStatusBadge(invoice.getStatus()));
+    }
+
     public ComponentRenderer<Span, OrderStatus> orderStatusEnum() {
         return new ComponentRenderer<>(this::createOrderStatusBadge);
     }
 
     public Span createOrderStatusBadge(OrderStatus status) {
+        return createBadge(messages.getMessage(status), getBadgeVariant(status));
+    }
+
+    public Span createInvoiceStatusBadge(InvoiceStatus status) {
         return createBadge(messages.getMessage(status), getBadgeVariant(status));
     }
 
@@ -249,6 +286,14 @@ public class CrmRenderers {
                 entityLinkButton(client, Client::getName, Client::getFullName);
         button.addClickListener(event ->
                 openReadOnlyDetailDialog(client, Client.class, ClientDetailView.class));
+        return button;
+    }
+
+    private JmixButton orderLinkButton(Order order) {
+        JmixButton button =
+                entityLinkButton(order, Order::getNumber, o -> o.getInstanceName(datatypeFormatter));
+        button.addClickListener(event ->
+                openReadOnlyDetailDialog(order, Order.class, OrderDetailView.class));
         return button;
     }
 

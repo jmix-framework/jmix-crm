@@ -49,10 +49,10 @@ import java.util.Map;
 import java.util.Optional;
 
 import static com.company.crm.app.util.ui.CrmUiUtils.addColumnHeaderCurrencySuffix;
+import static com.company.crm.app.util.ui.datacontext.DataContextUtils.wrapContext;
 import static io.jmix.core.querycondition.PropertyCondition.equal;
 import static io.jmix.core.querycondition.PropertyCondition.greaterOrEqual;
 import static io.jmix.core.querycondition.PropertyCondition.lessOrEqual;
-import static org.apache.commons.lang3.StringUtils.substringAfterLast;
 
 @Route(value = "orders", layout = MainView.class)
 @ViewController(id = "Order.list")
@@ -89,14 +89,14 @@ public class OrderListView extends StandardListView<Order> {
     private TypedDatePicker<LocalDate> toDatePicker;
     @ViewComponent
     private OrderStatusPipeline pipeLineFilter;
+    @ViewComponent
+    private DataGrid<Order> ordersDataGrid;
 
     private final LogicalCondition filtersCondition = LogicalCondition.and();
     private final AsyncTasksRegistry asyncTasksRegistry = AsyncTasksRegistry.newInstance();
 
     private Optional<OrderStatus> selectedStatus = Optional.empty();
     private SimpleUrlQueryParametersBinder selectedStatusUrlParameterBinder;
-    @ViewComponent
-    private DataGrid<Order> ordersDataGrid;
 
     @Subscribe
     private void onInit(final InitEvent event) {
@@ -114,17 +114,17 @@ public class OrderListView extends StandardListView<Order> {
 
     @Install(to = "ordersDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
     private List<Order> loadDelegate(Pageable pageable, JmixDataRepositoryContext context) {
-        return orderRepository.findAll(pageable, wrapContext(context)).getContent();
+        return orderRepository.findAll(pageable, wrapContext(context, filtersCondition)).getContent();
+    }
+
+    @Install(to = "pagination", subject = "totalCountByRepositoryDelegate")
+    private Long paginationTotalCountByRepositoryDelegate(final JmixDataRepositoryContext context) {
+        return orderRepository.count(wrapContext(context, filtersCondition));
     }
 
     @Install(to = "ordersDataGrid.removeAction", subject = "delegate")
     private void ordersDataGridRemoveDelegate(final Collection<Order> collection) {
         orderRepository.deleteAll(collection);
-    }
-
-    @Install(to = "pagination", subject = "totalCountByRepositoryDelegate")
-    private Long paginationTotalCountByRepositoryDelegate(final JmixDataRepositoryContext context) {
-        return orderRepository.count(wrapContext(context));
     }
 
     @Supply(to = "ordersDataGrid.client", subject = "renderer")
@@ -177,16 +177,6 @@ public class OrderListView extends StandardListView<Order> {
                         selectedStatus = Optional.ofNullable(OrderStatus.fromStringId(id))));
     }
 
-    private JmixDataRepositoryContext wrapContext(JmixDataRepositoryContext context) {
-        LogicalCondition resultCondition;
-        if (context.condition() != null) {
-            resultCondition = LogicalCondition.and(context.condition(), filtersCondition);
-        } else {
-            resultCondition = filtersCondition;
-        }
-        return new JmixDataRepositoryContext(context.fetchPlan(), resultCondition, context.hints());
-    }
-
     private void applyFilters() {
         updateFiltersCondition();
         ordersDl.load();
@@ -204,11 +194,6 @@ public class OrderListView extends StandardListView<Order> {
         addDateRangeConditions();
     }
 
-    private void addDateRangeConditions() {
-        addSearchByFromDateCondition();
-        addSearchByToDateCondition();
-    }
-
     private void addSearchBySelectedStatus() {
         selectedStatus.ifPresent(status ->
                 filtersCondition.add(equal("status", status)));
@@ -222,6 +207,11 @@ public class OrderListView extends StandardListView<Order> {
     private void addSearchByClientCondition() {
         clientComboBox.getOptionalValue().ifPresent(client ->
                 filtersCondition.add(equal("client", client)));
+    }
+
+    private void addDateRangeConditions() {
+        addSearchByFromDateCondition();
+        addSearchByToDateCondition();
     }
 
     private void addSearchByFromDateCondition() {

@@ -37,7 +37,7 @@
 
                 <textField id="searchField" valueChangeMode="EAGER" valueChangeTimeout="500"
                            placeholder="msg://searchFieldPlaceholder" clearButtonVisible="true"
-                           classNames="ms-auto me-l" minWidth="20em">
+                           classNames="ms-auto me-l" minWidth="6em" width="14vw">
                     <suffix>
                         <icon icon="SEARCH"/>
                     </suffix>

@@ -9,12 +9,10 @@ import io.jmix.core.FetchPlan;
 import io.jmix.core.FetchPlanBuilder;
 import io.jmix.core.FetchPlans;
 import io.jmix.core.FluentValueLoader;
-import org.jspecify.annotations.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -25,8 +23,6 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 import static java.util.Arrays.asList;
-import static java.util.Map.Entry.comparingByValue;
-import static java.util.stream.Collectors.toMap;
 
 @Service
 public class ClientService {
@@ -39,8 +35,7 @@ public class ClientService {
         this.clientRepository = clientRepository;
     }
 
-
-    public List<CompletedOrdersInfo> getCompletedOrdersInfo(@Nullable LocalDateRange dateRange, Client... clients) {
+    public List<CompletedOrdersByDateRangeInfo> getCompletedOrdersInfo(@Nullable LocalDateRange dateRange, Client... clients) {
         boolean clientsSpecified = clients.length > 0;
 
         StringBuilder query = new StringBuilder(
@@ -85,7 +80,8 @@ public class ClientService {
             LocalDate date = keyValue.getValue("orderDate");
             BigDecimal dateTotalSum = keyValue.getValue("total");
             Long dateAmount = keyValue.getValue("amount");
-            return new CompletedOrdersInfo(date, dateRange, dateAmount, dateTotalSum, rangeTotalAmount, rangeTotalSum, salesCycleLength);
+            return new CompletedOrdersByDateRangeInfo(date, dateRange, dateAmount,
+                    dateTotalSum, rangeTotalAmount, rangeTotalSum, salesCycleLength);
         }).toList();
     }
 
@@ -199,6 +195,30 @@ public class ClientService {
         }
 
         return (int) (sumDays / ordersCount);
+    }
+
+    /**
+     * Retrieves the count of clients grouped by their type using JPQL aggregation.
+     * This method is lightweight and does not load client entities into memory.
+     *
+     * @return a map where the key is the {@link ClientType} and the value is the count of clients with that type.
+     */
+    public Map<ClientType, Long> getClientsCountByType() {
+        Map<ClientType, Long> countsByType = new HashMap<>();
+
+        clientRepository.fluentValuesLoader(
+                        "select e.type as type, count(e) as amount " +
+                                "from Client e " +
+                                "group by e.type")
+                .properties("type", "amount")
+                .list()
+                .forEach(keyValue -> {
+                    ClientType type = keyValue.getValue("type");
+                    Long count = keyValue.getValue("amount");
+                    countsByType.put(type, count);
+                });
+
+        return countsByType;
     }
 
     /**

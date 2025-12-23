@@ -42,11 +42,11 @@
             </dropdownButton>
             <simplePagination id="pagination" dataLoader="usersDl"/>
         </hbox>
-        <dataGrid id="usersDataGrid"
+        <dataGrid id="usersDataGrid" dataContainer="usersDc"
                   width="100%"
-                  columnReorderingAllowed="true"
                   minHeight="20em"
-                  dataContainer="usersDc">
+                  multiSort="true"
+                  columnReorderingAllowed="true">
             <actions>
                 <action id="createAction" type="list_create"/>
                 <action id="editAction" type="list_edit"/>

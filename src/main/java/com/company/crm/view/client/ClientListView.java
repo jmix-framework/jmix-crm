@@ -8,7 +8,6 @@ import com.company.crm.app.service.user.UserService;
 import com.company.crm.app.ui.component.CrmLoader;
 import com.company.crm.app.ui.component.card.CrmCard;
 import com.company.crm.app.util.AsyncTasksRegistry;
-import com.company.crm.app.util.ui.CrmUiUtils;
 import com.company.crm.app.util.ui.listener.resize.WidthResizeListener;
 import com.company.crm.app.util.ui.renderer.CrmRenderers;
 import com.company.crm.model.client.Client;
@@ -67,6 +66,7 @@ import static com.company.crm.app.feature.sortable.SortableFeature.makeSortable;
 import static com.company.crm.app.util.demo.DemoUtils.defaultSleepForStatisticLoading;
 import static com.company.crm.app.util.ui.CrmUiUtils.addRowSelectionInMultiSelectMode;
 import static com.company.crm.app.util.ui.CrmUiUtils.openLink;
+import static com.company.crm.app.util.ui.datacontext.DataContextUtils.wrapContext;
 import static com.company.crm.app.util.ui.listener.resize.WidthResizeListener.isWidthChanged;
 import static io.jmix.core.querycondition.PropertyCondition.contains;
 import static io.jmix.core.querycondition.PropertyCondition.equal;
@@ -149,7 +149,7 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
 
     @Install(to = "clientsDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
     private List<Client> loadDelegate(Pageable pageable, JmixDataRepositoryContext context) {
-        return clientRepository.findAll(pageable, wrapContext(context)).getContent();
+        return clientRepository.findAll(pageable, wrapContext(context, filtersCondition)).getContent();
     }
 
     @Install(to = "clientsDataGrid.removeAction", subject = "delegate")
@@ -159,7 +159,7 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
 
     @Install(to = "pagination", subject = "totalCountByRepositoryDelegate")
     private Long paginationTotalCountByRepositoryDelegate(final JmixDataRepositoryContext context) {
-        return clientRepository.count(wrapContext(context));
+        return clientRepository.count(wrapContext(context, filtersCondition));
     }
 
     @Subscribe("showOnlyMyClientsCheckBox")
@@ -223,16 +223,6 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
                 return withoutProtocol.isBlank() ? website : withoutProtocol;
             }
         }, c -> openLink(c.getWebsite()));
-    }
-
-    private JmixDataRepositoryContext wrapContext(JmixDataRepositoryContext context) {
-        LogicalCondition resultCondition;
-        if (context.condition() != null) {
-            resultCondition = LogicalCondition.and(context.condition(), filtersCondition);
-        } else {
-            resultCondition = filtersCondition;
-        }
-        return new JmixDataRepositoryContext(context.fetchPlan(), resultCondition, context.hints());
     }
 
     private void initializeStatsBlock() {

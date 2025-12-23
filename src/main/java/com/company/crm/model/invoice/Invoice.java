@@ -54,7 +54,8 @@ public class Invoice extends FullAuditEntity {
     @Column(name = "SUBTOTAL")
     private BigDecimal subtotal;
 
-    @Column(name = "VAT", precision = 19, scale = 2)
+    @PropertyDatatype(PriceDataType.NAME)
+    @Column(name = "VAT")
     private BigDecimal vat;
 
     @PropertyDatatype(PriceDataType.NAME)

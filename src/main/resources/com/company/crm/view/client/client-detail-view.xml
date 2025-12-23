@@ -133,7 +133,7 @@
                                     <button id="removeButton" action="contactsDataGrid.removeAction"/>
                                 </startSlot>
                             </hbox>
-                            <dataGrid id="contactsDataGrid" dataContainer="contactsDc">
+                            <dataGrid id="contactsDataGrid" dataContainer="contactsDc" multiSort="true">
                                 <actions>
                                     <action id="createAction" type="list_create"/>
                                     <action id="editAction" type="list_edit"/>
@@ -149,7 +149,7 @@
                     </tab>
                     <tab id="ordersTab" label="msg://ordersTabLabel">
                         <vbox width="100%" height="100%">
-                            <dataGrid id="ordersDataGrid" dataContainer="ordersDc">
+                            <dataGrid id="ordersDataGrid" dataContainer="ordersDc" multiSort="true">
                                 <columns sortable="true">
                                     <column property="status" filterable="true"/>
                                     <column property="date"/>
@@ -160,7 +160,7 @@
                     </tab>
                     <tab id="invoicesTab" label="msg://invoicesTabLabel">
                         <vbox width="100%" height="100%">
-                            <dataGrid id="invoicesDataGrid" dataContainer="invoicesDc">
+                            <dataGrid id="invoicesDataGrid" dataContainer="invoicesDc" multiSort="true">
                                 <columns sortable="true">
                                     <column property="status" filterable="true"/>
                                     <column property="date" filterable="true"/>
@@ -171,7 +171,7 @@
                     </tab>
                     <tab id="paymentsTab" label="msg://paymentsTabLabel">
                         <vbox width="100%" height="100%">
-                            <dataGrid id="paymentsDataGrid" dataContainer="paymentsDc">
+                            <dataGrid id="paymentsDataGrid" dataContainer="paymentsDc" multiSort="true">
                                 <columns sortable="true">
                                     <column property="invoice" filterable="true"/>
                                     <column property="date" filterable="true"/>
@@ -182,7 +182,7 @@
                     </tab>
                     <tab id="activitiesTab" label="msg://activitiesTabLabel">
                         <vbox width="100%" height="100%">
-                            <dataGrid id="activitiesDataGrid" dataContainer="activitiesDc">
+                            <dataGrid id="activitiesDataGrid" dataContainer="activitiesDc" multiSort="true">
                                 <columns sortable="true">
                                     <column property="actionDescription" filterable="true"/>
                                 </columns>

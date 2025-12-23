@@ -72,7 +72,7 @@
                         <button id="removeButton" action="orderItemsGrid.removeAction"/>
                     </startSlot>
                 </hbox>
-                <dataGrid id="orderItemsGrid" dataContainer="orderItemsDc" width="100%" minHeight="15em">
+                <dataGrid id="orderItemsGrid" dataContainer="orderItemsDc" width="100%" minHeight="15em" multiSort="true">
                     <actions>
                         <action id="createAction" type="list_create">
                             <properties>

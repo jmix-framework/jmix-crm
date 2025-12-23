@@ -53,6 +53,7 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 import static com.company.crm.app.util.ui.CrmUiUtils.addRowSelectionInMultiSelectMode;
+import static com.company.crm.app.util.ui.datacontext.DataContextUtils.wrapContext;
 import static io.jmix.core.querycondition.PropertyCondition.contains;
 import static io.jmix.core.querycondition.PropertyCondition.equal;
 
@@ -100,7 +101,7 @@ public class CategoryItemListView extends StandardListView<CategoryItem> {
 
     @Install(to = "categoryItemsDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
     private List<CategoryItem> loadDelegate(Pageable pageable, JmixDataRepositoryContext context) {
-        return itemRepository.findAll(pageable, wrapContext(context)).getContent();
+        return itemRepository.findAll(pageable, wrapContext(context, filtersCondition)).getContent();
     }
 
     @Install(to = "categoryItemsDataGrid.removeAction", subject = "delegate")
@@ -110,22 +111,12 @@ public class CategoryItemListView extends StandardListView<CategoryItem> {
 
     @Install(to = "pagination", subject = "totalCountByRepositoryDelegate")
     private Long paginationTotalCountByRepositoryDelegate(final JmixDataRepositoryContext context) {
-        return itemRepository.count(wrapContext(context));
+        return itemRepository.count(wrapContext(context, filtersCondition));
     }
 
     @Supply(to = "categoryItemsDataGrid.code", subject = "renderer")
     private Renderer<CategoryItem> categoryItemsDataGridCodeRenderer() {
         return crmRenderers.categoryItemCode();
-    }
-
-    private JmixDataRepositoryContext wrapContext(JmixDataRepositoryContext context) {
-        LogicalCondition resultCondition;
-        if (context.condition() != null) {
-            resultCondition = LogicalCondition.and(context.condition(), filtersCondition);
-        } else {
-            resultCondition = filtersCondition;
-        }
-        return new JmixDataRepositoryContext(context.fetchPlan(), resultCondition, context.hints());
     }
 
     private void updateFiltersCondition() {
