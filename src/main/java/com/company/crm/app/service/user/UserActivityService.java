@@ -17,14 +17,15 @@ import java.util.List;
 @Service
 public class UserActivityService {
 
-    private final List<UserActivityRepository> userActivityRepositories;
+    private final List<UserActivityRepository<?>> userActivityRepositories;
     private final ClientUserActivityRepository clientUserActivityRepository;
 
-    public UserActivityService(List<UserActivityRepository> userActivityRepositories, ClientUserActivityRepository clientUserActivityRepository) {
+    public UserActivityService(List<UserActivityRepository<?>> userActivityRepositories, ClientUserActivityRepository clientUserActivityRepository) {
         this.userActivityRepositories = userActivityRepositories;
         this.clientUserActivityRepository = clientUserActivityRepository;
     }
 
+    @SuppressWarnings("unchecked")
     public List<? extends UserActivity> loadActivities(OffsetDateTimeRange dateTimeRange, int offset, int limit) {
         return userActivityRepositories.stream()
                 .flatMap(repository -> repository.findAllByCreatedDateGreaterThanEqualAndCreatedDateLessThanEqual(

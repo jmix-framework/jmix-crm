@@ -2,7 +2,6 @@ package com.company.crm.model.base;
 
 import io.jmix.core.metamodel.annotation.JmixEntity;
 import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
 import jakarta.persistence.MappedSuperclass;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;

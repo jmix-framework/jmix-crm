@@ -12,6 +12,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.lang.Nullable;
 
 import java.util.HashMap;
 import java.util.List;
@@ -56,8 +57,13 @@ public class OrderStatusPipeline extends FormLayout implements ApplicationContex
         deselectStatus(OrderStatus.values());
     }
 
-    public void selectUntil(OrderStatus status) {
+    public void selectUntil(@Nullable OrderStatus status) {
         deselectAllStatuses();
+
+        if (status == null) {
+            return;
+        }
+
         for (OrderStatus orderStatus : OrderStatus.values()) {
             selectStatus(orderStatus);
             if (orderStatus.equals(status)) {

@@ -4,7 +4,6 @@ import com.company.crm.model.settings.CrmSettings;
 import io.jmix.appsettings.AppSettings;
 import io.jmix.flowui.xml.layout.loader.MainViewLoader;
 import org.dom4j.Element;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 

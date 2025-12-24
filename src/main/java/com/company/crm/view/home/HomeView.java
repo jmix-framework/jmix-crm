@@ -5,17 +5,16 @@ import com.company.crm.app.service.finance.InvoiceService;
 import com.company.crm.app.service.finance.PaymentService;
 import com.company.crm.app.service.order.OrderService;
 import com.company.crm.app.ui.component.RecentActivitiesBlock;
-import com.company.crm.app.ui.component.card.CrmCard;
 import com.company.crm.app.ui.component.card.CardPeriod;
+import com.company.crm.app.ui.component.card.CrmCard;
 import com.company.crm.app.ui.component.card.CrmCard.RangeStatCardInfo;
-import com.company.crm.app.util.ui.CrmUiUtils;
 import com.company.crm.app.util.ui.listener.resize.WidthResizeListener;
 import com.company.crm.app.util.ui.renderer.CrmRenderers;
 import com.company.crm.model.datatype.PriceDataType;
+import com.company.crm.model.invoice.Invoice;
 import com.company.crm.model.order.Order;
 import com.company.crm.model.order.OrderStatus;
 import com.company.crm.model.payment.Payment;
-import com.company.crm.model.invoice.Invoice;
 import com.company.crm.view.main.MainView;
 import com.company.crm.view.usertask.UserTaskListView;
 import com.vaadin.flow.component.Component;
@@ -30,10 +29,8 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 import com.vaadin.flow.theme.lumo.LumoUtility.Margin;
 import io.jmix.chartsflowui.component.Chart;
 import io.jmix.chartsflowui.kit.component.model.DataSet;
@@ -75,7 +72,6 @@ import java.util.List;
 import java.util.Map;
 
 import static com.company.crm.app.feature.sortable.SortableFeature.makeSortable;
-import static com.company.crm.app.util.ui.CrmUiUtils.makeResizable;
 import static com.company.crm.app.util.ui.listener.resize.WidthResizeListener.isWidthChanged;
 import static io.jmix.flowui.component.UiComponentUtils.traverseComponents;
 
@@ -199,19 +195,18 @@ public class HomeView extends StandardView implements WidthResizeListener {
         var newTaskButton = new Button("New Task");
         newTaskButton.setIcon(VaadinIcon.PLUS.create());
         newTaskButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        newTaskButton.addClickListener(clickEvent -> {
-            dialogWindows.view(this, UserTaskListView.class)
-                    .withViewConfigurer(UserTaskListView::detailOnly)
-                    .withAfterCloseListener(closeEvent -> {
-                        if (closeEvent.closedWith(StandardOutcome.SAVE)) {
-                            traverseComponents(this, component -> {
-                                if (component instanceof UserTaskListView userTaskListView) {
-                                    userTaskListView.reloadData();
-                                }
-                            });
-                        }
-                    }).open();
-        });
+        newTaskButton.addClickListener(clickEvent ->
+                dialogWindows.view(this, UserTaskListView.class)
+                        .withViewConfigurer(UserTaskListView::detailOnly)
+                        .withAfterCloseListener(closeEvent -> {
+                            if (closeEvent.closedWith(StandardOutcome.SAVE)) {
+                                traverseComponents(this, component -> {
+                                    if (component instanceof UserTaskListView userTaskListView) {
+                                        userTaskListView.reloadData();
+                                    }
+                                });
+                            }
+                        }).open());
         container.add(newTaskButton);
 
         return container;
@@ -231,7 +226,7 @@ public class HomeView extends StandardView implements WidthResizeListener {
 
     private void doCreateCards(List<JmixCard> cards, JmixFormLayout form) {
         for (JmixCard card : cards) {
-            makeResizable(card).addClassName(Margin.Top.MEDIUM);
+            card.addClassName(Margin.Top.MEDIUM);
             form.add(card);
         }
     }

@@ -23,7 +23,11 @@ public class OrderStatusAmountValueDescription {
 
     @Override
     public boolean equals(Object obj) {
-        return EqualsBuilder.reflectionEquals(this, obj);
+        if (obj instanceof OrderStatusAmountValueDescription) {
+            return EqualsBuilder.reflectionEquals(this, obj);
+        } else {
+            return false;
+        }
     }
 
     @Override

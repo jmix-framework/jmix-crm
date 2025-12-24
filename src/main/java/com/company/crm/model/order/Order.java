@@ -21,8 +21,8 @@ import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import org.apache.commons.lang3.StringUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -57,7 +57,7 @@ public class Order extends FullAuditEntity {
     private String comment;
 
     @PropertyDatatype(PriceDataType.NAME)
-    @Column(name = "TOTAL", precision = 19, scale = 2)
+    @Column(name = "TOTAL")
     private BigDecimal total;
 
     // TODO: OVERALL_DISCOUNT_VALUE?
@@ -156,10 +156,15 @@ public class Order extends FullAuditEntity {
     @InstanceName
     @DependsOnProperties({"number", "date", "total"})
     public String getInstanceName(DatatypeFormatter datatypeFormatter) {
-        return String.format("%s | %s | %s$",
-                getNumber(),
-                datatypeFormatter.formatLocalDate(date),
-                datatypeFormatter.formatBigDecimal(total));
+        String orderNumber = getNumber();
+        if (StringUtils.isNotBlank(orderNumber)) {
+            return String.format("%s | %s | %s$",
+                    orderNumber,
+                    datatypeFormatter.formatLocalDate(date),
+                    datatypeFormatter.formatBigDecimal(total));
+        } else {
+            return "New Order";
+        }
     }
 
     public String getNumber() {

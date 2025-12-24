@@ -87,13 +87,13 @@ public class TabIndexUrlQueryParameterBinder extends AbstractUrlQueryParametersB
     private SimpleUrlQueryParametersBinder doCreateDelegate(UrlQueryParametersFacet facet,
                                                             JmixTabSheet tabSheet, int minTabValue, int maxTabValue) {
         validateId(tabSheet);
-        return createTabSheetBinder(tabSheet.getId().get(), facet, tabSheet::getSelectedIndex, tabSheet::setSelectedIndex, minTabValue, maxTabValue);
+        return createTabSheetBinder(tabSheet.getId().orElseThrow(), facet, tabSheet::getSelectedIndex, tabSheet::setSelectedIndex, minTabValue, maxTabValue);
     }
 
     private SimpleUrlQueryParametersBinder doCreateDelegate(UrlQueryParametersFacet facet,
                                                             Tabs tabs, int minTabValue, int maxTabValue) {
         validateId(tabs);
-        return createTabSheetBinder(tabs.getId().get(), facet, tabs::getSelectedIndex, tabs::setSelectedIndex, minTabValue, maxTabValue);
+        return createTabSheetBinder(tabs.getId().orElseThrow(), facet, tabs::getSelectedIndex, tabs::setSelectedIndex, minTabValue, maxTabValue);
     }
 
     private static SimpleUrlQueryParametersBinder createTabSheetBinder(String tabOwnerId, UrlQueryParametersFacet facet,

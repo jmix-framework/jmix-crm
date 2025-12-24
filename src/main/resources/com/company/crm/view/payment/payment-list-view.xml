@@ -35,6 +35,13 @@
         <action id="discardAction" type="lookup_discard"/>
     </actions>
     <layout>
+        <formLayout id="chartsBlock" width="100%">
+            <responsiveSteps>
+                <responsiveStep minWidth="0" columns="1"/>
+                <responsiveStep minWidth="40em" columns="2"/>
+            </responsiveSteps>
+        </formLayout>
+
         <div width="100%" maxWidth="60em">
             <formLayout width="100%">
                 <responsiveSteps>
@@ -73,6 +80,7 @@
                 <properties include=".*"/>
             </genericFilter>
         </div>
+
         <hbox id="buttonsPanel" classNames="buttons-panel">
             <startSlot>
                 <button id="createButton" action="paymentsDataGrid.createAction"/>

@@ -14,7 +14,14 @@ import io.jmix.flowui.DialogWindows;
 import io.jmix.flowui.Notifications;
 import io.jmix.flowui.component.textfield.TypedTextField;
 import io.jmix.flowui.kit.component.button.JmixButton;
-import io.jmix.flowui.view.*;
+import io.jmix.flowui.view.DialogWindow;
+import io.jmix.flowui.view.EditedEntityContainer;
+import io.jmix.flowui.view.MessageBundle;
+import io.jmix.flowui.view.StandardDetailView;
+import io.jmix.flowui.view.Subscribe;
+import io.jmix.flowui.view.ViewComponent;
+import io.jmix.flowui.view.ViewController;
+import io.jmix.flowui.view.ViewDescriptor;
 import io.jmix.securityflowui.view.changepassword.ChangePasswordView;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -84,9 +91,8 @@ public class UserDetailView extends StandardDetailView<User> {
         boolean canChangePassword = editedEntity.equals(currentUser) || roleUtils.isAdmin(currentUser);
         changePasswordButton.setVisible(canChangePassword && !isReadOnly());
         if (canChangePassword) {
-            changePasswordButton.addClickListener(e -> {
-                showChangePasswordDialog(editedEntity);
-            });
+            changePasswordButton.addClickListener(e ->
+                    showChangePasswordDialog(editedEntity));
         }
     }
 

@@ -2,6 +2,7 @@ package com.company.crm.model.settings;
 
 import io.jmix.appsettings.defaults.AppSettingsDefaultBoolean;
 import io.jmix.appsettings.entity.AppSettingsEntity;
+import io.jmix.core.metamodel.annotation.InstanceName;
 import io.jmix.core.metamodel.annotation.JmixEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -37,6 +38,11 @@ public class CrmSettings extends AppSettingsEntity {
     @LastModifiedDate
     @Column(name = "LAST_MODIFIED_DATE")
     private OffsetDateTime lastModifiedDate;
+
+    @InstanceName
+    public String getInstanceName() {
+        return getClass().getSimpleName();
+    }
 
     public Boolean getNavigationBarTouchOptimized() {
         return navigationBarTouchOptimized;

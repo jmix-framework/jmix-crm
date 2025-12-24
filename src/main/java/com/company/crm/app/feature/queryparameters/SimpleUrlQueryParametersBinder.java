@@ -8,7 +8,6 @@ import io.jmix.flowui.facet.urlqueryparameters.AbstractUrlQueryParametersBinder;
 import io.jmix.flowui.view.View;
 import io.jmix.flowui.view.ViewControllerUtils;
 
-import java.util.Collection;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 

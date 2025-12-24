@@ -21,7 +21,11 @@ public class ClientCategoryValueDescription {
 
     @Override
     public boolean equals(Object obj) {
-        return EqualsBuilder.reflectionEquals(this, obj);
+        if (obj instanceof ClientCategoryValueDescription) {
+            return EqualsBuilder.reflectionEquals(this, obj);
+        } else {
+            return false;
+        }
     }
 
     @Override

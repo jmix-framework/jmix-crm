@@ -6,7 +6,6 @@ import com.vaadin.flow.component.HasSize;
 import com.vaadin.flow.dom.Element;
 import io.jmix.flowui.component.UiComponentUtils;
 import io.jmix.flowui.facet.SettingsFacet;
-import io.jmix.flowui.view.StandardView;
 import io.jmix.flowui.view.View;
 import io.jmix.flowui.view.ViewControllerUtils;
 import org.vaadin.jchristophe.SortableConfig;

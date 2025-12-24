@@ -3,7 +3,6 @@ package com.company.crm.app.service.datetime;
 import com.company.crm.app.util.date.range.LocalDateRange;
 import io.jmix.core.TimeSource;
 import io.jmix.core.security.CurrentAuthentication;
-import org.jspecify.annotations.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 

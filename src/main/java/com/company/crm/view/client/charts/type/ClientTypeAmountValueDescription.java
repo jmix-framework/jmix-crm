@@ -23,7 +23,11 @@ public class ClientTypeAmountValueDescription {
 
     @Override
     public boolean equals(Object obj) {
-        return EqualsBuilder.reflectionEquals(this, obj);
+        if (obj instanceof ClientTypeAmountValueDescription) {
+            return EqualsBuilder.reflectionEquals(this, obj);
+        } else {
+            return false;
+        }
     }
 
     @Override

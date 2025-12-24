@@ -1,6 +1,7 @@
 package com.company.crm.model.payment;
 
 import com.company.crm.model.base.FullAuditEntity;
+import com.company.crm.model.client.Client;
 import com.company.crm.model.datatype.PriceDataType;
 import com.company.crm.model.invoice.Invoice;
 import com.company.crm.model.order.Order;
@@ -35,13 +36,19 @@ public class Payment extends FullAuditEntity {
     private LocalDate date;
 
     @PropertyDatatype(PriceDataType.NAME)
-    @Column(name = "AMOUNT", precision = 19, scale = 2)
+    @Column(name = "AMOUNT")
     private BigDecimal amount;
 
     @JmixProperty
     @DependsOnProperties("invoice")
     public Order getOrder() {
         return invoice.getOrder();
+    }
+
+    @JmixProperty
+    @DependsOnProperties("invoice")
+    public Client getClient() {
+        return invoice.getClient();
     }
 
     @InstanceName

@@ -1,7 +1,6 @@
 package com.company.crm.view.main;
 
 import com.company.crm.app.ui.component.CrmLoader;
-import com.company.crm.app.util.demo.DemoUtils;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.client.ClientRepository;
 import com.company.crm.model.user.User;
@@ -338,6 +337,7 @@ public class MainView extends StandardMainView {
                 .ifPresent(this::selectRelatedMenuItem);
     }
 
+    @SuppressWarnings("rawtypes")
     private void selectRelatedMenuItem(Class<? extends View> viewClass) {
         MenuItemStructure menuStructure = buildMenuStructure();
         for (MenuItemInfo itemInfo : menuStructure.itemsInfo()) {

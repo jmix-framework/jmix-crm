@@ -20,7 +20,6 @@ import com.company.crm.model.user.task.UserTask;
 import com.company.crm.security.FullAccessRole;
 import io.jmix.core.SaveContext;
 import io.jmix.core.UnconstrainedDataManager;
-import io.jmix.core.UuidProvider;
 import io.jmix.data.PersistenceHints;
 import io.jmix.security.role.assignment.RoleAssignment;
 import io.jmix.security.role.assignment.RoleAssignmentRepository;
@@ -490,7 +489,7 @@ public class DemoDataInitializer {
                 payment.setInvoice(invoice);
                 LocalDate date = (invoice.getDate() != null ? invoice.getDate() : randomDateWithinYears(2, random)).plusDays(random.nextInt(1, 60));
                 payment.setDate(date);
-                BigDecimal part = remaining.multiply(BigDecimal.valueOf(0.25 + random.nextDouble(0.5))).setScale(2, BigDecimal.ROUND_HALF_UP);
+                BigDecimal part = remaining.multiply(BigDecimal.valueOf(0.25 + random.nextDouble(0.5))).setScale(2, RoundingMode.HALF_UP);
                 if (part.compareTo(remaining) > 0) part = remaining;
                 payment.setAmount(part);
                 remaining = remaining.subtract(part);

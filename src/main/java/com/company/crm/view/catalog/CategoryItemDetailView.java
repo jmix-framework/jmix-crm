@@ -42,7 +42,7 @@ public class CategoryItemDetailView extends StandardDetailView<CategoryItem> imp
     @ViewComponent
     private JmixSplitLayout split;
     @ViewComponent
-    private JmixImage image;
+    private JmixImage<?> image;
     @ViewComponent
     private FileStorageUploadField imageUpload;
     @Autowired

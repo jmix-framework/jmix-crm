@@ -10,8 +10,6 @@ import io.jmix.core.EntityStates;
 import io.jmix.core.FetchPlan;
 import io.jmix.core.SaveContext;
 import io.jmix.flowui.component.valuepicker.EntityPicker;
-import io.jmix.flowui.model.DataContext;
-import io.jmix.flowui.model.InstanceContainer;
 import io.jmix.flowui.view.DialogMode;
 import io.jmix.flowui.view.EditedEntityContainer;
 import io.jmix.flowui.view.Install;
@@ -29,8 +27,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-
-import static java.util.Objects.requireNonNull;
 
 @Route(value = "order-items/:id", layout = MainView.class)
 @ViewController(id = "OrderItem.detail")

@@ -26,6 +26,42 @@ public class InvoiceService {
     }
 
     /**
+     * @see #getAllInvoicesCount(LocalDateRange)
+     */
+    public long getAllInvoicesCount() {
+        return getAllInvoicesCount(null);
+    }
+
+    /**
+     * Retrieves the total count of invoices across all statuses, optionally filtered by a specified date range.
+     * If no date range is provided, it returns the count of all invoices regardless of their date.
+     *
+     * @param dateRange an optional date range to filter invoices; if {@code null}, no date range filtering is applied
+     * @return the total count of invoices within the specified date range and across all statuses
+     */
+    public long getAllInvoicesCount(@Nullable LocalDateRange dateRange) {
+        return getInvoicesCount(dateRange, InvoiceStatus.values());
+    }
+
+    /**
+     * @see #getPaidInvoicesCount(LocalDateRange)
+     */
+    public long getPaidInvoicesCount() {
+        return getPaidInvoicesCount(null);
+    }
+
+    /**
+     * Retrieves the count of invoices with the status {@link InvoiceStatus#PAID} within the specified date range.
+     * If no date range is provided, it returns the count of all paid invoices.
+     *
+     * @param dateRange an optional date range to filter invoices; if {@code null}, no date range filtering is applied.
+     * @return the count of paid invoices within the specified date range, or zero if none are found.
+     */
+    public long getPaidInvoicesCount(@Nullable LocalDateRange dateRange) {
+        return getInvoicesCount(dateRange, InvoiceStatus.PAID);
+    }
+
+    /**
      * @see #getOverdueInvoices(LocalDateRange, Integer)
      */
     public List<Invoice> getOverdueInvoices() {
@@ -61,7 +97,7 @@ public class InvoiceService {
      * @param status    the {@link InvoiceStatus} to filter by
      * @return the count of invoices matching the criteria, or zero if no invoices are found
      */
-    public Long getInvoicesCount(@Nullable LocalDateRange dateRange, InvoiceStatus... status) {
+    public long getInvoicesCount(@Nullable LocalDateRange dateRange, InvoiceStatus... status) {
         StringBuilder query = new StringBuilder("select count(e) from Invoice e");
         List<String> conditions = new ArrayList<>();
 
@@ -93,10 +129,7 @@ public class InvoiceService {
     }
 
     /**
-     * Retrieves the count of invoices grouped by their status using JPQL aggregation.
-     * This method is lightweight and does not load invoice entities into memory.
-     *
-     * @return a map where the key is the {@link InvoiceStatus} and the value is the count of invoices with that status.
+     * @see #getInvoicesCountByStatus(LocalDateRange)
      */
     public Map<InvoiceStatus, Long> getInvoicesCountByStatus() {
         return getInvoicesCountByStatus(null);
@@ -147,17 +180,5 @@ public class InvoiceService {
             LocalDate date = keyValue.getValue("invoiceDate");
             return new InvoicesByDateRangeInfo(date, dateRange, status, count);
         }).toList();
-    }
-
-    /**
-     * Groups invoices by their status and returns a map where the key is the {@link InvoiceStatus}
-     * and the value is the list of invoices with that status.
-     */
-    public Map<InvoiceStatus, List<Invoice>> getInvoicesByStatus() {
-        Map<InvoiceStatus, List<Invoice>> invoicesByStatus = new HashMap<>();
-        invoiceRepository.findAll().forEach(invoice ->
-                invoicesByStatus.computeIfAbsent(invoice.getStatus(),
-                        i -> new ArrayList<>()).add(invoice));
-        return invoicesByStatus;
     }
 }

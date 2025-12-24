@@ -30,8 +30,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 import java.util.function.Function;
 
-import static org.apache.commons.lang3.StringUtils.defaultString;
-
 public class CrmCard extends JmixCard implements ApplicationContextAware {
 
     private static final CardPeriod DEFAULT_INITIAL_PERIOD = CardPeriod.MONTH;

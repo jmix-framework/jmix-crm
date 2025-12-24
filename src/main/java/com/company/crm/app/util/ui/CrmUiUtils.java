@@ -1,7 +1,5 @@
 package com.company.crm.app.util.ui;
 
-import com.company.crm.model.datatype.PriceDataType;
-import com.company.crm.model.order.Order;
 import com.vaadin.flow.component.HasStyle;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.grid.Grid;
@@ -20,7 +18,6 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
-import static com.company.crm.model.datatype.PriceDataType.getCurrencySuffix;
 import static com.company.crm.model.datatype.PriceDataType.getCurrencySymbol;
 
 public final class CrmUiUtils {

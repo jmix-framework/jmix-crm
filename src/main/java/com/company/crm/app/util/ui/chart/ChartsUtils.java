@@ -1,7 +1,12 @@
 package com.company.crm.app.util.ui.chart;
 
+import com.company.crm.app.ui.component.card.CrmCard;
 import com.company.crm.view.util.SkeletonStyler;
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Unit;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.spring.annotation.SpringComponent;
+import com.vaadin.flow.theme.lumo.LumoUtility;
 import io.jmix.chartsflowui.component.Chart;
 import io.jmix.chartsflowui.kit.component.model.DataSet;
 import io.jmix.chartsflowui.kit.component.model.Grid;
@@ -18,14 +23,12 @@ import io.jmix.chartsflowui.kit.component.model.series.PieSeries;
 import io.jmix.chartsflowui.kit.component.model.series.SeriesType;
 import io.jmix.chartsflowui.kit.component.model.shared.FontStyle;
 import io.jmix.chartsflowui.kit.component.model.shared.Orientation;
-import io.jmix.chartsflowui.kit.component.model.toolbox.MagicTypeFeature;
 import io.jmix.chartsflowui.kit.component.model.toolbox.SaveAsImageFeature;
 import io.jmix.chartsflowui.kit.component.model.toolbox.Toolbox;
 import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.asynctask.UiAsyncTasks;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Map;
@@ -33,7 +36,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
-@Component
+@SpringComponent
 public class ChartsUtils {
     private static final Logger log = LoggerFactory.getLogger(ChartsUtils.class);
     private final UiAsyncTasks uiAsyncTasks;
@@ -42,6 +45,19 @@ public class ChartsUtils {
     public ChartsUtils(UiAsyncTasks uiAsyncTasks, UiComponents uiComponents) {
         this.uiAsyncTasks = uiAsyncTasks;
         this.uiComponents = uiComponents;
+    }
+
+    public Component createViewStatChartWrapper(Chart chart) {
+        var flexContainer = new VerticalLayout(chart);
+        flexContainer.addClassNames(LumoUtility.Flex.GROW);
+        flexContainer.setPadding(false);
+
+        CrmCard card = uiComponents.create(CrmCard.class);
+        card.setWidthFull();
+        card.add(flexContainer);
+
+        SkeletonStyler.apply(chart);
+        return card;
     }
 
     public CompletableFuture<?> initializeChartsAsync(Map<Chart, Supplier<DataSet>> chartsLoaders) {

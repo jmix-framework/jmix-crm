@@ -35,6 +35,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static java.util.Objects.requireNonNull;
 
 public class RecentActivitiesBlock extends Div implements ApplicationContextAware, InitializingBean {
 
@@ -208,7 +209,7 @@ public class RecentActivitiesBlock extends Div implements ApplicationContextAwar
         Span activityDescriptionSpan = new Span(activity.getActionDescription());
         activityDescriptionSpan.addClassNames(LumoUtility.TextColor.TERTIARY);
 
-        Span dateSpan = new Span(DATE_WITH_YEAR_AND_TIME.format(activity.getCreatedDate()));
+        Span dateSpan = new Span(DATE_WITH_YEAR_AND_TIME.format(requireNonNull(activity.getCreatedDate())));
         dateSpan.addClassNames(LumoUtility.TextColor.TERTIARY);
 
         Div activityInfoBlock = new Div(new HorizontalLayout(userNameSpan, activityDescriptionSpan), dateSpan);

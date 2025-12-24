@@ -4,6 +4,7 @@ import com.company.crm.model.base.CreateAuditEntity;
 import com.company.crm.model.user.User;
 import io.jmix.core.DeletePolicy;
 import io.jmix.core.entity.annotation.OnDeleteInverse;
+import io.jmix.core.metamodel.annotation.InstanceName;
 import io.jmix.core.metamodel.annotation.JmixEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -13,7 +14,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotNull;
 
 @JmixEntity
 @Table(name = "CATEGORY_ITEM_COMMENT", indexes = {
@@ -22,12 +22,14 @@ import jakarta.validation.constraints.NotNull;
 })
 @Entity
 public class CategoryItemComment extends CreateAuditEntity {
+
     @OnDeleteInverse(DeletePolicy.CASCADE)
     @JoinColumn(name = "CATEGORY_ITEM_ID", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     private CategoryItem categoryItem;
 
     @Lob
+    @InstanceName
     @Column(name = "MESSAGE", nullable = false)
     private String message;
 

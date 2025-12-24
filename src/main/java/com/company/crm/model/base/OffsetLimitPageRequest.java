@@ -106,7 +106,7 @@ public record OffsetLimitPageRequest(long offset, long limit, @Nullable Sort sor
 
     @Override
     public Pageable withPage(int pageNumber) {
-        return null;
+        throw new UnsupportedOperationException("Page number is not supported in %s".formatted(getClass().getSimpleName()));
     }
 
     @Override

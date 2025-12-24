@@ -22,9 +22,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import static java.util.Arrays.stream;
-import static org.springframework.core.annotation.AnnotationUtils.findAnnotation;
-
 @Service
 public class UserActivityRecorder {
 

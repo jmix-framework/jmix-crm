@@ -3,7 +3,6 @@ package com.company.crm.view.catalog;
 import com.company.crm.app.feature.queryparameters.filters.FieldValueQueryParameterBinder;
 import com.company.crm.app.service.catalog.CatalogService;
 import com.company.crm.app.service.datetime.DateTimeService;
-import com.company.crm.app.ui.component.card.CrmCard;
 import com.company.crm.app.util.date.range.LocalDateRange;
 import com.company.crm.app.util.ui.chart.ChartsUtils;
 import com.company.crm.app.util.ui.renderer.CrmRenderers;
@@ -14,7 +13,6 @@ import com.company.crm.model.catalog.item.CategoryItemRepository;
 import com.company.crm.view.catalog.charts.ItemOrdersAmountItem;
 import com.company.crm.view.catalog.charts.ItemOrdersAmountValueDescription;
 import com.company.crm.view.main.MainView;
-import com.company.crm.view.util.SkeletonStyler;
 import com.vaadin.flow.component.HasValue;
 import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.router.Route;
@@ -24,7 +22,6 @@ import io.jmix.chartsflowui.kit.data.chart.ListChartItems;
 import io.jmix.core.common.datastruct.Pair;
 import io.jmix.core.querycondition.LogicalCondition;
 import io.jmix.core.repository.JmixDataRepositoryContext;
-import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.component.formlayout.JmixFormLayout;
 import io.jmix.flowui.component.grid.DataGrid;
 import io.jmix.flowui.component.select.JmixSelect;
@@ -68,8 +65,6 @@ public class CategoryItemListView extends StandardListView<CategoryItem> {
     private ChartsUtils chartsUtils;
     @Autowired
     private CrmRenderers crmRenderers;
-    @Autowired
-    private UiComponents uiComponents;
     @Autowired
     private CategoryItemRepository itemRepository;
     @Autowired
@@ -163,14 +158,10 @@ public class CategoryItemListView extends StandardListView<CategoryItem> {
         new ArrayList<Pair<Chart, Supplier<DataSet>>>() {{
             add(createBestOrderItemsChart());
             add(createOrderedThisMonthChart());
-            // add(createAvailableByCategoryChart());
         }}.forEach(chart2Initializer -> {
             Chart chart = chart2Initializer.getFirst();
             Supplier<DataSet> dataSetSupplier = chart2Initializer.getSecond();
-            CrmCard card = uiComponents.create(CrmCard.class);
-            card.add(chart);
-            chartsBlock.add(card);
-            SkeletonStyler.apply(chart);
+            chartsBlock.add(chartsUtils.createViewStatChartWrapper(chart));
             chart2DataSetLoader.put(chart, dataSetSupplier);
         });
         return chart2DataSetLoader;
@@ -186,15 +177,10 @@ public class CategoryItemListView extends StandardListView<CategoryItem> {
         return new Pair<>(chart, () -> createBestOrderItemsChartDataSet(dateTimeService.getCurrentMonthRange()));
     }
 
-    private Pair<Chart, Supplier<DataSet>> createAvailableByCategoryChart() {
-        Chart chart = chartsUtils.createViewStatPieChart("Available by category");
-        return new Pair<>(chart, this::createAvailableByCategoryChartDataSet);
-    }
-
     private DataSet createBestOrderItemsChartDataSet(@Nullable LocalDateRange dateRange) {
         var dataItems = new ArrayList<ItemOrdersAmountItem>();
 
-        for (Map.Entry<CategoryItem, BigDecimal> entry : catalogService.getBestItems(4, dateRange).entrySet()) {
+        for (Map.Entry<CategoryItem, BigDecimal> entry : catalogService.getBestOrderedItems(4, dateRange).entrySet()) {
             String key = entry.getKey().getName();
             BigDecimal value = entry.getValue();
             ItemOrdersAmountValueDescription valueDescription = new ItemOrdersAmountValueDescription(key, value);
@@ -207,9 +193,5 @@ public class CategoryItemListView extends StandardListView<CategoryItem> {
                         .withCategoryField("item")
                         .withValueField("amount")
         );
-    }
-
-    private DataSet createAvailableByCategoryChartDataSet() {
-        return null;
     }
 }

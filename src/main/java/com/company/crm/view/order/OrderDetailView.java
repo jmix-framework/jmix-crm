@@ -1,5 +1,6 @@
 package com.company.crm.view.order;
 
+import com.company.crm.app.service.datetime.DateTimeService;
 import com.company.crm.app.ui.component.OrderStatusPipeline;
 import com.company.crm.app.util.ui.renderer.CrmRenderers;
 import com.company.crm.model.order.Order;
@@ -12,13 +13,10 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.spring.annotation.UIScope;
 import io.jmix.core.FetchPlan;
-import io.jmix.core.SaveContext;
 import io.jmix.flowui.component.SupportsTypedValue.TypedValueChangeEvent;
 import io.jmix.flowui.component.textfield.TypedTextField;
 import io.jmix.flowui.exception.ValidationException;
-import io.jmix.flowui.model.DataContext;
 import io.jmix.flowui.model.InstanceContainer;
 import io.jmix.flowui.view.EditedEntityContainer;
 import io.jmix.flowui.view.Install;
@@ -30,12 +28,11 @@ import io.jmix.flowui.view.ViewComponent;
 import io.jmix.flowui.view.ViewController;
 import io.jmix.flowui.view.ViewDescriptor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 
 import static com.company.crm.app.util.price.PriceCalculator.calculateTotal;
@@ -51,6 +48,8 @@ public class OrderDetailView extends StandardDetailView<Order> {
     private CrmRenderers crmRenderers;
     @Autowired
     private OrderRepository orderRepository;
+    @Autowired
+    private DateTimeService dateTimeService;
 
     @ViewComponent
     private OrderStatusPipeline statusPipeline;
@@ -62,7 +61,14 @@ public class OrderDetailView extends StandardDetailView<Order> {
     private H3 orderItemsCount;
 
     @Subscribe
-    public void onBeforeShow(final BeforeShowEvent event) {
+    private void onInitEntity(final InitEntityEvent<Order> event) {
+        Order order = event.getEntity();
+        order.setStatus(OrderStatus.NEW);
+        order.setDate(dateTimeService.now().toLocalDate());
+    }
+
+    @Subscribe
+    private void onBeforeShow(final BeforeShowEvent event) {
         initFieldsValidation();
         selectStatusInPipeline();
         addStatusPipelineClickListener();
@@ -70,7 +76,7 @@ public class OrderDetailView extends StandardDetailView<Order> {
     }
 
     @Subscribe(id = "orderDc", target = Target.DATA_CONTAINER)
-    public void onOrderDcItemPropertyChange(final InstanceContainer.ItemPropertyChangeEvent<Order> event) {
+    private void onOrderDcItemPropertyChange(final InstanceContainer.ItemPropertyChangeEvent<Order> event) {
         selectStatusInPipeline();
         updateFooter();
     }
@@ -106,11 +112,6 @@ public class OrderDetailView extends StandardDetailView<Order> {
         return crmRenderers.orderStatusEnum();
     }
 
-    @Install(to = "statusSelect", subject = "itemLabelGenerator")
-    private String statusSelectItemLabelGenerator(final OrderStatus item) {
-        return "";
-    }
-
     private void selectStatusInPipeline() {
         statusPipeline.selectUntil(getEditedEntity().getStatus());
     }
@@ -122,7 +123,8 @@ public class OrderDetailView extends StandardDetailView<Order> {
     }
 
     private void updateFooter() {
-        orderItemsCount.setText(getEditedEntity().getOrderItems().size() + " pcs");
+        List<OrderItem> orderItems = getEditedEntity().getOrderItems();
+        orderItemsCount.setText((orderItems != null ? orderItems.size() : 0) + " pcs");
     }
 
     private void recalculateTotal(TypedTextField<BigDecimal> changesOwner) {

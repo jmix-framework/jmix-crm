@@ -17,10 +17,10 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
 
@@ -251,27 +251,22 @@ public class ClientService {
      * Returns a map of the top buyers and their corresponding total purchase amounts,
      * sorted by total purchase in descending order.
      *
-     * @param amount the maximum number of top buyers to include in the result.
-     *               If {@param amount} is {@code null}, all available data will be returned
+     * @param limit the maximum number of top buyers to include in the result.
+     *              If {@param limit} is {@code null}, all available data will be returned
      * @return a map where the keys are the {@link Client} and the values are the total purchase amounts.
      */
-    public Map<Client, BigDecimal> getBestBuyers(@Nullable Integer amount) {
-        Map<Client, BigDecimal> totalsByClient = new LinkedHashMap<>();
-
-        clientRepository.fluentValuesLoader(
+    public Map<Client, BigDecimal> getBestBuyers(@Nullable Integer limit) {
+        return clientRepository.fluentValuesLoader(
                         "select distinct e.client as client, sum(e.total) as total " +
                                 "from Order_ e " +
                                 "group by e.client " +
-                                "order by total desc " +
-                                ((amount != null && amount > 0) ? ("limit " + amount) : ""))
+                                "order by total desc ")
                 .properties("client", "total")
-                .list().forEach(keyValue -> {
-                    Client client = keyValue.getValue("client");
-                    BigDecimal clientTotal = keyValue.getValue("total");
-                    totalsByClient.merge(client, clientTotal, BigDecimal::add);
-                });
-
-        return totalsByClient;
+                .maxResults(limit != null ? limit : 0)
+                .list().stream()
+                .collect(Collectors.toMap(
+                        keyValue -> keyValue.getValue("client"),
+                        keyValue -> keyValue.getValue("total")));
     }
 
     /**

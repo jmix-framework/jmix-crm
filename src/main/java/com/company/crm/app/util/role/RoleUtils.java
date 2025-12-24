@@ -16,7 +16,7 @@ public class RoleUtils {
     private final CurrentAuthentication currentAuthentication;
     private final RoleAssignmentRepository roleAssignmentRepository;
 
-    public static String[] ADMIN_ROLE_CODES = new String[]{FullAccessRole.CODE};
+    public static final String[] ADMIN_ROLE_CODES = new String[]{FullAccessRole.CODE};
 
     public RoleUtils(CurrentAuthentication currentAuthentication, RoleAssignmentRepository roleAssignmentRepository) {
         this.currentAuthentication = currentAuthentication;

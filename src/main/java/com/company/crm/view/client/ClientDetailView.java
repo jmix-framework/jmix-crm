@@ -5,7 +5,6 @@ import com.company.crm.app.service.client.ClientService;
 import com.company.crm.app.service.client.CompletedOrdersByDateRangeInfo;
 import com.company.crm.app.service.datetime.DateTimeService;
 import com.company.crm.app.ui.component.RecentActivitiesBlock;
-import com.company.crm.app.ui.component.card.CrmCard;
 import com.company.crm.app.util.date.range.LocalDateRange;
 import com.company.crm.app.util.ui.chart.ChartsUtils;
 import com.company.crm.app.util.ui.listener.resize.WidthResizeListener;
@@ -14,7 +13,6 @@ import com.company.crm.model.client.ClientRepository;
 import com.company.crm.model.user.activity.UserActivity;
 import com.company.crm.model.user.activity.client.ClientUserActivityRepository;
 import com.company.crm.view.main.MainView;
-import com.company.crm.view.util.SkeletonStyler;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.splitlayout.SplitLayout.Orientation;
 import com.vaadin.flow.router.Route;
@@ -85,8 +83,8 @@ public class ClientDetailView extends StandardDetailView<Client> implements Widt
     @ViewComponent
     private JmixFormLayout chartsBlock;
 
-    @SuppressWarnings({"FieldCanBeLocal", "FieldMayBeFinal"})
-    private int loadStatsForLastYearsAmount = 3;
+    @SuppressWarnings("FieldCanBeLocal")
+    private final int loadStatsForLastYearsAmount = 3;
 
     @Override
     public void configureUiForWidth(int width) {
@@ -129,17 +127,13 @@ public class ClientDetailView extends StandardDetailView<Client> implements Widt
             add(createSalesCycleLengthChart());
         }}.forEach(chart2Initializer -> {
             Chart chart = chart2Initializer.getFirst();
+            Supplier<DataSet> dataSetSupplier = chart2Initializer.getSecond();
             chart.withLegend(new Legend().withShow(false))
                     .getYAxes().getFirst()
                     .withInterval(0)
                     .withSplitLine(new SplitLine().withShow(false));
 
-            CrmCard card = uiComponents.create(CrmCard.class);
-            card.add(chart);
-            chartsBlock.add(card);
-
-            SkeletonStyler.apply(chart);
-            Supplier<DataSet> dataSetSupplier = chart2Initializer.getSecond();
+            chartsBlock.add(chartsUtils.createViewStatChartWrapper(chart));
             chart2DataSetLoader.put(chart, dataSetSupplier);
         });
         return chart2DataSetLoader;
