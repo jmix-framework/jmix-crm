@@ -8,6 +8,7 @@ import com.company.crm.app.ui.component.RecentActivitiesBlock;
 import com.company.crm.app.ui.component.card.CardPeriod;
 import com.company.crm.app.ui.component.card.CrmCard;
 import com.company.crm.app.ui.component.card.CrmCard.RangeStatCardInfo;
+import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.app.util.ui.listener.resize.WidthResizeListener;
 import com.company.crm.app.util.ui.renderer.CrmRenderers;
 import com.company.crm.model.datatype.PriceDataType;
@@ -76,7 +77,7 @@ import static com.company.crm.app.util.ui.listener.resize.WidthResizeListener.is
 import static io.jmix.flowui.component.UiComponentUtils.traverseComponents;
 
 @Route(value = "home", layout = MainView.class)
-@ViewController(id = "HomeView")
+@ViewController(id = CrmConstants.ViewIds.HOME)
 @ViewDescriptor(path = "home-view.xml")
 public class HomeView extends StandardView implements WidthResizeListener {
 

@@ -2,6 +2,7 @@ package com.company.crm.view.order;
 
 import com.company.crm.app.service.datetime.DateTimeService;
 import com.company.crm.app.ui.component.OrderStatusPipeline;
+import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.app.util.ui.renderer.CrmRenderers;
 import com.company.crm.model.order.Order;
 import com.company.crm.model.order.OrderItem;
@@ -20,6 +21,7 @@ import io.jmix.flowui.exception.ValidationException;
 import io.jmix.flowui.model.InstanceContainer;
 import io.jmix.flowui.view.EditedEntityContainer;
 import io.jmix.flowui.view.Install;
+import io.jmix.flowui.view.PrimaryDetailView;
 import io.jmix.flowui.view.StandardDetailView;
 import io.jmix.flowui.view.Subscribe;
 import io.jmix.flowui.view.Supply;
@@ -39,9 +41,10 @@ import static com.company.crm.app.util.price.PriceCalculator.calculateTotal;
 import static com.company.crm.model.datatype.PriceDataType.formatWithoutCurrency;
 
 @Route(value = "orders/:id", layout = MainView.class)
-@ViewController(id = "Order_.detail")
+@ViewController(id = CrmConstants.ViewIds.ORDER_DETAIL)
 @ViewDescriptor(path = "order-detail-view.xml")
 @EditedEntityContainer("orderDc")
+@PrimaryDetailView(Order.class)
 public class OrderDetailView extends StandardDetailView<Order> {
 
     @Autowired

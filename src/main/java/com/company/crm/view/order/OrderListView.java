@@ -6,6 +6,7 @@ import com.company.crm.app.service.order.OrderService;
 import com.company.crm.app.ui.component.OrderStatusPipeline;
 import com.company.crm.app.ui.component.OrderStatusPipeline.OrderStatusComponent;
 import com.company.crm.app.util.AsyncTasksRegistry;
+import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.app.util.ui.renderer.CrmRenderers;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.datatype.PriceDataType;
@@ -31,6 +32,7 @@ import io.jmix.flowui.model.CollectionLoader;
 import io.jmix.flowui.view.DialogMode;
 import io.jmix.flowui.view.Install;
 import io.jmix.flowui.view.LookupComponent;
+import io.jmix.flowui.view.PrimaryListView;
 import io.jmix.flowui.view.StandardListView;
 import io.jmix.flowui.view.Subscribe;
 import io.jmix.flowui.view.Supply;
@@ -55,10 +57,11 @@ import static io.jmix.core.querycondition.PropertyCondition.greaterOrEqual;
 import static io.jmix.core.querycondition.PropertyCondition.lessOrEqual;
 
 @Route(value = "orders", layout = MainView.class)
-@ViewController(id = "Order.list")
+@ViewController(id = CrmConstants.ViewIds.ORDER_LIST)
 @ViewDescriptor(path = "order-list-view.xml")
 @LookupComponent("ordersDataGrid")
 @DialogMode(width = "64em")
+@PrimaryListView(Order.class)
 public class OrderListView extends StandardListView<Order> {
 
     @Autowired

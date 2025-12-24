@@ -5,6 +5,7 @@ import com.company.crm.app.service.client.ClientService;
 import com.company.crm.app.service.client.CompletedOrdersByDateRangeInfo;
 import com.company.crm.app.service.datetime.DateTimeService;
 import com.company.crm.app.ui.component.RecentActivitiesBlock;
+import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.app.util.date.range.LocalDateRange;
 import com.company.crm.app.util.ui.chart.ChartsUtils;
 import com.company.crm.app.util.ui.listener.resize.WidthResizeListener;
@@ -55,7 +56,7 @@ import java.util.UUID;
 import java.util.function.Supplier;
 
 @Route(value = "clients/:id", layout = MainView.class)
-@ViewController(id = "Client.detail")
+@ViewController(id = CrmConstants.ViewIds.CLIENT_DETAIL)
 @ViewDescriptor(path = "client-detail-view.xml")
 @EditedEntityContainer("clientDc")
 @DialogMode(width = "90%", height = "90%", resizable = true, closeOnEsc = true, closeOnOutsideClick = true)

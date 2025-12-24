@@ -3,6 +3,7 @@ package com.company.crm.view.invoice;
 import com.company.crm.app.feature.queryparameters.filters.FieldValueQueryParameterBinder;
 import com.company.crm.app.service.datetime.DateTimeService;
 import com.company.crm.app.service.finance.InvoiceService;
+import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.app.util.date.range.LocalDateRange;
 import com.company.crm.app.util.ui.chart.ChartsUtils;
 import com.company.crm.app.util.ui.renderer.CrmRenderers;
@@ -63,7 +64,7 @@ import static io.jmix.core.querycondition.PropertyCondition.greaterOrEqual;
 import static io.jmix.core.querycondition.PropertyCondition.lessOrEqual;
 
 @Route(value = "invoices", layout = MainView.class)
-@ViewController(id = "Invoice.list")
+@ViewController(id = CrmConstants.ViewIds.INVOICE_LIST)
 @ViewDescriptor(path = "invoice-list-view.xml")
 @LookupComponent("invoicesDataGrid")
 @DialogMode(width = "64em")

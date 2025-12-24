@@ -2,6 +2,7 @@ package com.company.crm.view.payment;
 
 import com.company.crm.app.feature.queryparameters.filters.FieldValueQueryParameterBinder;
 import com.company.crm.app.service.finance.PaymentService;
+import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.app.util.ui.chart.ChartsUtils;
 import com.company.crm.app.util.ui.renderer.CrmRenderers;
 import com.company.crm.model.client.Client;
@@ -56,7 +57,7 @@ import static io.jmix.core.querycondition.PropertyCondition.greaterOrEqual;
 import static io.jmix.core.querycondition.PropertyCondition.lessOrEqual;
 
 @Route(value = "payments", layout = MainView.class)
-@ViewController(id = "Payment.list")
+@ViewController(id = CrmConstants.ViewIds.PAYMENT_LIST)
 @ViewDescriptor(path = "payment-list-view.xml")
 @LookupComponent("paymentsDataGrid")
 @DialogMode(width = "64em")

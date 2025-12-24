@@ -8,6 +8,7 @@ import com.company.crm.app.service.user.UserService;
 import com.company.crm.app.ui.component.CrmLoader;
 import com.company.crm.app.ui.component.card.CrmCard;
 import com.company.crm.app.util.AsyncTasksRegistry;
+import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.app.util.ui.listener.resize.WidthResizeListener;
 import com.company.crm.app.util.ui.renderer.CrmRenderers;
 import com.company.crm.model.client.Client;
@@ -74,7 +75,7 @@ import static io.jmix.core.querycondition.PropertyCondition.isCollectionEmpty;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
 
 @Route(value = "clients", layout = MainView.class)
-@ViewController(id = "Client.list")
+@ViewController(id = CrmConstants.ViewIds.CLIENT_LIST)
 @ViewDescriptor(path = "client-list-view.xml")
 @LookupComponent("clientsDataGrid")
 @DialogMode(width = "64em")

@@ -1,5 +1,6 @@
 package com.company.crm.view.login;
 
+import com.company.crm.app.util.constant.CrmConstants;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.login.AbstractLogin.LoginEvent;
 import com.vaadin.flow.component.login.LoginI18n;
@@ -13,7 +14,12 @@ import io.jmix.core.security.AccessDeniedException;
 import io.jmix.flowui.component.loginform.JmixLoginForm;
 import io.jmix.flowui.kit.component.ComponentUtils;
 import io.jmix.flowui.kit.component.loginform.JmixLoginI18n;
-import io.jmix.flowui.view.*;
+import io.jmix.flowui.view.MessageBundle;
+import io.jmix.flowui.view.StandardView;
+import io.jmix.flowui.view.Subscribe;
+import io.jmix.flowui.view.ViewComponent;
+import io.jmix.flowui.view.ViewController;
+import io.jmix.flowui.view.ViewDescriptor;
 import io.jmix.securityflowui.authentication.AuthDetails;
 import io.jmix.securityflowui.authentication.LoginViewSupport;
 import org.apache.commons.lang3.StringUtils;
@@ -31,7 +37,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Route(value = "login")
-@ViewController(id = "LoginView")
+@ViewController(id = CrmConstants.ViewIds.LOGIN)
 @ViewDescriptor(path = "login-view.xml")
 public class LoginView extends StandardView implements LocaleChangeObserver {
 

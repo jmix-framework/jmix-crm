@@ -1,5 +1,6 @@
 package com.company.crm.view.usertask;
 
+import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.app.util.ui.renderer.CrmRenderers;
 import com.company.crm.model.user.User;
 import com.company.crm.model.user.task.UserTask;
@@ -80,7 +81,7 @@ import static io.jmix.core.repository.JmixDataRepositoryUtils.extractEntityId;
 import static io.jmix.flowui.component.delegate.AbstractFieldDelegate.PROPERTY_INVALID;
 
 @Route(value = "user-tasks", layout = MainView.class)
-@ViewController(id = "UserTask.list")
+@ViewController(id = CrmConstants.ViewIds.USER_TASK_LIST)
 @ViewDescriptor(path = "user-task-list-view.xml")
 @LookupComponent("userTasksDataGrid")
 @DialogMode(width = "64em", resizable = true, closeOnOutsideClick = true, closeOnEsc = true)

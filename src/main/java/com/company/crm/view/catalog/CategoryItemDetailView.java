@@ -1,5 +1,6 @@
 package com.company.crm.view.catalog;
 
+import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.app.util.ui.listener.resize.WidthResizeListener;
 import com.company.crm.model.catalog.item.CategoryItem;
 import com.company.crm.model.catalog.item.CategoryItemRepository;
@@ -32,7 +33,7 @@ import java.util.UUID;
 import static com.vaadin.flow.server.streams.DownloadHandler.fromInputStream;
 
 @Route(value = "category-items/:id", layout = MainView.class)
-@ViewController(id = "CategoryItem.detail")
+@ViewController(id = CrmConstants.ViewIds.CATEGORY_ITEM_DETAIL)
 @ViewDescriptor(path = "category-item-detail-view.xml")
 @EditedEntityContainer("categoryItemDc")
 public class CategoryItemDetailView extends StandardDetailView<CategoryItem> implements WidthResizeListener {

@@ -1,6 +1,7 @@
 package com.company.crm.view.finance;
 
 import com.company.crm.app.feature.queryparameters.tab.TabIndexUrlQueryParameterBinder;
+import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.view.invoice.InvoiceListView;
 import com.company.crm.view.main.MainView;
 import com.company.crm.view.payment.PaymentListView;
@@ -15,7 +16,7 @@ import io.jmix.flowui.view.ViewDescriptor;
 import org.springframework.beans.factory.annotation.Autowired;
 
 @Route(value = "finance-view", layout = MainView.class)
-@ViewController(id = "FinanceView")
+@ViewController(id = CrmConstants.ViewIds.FINANCE)
 @ViewDescriptor(path = "finance-view.xml")
 public class FinanceView extends StandardView {
 

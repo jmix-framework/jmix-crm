@@ -1,5 +1,6 @@
 package com.company.crm.view.user;
 
+import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.app.util.role.RoleUtils;
 import com.company.crm.model.user.User;
 import com.company.crm.view.main.MainView;
@@ -32,7 +33,7 @@ import java.util.Objects;
 import java.util.TimeZone;
 
 @Route(value = "users/:id", layout = MainView.class)
-@ViewController(id = "User.detail")
+@ViewController(id = CrmConstants.ViewIds.USER_DETAIL)
 @ViewDescriptor(path = "user-detail-view.xml")
 @EditedEntityContainer("userDc")
 public class UserDetailView extends StandardDetailView<User> {

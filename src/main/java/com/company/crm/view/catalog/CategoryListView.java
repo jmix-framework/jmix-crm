@@ -1,5 +1,6 @@
 package com.company.crm.view.catalog;
 
+import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.app.util.ui.renderer.CrmRenderers;
 import com.company.crm.model.catalog.category.Category;
 import com.company.crm.model.catalog.category.CategoryRepository;
@@ -35,7 +36,7 @@ import java.util.Collection;
 import java.util.List;
 
 @Route(value = "categories", layout = MainView.class)
-@ViewController(id = "Category.list")
+@ViewController(id = CrmConstants.ViewIds.CATEGORY_LIST)
 @ViewDescriptor(path = "category-list-view.xml")
 @LookupComponent("categoriesDataGrid")
 @DialogMode(width = "64em")

@@ -3,6 +3,7 @@ package com.company.crm.view.catalog;
 import com.company.crm.app.feature.queryparameters.filters.FieldValueQueryParameterBinder;
 import com.company.crm.app.service.catalog.CatalogService;
 import com.company.crm.app.service.datetime.DateTimeService;
+import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.app.util.date.range.LocalDateRange;
 import com.company.crm.app.util.ui.chart.ChartsUtils;
 import com.company.crm.app.util.ui.renderer.CrmRenderers;
@@ -55,7 +56,7 @@ import static io.jmix.core.querycondition.PropertyCondition.contains;
 import static io.jmix.core.querycondition.PropertyCondition.equal;
 
 @Route(value = "category-items", layout = MainView.class)
-@ViewController(id = "CategoryItem.list")
+@ViewController(id = CrmConstants.ViewIds.CATEGORY_ITEM_LIST)
 @ViewDescriptor(path = "category-item-list-view.xml")
 @LookupComponent("categoryItemsDataGrid")
 @DialogMode(width = "64em")

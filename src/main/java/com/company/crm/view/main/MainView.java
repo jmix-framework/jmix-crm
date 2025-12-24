@@ -1,6 +1,7 @@
 package com.company.crm.view.main;
 
 import com.company.crm.app.ui.component.CrmLoader;
+import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.client.ClientRepository;
 import com.company.crm.model.user.User;
@@ -60,7 +61,7 @@ import java.util.Optional;
 import static com.company.crm.app.util.demo.DemoUtils.defaultSleepForSearchClient;
 
 @Route("")
-@ViewController(id = "MainView")
+@ViewController(id = CrmConstants.ViewIds.MAIN)
 @ViewDescriptor(path = "main-view.xml")
 public class MainView extends StandardMainView {
 

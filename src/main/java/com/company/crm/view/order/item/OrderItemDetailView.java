@@ -1,5 +1,6 @@
 package com.company.crm.view.order.item;
 
+import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.order.Order;
 import com.company.crm.model.order.OrderItem;
@@ -29,7 +30,7 @@ import java.util.Set;
 import java.util.UUID;
 
 @Route(value = "order-items/:id", layout = MainView.class)
-@ViewController(id = "OrderItem.detail")
+@ViewController(id = CrmConstants.ViewIds.ORDER_ITEM_DETAIL)
 @ViewDescriptor(path = "order-item-detail-view.xml")
 @EditedEntityContainer("orderItemDc")
 @DialogMode(resizable = true)

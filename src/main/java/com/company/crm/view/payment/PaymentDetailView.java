@@ -1,5 +1,6 @@
 package com.company.crm.view.payment;
 
+import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.model.payment.Payment;
 import com.company.crm.model.payment.PaymentRepository;
 import com.company.crm.view.main.MainView;
@@ -17,7 +18,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Route(value = "payments/:id", layout = MainView.class)
-@ViewController(id = "Payment.detail")
+@ViewController(id = CrmConstants.ViewIds.PAYMENT_DETAIL)
 @ViewDescriptor(path = "payment-detail-view.xml")
 @EditedEntityContainer("paymentDc")
 public class PaymentDetailView extends StandardDetailView<Payment> {

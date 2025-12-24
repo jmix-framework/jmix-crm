@@ -1,5 +1,6 @@
 package com.company.crm.view.category;
 
+import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.model.catalog.category.Category;
 import com.company.crm.model.catalog.category.CategoryRepository;
 import com.company.crm.view.main.MainView;
@@ -17,7 +18,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Route(value = "categories/:id", layout = MainView.class)
-@ViewController(id = "Category.detail")
+@ViewController(id = CrmConstants.ViewIds.CATEGORY_DETAIL)
 @ViewDescriptor(path = "category-detail-view.xml")
 @EditedEntityContainer("categoryDc")
 public class CategoryDetailView extends StandardDetailView<Category> {

@@ -1,6 +1,7 @@
 package com.company.crm.view.invoice;
 
 import com.company.crm.app.service.datetime.DateTimeService;
+import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.model.invoice.Invoice;
 import com.company.crm.model.invoice.InvoiceRepository;
 import com.company.crm.model.invoice.InvoiceStatus;
@@ -20,7 +21,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Route(value = "invoices/:id", layout = MainView.class)
-@ViewController(id = "Invoice.detail")
+@ViewController(id = CrmConstants.ViewIds.INVOICE_DETAIL)
 @ViewDescriptor(path = "invoice-detail-view.xml")
 @EditedEntityContainer("invoiceDc")
 public class InvoiceDetailView extends StandardDetailView<Invoice> {
