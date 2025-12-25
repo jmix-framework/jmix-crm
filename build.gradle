@@ -103,7 +103,23 @@ configurations.implementation {
     exclude group: 'com.vaadin', module: 'copilot'
 }
 
+tasks.register("testPreparing", Delete) {
+    dependsOn(cleanConf)
+    doLast {
+        def dbDir = file('.jmix/hsqldb')
+        if (dbDir.exists()) {
+            dbDir.listFiles().each { file ->
+                if (file.name.startsWith('test.')) {
+                    file.delete()
+                    println "Deleted: ${file.name}"
+                }
+            }
+        }
+    }
+}
+
 test {
+    dependsOn(testPreparing)
     useJUnitPlatform()
 }
 

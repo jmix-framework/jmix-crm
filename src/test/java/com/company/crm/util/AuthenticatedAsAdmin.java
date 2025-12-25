@@ -1,4 +1,4 @@
-package com.company.crm.test_support;
+package com.company.crm.util;
 
 import io.jmix.core.security.SystemAuthenticator;
 import org.junit.jupiter.api.extension.AfterEachCallback;

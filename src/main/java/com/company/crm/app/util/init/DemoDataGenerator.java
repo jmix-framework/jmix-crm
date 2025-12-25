@@ -32,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.env.Environment;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -55,20 +56,22 @@ import static com.company.crm.app.util.price.PriceCalculator.calculateTotal;
  * If clients table is not empty, does nothing.
  */
 @Component
-public class DemoDataInitializer {
+public class DemoDataGenerator {
 
-    private static final Logger log = LoggerFactory.getLogger(DemoDataInitializer.class);
+    private static final Logger log = LoggerFactory.getLogger(DemoDataGenerator.class);
 
     private final RoleAssignmentRepository roleAssignmentRepository;
     private final UnconstrainedDataManager dataManager;
     private final PasswordEncoder passwordEncoder;
+    private final Environment environment;
 
-    public DemoDataInitializer(RoleAssignmentRepository roleAssignmentRepository,
-                               UnconstrainedDataManager dataManager,
-                               PasswordEncoder passwordEncoder) {
+    public DemoDataGenerator(RoleAssignmentRepository roleAssignmentRepository,
+                             UnconstrainedDataManager dataManager,
+                             PasswordEncoder passwordEncoder, Environment environment) {
         this.roleAssignmentRepository = roleAssignmentRepository;
         this.passwordEncoder = passwordEncoder;
         this.dataManager = dataManager;
+        this.environment = environment;
     }
 
     @EventListener(ApplicationReadyEvent.class)
@@ -219,11 +222,17 @@ public class DemoDataInitializer {
     }
 
     private boolean shouldInitializeDemoData() {
-        Long cnt = dataManager.loadValue("select count(c) from Client c", Long.class).one();
-        if (cnt > 0) {
-            log.info("Demo data already present ({} clients). Skipping initialization.", cnt);
+        if (!Boolean.valueOf(environment.getProperty("crm.generateDemoData", "false"))) {
+            log.info("Demo data generation is disabled, skipping...");
             return false;
         }
+
+        Long clientsAmount = dataManager.loadValue("select count(c) from Client c", Long.class).one();
+        if (clientsAmount > 0) {
+            log.info("Demo data already present ({} clients). Skipping generation....", clientsAmount);
+            return false;
+        }
+
         return true;
     }
 
