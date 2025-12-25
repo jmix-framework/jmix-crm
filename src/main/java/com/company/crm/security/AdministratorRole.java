@@ -9,15 +9,17 @@ import io.jmix.security.role.annotation.SpecificPolicy;
 import io.jmix.securityflowui.role.annotation.MenuPolicy;
 import io.jmix.securityflowui.role.annotation.ViewPolicy;
 
-@ResourceRole(name = "Full Access", code = FullAccessRole.CODE)
-public interface FullAccessRole {
+@ResourceRole(name = AdministratorRole.NAME, code = AdministratorRole.CODE)
+public interface AdministratorRole {
 
-    String CODE = "system-full-access";
+    String CODE = "administrator";
+
+    String  NAME = "Administrator";
 
     @EntityPolicy(entityName = "*", actions = {EntityPolicyAction.ALL})
     @EntityAttributePolicy(entityName = "*", attributes = "*", action = EntityAttributePolicyAction.MODIFY)
     @ViewPolicy(viewIds = "*")
     @MenuPolicy(menuIds = "*")
     @SpecificPolicy(resources = "*")
-    void fullAccess();
+    void admin();
 }

@@ -17,7 +17,7 @@ import com.company.crm.model.user.User;
 import com.company.crm.model.user.activity.client.ClientUserActivity;
 import com.company.crm.model.user.activity.userprofile.UserProfileUserActivity;
 import com.company.crm.model.user.task.UserTask;
-import com.company.crm.security.FullAccessRole;
+import com.company.crm.security.AdministratorRole;
 import io.jmix.core.SaveContext;
 import io.jmix.core.UnconstrainedDataManager;
 import io.jmix.data.PersistenceHints;
@@ -156,7 +156,7 @@ public class DemoDataInitializer {
             if (entity instanceof User user) {
                 Collection<RoleAssignment> userRoles =
                         roleAssignmentRepository.getAssignmentsByUsername(user.getUsername());
-                if (userRoles.stream().anyMatch(ra -> ra.getRoleCode().equals(FullAccessRole.CODE))) {
+                if (userRoles.stream().anyMatch(ra -> ra.getRoleCode().equals(AdministratorRole.CODE))) {
                     entities.remove(user);
                 }
             }
@@ -166,7 +166,7 @@ public class DemoDataInitializer {
     private void excludeAdminAssignments(List<?> entities) {
         for (Object entity : new ArrayList<>(entities)) {
             if (entity instanceof RoleAssignmentEntity roleAssignment
-                    && roleAssignment.getRoleCode().equals(FullAccessRole.CODE)) {
+                    && roleAssignment.getRoleCode().equals(AdministratorRole.CODE)) {
                 entities.remove(roleAssignment);
             }
         }

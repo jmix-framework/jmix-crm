@@ -74,7 +74,7 @@
             <column name="ID" value="6c9e420a-2b7a-4c42-8654-a9027ee14083"/>
             <column name="VERSION" value="1"/>
             <column name="USERNAME" value="admin"/>
-            <column name="ROLE_CODE" value="system-full-access"/>
+            <column name="ROLE_CODE" value="administrator"/>
             <column name="ROLE_TYPE" value="resource"/>
         </insert>
 
@@ -82,7 +82,7 @@
             <column name="ID" value="6c9e420a2b7a4c428654a9027ee14083"/>
             <column name="VERSION" value="1"/>
             <column name="USERNAME" value="admin"/>
-            <column name="ROLE_CODE" value="system-full-access"/>
+            <column name="ROLE_CODE" value="administrator"/>
             <column name="ROLE_TYPE" value="resource"/>
         </insert>
 

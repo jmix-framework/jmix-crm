@@ -71,9 +71,9 @@
                 <action id="editAction" type="list_edit"/>
                 <action id="removeAction" type="list_remove"/>
             </actions>
-            <columns resizable="true">
+            <columns resizable="true" sortable="true">
                 <column property="number" autoWidth="true" flexGrow="0"/>
-                <column property="status" autoWidth="true" flexGrow="0"/>
+                <column property="status" autoWidth="true" flexGrow="0" filterable="true"/>
                 <column property="date" autoWidth="true" flexGrow="0"/>
                 <column property="client"/>
                 <column property="total" autoWidth="true" flexGrow="0"/>

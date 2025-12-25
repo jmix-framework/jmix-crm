@@ -20,7 +20,7 @@ public class DatabaseUserRepository extends AbstractDatabaseUserRepository<User>
     @Override
     protected void initSystemUser(final User systemUser) {
         final Collection<GrantedAuthority> authorities = getGrantedAuthoritiesBuilder()
-                .addResourceRole(FullAccessRole.CODE)
+                .addResourceRole(AdministratorRole.CODE)
                 .build();
         systemUser.setAuthorities(authorities);
     }

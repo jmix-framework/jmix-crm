@@ -1,7 +1,7 @@
 package com.company.crm.app.util.role;
 
 import com.company.crm.model.user.User;
-import com.company.crm.security.FullAccessRole;
+import com.company.crm.security.AdministratorRole;
 import io.jmix.core.security.CurrentAuthentication;
 import io.jmix.security.role.assignment.RoleAssignment;
 import io.jmix.security.role.assignment.RoleAssignmentRepository;
@@ -16,7 +16,7 @@ public class RoleUtils {
     private final CurrentAuthentication currentAuthentication;
     private final RoleAssignmentRepository roleAssignmentRepository;
 
-    public static final String[] ADMIN_ROLE_CODES = new String[]{FullAccessRole.CODE};
+    public static final String[] ADMIN_ROLE_CODES = new String[]{AdministratorRole.CODE};
 
     public RoleUtils(CurrentAuthentication currentAuthentication, RoleAssignmentRepository roleAssignmentRepository) {
         this.currentAuthentication = currentAuthentication;

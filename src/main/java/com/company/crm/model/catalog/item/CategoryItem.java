@@ -6,6 +6,7 @@ import io.jmix.core.FileRef;
 import io.jmix.core.metamodel.annotation.Composition;
 import io.jmix.core.metamodel.annotation.InstanceName;
 import io.jmix.core.metamodel.annotation.JmixEntity;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -47,7 +48,7 @@ public class CategoryItem extends FullAuditEntity {
     private String uom;
 
     @Composition
-    @OneToMany(mappedBy = "categoryItem")
+    @OneToMany(mappedBy = "categoryItem", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CategoryItemComment> comments;
 
     public FileRef getImage() {

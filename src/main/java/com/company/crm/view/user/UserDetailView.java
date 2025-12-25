@@ -45,6 +45,8 @@ public class UserDetailView extends StandardDetailView<User> {
     @Autowired
     private Notifications notifications;
     @Autowired
+    private DialogWindows dialogWindows;
+    @Autowired
     private PasswordEncoder passwordEncoder;
     @Autowired
     private CurrentAuthentication currentAuthentication;
@@ -63,8 +65,6 @@ public class UserDetailView extends StandardDetailView<User> {
     private JmixButton changePasswordButton;
 
     private boolean newEntity;
-    @Autowired
-    private DialogWindows dialogWindows;
 
     @Subscribe
     private void onInit(final InitEvent event) {
@@ -85,21 +85,6 @@ public class UserDetailView extends StandardDetailView<User> {
         } else {
             showChangePasswordButton(editedEntity);
         }
-    }
-
-    private void showChangePasswordButton(User editedEntity) {
-        UserDetails currentUser = currentAuthentication.getUser();
-        boolean canChangePassword = editedEntity.equals(currentUser) || roleUtils.isAdmin(currentUser);
-        changePasswordButton.setVisible(canChangePassword && !isReadOnly());
-        if (canChangePassword) {
-            changePasswordButton.addClickListener(e ->
-                    showChangePasswordDialog(editedEntity));
-        }
-    }
-
-    private void showPasswordFields() {
-        passwordField.setVisible(true);
-        confirmPasswordField.setVisible(true);
     }
 
     @Subscribe
@@ -128,6 +113,21 @@ public class UserDetailView extends StandardDetailView<User> {
 
             newEntity = false;
         }
+    }
+
+    private void showChangePasswordButton(User editedEntity) {
+        UserDetails currentUser = currentAuthentication.getUser();
+        boolean canChangePassword = editedEntity.equals(currentUser) || roleUtils.isAdmin(currentUser);
+        changePasswordButton.setVisible(canChangePassword && !isReadOnly());
+        if (canChangePassword) {
+            changePasswordButton.addClickListener(e ->
+                    showChangePasswordDialog(editedEntity));
+        }
+    }
+
+    private void showPasswordFields() {
+        passwordField.setVisible(true);
+        confirmPasswordField.setVisible(true);
     }
 
     private void showChangePasswordDialog(User editedEntity) {
