@@ -1,11 +1,9 @@
-package com.company.crm.util;
+package com.company.crm.util.extenstion;
 
 import io.jmix.core.security.SystemAuthenticator;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
-import org.springframework.context.ApplicationContext;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 /**
  * JUnit extension for providing system authentication in integration tests.
@@ -24,7 +22,6 @@ public class AuthenticatedAsAdmin implements BeforeEachCallback, AfterEachCallba
     }
 
     private SystemAuthenticator getSystemAuthenticator(ExtensionContext context) {
-        ApplicationContext applicationContext = SpringExtension.getApplicationContext(context);
-        return applicationContext.getBean(SystemAuthenticator.class);
+        return ExtensionUtils.getBean(context, SystemAuthenticator.class);
     }
 }

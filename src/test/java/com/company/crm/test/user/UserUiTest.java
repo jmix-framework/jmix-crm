@@ -1,7 +1,8 @@
-package com.company.crm.tests.user;
+package com.company.crm.test.user;
 
 import com.company.crm.AbstractUiTest;
 import com.company.crm.model.user.User;
+import com.company.crm.util.UniqueValues;
 import com.company.crm.view.user.UserDetailView;
 import com.company.crm.view.user.UserListView;
 import io.jmix.flowui.component.grid.DataGrid;
@@ -10,7 +11,6 @@ import io.jmix.flowui.component.textfield.TypedTextField;
 import io.jmix.flowui.data.grid.DataGridItems;
 import io.jmix.flowui.kit.component.button.JmixButton;
 import io.jmix.flowui.testassist.UiTestUtils;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -26,23 +26,24 @@ public class UserUiTest extends AbstractUiTest {
 
         UserListView userListView = UiTestUtils.getCurrentView();
 
-        // click "Create" button
+        // Click the "Create" button
         JmixButton createBtn = UiTestUtils.getComponent(userListView, "createButton");
         createBtn.click();
 
-        // Get detail view
+        // Get user detail view
         UserDetailView userDetailView = UiTestUtils.getCurrentView();
 
         // Set username and password in the fields
         TypedTextField<String> usernameField = UiTestUtils.getComponent(userDetailView, "usernameField");
-        String username = "test-user-" + System.currentTimeMillis();
+        String username = UniqueValues.string();
         usernameField.setValue(username);
 
+        String password = UniqueValues.string();
         JmixPasswordField passwordField = UiTestUtils.getComponent(userDetailView, "passwordField");
-        passwordField.setValue("test-passwd");
+        passwordField.setValue(password);
 
         JmixPasswordField confirmPasswordField = UiTestUtils.getComponent(userDetailView, "confirmPasswordField");
-        confirmPasswordField.setValue("test-passwd");
+        confirmPasswordField.setValue(password);
 
         // Click "OK"
         JmixButton commitAndCloseBtn = UiTestUtils.getComponent(userDetailView, "saveAndCloseButton");
@@ -61,13 +62,5 @@ public class UserUiTest extends AbstractUiTest {
                 .filter(u -> u.getUsername().equals(username))
                 .findFirst()
                 .orElseThrow();
-    }
-
-    @AfterEach
-    void tearDown() {
-        dataManager.load(User.class)
-                .query("e.username like ?1", "test-user-%")
-                .list()
-                .forEach(u -> dataManager.remove(u));
     }
 }
