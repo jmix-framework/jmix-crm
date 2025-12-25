@@ -22,6 +22,7 @@
     <include file="/io/jmix/securitydata/liquibase/changelog.xml"/>
     <include file="/io/jmix/audit/liquibase/changelog.xml"/>
     <include file="/io/jmix/dynattr/liquibase/changelog.xml"/>
+    <include file="/io/jmix/reports/liquibase/changelog.xml"/>
 
     <includeAll path="/com/company/crm/liquibase/changelog"/>
 

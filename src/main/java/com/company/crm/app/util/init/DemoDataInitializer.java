@@ -15,9 +15,11 @@ import com.company.crm.model.order.OrderStatus;
 import com.company.crm.model.payment.Payment;
 import com.company.crm.model.user.User;
 import com.company.crm.model.user.activity.client.ClientUserActivity;
-import com.company.crm.model.user.activity.userprofile.UserProfileUserActivity;
 import com.company.crm.model.user.task.UserTask;
 import com.company.crm.security.AdministratorRole;
+import com.company.crm.security.ManagerRole;
+import com.company.crm.security.SupervisorRole;
+import com.company.crm.security.UiMinimalRole;
 import io.jmix.core.SaveContext;
 import io.jmix.core.UnconstrainedDataManager;
 import io.jmix.data.PersistenceHints;
@@ -38,12 +40,12 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static com.company.crm.app.util.price.PriceCalculator.calculateTotal;
@@ -61,7 +63,9 @@ public class DemoDataInitializer {
     private final UnconstrainedDataManager dataManager;
     private final PasswordEncoder passwordEncoder;
 
-    public DemoDataInitializer(RoleAssignmentRepository roleAssignmentRepository, UnconstrainedDataManager dataManager, PasswordEncoder passwordEncoder) {
+    public DemoDataInitializer(RoleAssignmentRepository roleAssignmentRepository,
+                               UnconstrainedDataManager dataManager,
+                               PasswordEncoder passwordEncoder) {
         this.roleAssignmentRepository = roleAssignmentRepository;
         this.passwordEncoder = passwordEncoder;
         this.dataManager = dataManager;
@@ -118,23 +122,19 @@ public class DemoDataInitializer {
     private void clearData() {
         log.info("Clearing data...");
         var entityClassesToRemove = List.of(
-                Payment.class,
-                Invoice.class,
-                Order.class,
-                Contact.class,
                 Client.class,
-                RoleAssignmentEntity.class,
-                UserProfileUserActivity.class,
-                ClientUserActivity.class,
-                CategoryItem.class,
                 Category.class,
+                RoleAssignmentEntity.class,
+                UserTask.class,
                 User.class
         );
 
         for (Class<?> entityClass : entityClassesToRemove) {
             List<?> entitiesToRemove = dataManager.load(entityClass).all().list();
             filterEntitiesToRemove(entityClass, entitiesToRemove);
+
             log.info("Removing {} entities of type {}", entitiesToRemove.size(), entityClass.getSimpleName());
+
             SaveContext saveContext = new SaveContext()
                     .setDiscardSaved(true)
                     .setHint(PersistenceHints.SOFT_DELETION, false);
@@ -230,6 +230,8 @@ public class DemoDataInitializer {
     private List<User> generateUsers() {
         log.info("Generating users...");
         return List.of(
+                saveUser(ManagerRole.CODE.toLowerCase(), "Mike", "Wazowski"),
+                saveUser(SupervisorRole.CODE.toLowerCase(), "James", "Sullivan"),
                 saveUser("alice", "Alice", "Brown"),
                 saveUser("james", "James", "Wilson"),
                 saveUser("mary", "Mary", "Jones"),
@@ -282,20 +284,25 @@ public class DemoDataInitializer {
         user.setUsername(username);
         user.setFirstName(firstName);
         user.setLastName(lastName);
-        user.setPassword(createPassword());
+        user.setPassword(passwordEncoder.encode(username));
         return dataManager.save(user);
     }
 
     private void assignRoles(List<User> users) {
         log.info("Assigning roles to users...");
         for (User user : users) {
-            boolean isManager = Arrays.asList("alice", "james").contains(user.getUsername());
+            boolean isSupervisor = Objects.equals(SupervisorRole.CODE.toLowerCase(), user.getUsername());
+            boolean isManager = Objects.equals(ManagerRole.CODE.toLowerCase(), user.getUsername());
+            String roleCode = isSupervisor ? SupervisorRole.CODE
+                    : isManager ? ManagerRole.CODE
+                    : UiMinimalRole.CODE;
 
             RoleAssignmentEntity roleAssignment = dataManager.create(RoleAssignmentEntity.class);
             roleAssignment.setUsername(user.getUsername());
-            roleAssignment.setRoleCode(isManager ? "manager" : "employee");
+            roleAssignment.setRoleCode(roleCode);
             roleAssignment.setRoleType(RoleAssignmentRoleType.RESOURCE);
             dataManager.saveWithoutReload(roleAssignment);
+            log.info("Role [{}] assigned to user [{}]", roleCode, user.getUsername());
         }
     }
 
@@ -496,10 +503,6 @@ public class DemoDataInitializer {
                 dataManager.saveWithoutReload(payment);
             }
         }
-    }
-
-    private String createPassword() {
-        return passwordEncoder.encode("1");
     }
 
     private String randomVatLike(ThreadLocalRandom r) {

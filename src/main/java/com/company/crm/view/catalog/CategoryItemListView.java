@@ -31,6 +31,7 @@ import io.jmix.flowui.model.CollectionLoader;
 import io.jmix.flowui.view.DialogMode;
 import io.jmix.flowui.view.Install;
 import io.jmix.flowui.view.LookupComponent;
+import io.jmix.flowui.view.MessageBundle;
 import io.jmix.flowui.view.StandardListView;
 import io.jmix.flowui.view.Subscribe;
 import io.jmix.flowui.view.Supply;
@@ -48,6 +49,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static com.company.crm.app.util.ui.CrmUiUtils.addRowSelectionInMultiSelectMode;
@@ -87,6 +89,8 @@ public class CategoryItemListView extends StandardListView<CategoryItem> {
     private DataGrid<CategoryItem> categoryItemsDataGrid;
 
     private final LogicalCondition filtersCondition = LogicalCondition.and();
+    @ViewComponent
+    private MessageBundle messageBundle;
 
     @Subscribe
     public void onInit(final InitEvent event) {
@@ -108,6 +112,16 @@ public class CategoryItemListView extends StandardListView<CategoryItem> {
     @Install(to = "pagination", subject = "totalCountByRepositoryDelegate")
     private Long paginationTotalCountByRepositoryDelegate(final JmixDataRepositoryContext context) {
         return itemRepository.count(wrapContext(context, filtersCondition));
+    }
+
+    @Supply(to = "categoryItemsDataGrid.name", subject = "renderer")
+    private Renderer<CategoryItem> categoryItemsDataGridNameRenderer() {
+        return crmRenderers.entityLink(Function.identity());
+    }
+
+    @Supply(to = "categoryItemsDataGrid.category", subject = "renderer")
+    private Renderer<CategoryItem> categoryItemsDataGridCategoryRenderer() {
+        return crmRenderers.entityLink(CategoryItem::getCategory);
     }
 
     @Supply(to = "categoryItemsDataGrid.code", subject = "renderer")
@@ -169,12 +183,12 @@ public class CategoryItemListView extends StandardListView<CategoryItem> {
     }
 
     private Pair<Chart, Supplier<DataSet>> createBestOrderItemsChart() {
-        Chart chart = chartsUtils.createViewStatPieChart("Best order items");
+        Chart chart = chartsUtils.createViewStatPieChart(messageBundle.getMessage("bestOrderItems"));
         return new Pair<>(chart, () -> createBestOrderItemsChartDataSet(null));
     }
 
     private Pair<Chart, Supplier<DataSet>> createOrderedThisMonthChart() {
-        Chart chart = chartsUtils.createViewStatPieChart("Ordered this month");
+        Chart chart = chartsUtils.createViewStatPieChart(messageBundle.getMessage("orderedThisMonth"));
         return new Pair<>(chart, () -> createBestOrderItemsChartDataSet(dateTimeService.getCurrentMonthRange()));
     }
 

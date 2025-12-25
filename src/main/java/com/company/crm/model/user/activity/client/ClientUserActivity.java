@@ -11,7 +11,6 @@ import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotNull;
 
 @JmixEntity
 @Table(name = "CLIENT_USER_ACITIVTY", indexes = {
@@ -20,9 +19,9 @@ import jakarta.validation.constraints.NotNull;
 })
 @Entity
 public class ClientUserActivity extends UserActivity {
+
     @OnDeleteInverse(DeletePolicy.CASCADE)
     @JoinColumn(name = "CLIENT_ID", nullable = false)
-    @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     private Client client;
 

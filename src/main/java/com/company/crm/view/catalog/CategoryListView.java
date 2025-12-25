@@ -8,11 +8,14 @@ import com.company.crm.view.main.MainView;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.grid.editor.EditorCloseEvent;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.router.Route;
 import io.jmix.core.DataManager;
+import io.jmix.core.Messages;
 import io.jmix.core.repository.JmixDataRepositoryContext;
 import io.jmix.flowui.UiComponents;
+import io.jmix.flowui.action.list.EditAction;
 import io.jmix.flowui.component.grid.TreeDataGrid;
 import io.jmix.flowui.component.grid.editor.DataGridEditor;
 import io.jmix.flowui.component.grid.editor.EditComponentGenerationContext;
@@ -55,6 +58,10 @@ public class CategoryListView extends StandardListView<Category> {
     private CollectionContainer<Category> categoriesDc;
     @ViewComponent
     private TreeDataGrid<Category> categoriesDataGrid;
+    @Autowired
+    private Messages messages;
+    @ViewComponent("categoriesDataGrid.editAction")
+    private EditAction<Category> editAction;
 
     @Subscribe
     public void onInit(InitEvent event) {
@@ -64,6 +71,11 @@ public class CategoryListView extends StandardListView<Category> {
     @Install(to = "categoriesDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
     private List<Category> loadDelegate(Pageable pageable, JmixDataRepositoryContext context) {
         return categoryRepository.findAll(pageable, context).getContent();
+    }
+
+    @Install(to = "pagination", subject = "totalCountByRepositoryDelegate")
+    private Long paginationTotalCountByRepositoryDelegate(final JmixDataRepositoryContext context) {
+        return categoryRepository.count(context);
     }
 
     @Subscribe("categoriesDataGrid.editAction")
@@ -76,23 +88,55 @@ public class CategoryListView extends StandardListView<Category> {
         categoryRepository.deleteAll(collection);
     }
 
-    @Install(to = "pagination", subject = "totalCountByRepositoryDelegate")
-    private Long paginationTotalCountByRepositoryDelegate(final JmixDataRepositoryContext context) {
-        return categoryRepository.count(context);
-    }
-
     @Install(to = "categoriesDataGrid.@editor", subject = "closeListener")
     private void categoriesDataGridEditorCloseListener(final EditorCloseEvent<Category> event) {
         categoriesDc.replaceItem(dataManager.save(event.getItem()));
     }
 
+    @Supply(to = "categoriesDataGrid.code", subject = "renderer")
+    private Renderer<Category> categoriesDataGridCodeRenderer() {
+        return crmRenderers.categoryCode();
+    }
+
+    @Install(to = "categoriesDataGrid.createAction", subject = "newEntitySupplier")
+    private Category categoriesDataGridCreateActionNewEntitySupplier() {
+        Category category = dataManager.create(Category.class);
+        Category parent = categoriesDataGrid.getSingleSelectedItem();
+        if (parent != null) {
+            category.setParent(parent);
+        }
+        return category;
+    }
+
+    @Install(to = "categoriesDataGrid.createAction", subject = "afterSaveHandler")
+    private void categoriesDataGridCreateActionAfterSaveHandler(final Category category) {
+        Category parent = category.getParent();
+        if (parent != null) {
+            categoriesDataGrid.expand(parent);
+        }
+        categoriesDataGrid.select(category);
+    }
+
     private void configureInlineEdit() {
         addGridDoubleClickListener();
         installDefaultStringEditorComponent("code", "name", "description");
+        addEditorListeners();
     }
 
     private void addGridDoubleClickListener() {
         categoriesDataGrid.addItemDoubleClickListener(e -> editItem(e.getItem()));
+    }
+
+    private void addEditorListeners() {
+        DataGridEditor<Category> editor = categoriesDataGrid.getEditor();
+        editor.addOpenListener(e -> {
+            editAction.setText(messages.getMessage("actions.Cancel"));
+            editAction.setIcon(VaadinIcon.BAN.create());
+        });
+        editor.addCloseListener(e -> {
+            editAction.setText(messages.getMessage("actions.Edit"));
+            editAction.setIcon(VaadinIcon.PENCIL.create());
+        });
     }
 
     private void installDefaultStringEditorComponent(String... columns) {
@@ -117,6 +161,7 @@ public class CategoryListView extends StandardListView<Category> {
     }
 
     private void editItem(Category selectedItem) {
+        categoriesDataGrid.select(selectedItem);
         categoriesDataGrid.getEditor().editItem(selectedItem);
     }
 
@@ -130,10 +175,5 @@ public class CategoryListView extends StandardListView<Category> {
             component.focus();
         }
         return component;
-    }
-
-    @Supply(to = "categoriesDataGrid.code", subject = "renderer")
-    private Renderer<Category> categoriesDataGridCodeRenderer() {
-        return crmRenderers.categoryCode();
     }
 }

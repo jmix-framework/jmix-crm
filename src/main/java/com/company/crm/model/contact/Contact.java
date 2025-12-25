@@ -22,7 +22,6 @@ import java.time.LocalDate;
 @Entity
 public class Contact extends FullAuditEntity {
 
-    @InstanceName
     @JoinColumn(name = "CLIENT_ID", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     private Client client;
@@ -45,6 +44,11 @@ public class Contact extends FullAuditEntity {
     @Email
     @Column(name = "EMAIL")
     private String email;
+
+    @InstanceName
+    public String getInstanceName() {
+        return String.format("%s %s | tel: %s | mail: %s", position, person, phone, email);
+    }
 
     public String getEmail() {
         return email;

@@ -44,7 +44,6 @@ public final class CrmConstants {
         public static final String USER_DETAIL = "User.detail";
 
         public static final String USER_TASK_LIST = "UserTask.list";
-        public static final String USER_TASK_DETAIL = "UserTask.detail";
 
         private ViewIds() {
         }

@@ -19,9 +19,9 @@
     <actions>
         <action id="saveCloseAction" type="detail_saveClose" text="msg:///actions.Save"/>
         <action id="closeAction" type="detail_close" text="msg:///actions.Close" icon="vaadin:close"/>
-        <action id="cloneAction" text="Clone" icon="vaadin:copy"/>
-        <action id="emailAction" text="E-Mail" icon="vaadin:envelope-o"/>
-        <action id="downloadAction" text="Download" icon="vaadin:download-alt" actionVariant="SUCCESS"/>
+        <action id="cloneAction" text="msg:///clone" icon="vaadin:copy"/>
+        <action id="emailAction" text="msg:///email" icon="vaadin:envelope-o"/>
+        <action id="downloadAction" text="msg:///download" icon="vaadin:download-alt" actionVariant="SUCCESS"/>
     </actions>
     <layout>
         <hbox width="100%" padding="true" justifyContent="BETWEEN" alignItems="CENTER">

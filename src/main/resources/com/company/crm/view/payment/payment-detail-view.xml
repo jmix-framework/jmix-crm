@@ -9,6 +9,9 @@
             </fetchPlan>
             <loader id="paymentDl"/>
         </instance>
+        <collection id="invoicesDc" class="com.company.crm.model.invoice.Invoice">
+            <loader id="invoicesDl"/>
+        </collection>
     </data>
     <facets>
         <dataLoadCoordinator auto="true"/>
@@ -23,12 +26,12 @@
                 <responsiveStep minWidth="0" columns="1"/>
                 <responsiveStep minWidth="40em" columns="2"/>
             </responsiveSteps>
-            <entityPicker id="invoiceField" property="invoice">
+            <entityComboBox id="invoiceField" property="invoice" itemsContainer="invoicesDc">
                 <actions>
                     <action id="entityLookupAction" type="entity_lookup"/>
                     <action id="entityClearAction" type="entity_clear"/>
                 </actions>
-            </entityPicker>
+            </entityComboBox>
             <datePicker id="dateField" property="date"/>
             <textField id="amountField" property="amount"/>
         </formLayout>

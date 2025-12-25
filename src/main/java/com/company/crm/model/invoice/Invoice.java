@@ -5,6 +5,8 @@ import com.company.crm.model.client.Client;
 import com.company.crm.model.datatype.PriceDataType;
 import com.company.crm.model.order.Order;
 import com.company.crm.model.payment.Payment;
+import io.jmix.core.DeletePolicy;
+import io.jmix.core.entity.annotation.OnDelete;
 import io.jmix.core.metamodel.annotation.DependsOnProperties;
 import io.jmix.core.metamodel.annotation.InstanceName;
 import io.jmix.core.metamodel.annotation.JmixEntity;
@@ -37,6 +39,7 @@ public class Invoice extends FullAuditEntity {
     private Client client;
 
     @OrderBy("date")
+    @OnDelete(DeletePolicy.CASCADE)
     @OneToMany(mappedBy = "invoice")
     private List<Payment> payments;
 
@@ -138,9 +141,10 @@ public class Invoice extends FullAuditEntity {
     }
 
     @InstanceName
-    @DependsOnProperties({"date", "total"})
+    @DependsOnProperties({"order", "date", "total"})
     public String getInstanceName(DatatypeFormatter datatypeFormatter) {
-        return String.format("%s, %s",
+        return String.format("Invoice for order %s from %s: %s",
+                order.getNumber(),
                 datatypeFormatter.formatLocalDate(date),
                 datatypeFormatter.formatBigDecimal(total));
     }

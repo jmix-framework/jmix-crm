@@ -10,9 +10,11 @@ import io.jmix.security.role.annotation.EntityAttributePolicy;
 import io.jmix.security.role.annotation.EntityPolicy;
 import io.jmix.security.role.annotation.ResourceRole;
 
-@ResourceRole(name = "HeadOfSales", code = SupervisorRole.CODE)
+@ResourceRole(name = SupervisorRole.NAME, code = SupervisorRole.CODE)
 public interface SupervisorRole extends ManagerRole {
-    String CODE = "head-of-sales";
+
+    String CODE = "supervisor";
+    String NAME = "Supervisor";
 
     @EntityAttributePolicy(entityClass = Client.class, attributes = "accountManager", action = EntityAttributePolicyAction.MODIFY)
     void client();

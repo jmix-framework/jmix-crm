@@ -32,6 +32,7 @@ import io.jmix.flowui.model.CollectionLoader;
 import io.jmix.flowui.view.DialogMode;
 import io.jmix.flowui.view.Install;
 import io.jmix.flowui.view.LookupComponent;
+import io.jmix.flowui.view.MessageBundle;
 import io.jmix.flowui.view.StandardListView;
 import io.jmix.flowui.view.Subscribe;
 import io.jmix.flowui.view.Supply;
@@ -103,6 +104,8 @@ public class PaymentListView extends StandardListView<Payment> {
     private TypedDatePicker<LocalDate> payments_ToDatePicker;
 
     private final LogicalCondition filtersCondition = LogicalCondition.and();
+    @ViewComponent
+    private MessageBundle messageBundle;
 
     @Subscribe
     private void onInit(final InitEvent event) {
@@ -230,12 +233,12 @@ public class PaymentListView extends StandardListView<Payment> {
     }
 
     private Pair<Chart, Supplier<DataSet>> createTotalsByClientChart() {
-        Chart chart = chartsUtils.createViewStatPieChart("Totals by clients");
+        Chart chart = chartsUtils.createViewStatPieChart(messageBundle.getMessage("totalsByClients"));
         return new Pair<>(chart, this::createTotalsByClientChartDataSet);
     }
 
     private Pair<Chart, Supplier<DataSet>> createBiggestPaymentsChart() {
-        Chart chart = chartsUtils.createViewStatPieChart("Biggest payments");
+        Chart chart = chartsUtils.createViewStatPieChart(messageBundle.getMessage("biggestPayments"));
         return new Pair<>(chart, this::createBiggestPaymentsChartDataSet);
     }
 

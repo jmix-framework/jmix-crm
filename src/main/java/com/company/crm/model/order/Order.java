@@ -5,6 +5,8 @@ import com.company.crm.app.util.context.AppContext;
 import com.company.crm.model.base.FullAuditEntity;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.datatype.PriceDataType;
+import io.jmix.core.DeletePolicy;
+import io.jmix.core.entity.annotation.OnDelete;
 import io.jmix.core.metamodel.annotation.Composition;
 import io.jmix.core.metamodel.annotation.DependsOnProperties;
 import io.jmix.core.metamodel.annotation.InstanceName;
@@ -44,6 +46,7 @@ public class Order extends FullAuditEntity {
     private Client client;
 
     @Composition
+    @OnDelete(DeletePolicy.CASCADE)
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> orderItems;
 
@@ -159,10 +162,7 @@ public class Order extends FullAuditEntity {
     public String getInstanceName(DatatypeFormatter datatypeFormatter) {
         String orderNumber = getNumber();
         if (StringUtils.isNotBlank(orderNumber)) {
-            return String.format("%s | %s | %s$",
-                    orderNumber,
-                    datatypeFormatter.formatLocalDate(date),
-                    datatypeFormatter.formatBigDecimal(total));
+            return String.format("Order %s from %s", orderNumber, datatypeFormatter.formatLocalDate(date));
         } else {
             return "New Order";
         }

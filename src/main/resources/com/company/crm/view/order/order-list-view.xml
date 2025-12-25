@@ -57,7 +57,9 @@
             <button id="createButton" action="ordersDataGrid.createAction"/>
             <button id="editButton" action="ordersDataGrid.editAction"/>
             <button id="removeButton" action="ordersDataGrid.removeAction"/>
-            <simplePagination id="pagination" dataLoader="ordersDl"/>
+            <simplePagination id="pagination" dataLoader="ordersDl" classNames="ml-auto"/>
+            <gridColumnVisibility dataGrid="ordersDataGrid" icon="COG_O"
+                                  themeNames="tertiary-inline" hideAllEnabled="false"/>
         </hbox>
         <component id="pipeLineFilter" class="com.company.crm.app.ui.component.OrderStatusPipeline"/>
         <dataGrid id="ordersDataGrid" dataContainer="ordersDc"

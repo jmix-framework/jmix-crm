@@ -130,12 +130,12 @@ public class RecentActivitiesBlock extends Div implements ApplicationContextAwar
 
     private void addTodayActivities() {
         LocalDate todayStart = dateTimeService.getCurrentDayStart().toLocalDate();
-        addActivities("Today", todayStart);
+        addActivities(messages.getMessage("today"), todayStart);
     }
 
     private void addYesterdayActivities() {
         LocalDate yesterdayStart = dateTimeService.getCurrentDayStart().toLocalDate().minusDays(1);
-        addActivities("Yesterday", yesterdayStart);
+        addActivities(messages.getMessage("yesterday"), yesterdayStart);
     }
 
     private void addActivitiesBlock(String title, LocalDate date) {

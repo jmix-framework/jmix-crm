@@ -28,10 +28,12 @@ import io.jmix.core.FetchPlan;
 import io.jmix.core.SaveContext;
 import io.jmix.core.common.datastruct.Pair;
 import io.jmix.core.repository.JmixDataRepositoryContext;
+import io.jmix.flowui.Notifications;
 import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.component.formlayout.JmixFormLayout;
 import io.jmix.flowui.component.splitlayout.JmixSplitLayout;
 import io.jmix.flowui.component.tabsheet.JmixTabSheet;
+import io.jmix.flowui.kit.action.ActionPerformedEvent;
 import io.jmix.flowui.view.DialogMode;
 import io.jmix.flowui.view.EditedEntityContainer;
 import io.jmix.flowui.view.Install;
@@ -86,6 +88,8 @@ public class ClientDetailView extends StandardDetailView<Client> implements Widt
 
     @SuppressWarnings("FieldCanBeLocal")
     private final int loadStatsForLastYearsAmount = 3;
+    @Autowired
+    private Notifications notifications;
 
     @Override
     public void configureUiForWidth(int width) {
@@ -117,6 +121,14 @@ public class ClientDetailView extends StandardDetailView<Client> implements Widt
     @Install(to = "activitiesDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
     private List<? extends UserActivity> activitiesDlLoadFromRepositoryDelegate(final Pageable pageable, final JmixDataRepositoryContext ctx) {
         return userActivityRepository.findAll(pageable, ctx).getContent();
+    }
+
+    @Subscribe("downloadProfile")
+    private void onDownloadProfile(final ActionPerformedEvent event) {
+        // TODO: download custom design-time report
+        notifications.create("Client profile downloaded successfully")
+                .withType(Notifications.Type.SUCCESS)
+                .show();
     }
 
     private Map<Chart, Supplier<DataSet>> getChartsLoaders() {

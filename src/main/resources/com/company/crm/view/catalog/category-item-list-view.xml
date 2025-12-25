@@ -62,8 +62,7 @@
                   minHeight="20em"
                   dataContainer="categoryItemsDc"
                   multiSort="true"
-                  columnReorderingAllowed="true"
-                  selectionMode="MULTI">
+                  columnReorderingAllowed="true">
             <actions>
                 <action id="createAction" type="list_create">
                     <properties>

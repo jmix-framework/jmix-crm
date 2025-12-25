@@ -25,12 +25,19 @@
             </responsiveSteps>
             <textField id="codeField" property="code"/>
             <textField id="nameField" property="name"/>
-            <entityPicker id="parentField" property="parent">
+            <entityComboBox id="parentField" property="parent" dataContainer="categoryDc">
                 <actions>
                     <action id="entityLookupAction" type="entity_lookup"/>
                     <action id="entityClearAction" type="entity_clear"/>
                 </actions>
-            </entityPicker>
+                <itemsQuery class="com.company.crm.model.catalog.category.Category" escapeValueForLike="true"
+                            searchStringFormat="(?i)%${inputString}%">
+                    <fetchPlan extends="_base"/>
+                    <query>
+                        <![CDATA[select e from Category e where e.name like :searchString escape '\' order by e.name]]>
+                    </query>
+                </itemsQuery>
+            </entityComboBox>
             <textArea id="descriptionField" height="9.5em" property="description"/>
         </formLayout>
         <hbox id="detailActions">

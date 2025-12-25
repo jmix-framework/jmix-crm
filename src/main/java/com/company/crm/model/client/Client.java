@@ -7,7 +7,9 @@ import com.company.crm.model.invoice.Invoice;
 import com.company.crm.model.order.Order;
 import com.company.crm.model.payment.Payment;
 import com.company.crm.model.user.User;
+import io.jmix.core.DeletePolicy;
 import io.jmix.core.entity.annotation.EmbeddedParameters;
+import io.jmix.core.entity.annotation.OnDelete;
 import io.jmix.core.metamodel.annotation.Composition;
 import io.jmix.core.metamodel.annotation.DependsOnProperties;
 import io.jmix.core.metamodel.annotation.InstanceName;
@@ -39,10 +41,12 @@ public class Client extends FullAuditEntity {
     private String name;
 
     @OrderBy("date")
+    @OnDelete(DeletePolicy.CASCADE)
     @OneToMany(mappedBy = "client")
     private List<Invoice> invoices;
 
     @OrderBy("date")
+    @OnDelete(DeletePolicy.CASCADE)
     @OneToMany(mappedBy = "client")
     private List<Order> orders;
 

@@ -1,6 +1,5 @@
 package com.company.crm.security;
 
-import com.company.crm.app.util.constant.CrmConstants.ViewIds;
 import com.company.crm.model.address.Address;
 import com.company.crm.model.catalog.category.Category;
 import com.company.crm.model.catalog.item.CategoryItem;
@@ -11,8 +10,10 @@ import com.company.crm.model.invoice.Invoice;
 import com.company.crm.model.order.Order;
 import com.company.crm.model.order.OrderItem;
 import com.company.crm.model.payment.Payment;
+import com.company.crm.model.user.task.UserTask;
 import io.jmix.security.model.EntityAttributePolicyAction;
 import io.jmix.security.model.EntityPolicyAction;
+import io.jmix.security.model.SecurityScope;
 import io.jmix.security.role.annotation.EntityAttributePolicy;
 import io.jmix.security.role.annotation.EntityPolicy;
 import io.jmix.security.role.annotation.ResourceRole;
@@ -26,6 +27,7 @@ import static com.company.crm.app.util.constant.CrmConstants.ViewIds.CATEGORY_LI
 import static com.company.crm.app.util.constant.CrmConstants.ViewIds.CLIENT_DETAIL;
 import static com.company.crm.app.util.constant.CrmConstants.ViewIds.CLIENT_LIST;
 import static com.company.crm.app.util.constant.CrmConstants.ViewIds.FINANCE;
+import static com.company.crm.app.util.constant.CrmConstants.ViewIds.HOME;
 import static com.company.crm.app.util.constant.CrmConstants.ViewIds.INVOICE_DETAIL;
 import static com.company.crm.app.util.constant.CrmConstants.ViewIds.INVOICE_LIST;
 import static com.company.crm.app.util.constant.CrmConstants.ViewIds.ORDER_DETAIL;
@@ -33,13 +35,16 @@ import static com.company.crm.app.util.constant.CrmConstants.ViewIds.ORDER_ITEM_
 import static com.company.crm.app.util.constant.CrmConstants.ViewIds.ORDER_LIST;
 import static com.company.crm.app.util.constant.CrmConstants.ViewIds.PAYMENT_DETAIL;
 import static com.company.crm.app.util.constant.CrmConstants.ViewIds.PAYMENT_LIST;
+import static com.company.crm.app.util.constant.CrmConstants.ViewIds.USER_TASK_LIST;
 
-@ResourceRole(name = "Manager", code = ManagerRole.CODE, scope = "UI")
+@ResourceRole(name = "Manager", code = ManagerRole.CODE, scope = SecurityScope.UI)
 public interface ManagerRole extends UiMinimalRole {
-    String CODE = "manager";
 
-    @MenuPolicy(menuIds = {"home", "categories", "categoryItems", "clients", "orders", "finance"})
-    @ViewPolicy(viewIds = {ViewIds.HOME, CATEGORY_LIST, CATEGORY_ITEM_LIST, CLIENT_LIST,
+    String CODE = "manager";
+    String NAME = "Manager";
+
+    @MenuPolicy(menuIds = {"home", "tasks", "categories", "categoryItems", "clients", "orders", "finance"})
+    @ViewPolicy(viewIds = {HOME, USER_TASK_LIST, CATEGORY_LIST, CATEGORY_ITEM_LIST, CLIENT_LIST,
             ORDER_LIST, FINANCE, CATEGORY_ITEM_DETAIL, CATEGORY_DETAIL,
             CLIENT_DETAIL, INVOICE_DETAIL, INVOICE_LIST, ORDER_ITEM_DETAIL, ORDER_DETAIL,
             PAYMENT_DETAIL, PAYMENT_LIST})
@@ -62,7 +67,12 @@ public interface ManagerRole extends UiMinimalRole {
     void categoryItemComment();
 
     @EntityAttributePolicy(entityClass = Client.class, attributes = "accountManager", action = EntityAttributePolicyAction.VIEW)
-    @EntityAttributePolicy(entityClass = Client.class, attributes = {"id", "createdBy", "createdDate", "updatedBy", "updatedDate", "version", "deletedBy", "deletedDate", "name", "invoices", "orders", "fullName", "address", "type", "vatNumber", "regNumber", "website", "contacts"}, action = EntityAttributePolicyAction.MODIFY)
+    @EntityAttributePolicy(entityClass = Client.class,
+            attributes = {"id", "createdBy", "createdDate", "updatedBy", "updatedDate",
+                    "version", "deletedBy", "deletedDate", "name", "invoices",
+                    "orders", "fullName", "address", "type", "vatNumber",
+                    "regNumber", "website", "contacts"},
+            action = EntityAttributePolicyAction.MODIFY)
     @EntityPolicy(entityClass = Client.class, actions = EntityPolicyAction.ALL)
     void client();
 
@@ -85,4 +95,7 @@ public interface ManagerRole extends UiMinimalRole {
     @EntityAttributePolicy(entityClass = Payment.class, attributes = "*", action = EntityAttributePolicyAction.MODIFY)
     @EntityPolicy(entityClass = Payment.class, actions = EntityPolicyAction.ALL)
     void payment();
+
+    @EntityPolicy(entityClass = UserTask.class, actions = EntityPolicyAction.ALL)
+    void userTask();
 }

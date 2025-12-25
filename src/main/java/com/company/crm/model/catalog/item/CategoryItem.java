@@ -2,7 +2,9 @@ package com.company.crm.model.catalog.item;
 
 import com.company.crm.model.base.FullAuditEntity;
 import com.company.crm.model.catalog.category.Category;
+import io.jmix.core.DeletePolicy;
 import io.jmix.core.FileRef;
+import io.jmix.core.entity.annotation.OnDeleteInverse;
 import io.jmix.core.metamodel.annotation.Composition;
 import io.jmix.core.metamodel.annotation.InstanceName;
 import io.jmix.core.metamodel.annotation.JmixEntity;
@@ -30,6 +32,7 @@ public class CategoryItem extends FullAuditEntity {
     @Column(name = "NAME", nullable = false)
     private String name;
 
+    @OnDeleteInverse(DeletePolicy.CASCADE)
     @JoinColumn(name = "CATEGORY_ID")
     @ManyToOne(fetch = FetchType.LAZY)
     private Category category;

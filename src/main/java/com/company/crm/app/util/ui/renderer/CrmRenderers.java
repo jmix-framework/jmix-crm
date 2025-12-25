@@ -46,6 +46,8 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import static com.company.crm.app.util.ui.CrmUiUtils.DEFAULT_BADGE;
+import static com.company.crm.app.util.ui.CrmUiUtils.SUCCESS_BADGE;
 import static com.company.crm.app.util.ui.color.EnumClassColors.getBadgeVariant;
 import static io.jmix.flowui.component.UiComponentUtils.getCurrentView;
 
@@ -245,23 +247,23 @@ public class CrmRenderers {
             Period daysLeft = currentDate.until(dueDate);
 
             Boolean isCompleted = task.getIsCompleted();
-            var badgeVariant = isCompleted ? "success" : "default";
+            var badgeVariant = isCompleted ? SUCCESS_BADGE : DEFAULT_BADGE;
             if (!isCompleted) {
                 if (daysLeft.isNegative()) {
-                    badgeVariant = "error";
+                    badgeVariant = CrmUiUtils.ERROR_BADGE;
                 } else if (daysLeft.getDays() < 3) {
-                    badgeVariant = "warning";
+                    badgeVariant = CrmUiUtils.WARNING_BADGE;
                 }
             }
 
-            span.getElement().getThemeList().add("badge " + badgeVariant);
+            CrmUiUtils.setBadge(span, badgeVariant);
             return span;
         });
     }
 
     private Span createBadge(String text, String badgeVariant) {
         Span span = new Span(text);
-        span.getElement().getThemeList().add("badge " + badgeVariant);
+        CrmUiUtils.setBadge(span, badgeVariant);
         return span;
     }
 

@@ -84,7 +84,7 @@
                                             <responsiveStep minWidth="0" columns="1"/>
                                             <responsiveStep minWidth="40em" columns="2"/>
                                         </responsiveSteps>
-                                        <h3 text="Common" classNames="pt-l" colspan="2"/>
+                                        <h3 text="msg://common" classNames="pt-l" colspan="2"/>
                                         <textField id="nameField" property="name"/>
                                         <select id="typeField" property="type"/>
                                         <textField id="fullNameField" property="fullName"/>
@@ -113,8 +113,22 @@
                                             <responsiveStep minWidth="0" columns="1"/>
                                         </responsiveSteps>
                                         <h3 text="msg://managementTitle" classNames="pt-l"/>
-                                        <entityPicker id="accountManagerField" property="accountManager"
-                                                      readOnly="true" classNames="pb-l"/>
+                                        <entityComboBox id="accountManagerField" property="accountManager"
+                                                        readOnly="true" classNames="pb-l" dataContainer="clientDc">
+                                            <itemsQuery class="com.company.crm.model.user.User"
+                                                        escapeValueForLike="true"
+                                                        searchStringFormat="(?i)%${inputString}%">
+                                                <fetchPlan extends="_base"/>
+                                                <query>
+                                                    <![CDATA[select e from User e where e.username like :searchString escape '\' order by e.username]]>
+                                                </query>
+                                            </itemsQuery>
+                                            <actions>
+                                                <action id="entityClear" type="entity_clear"/>
+                                                <action id="entityLookup" type="entity_lookup"/>
+                                                <action id="entityOpen" type="entity_open"/>
+                                            </actions>
+                                        </entityComboBox>
                                         <component id="recentActivities"
                                                    class="com.company.crm.app.ui.component.RecentActivitiesBlock">
                                             <properties>

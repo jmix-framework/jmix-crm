@@ -9,16 +9,28 @@ import com.company.crm.model.order.OrderItem;
 import com.company.crm.model.order.OrderRepository;
 import com.company.crm.model.order.OrderStatus;
 import com.company.crm.view.main.MainView;
+import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.router.Route;
 import io.jmix.core.FetchPlan;
+import io.jmix.core.Messages;
 import io.jmix.core.SaveContext;
+import io.jmix.flowui.Dialogs;
+import io.jmix.flowui.UiComponents;
+import io.jmix.flowui.action.inputdialog.InputDialogAction;
+import io.jmix.flowui.app.inputdialog.InputParameter;
 import io.jmix.flowui.component.SupportsTypedValue.TypedValueChangeEvent;
+import io.jmix.flowui.component.grid.DataGrid;
+import io.jmix.flowui.component.richtexteditor.RichTextEditor;
 import io.jmix.flowui.component.textfield.TypedTextField;
+import io.jmix.flowui.download.Downloader;
 import io.jmix.flowui.exception.ValidationException;
+import io.jmix.flowui.kit.action.ActionPerformedEvent;
+import io.jmix.flowui.kit.action.ActionVariant;
 import io.jmix.flowui.model.InstanceContainer;
 import io.jmix.flowui.view.EditedEntityContainer;
 import io.jmix.flowui.view.Install;
@@ -30,6 +42,8 @@ import io.jmix.flowui.view.Target;
 import io.jmix.flowui.view.ViewComponent;
 import io.jmix.flowui.view.ViewController;
 import io.jmix.flowui.view.ViewDescriptor;
+import io.jmix.gridexportflowui.exporter.ExportMode;
+import io.jmix.gridexportflowui.exporter.excel.ExcelExporter;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;
@@ -50,7 +64,17 @@ import static com.company.crm.model.datatype.PriceDataType.formatWithoutCurrency
 public class OrderDetailView extends StandardDetailView<Order> {
 
     @Autowired
+    private Dialogs dialogs;
+    @Autowired
+    private Messages messages;
+    @Autowired
+    private Downloader downloader;
+    @Autowired
+    private UiComponents uiComponents;
+    @Autowired
     private CrmRenderers crmRenderers;
+    @Autowired
+    private ExcelExporter excelExporter;
     @Autowired
     private OrderRepository orderRepository;
     @Autowired
@@ -64,6 +88,8 @@ public class OrderDetailView extends StandardDetailView<Order> {
     private TypedTextField<BigDecimal> discountPercentField;
     @ViewComponent
     private H3 orderItemsCount;
+    @ViewComponent
+    private DataGrid<OrderItem> orderItemsGrid;
 
     @Subscribe
     private void onInitEntity(final InitEntityEvent<Order> event) {
@@ -120,6 +146,31 @@ public class OrderDetailView extends StandardDetailView<Order> {
     @Supply(to = "statusSelect", subject = "renderer")
     private ComponentRenderer<Span, OrderStatus> statusSelectRenderer() {
         return crmRenderers.orderStatusEnum();
+    }
+
+    @Subscribe("emailAction")
+    private void onEmailAction(final ActionPerformedEvent event) {
+        dialogs.createInputDialog(this)
+                .withParameter(InputParameter.parameter("text")
+                        .withLabel(messages.getMessage("email"))
+                        .withField(() -> uiComponents.create(RichTextEditor.class)))
+                .withActions(
+                        InputDialogAction.action("sendEmail").
+                                withText(messages.getMessage("send"))
+                                .withIcon(VaadinIcon.MAILBOX)
+                                .withVariant(ActionVariant.SUCCESS),
+                        InputDialogAction.action("close")
+                                .withText(messages.getMessage("actions.Close"))
+                                .withIcon(VaadinIcon.CLOSE))
+                .open();
+    }
+
+    @Subscribe("downloadAction")
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private void onDownloadAction(final ActionPerformedEvent event) {
+        // TODO: download custom design-time report
+        Grid itemsGrid = orderItemsGrid;
+        excelExporter.exportDataGrid(downloader, itemsGrid, ExportMode.CURRENT_PAGE);
     }
 
     private void selectStatusInPipeline() {

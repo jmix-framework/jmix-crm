@@ -81,8 +81,10 @@
     <changeSet author="b2b-crm" id="2">
         <validCheckSum>ANY</validCheckSum>
 
-        <addForeignKeyConstraint baseColumnNames="AUTHOR_ID" baseTableName="USER_TASK"
-                                 constraintName="FK_USER_TASK_ON_AUTHOR" referencedColumnNames="ID"
+        <addForeignKeyConstraint baseColumnNames="AUTHOR_ID"
+                                 baseTableName="USER_TASK"
+                                 constraintName="FK_USER_TASK_ON_AUTHOR"
+                                 referencedColumnNames="ID"
                                  referencedTableName="USER_"/>
 
         <addForeignKeyConstraint baseColumnNames="CATEGORY_ID"
@@ -91,42 +93,62 @@
                                  referencedColumnNames="ID"
                                  referencedTableName="CATEGORY"/>
 
-        <addForeignKeyConstraint baseColumnNames="ACCOUNT_MANAGER_ID" baseTableName="CLIENT"
-                                 constraintName="FK_CLIENT_ON_ACCOUNT_MANAGER" referencedColumnNames="ID"
+        <addForeignKeyConstraint baseColumnNames="ACCOUNT_MANAGER_ID"
+                                 baseTableName="CLIENT"
+                                 constraintName="FK_CLIENT_ON_ACCOUNT_MANAGER"
+                                 referencedColumnNames="ID"
                                  referencedTableName="USER_"/>
 
-        <addForeignKeyConstraint baseColumnNames="CLIENT_ID" baseTableName="CONTACT"
-                                 constraintName="FK_CONTACT_ON_CLIENT" referencedColumnNames="ID"
+        <addForeignKeyConstraint baseColumnNames="CLIENT_ID"
+                                 baseTableName="CONTACT"
+                                 constraintName="FK_CONTACT_ON_CLIENT"
+                                 referencedColumnNames="ID"
                                  referencedTableName="CLIENT"/>
 
-        <addForeignKeyConstraint baseColumnNames="CLIENT_ID" baseTableName="INVOICE"
-                                 constraintName="FK_INVOICE_ON_CLIENT" referencedColumnNames="ID"
+        <addForeignKeyConstraint baseColumnNames="CLIENT_ID"
+                                 baseTableName="INVOICE"
+                                 constraintName="FK_INVOICE_ON_CLIENT"
+                                 referencedColumnNames="ID"
                                  referencedTableName="CLIENT"/>
 
-        <addForeignKeyConstraint baseColumnNames="ORDER_ID" baseTableName="INVOICE" constraintName="FK_INVOICE_ON_ORDER"
-                                 referencedColumnNames="ID" referencedTableName="ORDER_"/>
+        <addForeignKeyConstraint baseColumnNames="ORDER_ID"
+                                 baseTableName="INVOICE"
+                                 constraintName="FK_INVOICE_ON_ORDER"
+                                 referencedColumnNames="ID"
+                                 referencedTableName="ORDER_"/>
 
-        <addForeignKeyConstraint baseColumnNames="CLIENT_ID" baseTableName="ORDER_" constraintName="FK_ORDER__ON_CLIENT"
-                                 referencedColumnNames="ID" referencedTableName="CLIENT"/>
+        <addForeignKeyConstraint baseColumnNames="CLIENT_ID"
+                                 baseTableName="ORDER_"
+                                 constraintName="FK_ORDER__ON_CLIENT"
+                                 referencedColumnNames="ID"
+                                 referencedTableName="CLIENT"/>
 
-        <addForeignKeyConstraint baseColumnNames="INVOICE_ID" baseTableName="PAYMENT"
-                                 constraintName="FK_PAYMENT_ON_INVOICE" referencedColumnNames="ID"
+        <addForeignKeyConstraint baseColumnNames="INVOICE_ID"
+                                 baseTableName="PAYMENT"
+                                 constraintName="FK_PAYMENT_ON_INVOICE"
+                                 referencedColumnNames="ID"
                                  referencedTableName="INVOICE"/>
 
         <addForeignKeyConstraint baseColumnNames="CATEGORY_ITEM_ID" baseTableName="CATEGORY_ITEM_COMMENT"
-                                 constraintName="FK_CATEGORY_ITEM_COMMENT_ON_CATEGORY_ITEM" referencedColumnNames="ID"
+                                 constraintName="FK_CATEGORY_ITEM_COMMENT_ON_CATEGORY_ITEM"
+                                 referencedColumnNames="ID"
                                  referencedTableName="CATEGORY_ITEM"/>
 
-        <addForeignKeyConstraint baseColumnNames="SENDER_ID" baseTableName="CATEGORY_ITEM_COMMENT"
-                                 constraintName="FK_CATEGORY_ITEM_COMMENT_ON_SENDER" referencedColumnNames="ID"
+        <addForeignKeyConstraint baseColumnNames="SENDER_ID"
+                                 baseTableName="CATEGORY_ITEM_COMMENT"
+                                 constraintName="FK_CATEGORY_ITEM_COMMENT_ON_SENDER"
+                                 referencedColumnNames="ID"
                                  referencedTableName="USER_"/>
 
-        <addForeignKeyConstraint baseColumnNames="CATEGORY_ITEM_ID" baseTableName="ORDER_ITEM"
-                                 constraintName="FK_ORDER_ITEM_ON_CATEGORY_ITEM" referencedColumnNames="ID"
+        <addForeignKeyConstraint baseColumnNames="CATEGORY_ITEM_ID"
+                                 baseTableName="ORDER_ITEM"
+                                 constraintName="FK_ORDER_ITEM_ON_CATEGORY_ITEM"
+                                 referencedColumnNames="ID"
                                  referencedTableName="CATEGORY_ITEM"/>
 
         <addForeignKeyConstraint baseColumnNames="ORDER_ID" baseTableName="ORDER_ITEM"
-                                 constraintName="FK_ORDER_ITEM_ON_ORDER" referencedColumnNames="ID"
+                                 constraintName="FK_ORDER_ITEM_ON_ORDER"
+                                 referencedColumnNames="ID"
                                  referencedTableName="ORDER_"/>
 
         <addForeignKeyConstraint baseColumnNames="PARENT_ID"

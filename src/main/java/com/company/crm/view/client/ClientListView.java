@@ -9,6 +9,7 @@ import com.company.crm.app.ui.component.CrmLoader;
 import com.company.crm.app.ui.component.card.CrmCard;
 import com.company.crm.app.util.AsyncTasksRegistry;
 import com.company.crm.app.util.constant.CrmConstants;
+import com.company.crm.app.util.ui.CrmUiUtils;
 import com.company.crm.app.util.ui.listener.resize.WidthResizeListener;
 import com.company.crm.app.util.ui.renderer.CrmRenderers;
 import com.company.crm.model.client.Client;
@@ -393,7 +394,7 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
             badge = "success";
         }
 
-        mainText.getElement().getThemeList().addAll(List.of("badge", badge));
+        CrmUiUtils.setBadge(mainText, badge);
         mainText.addClassNames(LumoUtility.FontSize.LARGE, LumoUtility.FontWeight.MEDIUM);
 
         Span hintText = new Span("Select clients in the table to show their statistics");

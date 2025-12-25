@@ -5,13 +5,13 @@ import com.company.crm.model.invoice.InvoiceStatus;
 import com.company.crm.model.order.OrderStatus;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 
-public final class EnumClassColors {
+import static com.company.crm.app.util.ui.CrmUiUtils.CONTRAST_BADGE;
+import static com.company.crm.app.util.ui.CrmUiUtils.DEFAULT_BADGE;
+import static com.company.crm.app.util.ui.CrmUiUtils.ERROR_BADGE;
+import static com.company.crm.app.util.ui.CrmUiUtils.SUCCESS_BADGE;
+import static com.company.crm.app.util.ui.CrmUiUtils.WARNING_BADGE;
 
-    private static final String CONTRAST_BADGE = "contrast";
-    private static final String DEFAULT_BADGE = "default";
-    private static final String SUCCESS_BADGE = "success";
-    private static final String WARNING_BADGE = "warning";
-    private static final String ERROR_BADGE = "error";
+public final class EnumClassColors {
 
     public static String getBackgroundClass(OrderStatus status) {
         return switch (status) {

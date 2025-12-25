@@ -39,6 +39,7 @@ import io.jmix.flowui.model.CollectionLoader;
 import io.jmix.flowui.view.DialogMode;
 import io.jmix.flowui.view.Install;
 import io.jmix.flowui.view.LookupComponent;
+import io.jmix.flowui.view.MessageBundle;
 import io.jmix.flowui.view.StandardListView;
 import io.jmix.flowui.view.Subscribe;
 import io.jmix.flowui.view.Supply;
@@ -110,6 +111,8 @@ public class InvoiceListView extends StandardListView<Invoice> {
     private CollectionLoader<Invoice> invoicesDl;
 
     private final LogicalCondition filtersCondition = LogicalCondition.and();
+    @ViewComponent
+    private MessageBundle messageBundle;
 
     @Subscribe
     private void onInit(final InitEvent event) {
@@ -242,17 +245,17 @@ public class InvoiceListView extends StandardListView<Invoice> {
     }
 
     private Pair<Chart, Supplier<DataSet>> paidOrInvoicedByMonthsChart() {
-        Chart chart = chartsUtils.createViewStatPieChart("Paid / Total");
+        Chart chart = chartsUtils.createViewStatPieChart(messageBundle.getMessage("paid2Total"));
         return new Pair<>(chart, this::createPaidInvoicesChartDataSet);
     }
 
     private Pair<Chart, Supplier<DataSet>> invoicesByStatusChart() {
-        Chart chart = chartsUtils.createViewStatPieChart("By status");
+        Chart chart = chartsUtils.createViewStatPieChart(messageBundle.getMessage("byStatus"));
         return new Pair<>(chart, () -> createInvoicesByStatusChartDataSet(null, null));
     }
 
     private Pair<Chart, Supplier<DataSet>> newInvoicesByMonthsChart() {
-        Chart chart = chartsUtils.createViewStatChart("New by month", SeriesType.BAR)
+        Chart chart = chartsUtils.createViewStatChart(messageBundle.getMessage("newByMonths"), SeriesType.BAR)
                 .withLegend(new Legend().withShow(false));
         return new Pair<>(chart, this::createNewInvoicesByMonthsDataSet);
     }

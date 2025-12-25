@@ -3,6 +3,7 @@ package com.company.crm.app.util.ui;
 import com.vaadin.flow.component.HasStyle;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.page.BrowserWindowResizeEvent;
 import com.vaadin.flow.component.page.Page;
 import com.vaadin.flow.component.page.PendingJavaScriptResult;
@@ -21,6 +22,12 @@ import java.util.function.Consumer;
 import static com.company.crm.model.datatype.PriceDataType.getCurrencySymbol;
 
 public final class CrmUiUtils {
+
+    public static final String CONTRAST_BADGE = "contrast";
+    public static final String DEFAULT_BADGE = "default";
+    public static final String SUCCESS_BADGE = "success";
+    public static final String WARNING_BADGE = "warning";
+    public static final String ERROR_BADGE = "error";
 
     private static final String GET_CLIENT_WIDTH_FUNC = "return window.innerWidth";
     private static final String GET_CLIENT_HEIGHT_FUNC = "return window.innerHeight";
@@ -52,6 +59,10 @@ public final class CrmUiUtils {
 
     public enum ResizeMode {
         VERTICAL, HORIZONTAL, BOTH
+    }
+
+    public static void setBadge(Span span, String badgeVariant) {
+        span.getElement().getThemeList().add("badge " + badgeVariant);
     }
 
     public static void setCursorPointer(HasStyle hasStyle) {

@@ -2,8 +2,6 @@ package com.company.crm.model.user.task;
 
 import com.company.crm.model.base.FullAuditEntity;
 import com.company.crm.model.user.User;
-import io.jmix.core.DeletePolicy;
-import io.jmix.core.entity.annotation.OnDeleteInverse;
 import io.jmix.core.metamodel.annotation.InstanceName;
 import io.jmix.core.metamodel.annotation.JmixEntity;
 import jakarta.persistence.Column;
@@ -39,7 +37,6 @@ public class UserTask extends FullAuditEntity {
     private LocalDate dueDate;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @OnDeleteInverse(DeletePolicy.CASCADE)
     @JoinColumn(name = "AUTHOR_ID")
     private User author;
 
