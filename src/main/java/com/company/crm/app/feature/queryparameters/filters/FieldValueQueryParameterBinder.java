@@ -46,30 +46,11 @@ public class FieldValueQueryParameterBinder extends AbstractUrlQueryParametersBi
         return new Builder(view);
     }
 
-    public static <V, C extends Component & HasValue<?, V>> void register(View<?> view,
-                                                                          C component,
-                                                                          Function<V, String> serializer,
-                                                                          Function<String, V> deserializer) {
-        validateIds(List.of(component));
-        new FieldValueQueryParameterBinder(
-                getUrlQueryParametersFacet(view),
-                List.of(new ComponentValueBinder<>(component, serializer, deserializer)));
+    private FieldValueQueryParameterBinder(Collection<ComponentValueBinder> fields, View<?> view) {
+        this(fields, getUrlQueryParametersFacet(view));
     }
 
-    public static <C extends Component & HasValue<?, String>> void register(View<?> view, C... fields) {
-        new FieldValueQueryParameterBinder(view, fields);
-    }
-
-    @SafeVarargs
-    public <C extends Component & HasValue<?, String>> FieldValueQueryParameterBinder(View<?> view, C... fields) {
-        this(view, stream(fields).toList());
-    }
-
-    public <C extends Component & HasValue<?, String>> FieldValueQueryParameterBinder(View<?> view, Collection<C> fields) {
-        this(getUrlQueryParametersFacet(view), createStringBinders(fields));
-    }
-
-    private FieldValueQueryParameterBinder(UrlQueryParametersFacet facet, Collection<ComponentValueBinder> fields) {
+    private FieldValueQueryParameterBinder(Collection<ComponentValueBinder> fields, UrlQueryParametersFacet facet) {
         delegate = createDelegate(facet, fields);
     }
 
@@ -228,7 +209,7 @@ public class FieldValueQueryParameterBinder extends AbstractUrlQueryParametersBi
         }
 
         public FieldValueQueryParameterBinder build() {
-            return new FieldValueQueryParameterBinder(getUrlQueryParametersFacet(view), binders);
+            return new FieldValueQueryParameterBinder(binders, view);
         }
     }
 }

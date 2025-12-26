@@ -20,6 +20,8 @@ import io.jmix.core.FetchPlan;
 import io.jmix.core.Messages;
 import io.jmix.core.SaveContext;
 import io.jmix.flowui.Dialogs;
+import io.jmix.flowui.Dialogs.InputDialogBuilder.LabelsPosition;
+import io.jmix.flowui.Notifications;
 import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.action.inputdialog.InputDialogAction;
 import io.jmix.flowui.app.inputdialog.InputParameter;
@@ -34,8 +36,10 @@ import io.jmix.flowui.kit.action.ActionVariant;
 import io.jmix.flowui.model.InstanceContainer;
 import io.jmix.flowui.view.EditedEntityContainer;
 import io.jmix.flowui.view.Install;
+import io.jmix.flowui.view.MessageBundle;
 import io.jmix.flowui.view.PrimaryDetailView;
 import io.jmix.flowui.view.StandardDetailView;
+import io.jmix.flowui.view.StandardOutcome;
 import io.jmix.flowui.view.Subscribe;
 import io.jmix.flowui.view.Supply;
 import io.jmix.flowui.view.Target;
@@ -90,6 +94,10 @@ public class OrderDetailView extends StandardDetailView<Order> {
     private H3 orderItemsCount;
     @ViewComponent
     private DataGrid<OrderItem> orderItemsGrid;
+    @Autowired
+    private Notifications notifications;
+    @ViewComponent
+    private MessageBundle messageBundle;
 
     @Subscribe
     private void onInitEntity(final InitEntityEvent<Order> event) {
@@ -151,18 +159,37 @@ public class OrderDetailView extends StandardDetailView<Order> {
     @Subscribe("emailAction")
     private void onEmailAction(final ActionPerformedEvent event) {
         dialogs.createInputDialog(this)
+                .withHeader(messageBundle.formatMessage("sendEmailDialog.header", getClientName()))
+                .withLabelsPosition(LabelsPosition.TOP)
                 .withParameter(InputParameter.parameter("text")
                         .withLabel(messages.getMessage("email"))
                         .withField(() -> uiComponents.create(RichTextEditor.class)))
                 .withActions(
-                        InputDialogAction.action("sendEmail").
-                                withText(messages.getMessage("send"))
+                        InputDialogAction.action("sendEmail")
+                                .withText(messages.getMessage("send"))
                                 .withIcon(VaadinIcon.MAILBOX)
-                                .withVariant(ActionVariant.SUCCESS),
+                                .withVariant(ActionVariant.SUCCESS)
+                                .withHandler(this::onSendEmail),
                         InputDialogAction.action("close")
                                 .withText(messages.getMessage("actions.Close"))
-                                .withIcon(VaadinIcon.CLOSE))
+                                .withIcon(VaadinIcon.CLOSE)
+                                .withHandler(this::closeEmailDialog))
+                .build()
                 .open();
+    }
+
+    private void onSendEmail(ActionPerformedEvent e) {
+        notifications.show(messageBundle.formatMessage("emailSentNotification", getClientName()));
+        closeEmailDialog(e);
+    }
+
+    private String getClientName() {
+        return getEditedEntity().getClient().getName();
+    }
+
+    @SuppressWarnings("DataFlowIssue")
+    private void closeEmailDialog(ActionPerformedEvent e) {
+        ((InputDialogAction) e.getSource()).getInputDialog().close(StandardOutcome.CLOSE);
     }
 
     @Subscribe("downloadAction")

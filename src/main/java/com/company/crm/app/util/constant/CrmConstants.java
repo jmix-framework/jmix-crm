@@ -16,6 +16,8 @@ public final class CrmConstants {
         public static final String MAIN = "MainView";
         public static final String LOGIN = "LoginView";
 
+        public static final String CATALOG = "CatalogView";
+
         public static final String CATEGORY_LIST = "Category.list";
         public static final String CATEGORY_DETAIL = "Category.detail";
 
@@ -35,7 +37,6 @@ public final class CrmConstants {
         public static final String ORDER_LIST = "Order.list";
         public static final String ORDER_DETAIL = "Order.detail";
 
-        public static final String ORDER_ITEM_LIST = "OrderItem.list";
         public static final String ORDER_ITEM_DETAIL = "OrderItem.detail";
 
         public static final String PAYMENT_LIST = "Payment.list";

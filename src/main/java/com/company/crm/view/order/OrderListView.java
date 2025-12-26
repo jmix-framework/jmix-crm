@@ -54,7 +54,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static com.company.crm.app.util.ui.CrmUiUtils.addColumnHeaderCurrencySuffix;
-import static com.company.crm.app.util.ui.datacontext.DataContextUtils.wrapContext;
+import static com.company.crm.app.util.ui.datacontext.DataContextUtils.wrapCondition;
 import static io.jmix.core.querycondition.PropertyCondition.equal;
 import static io.jmix.core.querycondition.PropertyCondition.greaterOrEqual;
 import static io.jmix.core.querycondition.PropertyCondition.lessOrEqual;
@@ -120,12 +120,12 @@ public class OrderListView extends StandardListView<Order> {
 
     @Install(to = "ordersDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
     private List<Order> loadDelegate(Pageable pageable, JmixDataRepositoryContext context) {
-        return orderRepository.findAll(pageable, wrapContext(context, filtersCondition)).getContent();
+        return orderRepository.findAll(pageable, wrapCondition(context, filtersCondition)).getContent();
     }
 
     @Install(to = "pagination", subject = "totalCountByRepositoryDelegate")
     private Long paginationTotalCountByRepositoryDelegate(final JmixDataRepositoryContext context) {
-        return orderRepository.count(wrapContext(context, filtersCondition));
+        return orderRepository.count(wrapCondition(context, filtersCondition));
     }
 
     @Install(to = "ordersDataGrid.removeAction", subject = "delegate")

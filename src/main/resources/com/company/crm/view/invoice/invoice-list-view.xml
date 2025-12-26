@@ -5,7 +5,6 @@
         <collection id="invoicesDc"
                     class="com.company.crm.model.invoice.Invoice">
             <fetchPlan extends="_base">
-                <property name="order" fetchPlan="_base"/>
                 <property name="client" fetchPlan="_base"/>
             </fetchPlan>
             <loader id="invoicesDl" readOnly="true"/>
@@ -22,8 +21,9 @@
     <facets>
         <settings auto="true"/>
         <dataLoadCoordinator auto="false"/>
-        <urlQueryParameters>
-            <pagination component="pagination"/>
+        <urlQueryParameters id="invoices_urlQueryParameters">
+            <pagination component="invoices_pagination"/>
+            <genericFilter component="invoices_AdvancedFilter"/>
         </urlQueryParameters>
     </facets>
     <actions>
@@ -77,7 +77,7 @@
             <button id="createButton" action="invoicesDataGrid.createAction"/>
             <button id="editButton" action="invoicesDataGrid.editAction"/>
             <button id="removeButton" action="invoicesDataGrid.removeAction"/>
-            <simplePagination id="pagination" dataLoader="invoicesDl"/>
+            <simplePagination id="invoices_pagination" dataLoader="invoicesDl"/>
         </hbox>
         <dataGrid id="invoicesDataGrid" dataContainer="invoicesDc"
                   width="100%"

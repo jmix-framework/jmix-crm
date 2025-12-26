@@ -227,7 +227,7 @@ public class HomeView extends StandardView implements WidthResizeListener {
 
     private void doCreateCards(List<JmixCard> cards, JmixFormLayout form) {
         for (JmixCard card : cards) {
-            card.addClassName(Margin.Top.MEDIUM);
+            card.addClassNames(Margin.Top.MEDIUM, Margin.Bottom.MEDIUM);
             form.add(card);
         }
     }

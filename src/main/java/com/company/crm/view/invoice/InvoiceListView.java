@@ -16,6 +16,7 @@ import com.company.crm.view.invoice.charts.InvoiceStatusAmountItem;
 import com.company.crm.view.invoice.charts.InvoiceStatusAmountValueDescription;
 import com.company.crm.view.invoice.charts.InvoiceStatusTotalCountValueDescription;
 import com.company.crm.view.main.MainView;
+import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.HasValue;
 import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.router.Route;
@@ -29,7 +30,6 @@ import io.jmix.core.Messages;
 import io.jmix.core.common.datastruct.Pair;
 import io.jmix.core.querycondition.LogicalCondition;
 import io.jmix.core.repository.JmixDataRepositoryContext;
-import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.component.combobox.EntityComboBox;
 import io.jmix.flowui.component.datepicker.TypedDatePicker;
 import io.jmix.flowui.component.formlayout.JmixFormLayout;
@@ -59,7 +59,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
-import static com.company.crm.app.util.ui.datacontext.DataContextUtils.wrapContext;
+import static com.company.crm.app.util.ui.datacontext.DataContextUtils.wrapCondition;
 import static io.jmix.core.querycondition.PropertyCondition.equal;
 import static io.jmix.core.querycondition.PropertyCondition.greaterOrEqual;
 import static io.jmix.core.querycondition.PropertyCondition.lessOrEqual;
@@ -78,14 +78,14 @@ public class InvoiceListView extends StandardListView<Invoice> {
     @Autowired
     private CrmRenderers crmRenderers;
     @Autowired
-    private UiComponents uiComponents;
-    @Autowired
     private DateTimeService dateTimeService;
     @Autowired
     private InvoiceService invoiceService;
     @Autowired
     private InvoiceRepository invoiceRepository;
 
+    @ViewComponent
+    private MessageBundle messageBundle;
     @ViewComponent
     private CollectionContainer<Order> ordersDc;
     @ViewComponent
@@ -111,12 +111,11 @@ public class InvoiceListView extends StandardListView<Invoice> {
     private CollectionLoader<Invoice> invoicesDl;
 
     private final LogicalCondition filtersCondition = LogicalCondition.and();
-    @ViewComponent
-    private MessageBundle messageBundle;
 
-    @Subscribe
-    private void onInit(final InitEvent event) {
+    @Override
+    protected void onAttach(AttachEvent attachEvent) {
         initialize();
+        super.onAttach(attachEvent);
     }
 
     @Subscribe
@@ -126,12 +125,12 @@ public class InvoiceListView extends StandardListView<Invoice> {
 
     @Install(to = "invoicesDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
     private List<Invoice> loadDelegate(Pageable pageable, JmixDataRepositoryContext context) {
-        return invoiceRepository.findAll(pageable, wrapContext(context, filtersCondition)).getContent();
+        return invoiceRepository.findAll(pageable, wrapCondition(context, filtersCondition)).getContent();
     }
 
-    @Install(to = "pagination", subject = "totalCountByRepositoryDelegate")
+    @Install(to = "invoices_pagination", subject = "totalCountByRepositoryDelegate")
     private Long paginationTotalCountByRepositoryDelegate(final JmixDataRepositoryContext context) {
-        return invoiceRepository.count(wrapContext(context, filtersCondition));
+        return invoiceRepository.count(wrapCondition(context, filtersCondition));
     }
 
     @Install(to = "invoicesDataGrid.removeAction", subject = "delegate")

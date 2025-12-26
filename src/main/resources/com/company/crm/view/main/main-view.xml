@@ -22,7 +22,7 @@
                 <nav id="navigation"
                      classNames="jmix-main-view-navigation"
                      ariaLabel="msg://navigation.ariaLabel">
-                    <listMenu id="menu"/>
+                    <listMenu id="menu" themeNames="toggle-reverse"/>
                 </nav>
             </section>
         </drawerLayout>
@@ -42,8 +42,8 @@
                         <icon icon="SEARCH"/>
                     </suffix>
                 </textField>
-                <button id="notificationsButton" icon="BELL_O" themeNames="error" classNames="me-l"
-                        css="background-color: var(--lumo-error-color-10pct);"/>/>
+                <button id="notificationsButton" icon="BELL_O" themeNames="tertiary" classNames="me-l"
+                        css="background-color: var(--lumo-shade-5pct);"/>
                 <userMenu id="userMenu" themeNames="tertiary" classNames="me-l">
                     <items>
                         <separator/>

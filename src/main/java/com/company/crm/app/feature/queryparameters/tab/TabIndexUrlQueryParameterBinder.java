@@ -22,6 +22,8 @@ import static com.company.crm.app.feature.queryparameters.SimpleUrlQueryParamete
 public class TabIndexUrlQueryParameterBinder extends AbstractUrlQueryParametersBinder {
 
     private static final String QP_PREFIX = "tab-index-for-";
+
+    private final Component tabsOwner;
     private final SimpleUrlQueryParametersBinder delegate;
 
     public static TabIndexUrlQueryParameterBinder register(View<?> view, JmixTabSheet tabSheet) {
@@ -53,11 +55,13 @@ public class TabIndexUrlQueryParameterBinder extends AbstractUrlQueryParametersB
     private TabIndexUrlQueryParameterBinder(UrlQueryParametersFacet facet, JmixTabSheet tabSheet,
                                             int minTabValue, int maxTabValue) {
         this.delegate = createDelegate(facet, tabSheet, minTabValue, maxTabValue);
+        this.tabsOwner = tabSheet;
     }
 
     private TabIndexUrlQueryParameterBinder(UrlQueryParametersFacet facet, Tabs tabs,
                                             int minTabValue, int maxTabValue) {
         this.delegate = createDelegate(facet, tabs, minTabValue, maxTabValue);
+        this.tabsOwner = tabs;
     }
 
     @Override
@@ -67,7 +71,7 @@ public class TabIndexUrlQueryParameterBinder extends AbstractUrlQueryParametersB
 
     @Override
     public Component getComponent() {
-        return null;
+        return tabsOwner;
     }
 
     private SimpleUrlQueryParametersBinder createDelegate(UrlQueryParametersFacet facet,

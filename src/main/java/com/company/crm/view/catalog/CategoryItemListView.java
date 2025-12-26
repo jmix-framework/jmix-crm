@@ -14,6 +14,7 @@ import com.company.crm.model.catalog.item.CategoryItemRepository;
 import com.company.crm.view.catalog.charts.ItemOrdersAmountItem;
 import com.company.crm.view.catalog.charts.ItemOrdersAmountValueDescription;
 import com.company.crm.view.main.MainView;
+import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.HasValue;
 import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.router.Route;
@@ -24,7 +25,6 @@ import io.jmix.core.common.datastruct.Pair;
 import io.jmix.core.querycondition.LogicalCondition;
 import io.jmix.core.repository.JmixDataRepositoryContext;
 import io.jmix.flowui.component.formlayout.JmixFormLayout;
-import io.jmix.flowui.component.grid.DataGrid;
 import io.jmix.flowui.component.select.JmixSelect;
 import io.jmix.flowui.component.textfield.TypedTextField;
 import io.jmix.flowui.model.CollectionLoader;
@@ -33,7 +33,6 @@ import io.jmix.flowui.view.Install;
 import io.jmix.flowui.view.LookupComponent;
 import io.jmix.flowui.view.MessageBundle;
 import io.jmix.flowui.view.StandardListView;
-import io.jmix.flowui.view.Subscribe;
 import io.jmix.flowui.view.Supply;
 import io.jmix.flowui.view.Target;
 import io.jmix.flowui.view.ViewComponent;
@@ -52,12 +51,11 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static com.company.crm.app.util.ui.CrmUiUtils.addRowSelectionInMultiSelectMode;
-import static com.company.crm.app.util.ui.datacontext.DataContextUtils.wrapContext;
+import static com.company.crm.app.util.ui.datacontext.DataContextUtils.wrapCondition;
 import static io.jmix.core.querycondition.PropertyCondition.contains;
 import static io.jmix.core.querycondition.PropertyCondition.equal;
 
-@Route(value = "category-items", layout = MainView.class)
+@Route(value = "products", layout = MainView.class)
 @ViewController(id = CrmConstants.ViewIds.CATEGORY_ITEM_LIST)
 @ViewDescriptor(path = "category-item-list-view.xml")
 @LookupComponent("categoryItemsDataGrid")
@@ -78,40 +76,37 @@ public class CategoryItemListView extends StandardListView<CategoryItem> {
     private CatalogService catalogService;
 
     @ViewComponent
+    private MessageBundle messageBundle;
+    @ViewComponent
     private JmixFormLayout chartsBlock;
     @ViewComponent
-    private TypedTextField<String> searchField;
+    private TypedTextField<String> items_searchField;
     @ViewComponent
-    private JmixSelect<Category> categorySelect;
+    private JmixSelect<Category> items_categorySelect;
     @ViewComponent
     private CollectionLoader<CategoryItem> categoryItemsDl;
-    @ViewComponent
-    private DataGrid<CategoryItem> categoryItemsDataGrid;
 
     private final LogicalCondition filtersCondition = LogicalCondition.and();
-    @ViewComponent
-    private MessageBundle messageBundle;
 
-    @Subscribe
-    public void onInit(final InitEvent event) {
-        initializeChartsBlock();
-        initializeFilterFields();
-        addRowSelectionInMultiSelectMode(categoryItemsDataGrid, "code");
+    @Override
+    protected void onAttach(AttachEvent attachEvent) {
+        initialize();
+        super.onAttach(attachEvent);
     }
 
     @Install(to = "categoryItemsDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
     private List<CategoryItem> loadDelegate(Pageable pageable, JmixDataRepositoryContext context) {
-        return itemRepository.findAll(pageable, wrapContext(context, filtersCondition)).getContent();
+        return itemRepository.findAll(pageable, wrapCondition(context, filtersCondition)).getContent();
+    }
+
+    @Install(to = "items_pagination", subject = "totalCountByRepositoryDelegate")
+    private Long paginationTotalCountByRepositoryDelegate(final JmixDataRepositoryContext context) {
+        return itemRepository.count(wrapCondition(context, filtersCondition));
     }
 
     @Install(to = "categoryItemsDataGrid.removeAction", subject = "delegate")
     private void categoryItemsDataGridRemoveDelegate(final Collection<CategoryItem> collection) {
         itemRepository.deleteAll(collection);
-    }
-
-    @Install(to = "pagination", subject = "totalCountByRepositoryDelegate")
-    private Long paginationTotalCountByRepositoryDelegate(final JmixDataRepositoryContext context) {
-        return itemRepository.count(wrapContext(context, filtersCondition));
     }
 
     @Supply(to = "categoryItemsDataGrid.name", subject = "renderer")
@@ -129,6 +124,16 @@ public class CategoryItemListView extends StandardListView<CategoryItem> {
         return crmRenderers.categoryItemCode();
     }
 
+    private void initialize() {
+        loadData();
+        initializeChartsBlock();
+        initializeFilterFields();
+    }
+
+    private void loadData() {
+        categoryItemsDl.load();
+    }
+
     private void updateFiltersCondition() {
         filtersCondition.getConditions().clear();
         addSearchByNameCondition();
@@ -136,26 +141,27 @@ public class CategoryItemListView extends StandardListView<CategoryItem> {
     }
 
     private void addSearchByNameCondition() {
-        searchField.getOptionalValue().ifPresent(name ->
+        items_searchField.getOptionalValue().ifPresent(name ->
                 filtersCondition.add(contains("name", name)));
     }
 
     private void addSearchByCategoryCondition() {
-        categorySelect.getOptionalValue().ifPresent(category ->
+        items_categorySelect.getOptionalValue().ifPresent(category ->
                 filtersCondition.add(equal("category", category)));
     }
 
     private void initializeFilterFields() {
         List<Category> categories = categoryRepository.findAll();
-        categorySelect.setItems(categories);
+        items_categorySelect.setItems(categories);
 
-        List.<HasValue<?, ?>>of(searchField, categorySelect)
+        List.<HasValue<?, ?>>of(items_searchField, items_categorySelect)
                 .forEach(field -> field.addValueChangeListener(e -> applyFilters()));
 
         //noinspection unchecked
         FieldValueQueryParameterBinder.builder(this)
-                .addStringBinding(searchField)
-                .addEntitySelectBinding(categorySelect, categories);
+                .addStringBinding(items_searchField)
+                .addEntitySelectBinding(items_categorySelect, categories)
+                .build();
     }
 
     private void applyFilters() {

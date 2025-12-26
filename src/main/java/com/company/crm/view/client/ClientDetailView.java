@@ -11,7 +11,6 @@ import com.company.crm.app.util.ui.chart.ChartsUtils;
 import com.company.crm.app.util.ui.listener.resize.WidthResizeListener;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.client.ClientRepository;
-import com.company.crm.model.user.activity.UserActivity;
 import com.company.crm.model.user.activity.client.ClientUserActivityRepository;
 import com.company.crm.view.main.MainView;
 import com.vaadin.flow.component.Unit;
@@ -27,7 +26,6 @@ import io.jmix.chartsflowui.kit.data.chart.ListChartItems;
 import io.jmix.core.FetchPlan;
 import io.jmix.core.SaveContext;
 import io.jmix.core.common.datastruct.Pair;
-import io.jmix.core.repository.JmixDataRepositoryContext;
 import io.jmix.flowui.Notifications;
 import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.component.formlayout.JmixFormLayout;
@@ -44,7 +42,6 @@ import io.jmix.flowui.view.ViewComponent;
 import io.jmix.flowui.view.ViewController;
 import io.jmix.flowui.view.ViewDescriptor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -116,11 +113,6 @@ public class ClientDetailView extends StandardDetailView<Client> implements Widt
     @Install(target = Target.DATA_CONTEXT)
     private Set<Object> saveDelegate(SaveContext saveContext) {
         return Set.of(clientRepository.save(getEditedEntity()));
-    }
-
-    @Install(to = "activitiesDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
-    private List<? extends UserActivity> activitiesDlLoadFromRepositoryDelegate(final Pageable pageable, final JmixDataRepositoryContext ctx) {
-        return userActivityRepository.findAll(pageable, ctx).getContent();
     }
 
     @Subscribe("downloadProfile")

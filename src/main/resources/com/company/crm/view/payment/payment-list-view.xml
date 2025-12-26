@@ -26,8 +26,9 @@
     <facets>
         <settings auto="true"/>
         <dataLoadCoordinator auto="false"/>
-        <urlQueryParameters>
-            <pagination component="pagination"/>
+        <urlQueryParameters id="payments_urlQueryParameters">
+            <pagination component="payments_pagination"/>
+            <genericFilter component="payments_AdvancedFilter"/>
         </urlQueryParameters>
     </facets>
     <actions>
@@ -75,7 +76,7 @@
                 <datePicker id="payments_ToDatePicker"
                             placeholder="msg:///toDatePicker.label" clearButtonVisible="true"/>
             </formLayout>
-            <genericFilter id="invoices_AdvancedFilter" dataLoader="paymentsDl" maxWidth="60em"
+            <genericFilter id="payments_AdvancedFilter" dataLoader="paymentsDl" maxWidth="60em"
                            opened="false" summaryText="msg:///advanced" themeNames="filled">
                 <properties include=".*"/>
             </genericFilter>
@@ -88,7 +89,7 @@
                 <button id="removeButton" action="paymentsDataGrid.removeAction"/>
             </startSlot>
             <endSlot>
-                <simplePagination id="pagination" dataLoader="paymentsDl"/>
+                <simplePagination id="payments_pagination" dataLoader="paymentsDl"/>
             </endSlot>
         </hbox>
         <dataGrid id="paymentsDataGrid"

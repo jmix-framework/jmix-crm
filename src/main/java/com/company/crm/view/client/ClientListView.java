@@ -21,6 +21,7 @@ import com.company.crm.model.user.User;
 import com.company.crm.view.main.MainView;
 import com.company.crm.view.util.SkeletonStyler;
 import com.vaadin.flow.component.AbstractField.ComponentValueChangeEvent;
+import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasSize;
 import com.vaadin.flow.component.HasValue;
@@ -68,7 +69,7 @@ import static com.company.crm.app.feature.sortable.SortableFeature.makeSortable;
 import static com.company.crm.app.util.demo.DemoUtils.defaultSleepForStatisticLoading;
 import static com.company.crm.app.util.ui.CrmUiUtils.addRowSelectionInMultiSelectMode;
 import static com.company.crm.app.util.ui.CrmUiUtils.openLink;
-import static com.company.crm.app.util.ui.datacontext.DataContextUtils.wrapContext;
+import static com.company.crm.app.util.ui.datacontext.DataContextUtils.wrapCondition;
 import static com.company.crm.app.util.ui.listener.resize.WidthResizeListener.isWidthChanged;
 import static io.jmix.core.querycondition.PropertyCondition.contains;
 import static io.jmix.core.querycondition.PropertyCondition.equal;
@@ -141,17 +142,15 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
         }
     }
 
-    @Subscribe
-    public void onInit(final InitEvent event) {
-        initializeStatsBlock();
-        initializeFilterFields();
-        addDetachListener(e -> asyncTasksRegistry.cancelAll());
-        addRowSelectionInMultiSelectMode(clientsDataGrid, "vatNumber", "regNumber");
+    @Override
+    protected void onAttach(AttachEvent attachEvent) {
+        initialize();
+        super.onAttach(attachEvent);
     }
 
     @Install(to = "clientsDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
     private List<Client> loadDelegate(Pageable pageable, JmixDataRepositoryContext context) {
-        return clientRepository.findAll(pageable, wrapContext(context, filtersCondition)).getContent();
+        return clientRepository.findAll(pageable, wrapCondition(context, filtersCondition)).getContent();
     }
 
     @Install(to = "clientsDataGrid.removeAction", subject = "delegate")
@@ -161,7 +160,7 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
 
     @Install(to = "pagination", subject = "totalCountByRepositoryDelegate")
     private Long paginationTotalCountByRepositoryDelegate(final JmixDataRepositoryContext context) {
-        return clientRepository.count(wrapContext(context, filtersCondition));
+        return clientRepository.count(wrapCondition(context, filtersCondition));
     }
 
     @Subscribe("showOnlyMyClientsCheckBox")
@@ -225,6 +224,13 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
                 return withoutProtocol.isBlank() ? website : withoutProtocol;
             }
         }, c -> openLink(c.getWebsite()));
+    }
+
+    private void initialize() {
+        initializeStatsBlock();
+        initializeFilterFields();
+        addDetachListener(e -> asyncTasksRegistry.cancelAll());
+        addRowSelectionInMultiSelectMode(clientsDataGrid, "vatNumber", "regNumber");
     }
 
     private void initializeStatsBlock() {

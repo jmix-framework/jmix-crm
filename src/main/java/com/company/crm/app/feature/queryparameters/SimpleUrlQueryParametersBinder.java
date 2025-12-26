@@ -2,6 +2,7 @@ package com.company.crm.app.feature.queryparameters;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.router.QueryParameters;
+import io.jmix.flowui.component.UiComponentUtils;
 import io.jmix.flowui.facet.UrlQueryParametersFacet;
 import io.jmix.flowui.facet.UrlQueryParametersFacet.UrlQueryParametersChangeEvent;
 import io.jmix.flowui.facet.urlqueryparameters.AbstractUrlQueryParametersBinder;
@@ -11,6 +12,7 @@ import io.jmix.flowui.view.ViewControllerUtils;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import static com.company.crm.app.util.ui.CrmUiUtils.getCurrentQueryParameters;
 import static io.jmix.flowui.component.UiComponentUtils.isComponentAttachedToDialog;
 
 public class SimpleUrlQueryParametersBinder extends AbstractUrlQueryParametersBinder {
@@ -59,15 +61,21 @@ public class SimpleUrlQueryParametersBinder extends AbstractUrlQueryParametersBi
         this.parametersUpdater = parametersUpdater;
         this.parametersReader = parametersReader;
         facet.registerBinder(this);
+        getCurrentQueryParameters().ifPresent(this::updateState);
     }
 
     public static UrlQueryParametersFacet getUrlQueryParametersFacet(View<?> view) {
+        var parentView = view.getParent().map(UiComponentUtils::findView).orElse(null);
+        view = parentView == null ? view : parentView;
+
         UrlQueryParametersFacet urlQueryParametersFacet =
                 ViewControllerUtils.getViewFacet(view, UrlQueryParametersFacet.class);
+
         if (urlQueryParametersFacet == null) {
             throw new IllegalStateException("View %s doesn't have %s"
                     .formatted(view.getClass().getSimpleName(), UrlQueryParametersFacet.class.getSimpleName()));
         }
+
         return urlQueryParametersFacet;
     }
 

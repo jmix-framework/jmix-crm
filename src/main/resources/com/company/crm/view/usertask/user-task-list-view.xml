@@ -76,7 +76,7 @@
                         <responsiveStep minWidth="40em" columns="2"/>
                     </responsiveSteps>
                     <textField id="titleField" property="title"/>
-                    <textArea id="descriptionField" height="9.5em" property="description"/>
+                    <richTextEditor id="descriptionField" height="9.5em" property="description"/>
                     <datePicker id="dueDateField" property="dueDate"/>
                     <switch id="isCompletedField" property="isCompleted"/>
                 </formLayout>

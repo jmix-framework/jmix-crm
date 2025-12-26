@@ -1,5 +1,6 @@
 package com.company.crm.app.ui.component.card;
 
+import com.company.crm.app.util.context.AppContext;
 import com.company.crm.app.util.date.range.LocalDateRange;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasStyle;
@@ -16,6 +17,7 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import io.jmix.core.Messages;
+import io.jmix.core.security.CurrentAuthentication;
 import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.component.UiComponentUtils;
 import io.jmix.flowui.component.card.JmixCard;
@@ -27,6 +29,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
 import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.function.Function;
 
@@ -127,9 +130,11 @@ public class CrmCard extends JmixCard implements ApplicationContextAware {
                 horizontalLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
                 contentComponent.add(horizontalLayout);
 
+                Locale currentLocale = AppContext.getBean(CurrentAuthentication.class).getLocale();
+
                 String dateRangeString = "%s - %s".formatted(
-                        DATE_WITHOUT_YEAR.format(range.startDate()),
-                        DATE_WITH_YEAR.format(range.endDate()));
+                        DATE_WITHOUT_YEAR.withLocale(currentLocale).format(range.startDate()),
+                        DATE_WITH_YEAR.withLocale(currentLocale).format(range.endDate()));
                 var dateRangeComponent = new Span(dateRangeString);
                 dateRangeComponent.addClassNames(LumoUtility.FontSize.XSMALL, LumoUtility.FontWeight.LIGHT);
                 horizontalLayout.add(dateRangeComponent);

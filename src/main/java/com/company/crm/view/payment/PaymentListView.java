@@ -13,6 +13,7 @@ import com.company.crm.model.payment.Payment;
 import com.company.crm.model.payment.PaymentRepository;
 import com.company.crm.view.main.MainView;
 import com.company.crm.view.payment.charts.ClientTotalPaymentsValueDescription;
+import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.HasValue;
 import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.router.Route;
@@ -23,7 +24,6 @@ import io.jmix.chartsflowui.kit.data.chart.ListChartItems;
 import io.jmix.core.common.datastruct.Pair;
 import io.jmix.core.querycondition.LogicalCondition;
 import io.jmix.core.repository.JmixDataRepositoryContext;
-import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.component.combobox.EntityComboBox;
 import io.jmix.flowui.component.datepicker.TypedDatePicker;
 import io.jmix.flowui.component.formlayout.JmixFormLayout;
@@ -34,7 +34,6 @@ import io.jmix.flowui.view.Install;
 import io.jmix.flowui.view.LookupComponent;
 import io.jmix.flowui.view.MessageBundle;
 import io.jmix.flowui.view.StandardListView;
-import io.jmix.flowui.view.Subscribe;
 import io.jmix.flowui.view.Supply;
 import io.jmix.flowui.view.Target;
 import io.jmix.flowui.view.ViewComponent;
@@ -52,7 +51,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
-import static com.company.crm.app.util.ui.datacontext.DataContextUtils.wrapContext;
+import static com.company.crm.app.util.ui.datacontext.DataContextUtils.wrapCondition;
 import static io.jmix.core.querycondition.PropertyCondition.equal;
 import static io.jmix.core.querycondition.PropertyCondition.greaterOrEqual;
 import static io.jmix.core.querycondition.PropertyCondition.lessOrEqual;
@@ -69,12 +68,12 @@ public class PaymentListView extends StandardListView<Payment> {
     @Autowired
     private ChartsUtils chartsUtils;
     @Autowired
-    private UiComponents uiComponents;
-    @Autowired
     private PaymentService paymentService;
     @Autowired
     private PaymentRepository paymentRepository;
 
+    @ViewComponent
+    private MessageBundle messageBundle;
     @ViewComponent
     private CollectionLoader<Payment> paymentsDl;
     @ViewComponent
@@ -104,23 +103,21 @@ public class PaymentListView extends StandardListView<Payment> {
     private TypedDatePicker<LocalDate> payments_ToDatePicker;
 
     private final LogicalCondition filtersCondition = LogicalCondition.and();
-    @ViewComponent
-    private MessageBundle messageBundle;
 
-    @Subscribe
-    private void onInit(final InitEvent event) {
+    @Override
+    protected void onAttach(AttachEvent attachEvent) {
         initialize();
-        chartsUtils.initializeChartsAsync(getChartsLoaders());
+        super.onAttach(attachEvent);
     }
 
     @Install(to = "paymentsDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
     private List<Payment> loadDelegate(Pageable pageable, JmixDataRepositoryContext context) {
-        return paymentRepository.findAll(pageable, wrapContext(context, filtersCondition)).getContent();
+        return paymentRepository.findAll(pageable, wrapCondition(context, filtersCondition)).getContent();
     }
 
-    @Install(to = "pagination", subject = "totalCountByRepositoryDelegate")
+    @Install(to = "payments_pagination", subject = "totalCountByRepositoryDelegate")
     private Long paginationTotalCountByRepositoryDelegate(final JmixDataRepositoryContext context) {
-        return paymentRepository.count(wrapContext(context, filtersCondition));
+        return paymentRepository.count(wrapCondition(context, filtersCondition));
     }
 
     @Install(to = "paymentsDataGrid.removeAction", subject = "delegate")
@@ -146,8 +143,13 @@ public class PaymentListView extends StandardListView<Payment> {
 
     private void initialize() {
         loadData();
+        initChartsBlock();
         registerUrlQueryParametersBinders();
         applyFilters();
+    }
+
+    private void initChartsBlock() {
+        chartsUtils.initializeChartsAsync(getChartsLoaders());
     }
 
     private void loadData() {
@@ -158,7 +160,8 @@ public class PaymentListView extends StandardListView<Payment> {
     }
 
     private void registerUrlQueryParametersBinders() {
-        List.<HasValue<?, ?>>of(payments_ClientComboBox, payments_OrderComboBox, payments_InvoiceComboBox, payments_FromDatePicker, payments_ToDatePicker)
+        List.<HasValue<?, ?>>of(payments_ClientComboBox, payments_OrderComboBox,
+                        payments_InvoiceComboBox, payments_FromDatePicker, payments_ToDatePicker)
                 .forEach(field -> field.addValueChangeListener(e -> applyFilters()));
 
         FieldValueQueryParameterBinder.builder(this)

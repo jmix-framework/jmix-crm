@@ -12,10 +12,10 @@
     </data>
     <facets>
         <settings auto="true"/>
-        <dataLoadCoordinator auto="true"/>
+        <dataLoadCoordinator auto="false"/>
         <urlQueryParameters>
-            <pagination component="pagination"/>
-            <genericFilter component="advancedFilter"/>
+            <pagination component="items_pagination"/>
+            <genericFilter component="items_advancedFilter"/>
             <dataGridFilter component="categoryItemsDataGrid"/>
         </urlQueryParameters>
     </facets>
@@ -37,15 +37,15 @@
                     <responsiveStep minWidth="0" columns="1"/>
                     <responsiveStep minWidth="20em" columns="2"/>
                 </responsiveSteps>
-                <textField id="searchField" placeholder="msg://searchField.placeholder" clearButtonVisible="true">
+                <textField id="items_searchField" placeholder="msg://searchField.placeholder" clearButtonVisible="true">
                     <prefix>
                         <icon icon="SEARCH"/>
                     </prefix>
                 </textField>
-                <select id="categorySelect" placeholder="Category" emptySelectionAllowed="true"
+                <select id="items_categorySelect" placeholder="Category" emptySelectionAllowed="true"
                         emptySelectionCaption="msg://allCategories"/>
             </formLayout>
-            <genericFilter id="advancedFilter" dataLoader="categoryItemsDl"
+            <genericFilter id="items_advancedFilter" dataLoader="categoryItemsDl"
                            opened="false" summaryText="msg:///advanced" themeNames="filled">
                 <properties include=".*"/>
             </genericFilter>
@@ -55,7 +55,7 @@
             <button id="createButton" action="categoryItemsDataGrid.createAction"/>
             <button id="editButton" action="categoryItemsDataGrid.editAction"/>
             <button id="removeButton" action="categoryItemsDataGrid.removeAction"/>
-            <simplePagination id="pagination" dataLoader="categoryItemsDl"/>
+            <simplePagination id="items_pagination" dataLoader="categoryItemsDl"/>
         </hbox>
         <dataGrid id="categoryItemsDataGrid"
                   width="100%"

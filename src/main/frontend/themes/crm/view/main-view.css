@@ -152,17 +152,13 @@ vaadin-menu-bar[jmix-role='jmix-user-menu']:not([theme~='substituted']) .user-me
 }
 
 .jmix-list-menu a[highlight][class*='jmix-menu-item-link'] {
-    background-color: var(--lumo-primary-color-50pct);
+    background-color: var(--lumo-primary-color);
     color: var(--lumo-primary-contrast-color);
     border-radius: 10px;
 }
 
 .jmix-list-menu vaadin-details-summary {
     padding: 0 !important;
-}
-
-.jmix-list-menu vaadin-details-summary::part(toggle) {
-    display: none;
 }
 
 .jmix-menubar-item vaadin-details-summary:hover .jmix-menubar-summary-icon-container {

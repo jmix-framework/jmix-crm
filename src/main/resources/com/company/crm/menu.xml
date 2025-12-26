@@ -7,16 +7,9 @@
     <item view="UserTask.list" id="tasks" title="msg://com.company.crm/menu_config.tasks.title"
           icon="vaadin:check-square"/>
 
-    <menu id="catalog"
+    <item view="CatalogView"
           title="msg://com.company.crm/menu_config.catalog.title"
-          icon="vaadin:open-book">
-        <item view="Category.list" id="categories"
-              title="msg://com.company.crm/menu_config.categories.title"
-              icon="vaadin:list-select"/>
-        <item view="CategoryItem.list" id="categoryItems"
-              title="msg://com.company.crm/menu_config.products.title"
-              icon="vaadin:list"/>
-    </menu>
+          icon="vaadin:open-book"/>
 
     <item view="Client.list" id="clients"
           title="msg://com.company.crm/menu_config.clients.title"

@@ -21,7 +21,7 @@
         <action id="closeAction" type="detail_close" text="msg:///actions.Close" icon="vaadin:close"/>
         <action id="cloneAction" text="msg:///clone" icon="vaadin:copy"/>
         <action id="emailAction" text="msg:///email" icon="vaadin:envelope-o"/>
-        <action id="downloadAction" text="msg:///download" icon="vaadin:download-alt" actionVariant="SUCCESS"/>
+        <action id="downloadAction" text="msg:///download" icon="vaadin:download-alt"/>
     </actions>
     <layout>
         <hbox width="100%" padding="true" justifyContent="BETWEEN" alignItems="CENTER">
@@ -33,8 +33,8 @@
                 <button id="saveAndCloseButton" action="saveCloseAction"/>
                 <button id="closeButton" action="closeAction"/>
                 <button action="cloneAction" themeNames="contrast"/>
-                <button action="emailAction" themeNames="warning"/>
-                <button action="downloadAction"/>
+                <button action="emailAction" themeNames="contrast"/>
+                <button action="downloadAction" themeNames="contrast"/>
             </hbox>
         </hbox>
         <scroller width="100%" height="100%">

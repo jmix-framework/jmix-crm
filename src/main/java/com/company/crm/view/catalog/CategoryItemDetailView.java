@@ -33,7 +33,7 @@ import java.util.UUID;
 
 import static com.vaadin.flow.server.streams.DownloadHandler.fromInputStream;
 
-@Route(value = "category-items/:id", layout = MainView.class)
+@Route(value = "products/:id", layout = MainView.class)
 @ViewController(id = CrmConstants.ViewIds.CATEGORY_ITEM_DETAIL)
 @ViewDescriptor(path = "category-item-detail-view.xml")
 @EditedEntityContainer("categoryItemDc")

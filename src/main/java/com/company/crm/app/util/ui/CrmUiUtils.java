@@ -10,6 +10,7 @@ import com.vaadin.flow.component.page.PendingJavaScriptResult;
 import com.vaadin.flow.data.selection.MultiSelect;
 import com.vaadin.flow.data.selection.SingleSelect;
 import com.vaadin.flow.dom.Style;
+import com.vaadin.flow.router.QueryParameters;
 import com.vaadin.flow.shared.Registration;
 import io.jmix.flowui.component.grid.DataGrid;
 import io.jmix.flowui.component.grid.DataGridColumn;
@@ -77,6 +78,10 @@ public final class CrmUiUtils {
         return Optional.ofNullable(UI.getCurrent());
     }
 
+    public static Optional<QueryParameters> getCurrentQueryParameters() {
+        return getCurrentUI().map(ui -> ui.getActiveViewLocation().getQueryParameters());
+    }
+
     public static Optional<Page> getCurrentPage() {
         return getCurrentUI().map(UI::getPage);
     }
@@ -117,7 +122,7 @@ public final class CrmUiUtils {
         return onClientHeightFuture().map(c -> c.whenComplete((width, t) -> onHeight.accept(width)));
     }
 
-    public static void addColumnHeaderCurrencySuffix(DataGrid<?> grid, String...columnKey) {
+    public static void addColumnHeaderCurrencySuffix(DataGrid<?> grid, String... columnKey) {
         for (String key : columnKey) {
             DataGridColumn<?> column = grid.getColumnByKey(key);
             if (column != null) {
@@ -127,7 +132,7 @@ public final class CrmUiUtils {
     }
 
     @SuppressWarnings("unchecked")
-    public static <T> void addRowSelectionInMultiSelectMode(DataGrid<T> grid, String...ignoredColumn) {
+    public static <T> void addRowSelectionInMultiSelectMode(DataGrid<T> grid, String... ignoredColumn) {
         if (grid.isMultiSelect()) {
             grid.addItemClickListener(e -> {
                 String columnKey = e.getColumn().getKey();

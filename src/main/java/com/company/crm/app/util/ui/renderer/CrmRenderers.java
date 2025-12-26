@@ -46,7 +46,7 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import static com.company.crm.app.util.ui.CrmUiUtils.DEFAULT_BADGE;
+import static com.company.crm.app.util.ui.CrmUiUtils.CONTRAST_BADGE;
 import static com.company.crm.app.util.ui.CrmUiUtils.SUCCESS_BADGE;
 import static com.company.crm.app.util.ui.color.EnumClassColors.getBadgeVariant;
 import static io.jmix.flowui.component.UiComponentUtils.getCurrentView;
@@ -55,12 +55,12 @@ import static io.jmix.flowui.component.UiComponentUtils.getCurrentView;
 public class CrmRenderers {
 
     private final Messages messages;
-    private final UiComponents uiComponents;
-    private final DialogWindows dialogWindows;
-    private final DatatypeFormatter datatypeFormatter;
-    private final DateTimeService dateTimeService;
     private final UiAsyncTasks uiAsyncTasks;
+    private final UiComponents uiComponents;
     private final MetadataTools metadataTools;
+    private final DialogWindows dialogWindows;
+    private final DateTimeService dateTimeService;
+    private final DatatypeFormatter datatypeFormatter;
 
     public CrmRenderers(UiComponents uiComponents, DialogWindows dialogWindows, Messages messages, DatatypeFormatter datatypeFormatter, DateTimeService dateTimeService, UiAsyncTasks uiAsyncTasks, MetadataTools metadataTools) {
         this.messages = messages;
@@ -72,11 +72,13 @@ public class CrmRenderers {
         this.metadataTools = metadataTools;
     }
 
+    // TODO: remove after Jmix 3.0
     public <SOURCE> ComponentRenderer<Button, SOURCE> longTextRenderer(
             int maxLength, Function<SOURCE, String> textProvider) {
         return longTextRenderer(maxLength, textProvider, null);
     }
 
+    // TODO: remove after Jmix 3.0
     public <SOURCE> ComponentRenderer<Button, SOURCE> longTextRenderer(
             int maxLength, Function<SOURCE, String> textProvider,
             @Nullable Consumer<SOURCE> fullTextClickListener) {
@@ -247,12 +249,10 @@ public class CrmRenderers {
             Period daysLeft = currentDate.until(dueDate);
 
             Boolean isCompleted = task.getIsCompleted();
-            var badgeVariant = isCompleted ? SUCCESS_BADGE : DEFAULT_BADGE;
+            var badgeVariant = isCompleted ? SUCCESS_BADGE : CONTRAST_BADGE;
             if (!isCompleted) {
                 if (daysLeft.isNegative()) {
                     badgeVariant = CrmUiUtils.ERROR_BADGE;
-                } else if (daysLeft.getDays() < 3) {
-                    badgeVariant = CrmUiUtils.WARNING_BADGE;
                 }
             }
 

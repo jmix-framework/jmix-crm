@@ -39,12 +39,6 @@
                 </query>
             </loader>
         </collection>
-        <collection id="activitiesDc" class="com.company.crm.model.user.activity.UserActivity">
-            <fetchPlan extends="_base">
-                <property name="user" fetchPlan="_base"/>
-            </fetchPlan>
-            <loader id="activitiesDl" readOnly="true"/>
-        </collection>
     </data>
     <facets>
         <dataLoadCoordinator auto="true"/>
@@ -107,7 +101,8 @@
                                     </formLayout>
                                 </vbox>
 
-                                <vbox width="100%" padding="false" alignItems="CENTER" classNames="pl-m" maxWidth="30em">
+                                <vbox width="100%" padding="false" alignItems="CENTER" classNames="pl-m"
+                                      maxWidth="30em">
                                     <formLayout dataContainer="clientDc" alignSelf="CENTER">
                                         <responsiveSteps>
                                             <responsiveStep minWidth="0" columns="1"/>
@@ -196,16 +191,6 @@
                                     <column property="invoice" filterable="true"/>
                                     <column property="date" filterable="true"/>
                                     <column property="amount" filterable="true"/>
-                                </columns>
-                            </dataGrid>
-                        </vbox>
-                    </tab>
-
-                    <tab id="activitiesTab" label="msg://activitiesTabLabel">
-                        <vbox width="100%" height="100%">
-                            <dataGrid id="activitiesDataGrid" dataContainer="activitiesDc" multiSort="true">
-                                <columns sortable="true">
-                                    <column property="actionDescription" filterable="true"/>
                                 </columns>
                             </dataGrid>
                         </vbox>
