@@ -1,5 +1,6 @@
 package com.company.crm.app.util.ui;
 
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasStyle;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.grid.Grid;
@@ -14,6 +15,7 @@ import com.vaadin.flow.router.QueryParameters;
 import com.vaadin.flow.shared.Registration;
 import io.jmix.flowui.component.grid.DataGrid;
 import io.jmix.flowui.component.grid.DataGridColumn;
+import io.jmix.flowui.fragment.FragmentUtils;
 
 import java.util.Arrays;
 import java.util.Optional;
@@ -32,6 +34,10 @@ public final class CrmUiUtils {
 
     private static final String GET_CLIENT_WIDTH_FUNC = "return window.innerWidth";
     private static final String GET_CLIENT_HEIGHT_FUNC = "return window.innerHeight";
+
+    public static Optional<String> getComponentId(Component component) {
+        return component.getId().or(() -> FragmentUtils.getComponentId(component));
+    }
 
     public static void openLink(String link) {
         getCurrentUI().ifPresent(ui -> ui.getPage().open(link, "_blank"));

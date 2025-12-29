@@ -2,11 +2,11 @@ package com.company.crm.view.finance;
 
 import com.company.crm.app.feature.queryparameters.tab.TabIndexUrlQueryParameterBinder;
 import com.company.crm.app.util.constant.CrmConstants;
-import com.company.crm.view.invoice.InvoiceListView;
+import com.company.crm.view.invoice.InvoicesFragment;
 import com.company.crm.view.main.MainView;
-import com.company.crm.view.payment.PaymentListView;
+import com.company.crm.view.payment.PaymentsFragment;
 import com.vaadin.flow.router.Route;
-import io.jmix.flowui.Views;
+import io.jmix.flowui.Fragments;
 import io.jmix.flowui.component.tabsheet.JmixTabSheet;
 import io.jmix.flowui.view.MessageBundle;
 import io.jmix.flowui.view.StandardView;
@@ -22,7 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class FinanceView extends StandardView {
 
     @Autowired
-    private Views views;
+    private Fragments fragments;
 
     @ViewComponent
     private JmixTabSheet tabSheet;
@@ -31,11 +31,11 @@ public class FinanceView extends StandardView {
 
     @Subscribe
     private void onInit(final InitEvent event) {
-        InvoiceListView invoiceListView = views.create(InvoiceListView.class);
-        PaymentListView paymentListView = views.create(PaymentListView.class);
+        var invoiceListView = fragments.create(this, InvoicesFragment.class);
+        var paymentsFragment = fragments.create(this, PaymentsFragment.class);
 
         tabSheet.add(messageBundle.getMessage("invoices"), invoiceListView);
-        tabSheet.add(messageBundle.getMessage("payments"), paymentListView);
+        tabSheet.add(messageBundle.getMessage("payments"), paymentsFragment);
 
         TabIndexUrlQueryParameterBinder.register(this, tabSheet);
     }

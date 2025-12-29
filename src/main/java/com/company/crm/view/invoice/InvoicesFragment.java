@@ -3,7 +3,6 @@ package com.company.crm.view.invoice;
 import com.company.crm.app.feature.queryparameters.filters.FieldValueQueryParameterBinder;
 import com.company.crm.app.service.datetime.DateTimeService;
 import com.company.crm.app.service.finance.InvoiceService;
-import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.app.util.date.range.LocalDateRange;
 import com.company.crm.app.util.ui.chart.ChartsUtils;
 import com.company.crm.app.util.ui.renderer.CrmRenderers;
@@ -15,11 +14,9 @@ import com.company.crm.model.order.Order;
 import com.company.crm.view.invoice.charts.InvoiceStatusAmountItem;
 import com.company.crm.view.invoice.charts.InvoiceStatusAmountValueDescription;
 import com.company.crm.view.invoice.charts.InvoiceStatusTotalCountValueDescription;
-import com.company.crm.view.main.MainView;
-import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.HasValue;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.renderer.Renderer;
-import com.vaadin.flow.router.Route;
 import io.jmix.chartsflowui.component.Chart;
 import io.jmix.chartsflowui.data.item.SimpleDataItem;
 import io.jmix.chartsflowui.kit.component.model.DataSet;
@@ -34,19 +31,19 @@ import io.jmix.flowui.component.combobox.EntityComboBox;
 import io.jmix.flowui.component.datepicker.TypedDatePicker;
 import io.jmix.flowui.component.formlayout.JmixFormLayout;
 import io.jmix.flowui.component.select.JmixSelect;
+import io.jmix.flowui.fragment.Fragment;
+import io.jmix.flowui.fragment.FragmentDescriptor;
 import io.jmix.flowui.model.CollectionContainer;
 import io.jmix.flowui.model.CollectionLoader;
 import io.jmix.flowui.view.DialogMode;
 import io.jmix.flowui.view.Install;
 import io.jmix.flowui.view.LookupComponent;
 import io.jmix.flowui.view.MessageBundle;
-import io.jmix.flowui.view.StandardListView;
 import io.jmix.flowui.view.Subscribe;
 import io.jmix.flowui.view.Supply;
 import io.jmix.flowui.view.Target;
+import io.jmix.flowui.view.View;
 import io.jmix.flowui.view.ViewComponent;
-import io.jmix.flowui.view.ViewController;
-import io.jmix.flowui.view.ViewDescriptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.lang.Nullable;
@@ -63,13 +60,12 @@ import static com.company.crm.app.util.ui.datacontext.DataContextUtils.wrapCondi
 import static io.jmix.core.querycondition.PropertyCondition.equal;
 import static io.jmix.core.querycondition.PropertyCondition.greaterOrEqual;
 import static io.jmix.core.querycondition.PropertyCondition.lessOrEqual;
+import static io.jmix.flowui.component.UiComponentUtils.getCurrentView;
 
-@Route(value = "invoices", layout = MainView.class)
-@ViewController(id = CrmConstants.ViewIds.INVOICE_LIST)
-@ViewDescriptor(path = "invoice-list-view.xml")
+@FragmentDescriptor("invoice-list-view.xml")
 @LookupComponent("invoicesDataGrid")
 @DialogMode(width = "64em")
-public class InvoiceListView extends StandardListView<Invoice> {
+public class InvoicesFragment extends Fragment<VerticalLayout> {
 
     @Autowired
     private Messages messages;
@@ -112,15 +108,9 @@ public class InvoiceListView extends StandardListView<Invoice> {
 
     private final LogicalCondition filtersCondition = LogicalCondition.and();
 
-    @Override
-    protected void onAttach(AttachEvent attachEvent) {
+    @Subscribe(target = Target.HOST_CONTROLLER)
+    private void onHostBeforeShow(final View.ReadyEvent event) {
         initialize();
-        super.onAttach(attachEvent);
-    }
-
-    @Subscribe
-    private void onBeforeShow(final BeforeShowEvent event) {
-        applyFilters();
     }
 
     @Install(to = "invoicesDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
@@ -157,6 +147,7 @@ public class InvoiceListView extends StandardListView<Invoice> {
         loadData();
         initializeChartsBlock();
         registerUrlQueryParametersBinders();
+        applyFilters();
     }
 
     private void loadData() {
@@ -220,9 +211,9 @@ public class InvoiceListView extends StandardListView<Invoice> {
                 .forEach(field -> field.addValueChangeListener(e -> applyFilters()));
 
         //noinspection unchecked
-        FieldValueQueryParameterBinder.builder(this)
-                .addComboboxBinding(invoices_OrderComboBox, ordersDc.getItems())
-                .addComboboxBinding(invoices_ClientComboBox, clientsDc.getItems())
+        FieldValueQueryParameterBinder.builder(getCurrentView())
+                .addComboboxBinding(invoices_OrderComboBox, () -> ordersDc.getItems())
+                .addComboboxBinding(invoices_ClientComboBox, () -> clientsDc.getItems())
                 .addEnumBinding(InvoiceStatus.class, invoices_StatusSelect)
                 .build();
     }

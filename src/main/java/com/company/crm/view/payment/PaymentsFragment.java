@@ -2,7 +2,6 @@ package com.company.crm.view.payment;
 
 import com.company.crm.app.feature.queryparameters.filters.FieldValueQueryParameterBinder;
 import com.company.crm.app.service.finance.PaymentService;
-import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.app.util.ui.chart.ChartsUtils;
 import com.company.crm.app.util.ui.renderer.CrmRenderers;
 import com.company.crm.model.client.Client;
@@ -11,12 +10,10 @@ import com.company.crm.model.invoice.Invoice;
 import com.company.crm.model.order.Order;
 import com.company.crm.model.payment.Payment;
 import com.company.crm.model.payment.PaymentRepository;
-import com.company.crm.view.main.MainView;
 import com.company.crm.view.payment.charts.ClientTotalPaymentsValueDescription;
-import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.HasValue;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.renderer.Renderer;
-import com.vaadin.flow.router.Route;
 import io.jmix.chartsflowui.component.Chart;
 import io.jmix.chartsflowui.data.item.SimpleDataItem;
 import io.jmix.chartsflowui.kit.component.model.DataSet;
@@ -24,21 +21,23 @@ import io.jmix.chartsflowui.kit.data.chart.ListChartItems;
 import io.jmix.core.common.datastruct.Pair;
 import io.jmix.core.querycondition.LogicalCondition;
 import io.jmix.core.repository.JmixDataRepositoryContext;
+import io.jmix.flowui.component.UiComponentUtils;
 import io.jmix.flowui.component.combobox.EntityComboBox;
 import io.jmix.flowui.component.datepicker.TypedDatePicker;
 import io.jmix.flowui.component.formlayout.JmixFormLayout;
+import io.jmix.flowui.fragment.Fragment;
+import io.jmix.flowui.fragment.FragmentDescriptor;
 import io.jmix.flowui.model.CollectionContainer;
 import io.jmix.flowui.model.CollectionLoader;
 import io.jmix.flowui.view.DialogMode;
 import io.jmix.flowui.view.Install;
 import io.jmix.flowui.view.LookupComponent;
 import io.jmix.flowui.view.MessageBundle;
-import io.jmix.flowui.view.StandardListView;
+import io.jmix.flowui.view.Subscribe;
 import io.jmix.flowui.view.Supply;
 import io.jmix.flowui.view.Target;
+import io.jmix.flowui.view.View;
 import io.jmix.flowui.view.ViewComponent;
-import io.jmix.flowui.view.ViewController;
-import io.jmix.flowui.view.ViewDescriptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 
@@ -56,12 +55,10 @@ import static io.jmix.core.querycondition.PropertyCondition.equal;
 import static io.jmix.core.querycondition.PropertyCondition.greaterOrEqual;
 import static io.jmix.core.querycondition.PropertyCondition.lessOrEqual;
 
-@Route(value = "payments", layout = MainView.class)
-@ViewController(id = CrmConstants.ViewIds.PAYMENT_LIST)
-@ViewDescriptor(path = "payment-list-view.xml")
+@FragmentDescriptor("payment-list-view.xml")
 @LookupComponent("paymentsDataGrid")
 @DialogMode(width = "64em")
-public class PaymentListView extends StandardListView<Payment> {
+public class PaymentsFragment extends Fragment<VerticalLayout> {
 
     @Autowired
     private CrmRenderers crmRenderers;
@@ -104,10 +101,9 @@ public class PaymentListView extends StandardListView<Payment> {
 
     private final LogicalCondition filtersCondition = LogicalCondition.and();
 
-    @Override
-    protected void onAttach(AttachEvent attachEvent) {
+    @Subscribe(target = Target.HOST_CONTROLLER)
+    private void onHostReady(final View.ReadyEvent event) {
         initialize();
-        super.onAttach(attachEvent);
     }
 
     @Install(to = "paymentsDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
@@ -164,10 +160,10 @@ public class PaymentListView extends StandardListView<Payment> {
                         payments_InvoiceComboBox, payments_FromDatePicker, payments_ToDatePicker)
                 .forEach(field -> field.addValueChangeListener(e -> applyFilters()));
 
-        FieldValueQueryParameterBinder.builder(this)
-                .addComboboxBinding(payments_OrderComboBox, ordersDc.getItems())
-                .addComboboxBinding(payments_ClientComboBox, clientsDc.getItems())
-                .addComboboxBinding(payments_InvoiceComboBox, invoicesDc.getItems())
+        FieldValueQueryParameterBinder.builder(UiComponentUtils.getCurrentView())
+                .addComboboxBinding(payments_OrderComboBox, () -> ordersDc.getItems())
+                .addComboboxBinding(payments_ClientComboBox, () -> clientsDc.getItems())
+                .addComboboxBinding(payments_InvoiceComboBox, () -> invoicesDc.getItems())
                 .addDatePickerBinding(payments_FromDatePicker)
                 .addDatePickerBinding(payments_ToDatePicker)
                 .build();

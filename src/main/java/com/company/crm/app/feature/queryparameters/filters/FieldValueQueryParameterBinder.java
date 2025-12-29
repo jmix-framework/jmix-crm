@@ -2,6 +2,7 @@ package com.company.crm.app.feature.queryparameters.filters;
 
 import com.company.crm.app.feature.queryparameters.SimpleUrlQueryParametersBinder;
 import com.company.crm.app.util.context.AppContext;
+import com.company.crm.app.util.ui.CrmUiUtils;
 import com.company.crm.model.base.UuidEntity;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasValue;
@@ -23,6 +24,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static com.company.crm.app.feature.queryparameters.SimpleUrlQueryParametersBinder.getUrlQueryParametersFacet;
 import static com.company.crm.app.feature.queryparameters.SimpleUrlQueryParametersBinder.validateId;
@@ -115,7 +117,7 @@ public class FieldValueQueryParameterBinder extends AbstractUrlQueryParametersBi
                                                                                  Function<String, V> deserializer) {
 
         String componentId() {
-            return component().getId().orElse("");
+            return CrmUiUtils.getComponentId(component).orElse("");
         }
 
         String serializedValue() {
@@ -163,20 +165,23 @@ public class FieldValueQueryParameterBinder extends AbstractUrlQueryParametersBi
             return this;
         }
 
-        public <V extends UuidEntity, C extends Select<V>> Builder addEntitySelectBinding(C select, Collection<V> items) {
-            doAddListDataItemBinding(select, items);
+        public <V extends UuidEntity, C extends Select<V>> Builder addEntitySelectBinding(C select,
+                                                                                          Supplier<Collection<V>> itemSupplier) {
+            doAddListDataItemBinding(select, itemSupplier);
             return this;
         }
 
-        public <V extends UuidEntity, C extends ComboBoxBase> Builder addComboboxBinding(C comboBox, Collection<V> items) {
-            doAddListDataItemBinding(comboBox, items);
+        public <V extends UuidEntity, C extends ComboBoxBase> Builder addComboboxBinding(C comboBox,
+                                                                                         Supplier<Collection<V>> itemsSupplier) {
+            doAddListDataItemBinding(comboBox, itemsSupplier);
             return this;
         }
 
-        private <V extends UuidEntity, C extends Component & HasValue<?, V>> void doAddListDataItemBinding(C listDataItem, Collection<V> items) {
+        private <V extends UuidEntity, C extends Component & HasValue<?, V>> void doAddListDataItemBinding(C listDataItem,
+                                                                                                           Supplier<Collection<V>> itemsSupplier) {
             binders.add(new ComponentValueBinder<>(listDataItem,
                     value -> Optional.ofNullable(value).map(entity -> entity.getId().toString()).orElse(""),
-                    id -> items.stream()
+                    id -> itemsSupplier.get().stream()
                             .filter(entity -> entity.getId().toString().equals(id))
                             .findFirst().orElse(null)));
         }

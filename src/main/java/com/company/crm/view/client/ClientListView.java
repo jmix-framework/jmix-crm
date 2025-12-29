@@ -31,6 +31,7 @@ import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.data.selection.SelectionEvent;
 import com.vaadin.flow.router.Route;
@@ -64,6 +65,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 import static com.company.crm.app.feature.sortable.SortableFeature.makeSortable;
 import static com.company.crm.app.util.demo.DemoUtils.defaultSleepForStatisticLoading;
@@ -74,7 +76,6 @@ import static com.company.crm.app.util.ui.listener.resize.WidthResizeListener.is
 import static io.jmix.core.querycondition.PropertyCondition.contains;
 import static io.jmix.core.querycondition.PropertyCondition.equal;
 import static io.jmix.core.querycondition.PropertyCondition.isCollectionEmpty;
-import static org.apache.commons.lang3.StringUtils.substringAfter;
 
 @Route(value = "clients", layout = MainView.class)
 @ViewController(id = CrmConstants.ViewIds.CLIENT_LIST)
@@ -215,15 +216,19 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
 
     @Supply(to = "clientsDataGrid.website", subject = "renderer")
     private Renderer<Client> clientsDataGridWebsiteRenderer() {
-        return crmRenderers.longTextRenderer(20, c -> {
-            String website = c.getWebsite();
-            if (StringUtils.isBlank(website)) {
-                return "";
-            } else {
-                String withoutProtocol = substringAfter(c.getWebsite(), "://").trim();
-                return withoutProtocol.isBlank() ? website : withoutProtocol;
+        return new ComponentRenderer<>(c -> {
+            String website = Objects.toString(c.getWebsite(), "");
+            if (website.length() > 30) {
+                website = StringUtils.substring(website, 0, 27) + "...";
             }
-        }, c -> openLink(c.getWebsite()));
+
+            Span span = new Span(website);
+            CrmUiUtils.setCursorPointer(span);
+            span.setTitle(c.getWebsite());
+            span.addClassNames(LumoUtility.TextColor.PRIMARY, LumoUtility.TextColor.SECONDARY, LumoUtility.TextOverflow.ELLIPSIS);
+            span.addClickListener(e -> openLink(c.getWebsite()));
+            return span;
+        });
     }
 
     private void initialize() {
@@ -428,7 +433,7 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
                 .addBooleanBinding(showOnlyMyClientsCheckBox)
                 .addEnumBinding(ClientType.class, typeSelect)
                 .addEnumBinding(ClientCategory.class, categorySelect)
-                .addEntitySelectBinding(accountManagerSelect, accountManagers)
+                .addEntitySelectBinding(accountManagerSelect, () -> accountManagers)
                 .build();
     }
 

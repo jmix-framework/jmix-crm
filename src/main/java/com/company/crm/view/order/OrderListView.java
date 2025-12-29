@@ -184,7 +184,7 @@ public class OrderListView extends StandardListView<Order> {
         //noinspection unchecked
         FieldValueQueryParameterBinder.builder(this)
                 .addStringBinding(searchField)
-                .addComboboxBinding(clientComboBox, clientsDc.getItems())
+                .addComboboxBinding(clientComboBox, () -> clientsDc.getItems())
                 .addDatePickerBinding(fromDatePicker)
                 .addDatePickerBinding(toDatePicker)
                 .build();

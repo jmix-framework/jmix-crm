@@ -160,7 +160,7 @@ public class CategoryItemListView extends StandardListView<CategoryItem> {
         //noinspection unchecked
         FieldValueQueryParameterBinder.builder(this)
                 .addStringBinding(items_searchField)
-                .addEntitySelectBinding(items_categorySelect, categories)
+                .addEntitySelectBinding(items_categorySelect, () -> categories)
                 .build();
     }
 
