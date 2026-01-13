@@ -39,6 +39,7 @@ import io.jmix.flowui.action.list.EditAction;
 import io.jmix.flowui.component.UiComponentUtils;
 import io.jmix.flowui.component.checkbox.Switch;
 import io.jmix.flowui.component.formlayout.JmixFormLayout;
+import io.jmix.flowui.component.genericfilter.GenericFilter;
 import io.jmix.flowui.component.grid.DataGrid;
 import io.jmix.flowui.component.validation.ValidationErrors;
 import io.jmix.flowui.data.EntityValueSource;
@@ -139,6 +140,8 @@ public class UserTaskListView extends StandardListView<UserTask> {
     private boolean modifiedAfterEdit;
 
     private Boolean gridOnly = null;
+    @ViewComponent
+    private GenericFilter genericFilter;
 
     public void reloadData() {
         userTasksDl.load();
@@ -163,7 +166,7 @@ public class UserTaskListView extends StandardListView<UserTask> {
 
         Dialog dialog = UiComponentUtils.findDialog(this);
         if (dialog != null) {
-            dialog.setMaxWidth(30, Unit.EM);
+            dialog.setMaxWidth(42, Unit.EM);
         }
 
         layoutWrapper.setAutoResponsive(true);
@@ -175,6 +178,7 @@ public class UserTaskListView extends StandardListView<UserTask> {
         listLayout.setHeight(getContent().getHeight());
         listLayout.setMaxHeight(getContent().getMaxHeight());
 
+        genericFilter.setVisible(false);
         detailsLayout.setVisible(!gridOnly);
         buttonsPanel.setVisible(!gridOnly);
 

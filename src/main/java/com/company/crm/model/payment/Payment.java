@@ -42,12 +42,18 @@ public class Payment extends FullAuditEntity {
     @JmixProperty
     @DependsOnProperties("invoice")
     public Order getOrder() {
+        if (invoice == null) {
+            return null;
+        }
         return invoice.getOrder();
     }
 
     @JmixProperty
     @DependsOnProperties("invoice")
     public Client getClient() {
+        if (invoice == null) {
+            return null;
+        }
         return invoice.getClient();
     }
 

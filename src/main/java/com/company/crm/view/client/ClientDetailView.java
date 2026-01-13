@@ -9,11 +9,19 @@ import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.app.util.date.range.LocalDateRange;
 import com.company.crm.app.util.ui.chart.ChartsUtils;
 import com.company.crm.app.util.ui.listener.resize.WidthResizeListener;
+import com.company.crm.model.address.Address;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.client.ClientRepository;
-import com.company.crm.model.user.activity.client.ClientUserActivityRepository;
+import com.company.crm.model.invoice.Invoice;
+import com.company.crm.model.order.Order;
+import com.company.crm.view.address.AddressFragment;
 import com.company.crm.view.main.MainView;
+import com.company.crm.view.payment.PaymentDetailView;
+import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.Unit;
+import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.splitlayout.SplitLayout.Orientation;
 import com.vaadin.flow.router.Route;
 import io.jmix.chartsflowui.component.Chart;
@@ -24,14 +32,22 @@ import io.jmix.chartsflowui.kit.component.model.legend.Legend;
 import io.jmix.chartsflowui.kit.component.model.series.SeriesType;
 import io.jmix.chartsflowui.kit.data.chart.ListChartItems;
 import io.jmix.core.FetchPlan;
+import io.jmix.core.Messages;
+import io.jmix.core.MetadataTools;
 import io.jmix.core.SaveContext;
 import io.jmix.core.common.datastruct.Pair;
+import io.jmix.flowui.Fragments;
 import io.jmix.flowui.Notifications;
 import io.jmix.flowui.UiComponents;
+import io.jmix.flowui.action.view.DetailSaveCloseAction;
 import io.jmix.flowui.component.formlayout.JmixFormLayout;
 import io.jmix.flowui.component.splitlayout.JmixSplitLayout;
 import io.jmix.flowui.component.tabsheet.JmixTabSheet;
+import io.jmix.flowui.component.textarea.JmixTextArea;
 import io.jmix.flowui.kit.action.ActionPerformedEvent;
+import io.jmix.flowui.kit.component.button.JmixButton;
+import io.jmix.flowui.model.DataContext;
+import io.jmix.flowui.model.InstancePropertyContainer;
 import io.jmix.flowui.view.DialogMode;
 import io.jmix.flowui.view.EditedEntityContainer;
 import io.jmix.flowui.view.Install;
@@ -66,13 +82,13 @@ public class ClientDetailView extends StandardDetailView<Client> implements Widt
     @Autowired
     private UiComponents uiComponents;
     @Autowired
+    private MetadataTools metadataTools;
+    @Autowired
     private ClientService clientService;
     @Autowired
     private DateTimeService dateTimeService;
     @Autowired
     private ClientRepository clientRepository;
-    @Autowired
-    private ClientUserActivityRepository userActivityRepository;
 
     @ViewComponent
     private JmixTabSheet tabSheet;
@@ -87,10 +103,26 @@ public class ClientDetailView extends StandardDetailView<Client> implements Widt
     private final int loadStatsForLastYearsAmount = 3;
     @Autowired
     private Notifications notifications;
+    @Autowired
+    private Fragments fragments;
+    @Autowired
+    private Messages messages;
+    @ViewComponent
+    private InstancePropertyContainer<Address> addressDc;
+    @ViewComponent
+    private JmixTextArea addressField;
+    @ViewComponent
+    private DetailSaveCloseAction<Object> saveCloseAction;
 
     @Override
     public void configureUiForWidth(int width) {
         formSplit.setOrientation(width > 900 ? Orientation.HORIZONTAL : Orientation.VERTICAL);
+    }
+
+    @Override
+    public void setReadOnly(boolean readOnly) {
+        super.setReadOnly(readOnly);
+        saveCloseAction.setEnabled(!readOnly);
     }
 
     @Subscribe
@@ -115,12 +147,79 @@ public class ClientDetailView extends StandardDetailView<Client> implements Widt
         return Set.of(clientRepository.save(getEditedEntity()));
     }
 
+    @Subscribe(target = Target.DATA_CONTEXT)
+    private void onDataContextChange(final DataContext.ChangeEvent event) {
+        Address address = addressDc.getItemOrNull();
+        if (address != null) {
+            addressField.setValue(address.getInstanceName());
+        }
+    }
+
+    @Install(to = "ordersDataGrid.createAction", subject = "initializer")
+    private void ordersDataGridCreateActionInitializer(final Order order) {
+        order.setClient(getEditedEntity());
+    }
+
+    @Install(to = "invoicesDataGrid.createAction", subject = "initializer")
+    private void invoicesDataGridCreateActionInitializer(final Invoice invoice) {
+        invoice.setClient(getEditedEntity());
+    }
+
+    @Install(to = "paymentsDataGrid.createAction", subject = "viewConfigurer")
+    private void paymentsDataGridCreateActionViewConfigurer(final PaymentDetailView paymentDetail) {
+        paymentDetail.setClient(getEditedEntity());
+    }
+
     @Subscribe("downloadProfile")
     private void onDownloadProfile(final ActionPerformedEvent event) {
         // TODO: download custom design-time report
         notifications.create("Client profile downloaded successfully")
                 .withType(Notifications.Type.SUCCESS)
                 .show();
+    }
+
+    @Subscribe(id = "addressEditBtn", subject = "clickListener")
+    private void onAddressEditBtnClick(final ClickEvent<JmixButton> event) {
+        openAddressEditFormDialog();
+    }
+
+    private void openAddressEditFormDialog() {
+        AddressFragment addressFragment = fragments.create(this, AddressFragment.class);
+        addressFragment.setAddress(metadataTools.copy(addressDc.getItem()));
+        Dialog addressDialog = new Dialog(addressFragment);
+
+        addressDialog.setHeaderTitle(messages.getMessage(Address.class, "Address"));
+        addressDialog.setMaxWidth(40, Unit.EM);
+        addressDialog.setResizable(true);
+
+        Runnable closeDialog = addressDialog::close;
+
+        var closeButton = uiComponents.create(JmixButton.class);
+        closeButton.setIcon(VaadinIcon.CLOSE_SMALL.create());
+        closeButton.addThemeVariants(ButtonVariant.LUMO_ICON, ButtonVariant.LUMO_TERTIARY);
+        closeButton.addClickListener(e -> closeDialog.run());
+        addressDialog.getHeader().add(closeButton);
+
+        var saveButton = uiComponents.create(JmixButton.class);
+        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        saveButton.setText(messages.getMessage("actions.Save"));
+        saveButton.addClickListener(event -> {
+            if (addressFragment.validate().isEmpty()) {
+                Address updatedAddress = addressFragment.getAddress();
+                if (updatedAddress != null) {
+                    metadataTools.copy(updatedAddress, addressDc.getItem());
+                }
+                closeDialog.run();
+            }
+        });
+
+        var cancelButton = uiComponents.create(JmixButton.class);
+        cancelButton.setText(messages.getMessage("actions.Cancel"));
+        cancelButton.addClickListener(e -> closeDialog.run());
+
+        addressDialog.getFooter().add(saveButton, cancelButton);
+
+        addressDialog.open();
     }
 
     private Map<Chart, Supplier<DataSet>> getChartsLoaders() {

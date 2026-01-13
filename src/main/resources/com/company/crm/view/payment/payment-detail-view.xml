@@ -28,7 +28,7 @@
             </responsiveSteps>
             <entityComboBox id="invoiceField" property="invoice" itemsContainer="invoicesDc">
                 <actions>
-                    <action id="entityLookupAction" type="entity_lookup"/>
+                    <action id="entityLookupAction" icon="PLUS"/>
                     <action id="entityClearAction" type="entity_clear"/>
                 </actions>
             </entityComboBox>

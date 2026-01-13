@@ -20,23 +20,6 @@ import io.jmix.security.role.annotation.ResourceRole;
 import io.jmix.securityflowui.role.annotation.MenuPolicy;
 import io.jmix.securityflowui.role.annotation.ViewPolicy;
 
-import static com.company.crm.app.util.constant.CrmConstants.ViewIds.CATEGORY_DETAIL;
-import static com.company.crm.app.util.constant.CrmConstants.ViewIds.CATEGORY_ITEM_DETAIL;
-import static com.company.crm.app.util.constant.CrmConstants.ViewIds.CATEGORY_ITEM_LIST;
-import static com.company.crm.app.util.constant.CrmConstants.ViewIds.CATEGORY_LIST;
-import static com.company.crm.app.util.constant.CrmConstants.ViewIds.CLIENT_DETAIL;
-import static com.company.crm.app.util.constant.CrmConstants.ViewIds.CLIENT_LIST;
-import static com.company.crm.app.util.constant.CrmConstants.ViewIds.FINANCE;
-import static com.company.crm.app.util.constant.CrmConstants.ViewIds.HOME;
-import static com.company.crm.app.util.constant.CrmConstants.ViewIds.INVOICE_DETAIL;
-import static com.company.crm.app.util.constant.CrmConstants.ViewIds.INVOICE_LIST;
-import static com.company.crm.app.util.constant.CrmConstants.ViewIds.ORDER_DETAIL;
-import static com.company.crm.app.util.constant.CrmConstants.ViewIds.ORDER_ITEM_DETAIL;
-import static com.company.crm.app.util.constant.CrmConstants.ViewIds.ORDER_LIST;
-import static com.company.crm.app.util.constant.CrmConstants.ViewIds.PAYMENT_DETAIL;
-import static com.company.crm.app.util.constant.CrmConstants.ViewIds.PAYMENT_LIST;
-import static com.company.crm.app.util.constant.CrmConstants.ViewIds.USER_TASK_LIST;
-
 @ResourceRole(name = "Manager", code = ManagerRole.CODE, scope = SecurityScope.UI)
 public interface ManagerRole extends UiMinimalRole {
 
@@ -44,10 +27,7 @@ public interface ManagerRole extends UiMinimalRole {
     String NAME = "Manager";
 
     @MenuPolicy(menuIds = {"home", "tasks", "categories", "categoryItems", "clients", "orders", "finance"})
-    @ViewPolicy(viewIds = {HOME, USER_TASK_LIST, CATEGORY_LIST, CATEGORY_ITEM_LIST, CLIENT_LIST,
-            ORDER_LIST, FINANCE, CATEGORY_ITEM_DETAIL, CATEGORY_DETAIL,
-            CLIENT_DETAIL, INVOICE_DETAIL, INVOICE_LIST, ORDER_ITEM_DETAIL, ORDER_DETAIL,
-            PAYMENT_DETAIL, PAYMENT_LIST})
+    @ViewPolicy(viewIds = {"HomeView", "UserTask.list", "Category.list", "CategoryItem.list", "Client.list", "Order.list", "FinanceView", "CategoryItem.detail", "Category.detail", "Client.detail", "Invoice.detail", "Invoice.list", "OrderItem.detail", "Order.detail", "Payment.detail", "Payment.list", "AddressFragment", "InvoicesFragment", "PaymentsFragment", "Contact.detail"})
     void screens();
 
     @EntityAttributePolicy(entityClass = Address.class, attributes = "*", action = EntityAttributePolicyAction.MODIFY)

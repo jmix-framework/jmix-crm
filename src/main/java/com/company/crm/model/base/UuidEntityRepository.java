@@ -5,8 +5,8 @@ import io.jmix.core.FluentLoader;
 import io.jmix.core.FluentValueLoader;
 import io.jmix.core.FluentValuesLoader;
 import io.jmix.core.repository.JmixDataRepository;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.repository.NoRepositoryBean;
-import org.springframework.lang.Nullable;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;

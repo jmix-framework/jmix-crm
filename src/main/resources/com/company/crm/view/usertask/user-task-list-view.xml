@@ -18,9 +18,12 @@
         </instance>
     </data>
     <facets>
+        <settings auto="true"/>
         <dataLoadCoordinator auto="true"/>
         <urlQueryParameters>
             <pagination component="pagination"/>
+            <genericFilter component="genericFilter"/>
+            <dataGridFilter component="userTasksDataGrid"/>
         </urlQueryParameters>
     </facets>
     <actions>
@@ -30,11 +33,15 @@
     <layout padding="false">
         <formLayout id="layoutWrapper" classNames="master-detail-layout" width="100%" height="100%">
             <vbox id="listLayout" height="100%" colspan="1">
+                <genericFilter id="genericFilter" dataLoader="userTasksDl">
+                    <properties include=".*"/>
+                </genericFilter>
                 <hbox id="buttonsPanel" classNames="buttons-panel">
                     <startSlot>
                         <button id="createButton" action="userTasksDataGrid.createAction"/>
                         <button id="editButton" action="userTasksDataGrid.editAction"/>
                         <button id="removeButton" action="userTasksDataGrid.removeAction"/>
+                        <button id="excelExportBtn" action="userTasksDataGrid.excelExport"/>
                     </startSlot>
                     <endSlot>
                         <simplePagination id="pagination" dataLoader="userTasksDl"/>
@@ -51,11 +58,12 @@
                         <action id="createAction" type="list_create"/>
                         <action id="editAction" type="list_edit"/>
                         <action id="removeAction" type="list_remove"/>
+                        <action id="excelExport" type="grdexp_excelExport"/>
                     </actions>
-                    <columns resizable="true">
-                        <column property="title"/>
-                        <column property="dueDate"/>
-                        <column property="isCompleted"/>
+                    <columns resizable="true" sortable="true">
+                        <column property="title" filterable="true"/>
+                        <column property="dueDate" filterable="true"/>
+                        <column property="isCompleted" filterable="true"/>
                     </columns>
                     <emptyStateComponent>
                         <hbox width="100%" height="100%" justifyContent="CENTER" alignItems="CENTER">

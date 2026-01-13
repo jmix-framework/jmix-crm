@@ -112,18 +112,20 @@
             <column name="WEBSITE" type="VARCHAR(255)"/>
             <column name="ACCOUNT_MANAGER_ID" type="UUID"/>
 
-            <column name="APARTMENT"
-                    type="VARCHAR(255)"/>
-            <column name="CITY"
-                    type="VARCHAR(255)"/>
-            <column name="COUNTRY"
-                    type="VARCHAR(255)"/>
-            <column name="HOUSE"
-                    type="VARCHAR(255)"/>
-            <column name="POSTAL_CODE"
-                    type="VARCHAR(255)"/>
-            <column name="STREET"
-                    type="VARCHAR(255)"/>
+            <column name="POSTAL_CODE" type="VARCHAR(255)"/>
+            <column name="COUNTRY" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CITY" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="HOUSE" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="STREET" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="APARTMENT" type="VARCHAR(255)"/>
         </createTable>
 
         <createTable tableName="CONTACT">

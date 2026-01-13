@@ -38,9 +38,9 @@ import io.jmix.flowui.view.Target;
 import io.jmix.flowui.view.ViewComponent;
 import io.jmix.flowui.view.ViewController;
 import io.jmix.flowui.view.ViewDescriptor;
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
-import org.springframework.lang.Nullable;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -59,7 +59,7 @@ import static io.jmix.core.querycondition.PropertyCondition.equal;
 @ViewController(id = CrmConstants.ViewIds.CATEGORY_ITEM_LIST)
 @ViewDescriptor(path = "category-item-list-view.xml")
 @LookupComponent("categoryItemsDataGrid")
-@DialogMode(width = "64em")
+@DialogMode(width = "64em", resizable = true)
 public class CategoryItemListView extends StandardListView<CategoryItem> {
 
     @Autowired

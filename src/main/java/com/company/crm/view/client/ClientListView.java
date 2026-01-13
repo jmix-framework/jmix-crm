@@ -81,7 +81,7 @@ import static io.jmix.core.querycondition.PropertyCondition.isCollectionEmpty;
 @ViewController(id = CrmConstants.ViewIds.CLIENT_LIST)
 @ViewDescriptor(path = "client-list-view.xml")
 @LookupComponent("clientsDataGrid")
-@DialogMode(width = "64em")
+@DialogMode(width = "64em", resizable = true)
 public class ClientListView extends StandardListView<Client> implements WidthResizeListener {
 
     @Autowired

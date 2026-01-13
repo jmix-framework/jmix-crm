@@ -63,7 +63,7 @@ import static io.jmix.core.querycondition.PropertyCondition.lessOrEqual;
 @ViewController(id = CrmConstants.ViewIds.ORDER_LIST)
 @ViewDescriptor(path = "order-list-view.xml")
 @LookupComponent("ordersDataGrid")
-@DialogMode(width = "64em")
+@DialogMode(width = "64em", resizable = true)
 @PrimaryListView(Order.class)
 public class OrderListView extends StandardListView<Order> {
 

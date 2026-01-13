@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      title="msg://contactDetailView.title"
+      focusComponent="form">
+    <data>
+        <instance id="contactDc"
+                  class="com.company.crm.model.contact.Contact">
+            <fetchPlan extends="_base">
+                <property name="client" fetchPlan="_base"/>
+            </fetchPlan>
+            <loader id="contactDl"/>
+        </instance>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+    </facets>
+    <actions>
+        <action id="saveCloseAction" type="detail_saveClose"/>
+        <action id="closeAction" type="detail_close"/>
+    </actions>
+    <layout alignItems="STRETCH"
+            padding="false" spacing="false"
+            expand="contentBox">
+        <vbox id="contentBox" classNames="overflow-auto">
+            <formLayout id="form" dataContainer="contactDc">
+                <responsiveSteps>
+                    <responsiveStep minWidth="0" columns="1"/>
+                    <responsiveStep minWidth="40em" columns="2"/>
+                </responsiveSteps>
+                <entityComboBox id="clientField" dataContainer="contactDc" property="client" colspan="2" readOnly="true">
+                    <actions>
+                        <action id="entityLookupAction" type="entity_lookup"/>
+                        <action id="entityClearAction" type="entity_clear"/>
+                    </actions>
+                    <itemsQuery class="com.company.crm.model.client.Client" escapeValueForLike="true"
+                                searchStringFormat="(?i)%${inputString}%">
+                        <fetchPlan extends="_base"/>
+                        <query>
+                            <![CDATA[select e from Client e where e.name like :searchString escape '\' order by e.name]]>
+                        </query>
+                    </itemsQuery>
+                </entityComboBox>
+                <textField id="personField" property="person"/>
+                <textField id="positionField" property="position"/>
+                <datePicker id="startDateField" property="startDate"/>
+                <datePicker id="endDateField" property="endDate"/>
+                <textField id="phoneField" property="phone"/>
+                <textField id="emailField" property="email"/>
+            </formLayout>
+        </vbox>
+        <hbox id="detailActions"
+              classNames="px-m py-s bg-contrast-5">
+            <button id="saveAndCloseButton" action="saveCloseAction"/>
+            <button id="closeButton" action="closeAction"/>
+        </hbox>
+    </layout>
+</view>

@@ -52,7 +52,7 @@
                         </actions>
                     </entityComboBox>
                     <select id="invoices_StatusSelect" itemsEnum="com.company.crm.model.invoice.InvoiceStatus"
-                            placeholder="msg://statusSelect.placeholhder"
+                            placeholder="msg://com.company.crm.view.invoice/statusSelect.placeholder"
                             emptySelectionAllowed="true" emptySelectionCaption="msg://allInvoices"/>
                     <datePicker id="invoices_FromDatePicker"
                                 placeholder="msg:///fromDatePicker.label" clearButtonVisible="true"/>
@@ -90,7 +90,7 @@
                     </action>
                     <action id="removeAction" type="list_remove"/>
                 </actions>
-                <columns resizable="true">
+                <columns resizable="true" sortable="true">
                     <column property="status" autoWidth="true" flexGrow="0"/>
                     <column property="order.number" autoWidth="true" flexGrow="0"
                             header="msg://com.company.crm.model.invoice/Invoice.order"/>

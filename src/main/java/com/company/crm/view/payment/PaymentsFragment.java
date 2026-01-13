@@ -57,7 +57,7 @@ import static io.jmix.core.querycondition.PropertyCondition.lessOrEqual;
 
 @FragmentDescriptor("payment-list-view.xml")
 @LookupComponent("paymentsDataGrid")
-@DialogMode(width = "64em")
+@DialogMode(width = "64em", resizable = true)
 public class PaymentsFragment extends Fragment<VerticalLayout> {
 
     @Autowired

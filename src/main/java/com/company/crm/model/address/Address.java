@@ -3,6 +3,7 @@ package com.company.crm.model.address;
 import io.jmix.core.metamodel.annotation.DependsOnProperties;
 import io.jmix.core.metamodel.annotation.InstanceName;
 import io.jmix.core.metamodel.annotation.JmixEntity;
+import io.jmix.core.metamodel.annotation.JmixProperty;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 
@@ -15,22 +16,23 @@ public class Address {
     @Column(name = "POSTAL_CODE")
     private String postalCode;
 
-    @Column(name = "COUNTRY")
+    @Column(name = "COUNTRY", nullable = false)
     private String country;
 
-    @Column(name = "CITY")
+    @Column(name = "CITY", nullable = false)
     private String city;
 
-    @Column(name = "STREET")
+    @Column(name = "STREET", nullable = false)
     private String street;
 
-    @Column(name = "HOUSE")
+    @Column(name = "HOUSE", nullable = false)
     private String building;
 
     @Column(name = "APARTMENT")
     private String apartment;
 
     @InstanceName
+    @JmixProperty
     @DependsOnProperties({"country", "postalCode", "city", "street", "building", "apartment"})
     public String getInstanceName() {
         StringBuilder result = new StringBuilder();

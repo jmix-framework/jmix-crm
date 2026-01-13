@@ -104,7 +104,7 @@
                     </action>
                     <action id="removeAction" type="list_remove"/>
                 </actions>
-                <columns resizable="true">
+                <columns resizable="true" sortable="true">
                     <column property="date" autoWidth="true" flexGrow="0"/>
                     <column property="order" autoWidth="true" flexGrow="0"/>
                     <column property="order.client"/>

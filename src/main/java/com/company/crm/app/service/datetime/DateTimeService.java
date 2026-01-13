@@ -3,7 +3,7 @@ package com.company.crm.app.service.datetime;
 import com.company.crm.app.util.date.range.LocalDateRange;
 import io.jmix.core.TimeSource;
 import io.jmix.core.security.CurrentAuthentication;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;

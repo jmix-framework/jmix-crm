@@ -11,7 +11,7 @@ public interface UiMinimalRole extends UiMinimalPolicies {
 
     String CODE = "ui-minimal";
 
-    @ViewPolicy(viewIds = "MainView")
+    @ViewPolicy(viewIds = {"MainView", "User.detail"})
     void main();
 
     @ViewPolicy(viewIds = "LoginView")

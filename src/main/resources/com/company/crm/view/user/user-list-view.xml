@@ -56,7 +56,7 @@
                 <action id="resetPasswordAction" type="sec_resetPassword"/>
                 <action id="showUserSubstitutionsAction" type="sec_showUserSubstitutions"/>
             </actions>
-            <columns resizable="true">
+            <columns resizable="true" sortable="true">
                 <column property="username"/>
                 <column property="firstName"/>
                 <column property="lastName"/>

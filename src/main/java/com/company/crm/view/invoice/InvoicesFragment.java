@@ -39,14 +39,15 @@ import io.jmix.flowui.view.DialogMode;
 import io.jmix.flowui.view.Install;
 import io.jmix.flowui.view.LookupComponent;
 import io.jmix.flowui.view.MessageBundle;
+import io.jmix.flowui.view.PrimaryListView;
 import io.jmix.flowui.view.Subscribe;
 import io.jmix.flowui.view.Supply;
 import io.jmix.flowui.view.Target;
 import io.jmix.flowui.view.View;
 import io.jmix.flowui.view.ViewComponent;
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
-import org.springframework.lang.Nullable;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -64,7 +65,8 @@ import static io.jmix.flowui.component.UiComponentUtils.getCurrentView;
 
 @FragmentDescriptor("invoice-list-view.xml")
 @LookupComponent("invoicesDataGrid")
-@DialogMode(width = "64em")
+@PrimaryListView(Invoice.class)
+@DialogMode(width = "64em", resizable = true)
 public class InvoicesFragment extends Fragment<VerticalLayout> {
 
     @Autowired

@@ -42,7 +42,7 @@ import java.util.List;
 @ViewController(id = CrmConstants.ViewIds.CATEGORY_LIST)
 @ViewDescriptor(path = "category-list-view.xml")
 @LookupComponent("categoriesDataGrid")
-@DialogMode(width = "64em")
+@DialogMode(width = "64em", resizable = true)
 public class CategoryListView extends StandardListView<Category> {
 
     @Autowired

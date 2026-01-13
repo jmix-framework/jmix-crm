@@ -58,46 +58,47 @@ public class CrmCard extends JmixCard implements ApplicationContextAware {
         updateBackground();
     }
 
-    public void fillAsStaticCard(String title,
-                                 Component component) {
-        fillAsStaticCard(title, 1, component);
+    public CrmCard fillAsStaticCard(String title,
+                                    Component component) {
+        return fillAsStaticCard(title, 1, component);
     }
 
-    public void fillAsStaticCard(String title,
-                                 int colspan,
-                                 Component component) {
+    public CrmCard fillAsStaticCard(String title,
+                                    int colspan,
+                                    Component component) {
         fillAsPeriodCard(title, colspan, p -> component);
         withPeriodFilter(false);
+        return this;
     }
 
-    public void fillAsPeriodCard(String title,
-                                 Function<CardPeriod, Component> contentProvider) {
-        fillAsPeriodCard(null, title, contentProvider);
+    public CrmCard fillAsPeriodCard(String title,
+                                    Function<CardPeriod, Component> contentProvider) {
+        return fillAsPeriodCard(null, title, contentProvider);
     }
 
-    public void fillAsPeriodCard(String title,
-                                 int colspan,
-                                 Function<CardPeriod, Component> contentProvider) {
-        fillAsPeriodCard(null, colspan, title, contentProvider);
+    public CrmCard fillAsPeriodCard(String title,
+                                    int colspan,
+                                    Function<CardPeriod, Component> contentProvider) {
+        return fillAsPeriodCard(null, colspan, title, contentProvider);
     }
 
-    public void fillAsPeriodCard(String id,
-                                 String title,
-                                 Function<CardPeriod, Component> contentProvider) {
-        fillAsPeriodCard(id, 1, title, contentProvider);
+    public CrmCard fillAsPeriodCard(String id,
+                                    String title,
+                                    Function<CardPeriod, Component> contentProvider) {
+        return fillAsPeriodCard(id, 1, title, contentProvider);
     }
 
-    public void fillAsPeriodCard(String id,
-                                 int colspan,
-                                 String title,
-                                 Function<CardPeriod, Component> contentProvider) {
-        fillAsPeriodCard(id, colspan, createDefaultTitleComponent(title), contentProvider);
+    public CrmCard fillAsPeriodCard(String id,
+                                    int colspan,
+                                    String title,
+                                    Function<CardPeriod, Component> contentProvider) {
+        return fillAsPeriodCard(id, colspan, createDefaultTitleComponent(title), contentProvider);
     }
 
-    public void fillAsPeriodCard(String id,
-                                 int colspan,
-                                 Component title,
-                                 Function<CardPeriod, Component> contentProvider) {
+    public CrmCard fillAsPeriodCard(String id,
+                                    int colspan,
+                                    Component title,
+                                    Function<CardPeriod, Component> contentProvider) {
         this.title = title;
         this.hasPeriodFilter = true;
         this.contentProvider = contentProvider;
@@ -106,10 +107,11 @@ public class CrmCard extends JmixCard implements ApplicationContextAware {
             setId(id);
         }
         refreshContent();
+        return this;
     }
 
-    public void defaultRangeStatPeriodCard(String title, Function<CardPeriod, RangeStatCardInfo> statInfoProvider) {
-        fillAsPeriodCard(title, period -> statInfoProvider.apply(period).createDefaultContent());
+    public CrmCard defaultRangeStatPeriodCard(String title, Function<CardPeriod, RangeStatCardInfo> statInfoProvider) {
+        return fillAsPeriodCard(title, period -> statInfoProvider.apply(period).createDefaultContent());
     }
 
     public record RangeStatCardInfo(LocalDateRange range, String currentRangeValue, String previousRangeDelta) {
@@ -146,6 +148,11 @@ public class CrmCard extends JmixCard implements ApplicationContextAware {
                 return contentComponent;
             };
         }
+    }
+
+    public CrmCard withId(String id) {
+        setId(id);
+        return this;
     }
 
     public CrmCard withoutBackground(boolean withoutBackground) {

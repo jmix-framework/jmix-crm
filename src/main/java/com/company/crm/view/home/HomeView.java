@@ -166,22 +166,40 @@ public class HomeView extends StandardView implements WidthResizeListener {
     }
 
     private List<JmixCard> getLeftCards() {
-        var totalOrdersCard = uiComponents.create(CrmCard.class);
-        totalOrdersCard.setId("totalOrdersCard");
-        totalOrdersCard.defaultRangeStatPeriodCard(messageBundle.getMessage("card.totalOrdersValue"), this::createTotalOrdersValueComponent);
+        return List.of(
+                createTotalOrdersCard(),
+                createPaymentsCard(),
+                createMyTasksCard(),
+                createOverdueInvoicesCard());
+    }
 
-        var paymentsCard = uiComponents.create(CrmCard.class);
-        paymentsCard.setId("paymentsCard");
-        paymentsCard.defaultRangeStatPeriodCard(messageBundle.getMessage("cards.payments"), this::createPaymentsComponent);
+    private CrmCard createMyTasksCard() {
+        return uiComponents.create(CrmCard.class)
+                .fillAsPeriodCard("myTasks", 2, myTasksTitleComponent(), this::createMyTasksComponent)
+                .withoutBackground(true).withPeriodFilter(false);
+    }
 
-        var overdueInvoicesCard = uiComponents.create(CrmCard.class).withoutBackground(true);
-        overdueInvoicesCard.fillAsPeriodCard("overdueInvoicesCard", 2,
-                messageBundle.getMessage("cards.overdueInvoices"), this::createOverdueInvoicesComponent);
+    private CrmCard createOverdueInvoicesCard() {
+        return uiComponents.create(CrmCard.class)
+                .fillAsPeriodCard("overdueInvoicesCard", 2,
+                        messageBundle.getMessage("cards.overdueInvoices"), this::createOverdueInvoicesComponent)
+                .withoutBackground(true).withPeriodFilter(false);
+    }
 
-        var myTasksCard = uiComponents.create(CrmCard.class).withoutBackground(true);
-        myTasksCard.fillAsPeriodCard("myTasks", 2, myTasksTitleComponent(), this::createMyTasksComponent);
+    private CrmCard createPaymentsCard() {
+        return uiComponents.create(CrmCard.class)
+                .withId("paymentsCard")
+                .defaultRangeStatPeriodCard(
+                        messageBundle.getMessage("cards.payments"),
+                        this::createPaymentsComponent);
+    }
 
-        return List.of(totalOrdersCard, paymentsCard, overdueInvoicesCard, myTasksCard);
+    private CrmCard createTotalOrdersCard() {
+        return uiComponents.create(CrmCard.class)
+                .withId("totalOrdersCard")
+                .defaultRangeStatPeriodCard(
+                        messageBundle.getMessage("card.totalOrdersValue"),
+                        this::createTotalOrdersValueComponent);
     }
 
     private Component myTasksTitleComponent() {
@@ -214,15 +232,22 @@ public class HomeView extends StandardView implements WidthResizeListener {
     }
 
     private List<JmixCard> getRightCards() {
-        var salesCard = uiComponents.create(CrmCard.class);
-        salesCard.setId("salesCard");
-        salesCard.fillAsPeriodCard("Sales Chart", 2, this::createSalesFunnelComponent);
+        return List.of(createSalesCard(), createRecentActivitiesCard());
+    }
 
-        var activitiesCard = uiComponents.create(CrmCard.class).withoutBackground(true);
-        activitiesCard.setId("activitiesCard");
-        activitiesCard.fillAsStaticCard("", 2, createRecentActivitiesComponent());
+    private CrmCard createRecentActivitiesCard() {
+        return uiComponents.create(CrmCard.class)
+                .withId("activitiesCard")
+                .withoutBackground(true)
+                .fillAsStaticCard("", 2, createRecentActivitiesComponent());
+    }
 
-        return List.of(salesCard, activitiesCard);
+    private CrmCard createSalesCard() {
+        return uiComponents.create(CrmCard.class)
+                .withId("salesCard")
+                .fillAsPeriodCard(
+                        messageBundle.getMessage("salesCardTitle"),
+                        2, this::createSalesFunnelComponent);
     }
 
     private void doCreateCards(List<JmixCard> cards, JmixFormLayout form) {
@@ -274,11 +299,13 @@ public class HomeView extends StandardView implements WidthResizeListener {
         DataGrid<Invoice> grid = uiComponents.create(DataGrid.class);
 
         grid.addColumn(new ComponentRenderer<>(r -> new Span(r.getClient().getName())))
+                .setSortable(true)
                 .setHeader(messages.getMessage("com.company.crm.model.client/Client"))
                 .setRenderer(crmRenderers.invoiceClientLink());
         localDateFormatter.setUseUserTimezone(true);
         localDateFormatter.setFormat(messages.getMessage("dateFormat"));
         grid.addColumn(new ComponentRenderer<>(r -> new Span(localDateFormatter.apply(r.getDueDate()))))
+                .setSortable(true)
                 .setHeader(messages.getMessage("com.company.crm.model.invoice/Invoice.dueDate"));
 
         grid.setItems(invoiceService.getOverdueInvoices());
@@ -343,7 +370,7 @@ public class HomeView extends StandardView implements WidthResizeListener {
                         .withShow(true)
                         .withFeatures(new SaveAsImageFeature().withType(SaveAsImageFeature.SaveType.PNG)))
                 .withTitle(new Title()
-                        .withText("STATUS")
+                        .withText(messageBundle.getMessage("salesChartTitle"))
                         .withTextStyle(new Title.TextStyle()
                                 .withFontSize(12)
                                 .withFontStyle(FontStyle.NORMAL)))

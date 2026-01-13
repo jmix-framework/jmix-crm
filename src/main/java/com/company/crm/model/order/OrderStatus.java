@@ -2,7 +2,7 @@ package com.company.crm.model.order;
 
 import com.company.crm.app.util.enums.EnumUtils;
 import io.jmix.core.metamodel.datatype.EnumClass;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 public enum OrderStatus implements EnumClass<Integer> {
 

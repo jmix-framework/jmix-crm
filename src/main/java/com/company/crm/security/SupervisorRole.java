@@ -9,6 +9,8 @@ import io.jmix.security.model.EntityPolicyAction;
 import io.jmix.security.role.annotation.EntityAttributePolicy;
 import io.jmix.security.role.annotation.EntityPolicy;
 import io.jmix.security.role.annotation.ResourceRole;
+import io.jmix.securityflowui.role.annotation.MenuPolicy;
+import io.jmix.securityflowui.role.annotation.ViewPolicy;
 
 @ResourceRole(name = SupervisorRole.NAME, code = SupervisorRole.CODE)
 public interface SupervisorRole extends ManagerRole {
@@ -30,4 +32,8 @@ public interface SupervisorRole extends ManagerRole {
     @EntityAttributePolicy(entityClass = CategoryItemComment.class, attributes = "*", action = EntityAttributePolicyAction.MODIFY)
     @EntityPolicy(entityClass = CategoryItemComment.class, actions = EntityPolicyAction.ALL)
     void categoryItemComment();
+
+    @MenuPolicy(menuIds = "CatalogView")
+    @ViewPolicy(viewIds = {"CatalogView"})
+    void screens();
 }
