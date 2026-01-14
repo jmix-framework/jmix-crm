@@ -10,6 +10,6 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE, ElementType.METHOD})
-@Profile(SpringProfiles.PROD)
-public @interface ProdProfile {
+@Profile(SpringProfiles.LOCAL)
+public @interface LocalProfile {
 }

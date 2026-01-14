@@ -1,12 +1,12 @@
 package com.company.crm.app.service.jmx;
 
-import com.company.crm.app.annotation.DevProfile;
+import com.company.crm.app.annotation.LocalProfile;
 import com.company.crm.app.util.init.DemoDataGenerator;
 import org.springframework.jmx.export.annotation.ManagedOperation;
 import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.stereotype.Component;
 
-@DevProfile
+@LocalProfile
 @Component
 @ManagedResource(
         description = "Generate demo data",
