@@ -13,40 +13,14 @@ import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.Locale;
 
-@DatatypeDef(id = PriceDataType.NAME, javaClass = BigDecimal.class)
+@DatatypeDef(id = PercentDataType.NAME, javaClass = BigDecimal.class)
 @Ddl("DECIMAL(19,2)")
-public class PriceDataType implements Datatype<BigDecimal> {
+public class PercentDataType implements Datatype<BigDecimal> {
 
-    public static final String NAME = "price";
-
+    public static final String NAME = "percent";
     private static final String PATTERN = "#,##0";
-    private static final CurrencyPosition DEFAULT_CURRENCY_POSITION = CurrencyPosition.START;
 
-    public static String formatWithoutCurrency(Object value) {
-        return doFormatValueWithoutCurrency(value);
-    }
-
-    public static String defaultFormat(Object value) {
-        return doFormatValueWithCurrency(value, DEFAULT_CURRENCY_POSITION);
-    }
-
-    public static String formatStartingCurrency(Object value) {
-        return doFormatValueWithCurrency(value, CurrencyPosition.START);
-    }
-
-    public static String formatEndingCurrency(Object value) {
-        return doFormatValueWithCurrency(value, CurrencyPosition.END);
-    }
-
-    private static String doFormatValueWithCurrency(Object value, CurrencyPosition currencyPosition) {
-        String withoutCurrency = formatWithoutCurrency(value);
-        return switch (currencyPosition) {
-            case START -> getCurrencyPrefix() + withoutCurrency;
-            case END -> withoutCurrency + getCurrencySuffix();
-        };
-    }
-
-    private static String doFormatValueWithoutCurrency(Object value) {
+    private static String doFormatValue(Object value) {
         if (value == null) {
             return "";
         }
@@ -55,19 +29,15 @@ public class PriceDataType implements Datatype<BigDecimal> {
             DecimalFormat decimalFormat = (DecimalFormat) numberInstance;
             decimalFormat.setParseBigDecimal(true);
             decimalFormat.applyPattern(PATTERN);
-            return decimalFormat.format(value);
+            return decimalFormat.format(value) + " %";
         } catch (Exception e) {
             return "[NaN]";
         }
     }
 
-    public enum CurrencyPosition {
-        START, END
-    }
-
     @Override
     public String format(@Nullable Object value) {
-        return doFormatValueWithCurrency(value, DEFAULT_CURRENCY_POSITION);
+        return doFormatValue(value);
     }
 
     @Override
@@ -97,17 +67,5 @@ public class PriceDataType implements Datatype<BigDecimal> {
     @Override
     public BigDecimal parse(@Nullable String value, Locale locale) {
         return parse(value);
-    }
-
-    public static String getCurrencySuffix() {
-        return " " + getCurrencySymbol();
-    }
-
-    public static String getCurrencyPrefix() {
-        return getCurrencySymbol() + " ";
-    }
-
-    public static String getCurrencySymbol() {
-        return "$";
     }
 }

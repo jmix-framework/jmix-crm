@@ -1,6 +1,7 @@
 package com.company.crm.app.util.ui.renderer;
 
 import com.company.crm.app.service.datetime.DateTimeService;
+import com.company.crm.app.service.order.OrderService;
 import com.company.crm.app.util.common.ThreadUtils;
 import com.company.crm.app.util.ui.CrmUiUtils;
 import com.company.crm.model.base.UuidEntity;
@@ -8,6 +9,7 @@ import com.company.crm.model.catalog.category.Category;
 import com.company.crm.model.catalog.item.CategoryItem;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.client.ClientType;
+import com.company.crm.model.datatype.PriceDataType;
 import com.company.crm.model.invoice.Invoice;
 import com.company.crm.model.invoice.InvoiceStatus;
 import com.company.crm.model.order.Order;
@@ -36,6 +38,7 @@ import io.jmix.flowui.kit.component.button.JmixButton;
 import io.jmix.flowui.view.StandardDetailView;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.function.Function;
@@ -49,6 +52,7 @@ import static io.jmix.flowui.component.UiComponentUtils.getCurrentView;
 public class CrmRenderers {
 
     private final Messages messages;
+    private final OrderService orderService;
     private final UiAsyncTasks uiAsyncTasks;
     private final UiComponents uiComponents;
     private final MetadataTools metadataTools;
@@ -56,7 +60,7 @@ public class CrmRenderers {
     private final DateTimeService dateTimeService;
     private final DatatypeFormatter datatypeFormatter;
 
-    public CrmRenderers(UiComponents uiComponents, DialogWindows dialogWindows, Messages messages, DatatypeFormatter datatypeFormatter, DateTimeService dateTimeService, UiAsyncTasks uiAsyncTasks, MetadataTools metadataTools) {
+    public CrmRenderers(UiComponents uiComponents, DialogWindows dialogWindows, Messages messages, DatatypeFormatter datatypeFormatter, DateTimeService dateTimeService, UiAsyncTasks uiAsyncTasks, MetadataTools metadataTools, OrderService orderService) {
         this.messages = messages;
         this.uiComponents = uiComponents;
         this.dialogWindows = dialogWindows;
@@ -64,6 +68,7 @@ public class CrmRenderers {
         this.dateTimeService = dateTimeService;
         this.uiAsyncTasks = uiAsyncTasks;
         this.metadataTools = metadataTools;
+        this.orderService = orderService;
     }
 
     public <E extends UuidEntity, LINK extends UuidEntity> Renderer<E> entityLink(Function<E, LINK> linkGetter) {
@@ -77,7 +82,7 @@ public class CrmRenderers {
             JmixButton button = entityLinkButton(link, textProvider, textProvider);
             button.addClickListener(e -> {
                 //noinspection unchecked
-                dialogWindows.detail(UiComponentUtils.getCurrentView(), ((Class<LINK>) link.getClass()))
+                dialogWindows.detail(getCurrentView(), ((Class<LINK>) link.getClass()))
                         .editEntity(link)
                         .withViewConfigurer(v -> {
                             if (v instanceof StandardDetailView<?> detailView) {
@@ -164,6 +169,25 @@ public class CrmRenderers {
         return createBadge(messages.getMessage(status), getBadgeVariant(status));
     }
 
+    public Renderer<Invoice> invoiceDueDateRenderer() {
+        return new ComponentRenderer<>(invoice -> {
+            LocalDate dueDate = invoice.getDueDate();
+            String dueDateText = datatypeFormatter.formatLocalDate(dueDate);
+            Span span = new Span(dueDateText);
+
+            LocalDate currentDate = dateTimeService.getTimeForCurrentUser().toLocalDate();
+            Period daysLeft = currentDate.until(dueDate);
+
+            var badgeVariant = CONTRAST_BADGE;
+            if (daysLeft.isNegative()) {
+                badgeVariant = CrmUiUtils.ERROR_BADGE;
+            }
+
+            CrmUiUtils.setBadge(span, badgeVariant);
+            return span;
+        });
+    }
+
     public Renderer<UserTask> taskDueDateRenderer() {
         return new ComponentRenderer<>(task -> {
             LocalDate dueDate = task.getDueDate();
@@ -182,6 +206,24 @@ public class CrmRenderers {
             }
 
             CrmUiUtils.setBadge(span, badgeVariant);
+            return span;
+        });
+    }
+
+    public Renderer<Order> orderLeftOverRenderer() {
+        return new ComponentRenderer<>(order -> {
+            BigDecimal leftOverSum = orderService.getOrderLeftOverSum(order);
+            Span span = new Span(PriceDataType.formatWithoutCurrency(leftOverSum));
+
+            if (leftOverSum.compareTo(BigDecimal.valueOf(10_000)) > 0) {
+                CrmUiUtils.setBadge(span, CrmUiUtils.ERROR_BADGE);
+            } else if (leftOverSum.compareTo(BigDecimal.ZERO) > 0) {
+                CrmUiUtils.setBadge(span, CrmUiUtils.WARNING_BADGE);
+            } else {
+                CrmUiUtils.setBadge(span, SUCCESS_BADGE);
+                span.setText(messages.getMessage("paid"));
+            }
+
             return span;
         });
     }
@@ -218,7 +260,7 @@ public class CrmRenderers {
 
     private JmixButton orderLinkButton(Order order) {
         JmixButton button =
-                entityLinkButton(order, Order::getNumber, o -> o.getInstanceName(datatypeFormatter));
+                entityLinkButton(order, metadataTools::getInstanceName, metadataTools::getInstanceName);
         button.addClickListener(event ->
                 openReadOnlyDetailDialog(order, Order.class, OrderDetailView.class));
         return button;

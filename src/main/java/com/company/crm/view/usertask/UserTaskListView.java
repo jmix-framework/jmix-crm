@@ -1,6 +1,9 @@
 package com.company.crm.view.usertask;
 
+import com.company.crm.app.service.datetime.DateTimeService;
 import com.company.crm.app.util.constant.CrmConstants;
+import com.company.crm.app.util.date.Period;
+import com.company.crm.app.util.date.range.LocalDateRange;
 import com.company.crm.app.util.ui.renderer.CrmRenderers;
 import com.company.crm.model.user.User;
 import com.company.crm.model.user.task.UserTask;
@@ -41,9 +44,11 @@ import io.jmix.flowui.component.checkbox.Switch;
 import io.jmix.flowui.component.formlayout.JmixFormLayout;
 import io.jmix.flowui.component.genericfilter.GenericFilter;
 import io.jmix.flowui.component.grid.DataGrid;
+import io.jmix.flowui.component.textfield.TypedTextField;
 import io.jmix.flowui.component.validation.ValidationErrors;
 import io.jmix.flowui.data.EntityValueSource;
 import io.jmix.flowui.data.SupportsValueSource;
+import io.jmix.flowui.data.grid.DataGridItems;
 import io.jmix.flowui.kit.action.Action;
 import io.jmix.flowui.kit.action.ActionPerformedEvent;
 import io.jmix.flowui.kit.component.button.JmixButton;
@@ -69,6 +74,7 @@ import io.jmix.flowui.view.ViewComponent;
 import io.jmix.flowui.view.ViewController;
 import io.jmix.flowui.view.ViewDescriptor;
 import io.jmix.flowui.view.ViewValidation;
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDate;
@@ -85,7 +91,7 @@ import static io.jmix.flowui.component.delegate.AbstractFieldDelegate.PROPERTY_I
 @ViewController(id = CrmConstants.ViewIds.USER_TASK_LIST)
 @ViewDescriptor(path = "user-task-list-view.xml")
 @LookupComponent("userTasksDataGrid")
-@DialogMode(width = "64em", resizable = true, closeOnOutsideClick = true, closeOnEsc = true)
+@DialogMode(width = "90%", resizable = true, closeOnOutsideClick = true, closeOnEsc = true)
 public class UserTaskListView extends StandardListView<UserTask> {
 
     @Autowired
@@ -102,6 +108,8 @@ public class UserTaskListView extends StandardListView<UserTask> {
     private AccessManager accessManager;
     @Autowired
     private ViewValidation viewValidation;
+    @Autowired
+    private DateTimeService dateTimeService;
     @Autowired
     private UiViewProperties uiViewProperties;
     @Autowired
@@ -136,15 +144,39 @@ public class UserTaskListView extends StandardListView<UserTask> {
     private JmixFormLayout layoutWrapper;
     @ViewComponent("userTasksDataGrid.editAction")
     private EditAction<UserTask> userTasksDataGridEditAction;
-
-    private boolean modifiedAfterEdit;
-
-    private Boolean gridOnly = null;
     @ViewComponent
     private GenericFilter genericFilter;
 
+    private boolean modifiedAfterEdit;
+
+    @Nullable
+    private Boolean gridOnly = null;
+
+    @Nullable
+    private Period period = null;
+    @ViewComponent
+    private TypedTextField<String> titleField;
+
+    public void loadData(@Nullable Period period) {
+        this.period = period;
+        userTasksDl.load();
+    }
+
+    public void loadData() {
+        loadData(null);
+    }
+
     public void reloadData() {
         userTasksDl.load();
+    }
+
+    public void setPadding(boolean padding) {
+        getContent().setPadding(padding);
+    }
+
+    public void setMaxHeight(float height, Unit unit) {
+        getContent().setMaxHeight(height, unit);
+        userTasksDataGrid.setMaxHeight(height, unit);
     }
 
     public UserTaskListView detailOnly() {
@@ -192,8 +224,8 @@ public class UserTaskListView extends StandardListView<UserTask> {
     @Subscribe
     private void onInit(final InitEvent event) {
         userTasksDataGrid.addItemDoubleClickListener(e -> {
-            if (!isGridOnlyMode()) {
-                userTasksDataGridEditAction.execute();
+            if (!isGridOnlyMode() && listLayout.isEnabled()) {
+                updateControls(true);
             }
         });
         userTasksDataGrid.getActions().forEach(action -> {
@@ -210,6 +242,12 @@ public class UserTaskListView extends StandardListView<UserTask> {
 
     @Subscribe
     private void onBeforeShow(final BeforeShowEvent event) {
+        DataGridItems<UserTask> gridItems = userTasksDataGrid.getItems();
+        if (gridItems != null) {
+            gridItems.getItems().stream()
+                    .findFirst()
+                    .ifPresent(userTask -> userTasksDataGrid.select(userTask));
+        }
         processGridOnly();
         updateControls(false);
         processDetailsMode();
@@ -296,9 +334,18 @@ public class UserTaskListView extends StandardListView<UserTask> {
     @Install(to = "userTasksDl", target = Target.DATA_LOADER)
     private List<UserTask> listLoadDelegate(LoadContext<UserTask> context) {
         LoadContext.Query query = new LoadContext.Query("select u from UserTask u");
-        query.setCondition(LogicalCondition.and(PropertyCondition.equal("author", getCurrentUser())));
-        query.setSort(Sort.by(Sort.Direction.ASC, "isCompleted", "dueDate"));
+
+        LogicalCondition condition = LogicalCondition.and(PropertyCondition.equal("author", getCurrentUser()));
+        if (period != null) {
+            LocalDateRange dateRange = period.getDateRange(dateTimeService);
+            condition.add(PropertyCondition.greaterOrEqual("dueDate", dateRange.startDate()));
+            condition.add(PropertyCondition.lessOrEqual("dueDate", dateRange.endDate()));
+        }
+
+        query.setCondition(condition);
+        query.setSort(Sort.by(Sort.Direction.ASC, "dueDate"));
         context.setQuery(query);
+
         return userTaskRepository.findAll(buildPageRequest(context), buildRepositoryContext(context)).getContent();
     }
 
@@ -315,11 +362,10 @@ public class UserTaskListView extends StandardListView<UserTask> {
             editor.addValueChangeListener(e -> {
                 userTask.setIsCompleted(e.getValue());
                 dataManager.save(userTask);
-                reloadData();
+                loadData();
             });
 
             HorizontalLayout layout = new HorizontalLayout();
-            // layout.setJustifyContentMode(FlexComponent.JustifyContentMode.CENTER);
             layout.setAlignItems(FlexComponent.Alignment.CENTER);
             layout.add(editor);
 
@@ -428,6 +474,10 @@ public class UserTaskListView extends StandardListView<UserTask> {
 
         if (!uiComponentProperties.isImmediateRequiredValidationEnabled() && editing) {
             resetFormInvalidState();
+        }
+
+        if (editing) {
+            titleField.focus();
         }
     }
 

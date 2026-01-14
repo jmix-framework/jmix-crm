@@ -12,7 +12,7 @@
     </data>
     <facets>
         <settings auto="true"/>
-        <dataLoadCoordinator auto="true"/>
+        <dataLoadCoordinator auto="false"/>
         <urlQueryParameters>
             <pagination component="pagination"/>
             <genericFilter component="genericFilter"/>
@@ -31,6 +31,7 @@
                 <button id="createButton" action="categoriesDataGrid.createAction"/>
                 <button id="editButton" action="categoriesDataGrid.editAction"/>
                 <button id="removeButton" action="categoriesDataGrid.removeAction"/>
+                <button id="excelExport" action="categoriesDataGrid.excelExport"/>
             </startSlot>
             <endSlot>
                 <simplePagination id="pagination" dataLoader="categoriesDl"/>
@@ -55,6 +56,7 @@
                     </properties>
                 </action>
                 <action id="removeAction" type="list_remove"/>
+                <action id="excelExport" type="grdexp_excelExport"/>
             </actions>
             <columns resizable="true" sortable="true">
                 <column property="name" filterable="true" editable="true"/>

@@ -14,6 +14,8 @@ import org.vaadin.jchristophe.SortableLayout;
 import java.util.List;
 import java.util.Optional;
 
+import static com.company.crm.app.util.ui.CrmUiUtils.setCursor;
+
 public final class SortableFeature {
 
     public static void makeSortable(Component component) {
@@ -68,6 +70,8 @@ public final class SortableFeature {
             sortableLayout.setWidth(hasSize.getWidth());
             sortableLayout.setHeight(hasSize.getHeight());
         }
+
+        component.getChildren().forEach(child -> setCursor(child, "grab"));
 
         return sortableLayout;
     }

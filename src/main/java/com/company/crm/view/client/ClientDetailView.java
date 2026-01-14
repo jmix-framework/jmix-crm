@@ -122,7 +122,7 @@ public class ClientDetailView extends StandardDetailView<Client> implements Widt
     @Override
     public void setReadOnly(boolean readOnly) {
         super.setReadOnly(readOnly);
-        saveCloseAction.setEnabled(!readOnly);
+        saveCloseAction.setVisible(!readOnly);
     }
 
     @Subscribe
@@ -173,8 +173,8 @@ public class ClientDetailView extends StandardDetailView<Client> implements Widt
     @Subscribe("downloadProfile")
     private void onDownloadProfile(final ActionPerformedEvent event) {
         // TODO: download custom design-time report
-        notifications.create("Client profile downloaded successfully")
-                .withType(Notifications.Type.SUCCESS)
+        notifications.create("Company profile download is not available yet")
+                .withType(Notifications.Type.WARNING)
                 .show();
     }
 

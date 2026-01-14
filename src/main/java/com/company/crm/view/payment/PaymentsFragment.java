@@ -5,7 +5,6 @@ import com.company.crm.app.service.finance.PaymentService;
 import com.company.crm.app.util.ui.chart.ChartsUtils;
 import com.company.crm.app.util.ui.renderer.CrmRenderers;
 import com.company.crm.model.client.Client;
-import com.company.crm.model.datatype.PriceDataType;
 import com.company.crm.model.invoice.Invoice;
 import com.company.crm.model.order.Order;
 import com.company.crm.model.payment.Payment;
@@ -19,6 +18,7 @@ import io.jmix.chartsflowui.data.item.SimpleDataItem;
 import io.jmix.chartsflowui.kit.component.model.DataSet;
 import io.jmix.chartsflowui.kit.data.chart.ListChartItems;
 import io.jmix.core.common.datastruct.Pair;
+import io.jmix.core.metamodel.datatype.DatatypeFormatter;
 import io.jmix.core.querycondition.LogicalCondition;
 import io.jmix.core.repository.JmixDataRepositoryContext;
 import io.jmix.flowui.component.UiComponentUtils;
@@ -57,7 +57,7 @@ import static io.jmix.core.querycondition.PropertyCondition.lessOrEqual;
 
 @FragmentDescriptor("payment-list-view.xml")
 @LookupComponent("paymentsDataGrid")
-@DialogMode(width = "64em", resizable = true)
+@DialogMode(width = "90%", resizable = true)
 public class PaymentsFragment extends Fragment<VerticalLayout> {
 
     @Autowired
@@ -68,6 +68,8 @@ public class PaymentsFragment extends Fragment<VerticalLayout> {
     private PaymentService paymentService;
     @Autowired
     private PaymentRepository paymentRepository;
+    @Autowired
+    private DatatypeFormatter datatypeFormatter;
 
     @ViewComponent
     private MessageBundle messageBundle;
@@ -128,13 +130,12 @@ public class PaymentsFragment extends Fragment<VerticalLayout> {
 
     @Supply(to = "paymentsDataGrid.order", subject = "renderer")
     private Renderer<Payment> paymentsDataGridOrderRenderer() {
-        return crmRenderers.entityLink(Payment::getOrder, Order::getNumber);
+        return crmRenderers.entityLink(Payment::getOrder);
     }
 
     @Supply(to = "paymentsDataGrid.invoice", subject = "renderer")
     private Renderer<Payment> paymentsDataGridInvoiceRenderer() {
-        return crmRenderers.entityLink(Payment::getInvoice,
-                i -> PriceDataType.formatEndingCurrency(i.getTotal()));
+        return crmRenderers.entityLink(Payment::getInvoice);
     }
 
     private void initialize() {

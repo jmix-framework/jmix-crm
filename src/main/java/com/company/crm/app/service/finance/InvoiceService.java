@@ -75,12 +75,19 @@ public class InvoiceService {
      */
     public List<Invoice> getOverdueInvoices(@Nullable LocalDateRange dateRange,
                                             @Nullable Integer limit) {
-        if (dateRange == null) {
-            return invoiceRepository.queryLoader("e.dueDate > e.date").list();
+        var query = new StringBuilder("e.status = :status");
+
+        if (dateRange != null) {
+            query.append(" AND e.date >= :startDate AND e.date <= :endDate");
         }
-        var loader = invoiceRepository.queryLoader("e.dueDate > e.date and e.date >= :startDate and e.date <= :endDate")
-                .parameter("startDate", dateRange.startDate())
+
+        var loader = invoiceRepository.queryLoader(query.toString())
+                .parameter("status", InvoiceStatus.OVERDUE);
+
+        if (dateRange != null) {
+            loader.parameter("startDate", dateRange.startDate())
                 .parameter("endDate", dateRange.endDate());
+        }
 
         if (limit != null) {
             loader.maxResults(limit);

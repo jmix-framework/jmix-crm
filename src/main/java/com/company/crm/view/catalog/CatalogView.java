@@ -30,8 +30,8 @@ public class CatalogView extends StandardView {
         var categoriesView = views.create(CategoryListView.class);
         var categoryItemsView = views.create(CategoryItemListView.class);
 
-        tabSheet.add(messageBundle.getMessage("categories"), categoriesView);
         tabSheet.add(messageBundle.getMessage("categoryItems"), categoryItemsView);
+        tabSheet.add(messageBundle.getMessage("categories"), categoriesView);
 
         TabIndexUrlQueryParameterBinder.register(this, tabSheet);
     }

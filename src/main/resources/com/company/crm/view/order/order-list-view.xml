@@ -57,6 +57,7 @@
             <button id="createButton" action="ordersDataGrid.createAction"/>
             <button id="editButton" action="ordersDataGrid.editAction"/>
             <button id="removeButton" action="ordersDataGrid.removeAction"/>
+            <button id="excelExport" action="ordersDataGrid.excelExport"/>
             <simplePagination id="pagination" dataLoader="ordersDl" classNames="ml-auto"/>
             <gridColumnVisibility dataGrid="ordersDataGrid" icon="COG_O"
                                   themeNames="tertiary-inline" hideAllEnabled="false"/>
@@ -72,6 +73,7 @@
                 <action id="createAction" type="list_create"/>
                 <action id="editAction" type="list_edit"/>
                 <action id="removeAction" type="list_remove"/>
+                <action id="excelExport" type="grdexp_excelExport"/>
             </actions>
             <columns resizable="true" sortable="true">
                 <column property="number" autoWidth="true" flexGrow="0"/>

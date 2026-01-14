@@ -189,12 +189,12 @@ public class CategoryItemListView extends StandardListView<CategoryItem> {
     }
 
     private Pair<Chart, Supplier<DataSet>> createBestOrderItemsChart() {
-        Chart chart = chartsUtils.createViewStatPieChart(messageBundle.getMessage("bestOrderItems"));
+        Chart chart = chartsUtils.createViewStatPieChart(messageBundle.getMessage("bestSelling"));
         return new Pair<>(chart, () -> createBestOrderItemsChartDataSet(null));
     }
 
     private Pair<Chart, Supplier<DataSet>> createOrderedThisMonthChart() {
-        Chart chart = chartsUtils.createViewStatPieChart(messageBundle.getMessage("orderedThisMonth"));
+        Chart chart = chartsUtils.createViewStatPieChart(messageBundle.getMessage("sellingThisMonth"));
         return new Pair<>(chart, () -> createBestOrderItemsChartDataSet(dateTimeService.getCurrentMonthRange()));
     }
 

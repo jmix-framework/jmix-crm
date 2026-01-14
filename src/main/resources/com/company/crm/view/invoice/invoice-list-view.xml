@@ -68,7 +68,11 @@
             <hbox id="buttonsPanel" classNames="buttons-panel">
                 <button id="createButton" action="invoicesDataGrid.createAction"/>
                 <button id="editButton" action="invoicesDataGrid.editAction"/>
+                <button id="downloadButton" action="invoicesDataGrid.downloadAction"/>
+                <button id="emailButton" action="invoicesDataGrid.emailAction"/>
+                <button id="viewPaymentsButton" action="invoicesDataGrid.viewPaymentsAction"/>
                 <button id="removeButton" action="invoicesDataGrid.removeAction"/>
+                <button id="excelExport" action="invoicesDataGrid.excelExport"/>
                 <simplePagination id="invoices_pagination" dataLoader="invoicesDl"/>
             </hbox>
             <dataGrid id="invoicesDataGrid" dataContainer="invoicesDc"
@@ -88,6 +92,11 @@
                             <property name="openMode" value="DIALOG"/>
                         </properties>
                     </action>
+                    <action id="excelExport" type="grdexp_excelExport"/>
+                    <action id="downloadAction" text="msg:///download" type="list_itemTracking" icon="DOWNLOAD_ALT"/>
+                    <action id="emailAction" text="msg:///email" type="list_itemTracking" icon="MAILBOX"/>
+                    <action id="viewPaymentsAction" text="msg://com.company.crm.model.invoice/Invoice.payments"
+                            type="list_itemTracking" icon="INVOICE"/>
                     <action id="removeAction" type="list_remove"/>
                 </actions>
                 <columns resizable="true" sortable="true">

@@ -33,6 +33,7 @@ import io.jmix.flowui.component.formlayout.JmixFormLayout;
 import io.jmix.flowui.component.select.JmixSelect;
 import io.jmix.flowui.fragment.Fragment;
 import io.jmix.flowui.fragment.FragmentDescriptor;
+import io.jmix.flowui.kit.action.ActionPerformedEvent;
 import io.jmix.flowui.model.CollectionContainer;
 import io.jmix.flowui.model.CollectionLoader;
 import io.jmix.flowui.view.DialogMode;
@@ -66,7 +67,7 @@ import static io.jmix.flowui.component.UiComponentUtils.getCurrentView;
 @FragmentDescriptor("invoice-list-view.xml")
 @LookupComponent("invoicesDataGrid")
 @PrimaryListView(Invoice.class)
-@DialogMode(width = "64em", resizable = true)
+@DialogMode(width = "90%", resizable = true)
 public class InvoicesFragment extends Fragment<VerticalLayout> {
 
     @Autowired
@@ -143,6 +144,21 @@ public class InvoicesFragment extends Fragment<VerticalLayout> {
     @Supply(to = "invoicesDataGrid.client", subject = "renderer")
     private Renderer<Invoice> invoicesDataGridClientRenderer() {
         return crmRenderers.invoiceClientLink();
+    }
+
+    @Subscribe("invoicesDataGrid.downloadAction")
+    private void onInvoicesDataGridDownloadAction(final ActionPerformedEvent event) {
+        // TODO:
+    }
+
+    @Subscribe("invoicesDataGrid.emailAction")
+    private void onInvoicesDataGridEmailAction(final ActionPerformedEvent event) {
+        // TODO:
+    }
+
+    @Subscribe("invoicesDataGrid.viewPaymentsAction")
+    private void onInvoicesDataGridViewPaymentsAction(final ActionPerformedEvent event) {
+        // TODO:
     }
 
     private void initialize() {

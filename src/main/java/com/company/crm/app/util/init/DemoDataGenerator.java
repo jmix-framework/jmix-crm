@@ -4,6 +4,7 @@ import com.company.crm.model.address.Address;
 import com.company.crm.model.catalog.category.Category;
 import com.company.crm.model.catalog.item.CategoryItem;
 import com.company.crm.model.catalog.item.CategoryItemComment;
+import com.company.crm.model.catalog.item.UomType;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.client.ClientType;
 import com.company.crm.model.contact.Contact;
@@ -200,7 +201,7 @@ public class DemoDataGenerator {
                 categoryItem.setCategory(category);
                 categoryItem.setName("Product %d in category %d".formatted(itemNumber, categoryNumber));
                 categoryItem.setCode(generateUniqueHumanReadableCode(random) + itemNumber);
-                categoryItem.setUom(random.nextBoolean() ? "kg" : "pcs");
+                categoryItem.setUom(random.nextBoolean() ? UomType.KG : UomType.PCS);
                 categoryItems.add(dataManager.save(categoryItem));
                 if (random.nextBoolean()) categoryItemComment(categoryItem);
             }

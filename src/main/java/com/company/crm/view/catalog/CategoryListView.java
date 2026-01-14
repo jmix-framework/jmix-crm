@@ -5,6 +5,7 @@ import com.company.crm.app.util.ui.renderer.CrmRenderers;
 import com.company.crm.model.catalog.category.Category;
 import com.company.crm.model.catalog.category.CategoryRepository;
 import com.company.crm.view.main.MainView;
+import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.grid.editor.EditorCloseEvent;
@@ -22,6 +23,7 @@ import io.jmix.flowui.component.grid.editor.EditComponentGenerationContext;
 import io.jmix.flowui.component.textfield.TypedTextField;
 import io.jmix.flowui.kit.action.ActionPerformedEvent;
 import io.jmix.flowui.model.CollectionContainer;
+import io.jmix.flowui.model.CollectionLoader;
 import io.jmix.flowui.view.DialogMode;
 import io.jmix.flowui.view.Install;
 import io.jmix.flowui.view.LookupComponent;
@@ -62,6 +64,14 @@ public class CategoryListView extends StandardListView<Category> {
     private Messages messages;
     @ViewComponent("categoriesDataGrid.editAction")
     private EditAction<Category> editAction;
+    @ViewComponent
+    private CollectionLoader<Category> categoriesDl;
+
+    @Override
+    protected void onAttach(AttachEvent attachEvent) {
+        super.onAttach(attachEvent);
+        categoriesDl.load();
+    }
 
     @Subscribe
     public void onInit(InitEvent event) {

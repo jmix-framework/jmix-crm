@@ -60,7 +60,7 @@ public class Payment extends FullAuditEntity {
     @InstanceName
     public String getInstanceName() {
         return String.format("Payment %s from %s",
-                PriceDataType.formatEndingCurrency(amount), date);
+                PriceDataType.defaultFormat(amount), date);
     }
 
     public BigDecimal getAmount() {

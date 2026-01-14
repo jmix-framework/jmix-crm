@@ -58,7 +58,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-import static com.company.crm.app.util.demo.DemoUtils.defaultSleepForSearchClient;
+import static com.company.crm.app.util.demo.DemoUtils.defaultSleepForClientsSearching;
 
 @Route("")
 @ViewController(id = CrmConstants.ViewIds.MAIN)
@@ -326,7 +326,7 @@ public class MainView extends StandardMainView {
     }
 
     private List<Client> searchClientsByName(String name, int size) {
-        defaultSleepForSearchClient();
+        defaultSleepForClientsSearching();
         return clientRepository.findAllByNameContains(name, Pageable.ofSize(size));
     }
 

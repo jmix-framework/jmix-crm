@@ -23,8 +23,8 @@
             <responsiveSteps>
                 <responsiveStep minWidth="0" columns="1"/>
             </responsiveSteps>
-            <textField id="codeField" property="code"/>
             <textField id="nameField" property="name"/>
+            <textField id="codeField" property="code"/>
             <entityComboBox id="parentField" property="parent" dataContainer="categoryDc">
                 <actions>
                     <action id="entityLookupAction" type="entity_lookup"/>

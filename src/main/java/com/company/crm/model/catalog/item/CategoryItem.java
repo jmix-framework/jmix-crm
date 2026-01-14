@@ -78,12 +78,12 @@ public class CategoryItem extends FullAuditEntity {
         this.comments = comments;
     }
 
-    public String getUom() {
-        return uom;
+    public UomType getUom() {
+        return UomType.fromId(uom);
     }
 
-    public void setUom(String uom) {
-        this.uom = uom;
+    public void setUom(UomType uom) {
+        this.uom = uom == null ? null : uom.getId();
     }
 
     public String getCode() {

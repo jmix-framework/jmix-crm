@@ -1,6 +1,7 @@
 package com.company.crm.app.ui.component.card;
 
 import com.company.crm.app.util.context.AppContext;
+import com.company.crm.app.util.date.Period;
 import com.company.crm.app.util.date.range.LocalDateRange;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasStyle;
@@ -35,7 +36,7 @@ import java.util.function.Function;
 
 public class CrmCard extends JmixCard implements ApplicationContextAware {
 
-    private static final CardPeriod DEFAULT_INITIAL_PERIOD = CardPeriod.MONTH;
+    private static final Period DEFAULT_INITIAL_PERIOD = Period.MONTH;
 
     private static final DateTimeFormatter DATE_WITHOUT_YEAR = DateTimeFormatter.ofPattern("dd MMM");
     private static final DateTimeFormatter DATE_WITH_YEAR = DateTimeFormatter.ofPattern("dd MMM yyyy");
@@ -47,9 +48,9 @@ public class CrmCard extends JmixCard implements ApplicationContextAware {
     private boolean hasPeriodFilter = false;
     private boolean hasEllipsisButton = false;
 
-    private Function<CardPeriod, Component> contentProvider;
+    private Function<Period, Component> contentProvider;
 
-    private CardPeriod currentPeriod = DEFAULT_INITIAL_PERIOD;
+    private Period currentPeriod = DEFAULT_INITIAL_PERIOD;
 
     private ApplicationContext applicationContext;
 
@@ -72,33 +73,33 @@ public class CrmCard extends JmixCard implements ApplicationContextAware {
     }
 
     public CrmCard fillAsPeriodCard(String title,
-                                    Function<CardPeriod, Component> contentProvider) {
+                                    Function<Period, Component> contentProvider) {
         return fillAsPeriodCard(null, title, contentProvider);
     }
 
     public CrmCard fillAsPeriodCard(String title,
                                     int colspan,
-                                    Function<CardPeriod, Component> contentProvider) {
+                                    Function<Period, Component> contentProvider) {
         return fillAsPeriodCard(null, colspan, title, contentProvider);
     }
 
     public CrmCard fillAsPeriodCard(String id,
                                     String title,
-                                    Function<CardPeriod, Component> contentProvider) {
+                                    Function<Period, Component> contentProvider) {
         return fillAsPeriodCard(id, 1, title, contentProvider);
     }
 
     public CrmCard fillAsPeriodCard(String id,
                                     int colspan,
                                     String title,
-                                    Function<CardPeriod, Component> contentProvider) {
+                                    Function<Period, Component> contentProvider) {
         return fillAsPeriodCard(id, colspan, createDefaultTitleComponent(title), contentProvider);
     }
 
     public CrmCard fillAsPeriodCard(String id,
                                     int colspan,
                                     Component title,
-                                    Function<CardPeriod, Component> contentProvider) {
+                                    Function<Period, Component> contentProvider) {
         this.title = title;
         this.hasPeriodFilter = true;
         this.contentProvider = contentProvider;
@@ -110,7 +111,7 @@ public class CrmCard extends JmixCard implements ApplicationContextAware {
         return this;
     }
 
-    public CrmCard defaultRangeStatPeriodCard(String title, Function<CardPeriod, RangeStatCardInfo> statInfoProvider) {
+    public CrmCard defaultRangeStatPeriodCard(String title, Function<Period, RangeStatCardInfo> statInfoProvider) {
         return fillAsPeriodCard(title, period -> statInfoProvider.apply(period).createDefaultContent());
     }
 
@@ -220,8 +221,8 @@ public class CrmCard extends JmixCard implements ApplicationContextAware {
     }
 
     private void addDropdownItems(Messages messages, DropdownButton dropdownButton) {
-        CardPeriod[] periods = CardPeriod.values();
-        for (CardPeriod period : periods) {
+        Period[] periods = Period.values();
+        for (Period period : periods) {
             String localizedMessage = messages.getMessage(period);
             DropdownButtonItem item = dropdownButton.addItem(period.name(), localizedMessage);
             item.addClickListener(e -> {
@@ -232,7 +233,7 @@ public class CrmCard extends JmixCard implements ApplicationContextAware {
                 }
             });
         }
-        dropdownButton.setText(messages.getMessage(CardPeriod.MONTH));
+        dropdownButton.setText(messages.getMessage(Period.MONTH));
     }
 
     private void updateContentIfNeeded() {

@@ -42,7 +42,7 @@
                     </entityComboBox>
                     <textField property="name"/>
                     <textField property="code"/>
-                    <textField property="uom"/>
+                    <select property="uom"/>
                     <textArea property="description" height="15em"/>
                 </formLayout>
             </vbox>

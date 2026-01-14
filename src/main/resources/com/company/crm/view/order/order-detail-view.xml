@@ -49,17 +49,23 @@
                     <select id="statusSelect" property="status"/>
                     <datePicker id="dateField" property="date"/>
                     <textField id="quoteField" property="quote"/>
-                    <textField id="discountValueField" property="discountValue">
+                    <bigDecimalField id="discountValueField" property="discountValue" clearButtonVisible="true">
+                        <prefix>
+                            <span text="$"/>
+                        </prefix>
                         <validators>
                             <decimalMin value="0"/>
                         </validators>
-                    </textField>
-                    <textField id="discountPercentField" property="discountPercent">
+                    </bigDecimalField>
+                    <bigDecimalField id="discountPercentField" property="discountPercent" clearButtonVisible="true">
+                        <prefix>
+                            <span text="%"/>
+                        </prefix>
                         <validators>
-                            <decimalMax value="100"/>
-                            <decimalMin value="0"/>
+                            <decimalMax value="100.00"/>
+                            <decimalMin value="0.00"/>
                         </validators>
-                    </textField>
+                    </bigDecimalField>
                     <textField id="totalField" property="total" readOnly="true" colspan="2"/>
                     <textArea id="commentField" height="8em" colspan="2" property="comment"/>
                 </formLayout>

@@ -146,6 +146,6 @@ public class Invoice extends FullAuditEntity {
         return String.format("Invoice for order %s from %s: %s",
                 order.getNumber(),
                 datatypeFormatter.formatLocalDate(date),
-                datatypeFormatter.formatBigDecimal(total));
+                PriceDataType.defaultFormat(total));
     }
 }

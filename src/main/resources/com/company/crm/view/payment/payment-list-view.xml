@@ -79,6 +79,7 @@
                     <button id="createButton" action="paymentsDataGrid.createAction"/>
                     <button id="editButton" action="paymentsDataGrid.editAction"/>
                     <button id="removeButton" action="paymentsDataGrid.removeAction"/>
+                    <button id="excelExport" action="paymentsDataGrid.excelExport"/>
                 </startSlot>
                 <endSlot>
                     <simplePagination id="payments_pagination" dataLoader="paymentsDl"/>
@@ -103,6 +104,7 @@
                         </properties>
                     </action>
                     <action id="removeAction" type="list_remove"/>
+                    <action id="excelExport" type="grdexp_excelExport"/>
                 </actions>
                 <columns resizable="true" sortable="true">
                     <column property="date" autoWidth="true" flexGrow="0"/>

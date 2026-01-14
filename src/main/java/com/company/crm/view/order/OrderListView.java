@@ -7,7 +7,6 @@ import com.company.crm.app.ui.component.OrderStatusPipeline;
 import com.company.crm.app.ui.component.OrderStatusPipeline.OrderStatusComponent;
 import com.company.crm.app.util.AsyncTasksRegistry;
 import com.company.crm.app.util.constant.CrmConstants;
-import com.company.crm.app.util.ui.CrmUiUtils;
 import com.company.crm.app.util.ui.renderer.CrmRenderers;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.datatype.PriceDataType;
@@ -16,8 +15,6 @@ import com.company.crm.model.order.OrderRepository;
 import com.company.crm.model.order.OrderStatus;
 import com.company.crm.view.main.MainView;
 import com.vaadin.flow.component.HasValue;
-import com.vaadin.flow.component.html.Span;
-import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.data.renderer.TextRenderer;
 import com.vaadin.flow.router.QueryParameters;
@@ -63,7 +60,7 @@ import static io.jmix.core.querycondition.PropertyCondition.lessOrEqual;
 @ViewController(id = CrmConstants.ViewIds.ORDER_LIST)
 @ViewDescriptor(path = "order-list-view.xml")
 @LookupComponent("ordersDataGrid")
-@DialogMode(width = "64em", resizable = true)
+@DialogMode(width = "90%", resizable = true)
 @PrimaryListView(Order.class)
 public class OrderListView extends StandardListView<Order> {
 
@@ -157,21 +154,7 @@ public class OrderListView extends StandardListView<Order> {
 
     @Supply(to = "ordersDataGrid.leftOver", subject = "renderer")
     private Renderer<Order> ordersDataGridLeftOverRenderer() {
-        return new ComponentRenderer<>(order -> {
-            BigDecimal leftOverSum = orderService.getOrderLeftOverSum(order);
-            Span span = new Span(PriceDataType.formatWithoutCurrency(leftOverSum));
-
-            if (leftOverSum.compareTo(BigDecimal.valueOf(10_000)) > 0) {
-                CrmUiUtils.setBadge(span, CrmUiUtils.ERROR_BADGE);
-            } else if (leftOverSum.compareTo(BigDecimal.ZERO) > 0) {
-                CrmUiUtils.setBadge(span, CrmUiUtils.WARNING_BADGE);
-            } else {
-                CrmUiUtils.setBadge(span, CrmUiUtils.SUCCESS_BADGE);
-                span.setText(messages.getMessage("paid"));
-            }
-
-            return span;
-        });
+        return crmRenderers.orderLeftOverRenderer();
     }
 
     private void initializeFilterFields() {

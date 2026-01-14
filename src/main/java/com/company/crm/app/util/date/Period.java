@@ -1,10 +1,10 @@
-package com.company.crm.app.ui.component.card;
+package com.company.crm.app.util.date;
 
 import com.company.crm.app.service.datetime.DateTimeService;
 import com.company.crm.app.util.date.range.LocalDateRange;
 import com.company.crm.model.base.DefaultStringEnumClass;
 
-public enum CardPeriod implements DefaultStringEnumClass<CardPeriod> {
+public enum Period implements DefaultStringEnumClass<Period> {
     WEEK,
     MONTH,
     YEAR;

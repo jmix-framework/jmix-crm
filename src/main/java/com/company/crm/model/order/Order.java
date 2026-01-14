@@ -4,6 +4,7 @@ import com.company.crm.app.service.order.OrderService;
 import com.company.crm.app.util.context.AppContext;
 import com.company.crm.model.base.FullAuditEntity;
 import com.company.crm.model.client.Client;
+import com.company.crm.model.datatype.PercentDataType;
 import com.company.crm.model.datatype.PriceDataType;
 import io.jmix.core.DeletePolicy;
 import io.jmix.core.entity.annotation.OnDelete;
@@ -25,6 +26,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import org.apache.commons.lang3.StringUtils;
 
 import java.math.BigDecimal;
@@ -69,6 +72,9 @@ public class Order extends FullAuditEntity {
     private BigDecimal discountValue;
 
     // TODO: OVERALL_DISCOUNT_PERCENT?
+    @Min(0)
+    @Max(100)
+    @PropertyDatatype(PercentDataType.NAME)
     @Column(name = "DISCOUNT_PERCENT", precision = 19, scale = 2)
     private BigDecimal discountPercent;
 

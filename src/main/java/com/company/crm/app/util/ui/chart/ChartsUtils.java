@@ -53,6 +53,7 @@ public class ChartsUtils {
         flexContainer.setPadding(false);
 
         CrmCard card = uiComponents.create(CrmCard.class);
+        card.withoutBackground(true);
         card.setWidthFull();
         card.add(flexContainer);
 

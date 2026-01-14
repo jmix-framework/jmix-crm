@@ -134,7 +134,7 @@ public class OrderItem extends FullAuditEntity {
     public String getInstanceName(MetadataTools metadataTools, DatatypeFormatter datatypeFormatter) {
         return String.format("%s %s of %s",
                 datatypeFormatter.formatBigDecimal(quantity),
-                categoryItem.getUom(),
+                metadataTools.format(categoryItem.getUom()),
                 metadataTools.format(categoryItem));
     }
 }

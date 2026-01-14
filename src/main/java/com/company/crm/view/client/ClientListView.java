@@ -68,7 +68,7 @@ import java.util.List;
 import java.util.Objects;
 
 import static com.company.crm.app.feature.sortable.SortableFeature.makeSortable;
-import static com.company.crm.app.util.demo.DemoUtils.defaultSleepForStatisticLoading;
+import static com.company.crm.app.util.demo.DemoUtils.defaultSleepForStatisticsLoading;
 import static com.company.crm.app.util.ui.CrmUiUtils.addRowSelectionInMultiSelectMode;
 import static com.company.crm.app.util.ui.CrmUiUtils.openLink;
 import static com.company.crm.app.util.ui.datacontext.DataContextUtils.wrapCondition;
@@ -81,7 +81,7 @@ import static io.jmix.core.querycondition.PropertyCondition.isCollectionEmpty;
 @ViewController(id = CrmConstants.ViewIds.CLIENT_LIST)
 @ViewDescriptor(path = "client-list-view.xml")
 @LookupComponent("clientsDataGrid")
-@DialogMode(width = "64em", resizable = true)
+@DialogMode(width = "90%", resizable = true)
 public class ClientListView extends StandardListView<Client> implements WidthResizeListener {
 
     @Autowired
@@ -313,7 +313,7 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
     }
 
     private BigDecimal calculateOrdersTotalSum(Client[] selectedClients) {
-        defaultSleepForStatisticLoading();
+        defaultSleepForStatisticsLoading();
         BigDecimal ordersTotalSum;
         if (selectedClients.length == 0 && !isFilterConditionEmpty()) {
             selectedClients = loadFilteredClients();
@@ -332,7 +332,7 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
     }
 
     private BigDecimal calculatePaymentsTotalSum(Client[] selectedClients) {
-        defaultSleepForStatisticLoading();
+        defaultSleepForStatisticsLoading();
         BigDecimal paymentsTotalSum;
         if (selectedClients.length == 0 && !isFilterConditionEmpty()) {
             selectedClients = loadFilteredClients();
@@ -351,7 +351,7 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
     }
 
     private BigDecimal calculateAverageBill(Client[] selectedClients) {
-        defaultSleepForStatisticLoading();
+        defaultSleepForStatisticsLoading();
         BigDecimal averageBill;
         if (selectedClients.length == 0 && !isFilterConditionEmpty()) {
             selectedClients = loadFilteredClients();
@@ -369,7 +369,7 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
     }
 
     private void fillStatCard(String title, CrmCard card, BigDecimal content) {
-        VerticalLayout component = new VerticalLayout(new H1(PriceDataType.formatEndingCurrency(content)));
+        VerticalLayout component = new VerticalLayout(new H1(PriceDataType.defaultFormat(content)));
         component.setPadding(false);
         component.add(createStatCardFooter());
         card.fillAsStaticCard(title, component);
