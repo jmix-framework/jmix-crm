@@ -25,6 +25,8 @@ import io.jmix.flowui.component.UiComponentUtils;
 import io.jmix.flowui.component.combobox.EntityComboBox;
 import io.jmix.flowui.component.datepicker.TypedDatePicker;
 import io.jmix.flowui.component.formlayout.JmixFormLayout;
+import io.jmix.flowui.component.grid.DataGrid;
+import io.jmix.flowui.data.grid.DataGridItems;
 import io.jmix.flowui.fragment.Fragment;
 import io.jmix.flowui.fragment.FragmentDescriptor;
 import io.jmix.flowui.model.CollectionContainer;
@@ -98,10 +100,15 @@ public class PaymentsFragment extends Fragment<VerticalLayout> {
     private TypedDatePicker<LocalDate> payments_ToDatePicker;
 
     private final LogicalCondition filtersCondition = LogicalCondition.and();
+    @ViewComponent
+    private DataGrid<Payment> paymentsDataGrid;
 
     @Override
     protected void onAttach(AttachEvent attachEvent) {
         super.onAttach(attachEvent);
+        if (paymentsDataGrid.getItems() instanceof DataGridItems.Sortable<Payment> sortable) {
+            sortable.sort(new String[]{"date"}, new boolean[]{false});
+        }
         initialize();
     }
 

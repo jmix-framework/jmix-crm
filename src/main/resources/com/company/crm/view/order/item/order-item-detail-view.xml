@@ -46,11 +46,19 @@
                     </query>
                 </itemsQuery>
             </entityComboBox>
-            <textField id="quantityField" property="quantity"/>
-            <textField id="discountField" property="discount"/>
-            <textField id="netPriceField" property="netPrice"/>
-            <textField id="vatAmountField" property="vatAmount"/>
-            <textField id="grossPriceField" property="grossPrice"/>
+            <bigDecimalField id="quantityField" property="quantity"/>
+            <bigDecimalField id="discountField" property="discount"/>
+            <bigDecimalField id="netPriceField" property="netPrice">
+                <prefix>
+                    <span text="$"/>
+                </prefix>
+            </bigDecimalField>
+            <bigDecimalField id="vatAmountField" property="vatAmount"/>
+            <bigDecimalField id="grossPriceField" property="grossPrice">
+                <prefix>
+                    <span text="$"/>
+                </prefix>
+            </bigDecimalField>
             <switch id="vatIncludedField" property="vatIncluded"/>
         </formLayout>
         <hbox id="detailActions">

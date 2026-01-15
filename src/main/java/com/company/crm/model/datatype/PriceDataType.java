@@ -78,9 +78,13 @@ public class PriceDataType implements Datatype<BigDecimal> {
     @Nullable
     @Override
     public BigDecimal parse(@Nullable String value) {
+        value = StringUtils.substringBefore(value, getCurrencySuffix());
+        value = StringUtils.substringAfter(value, getCurrencySuffix());
+
         if (StringUtils.isBlank(value)) {
             return null;
         }
+
         final NumberFormat numberInstance = NumberFormat.getNumberInstance();
         DecimalFormat decimalFormat = (DecimalFormat) numberInstance;
         decimalFormat.setParseBigDecimal(true);

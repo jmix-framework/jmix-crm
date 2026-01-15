@@ -56,9 +56,21 @@
             </entityComboBox>
             <datePicker id="dateField" property="date"/>
             <datePicker id="dueDateField" property="dueDate"/>
-            <textField id="subtotalField" property="subtotal"/>
-            <textField id="vatField" property="vat"/>
-            <textField id="totalField" property="total"/>
+            <bigDecimalField id="subtotalField" property="subtotal">
+                <prefix>
+                    <span text="$"/>
+                </prefix>
+            </bigDecimalField>
+            <bigDecimalField id="vatField" property="vat">
+                <prefix>
+                    <span text="$"/>
+                </prefix>
+            </bigDecimalField>
+            <bigDecimalField id="totalField" property="total">
+                <prefix>
+                    <span text="$"/>
+                </prefix>
+            </bigDecimalField>
             <select id="statusField" property="status"/>
         </formLayout>
         <hbox id="detailActions">

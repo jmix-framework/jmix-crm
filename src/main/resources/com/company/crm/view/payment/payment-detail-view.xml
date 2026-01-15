@@ -33,7 +33,11 @@
                 </actions>
             </entityComboBox>
             <datePicker id="dateField" property="date"/>
-            <textField id="amountField" property="amount"/>
+            <bigDecimalField id="amountField" property="amount">
+                <prefix>
+                    <span text="$"/>
+                </prefix>
+            </bigDecimalField>
         </formLayout>
         <hbox id="detailActions">
             <button id="saveAndCloseButton" action="saveCloseAction"/>
