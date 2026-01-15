@@ -145,8 +145,8 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
 
     @Override
     protected void onAttach(AttachEvent attachEvent) {
-        initialize();
         super.onAttach(attachEvent);
+        initialize();
     }
 
     @Install(to = "clientsDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")

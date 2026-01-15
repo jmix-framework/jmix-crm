@@ -201,7 +201,7 @@ public class DemoDataGenerator {
                 categoryItem.setCategory(category);
                 categoryItem.setName("Product %d in category %d".formatted(itemNumber, categoryNumber));
                 categoryItem.setCode(generateUniqueHumanReadableCode(random) + itemNumber);
-                categoryItem.setUom(random.nextBoolean() ? UomType.KG : UomType.PCS);
+                categoryItem.setUom(random.nextBoolean() ? UomType.KILOGRAM : UomType.PIECES);
                 categoryItems.add(dataManager.save(categoryItem));
                 if (random.nextBoolean()) categoryItemComment(categoryItem);
             }

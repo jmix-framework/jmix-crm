@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<fragment xmlns="http://jmix.io/schema/flowui/fragment">
+<view xmlns="http://jmix.io/schema/flowui/view"
+      title="msg://PaymentListView.title">
     <data>
         <collection id="paymentsDc"
                     class="com.company.crm.model.payment.Payment">
@@ -26,100 +27,107 @@
         <action id="selectAction" type="lookup_select"/>
         <action id="discardAction" type="lookup_discard"/>
     </actions>
-    <content>
-        <vbox>
-            <formLayout id="chartsBlock" width="100%">
+    <facets>
+        <settings auto="true"/>
+        <dataLoadCoordinator auto="true"/>
+        <urlQueryParameters id="urlQueryParameters">
+            <pagination component="payments_pagination"/>
+            <genericFilter component="payments_AdvancedFilter"/>
+            <dataGridFilter component="paymentsDataGrid"/>
+        </urlQueryParameters>
+    </facets>
+    <layout>
+        <formLayout id="chartsBlock" width="100%">
+            <responsiveSteps>
+                <responsiveStep minWidth="0" columns="1"/>
+                <responsiveStep minWidth="40em" columns="2"/>
+            </responsiveSteps>
+        </formLayout>
+
+        <div width="100%" maxWidth="60em">
+            <formLayout width="100%">
                 <responsiveSteps>
                     <responsiveStep minWidth="0" columns="1"/>
-                    <responsiveStep minWidth="40em" columns="2"/>
+                    <responsiveStep minWidth="20em" columns="3"/>
                 </responsiveSteps>
+                <datePicker id="payments_FromDatePicker"
+                            placeholder="msg:///fromDatePicker.label" clearButtonVisible="true"/>
+                <datePicker id="payments_ToDatePicker"
+                            placeholder="msg:///toDatePicker.label" clearButtonVisible="true"/>
+                <div/>
+                <entityComboBox id="payments_ClientComboBox"
+                                placeholder="msg:///clientComboBox.placeholder"
+                                metaClass="Client" itemsContainer="clientsDc">
+                    <actions>
+                        <action id="clear" type="value_clear"/>
+                    </actions>
+                </entityComboBox>
+                <entityComboBox id="payments_OrderComboBox"
+                                placeholder="msg:///orderComboBox.placeholder"
+                                metaClass="Order_" itemsContainer="ordersDc">
+                    <actions>
+                        <action id="clear" type="value_clear"/>
+                    </actions>
+                </entityComboBox>
+                <entityComboBox id="payments_InvoiceComboBox"
+                                placeholder="msg:///invoiceComboBox.placeholder"
+                                metaClass="Invoice" itemsContainer="invoicesDc">
+                    <actions>
+                        <action id="clear" type="value_clear"/>
+                    </actions>
+                </entityComboBox>
             </formLayout>
+            <genericFilter id="payments_AdvancedFilter" dataLoader="paymentsDl" maxWidth="60em"
+                           opened="false" summaryText="msg:///advanced" themeNames="filled">
+                <properties include=".*"/>
+            </genericFilter>
+        </div>
 
-            <div width="100%" maxWidth="60em">
-                <formLayout width="100%">
-                    <responsiveSteps>
-                        <responsiveStep minWidth="0" columns="1"/>
-                        <responsiveStep minWidth="20em" columns="3"/>
-                    </responsiveSteps>
-                    <datePicker id="payments_FromDatePicker"
-                                placeholder="msg:///fromDatePicker.label" clearButtonVisible="true"/>
-                    <datePicker id="payments_ToDatePicker"
-                                placeholder="msg:///toDatePicker.label" clearButtonVisible="true"/>
-                    <div/>
-                    <entityComboBox id="payments_ClientComboBox"
-                                    placeholder="msg:///clientComboBox.placeholder"
-                                    metaClass="Client" itemsContainer="clientsDc">
-                        <actions>
-                            <action id="clear" type="value_clear"/>
-                        </actions>
-                    </entityComboBox>
-                    <entityComboBox id="payments_OrderComboBox"
-                                    placeholder="msg:///orderComboBox.placeholder"
-                                    metaClass="Order_" itemsContainer="ordersDc">
-                        <actions>
-                            <action id="clear" type="value_clear"/>
-                        </actions>
-                    </entityComboBox>
-                    <entityComboBox id="payments_InvoiceComboBox"
-                                    placeholder="msg:///invoiceComboBox.placeholder"
-                                    metaClass="Invoice" itemsContainer="invoicesDc">
-                        <actions>
-                            <action id="clear" type="value_clear"/>
-                        </actions>
-                    </entityComboBox>
-                </formLayout>
-                <genericFilter id="payments_AdvancedFilter" dataLoader="paymentsDl" maxWidth="60em"
-                               opened="false" summaryText="msg:///advanced" themeNames="filled">
-                    <properties include=".*"/>
-                </genericFilter>
-            </div>
-
-            <hbox id="buttonsPanel" classNames="buttons-panel">
-                <startSlot>
-                    <button id="createButton" action="paymentsDataGrid.createAction"/>
-                    <button id="editButton" action="paymentsDataGrid.editAction"/>
-                    <button id="removeButton" action="paymentsDataGrid.removeAction"/>
-                    <button id="excelExport" action="paymentsDataGrid.excelExport"/>
-                </startSlot>
-                <endSlot>
-                    <simplePagination id="payments_pagination" dataLoader="paymentsDl" classNames="ml-auto"/>
-                    <gridColumnVisibility dataGrid="paymentsDataGrid" icon="COG_O"
-                                          themeNames="tertiary-inline" hideAllEnabled="false"/>
-                </endSlot>
-            </hbox>
-            <dataGrid id="paymentsDataGrid"
-                      width="100%"
-                      minHeight="20em"
-                      multiSort="true"
-                      themeNames="column-borders"
-                      dataContainer="paymentsDc"
-                      columnReorderingAllowed="true">
-                <actions>
-                    <action id="createAction" type="list_create">
-                        <properties>
-                            <property name="openMode" value="DIALOG"/>
-                        </properties>
-                    </action>
-                    <action id="editAction" type="list_edit">
-                        <properties>
-                            <property name="openMode" value="DIALOG"/>
-                        </properties>
-                    </action>
-                    <action id="removeAction" type="list_remove"/>
-                    <action id="excelExport" type="grdexp_excelExport"/>
-                </actions>
-                <columns resizable="true" sortable="true">
-                    <column property="date" autoWidth="true" flexGrow="0"/>
-                    <column property="order" autoWidth="true" flexGrow="0"/>
-                    <column property="order.client"/>
-                    <column property="amount" autoWidth="true" flexGrow="0"/>
-                    <column property="invoice"/>
-                </columns>
-            </dataGrid>
-            <hbox id="lookupActions" visible="false">
-                <button id="selectButton" action="selectAction"/>
-                <button id="discardButton" action="discardAction"/>
-            </hbox>
-        </vbox>
-    </content>
-</fragment>
+        <hbox id="buttonsPanel" classNames="buttons-panel">
+            <startSlot>
+                <button id="createButton" action="paymentsDataGrid.createAction"/>
+                <button id="editButton" action="paymentsDataGrid.editAction"/>
+                <button id="removeButton" action="paymentsDataGrid.removeAction"/>
+                <button id="excelExport" action="paymentsDataGrid.excelExport"/>
+            </startSlot>
+            <endSlot>
+                <simplePagination id="payments_pagination" dataLoader="paymentsDl"/>
+                <gridColumnVisibility dataGrid="paymentsDataGrid" icon="COG_O"
+                                      themeNames="tertiary-inline" hideAllEnabled="false"/>
+            </endSlot>
+        </hbox>
+        <dataGrid id="paymentsDataGrid"
+                  width="100%"
+                  minHeight="20em"
+                  multiSort="true"
+                  themeNames="column-borders"
+                  dataContainer="paymentsDc"
+                  columnReorderingAllowed="true">
+            <actions>
+                <action id="createAction" type="list_create">
+                    <properties>
+                        <property name="openMode" value="DIALOG"/>
+                    </properties>
+                </action>
+                <action id="editAction" type="list_edit">
+                    <properties>
+                        <property name="openMode" value="DIALOG"/>
+                    </properties>
+                </action>
+                <action id="removeAction" type="list_remove"/>
+                <action id="excelExport" type="grdexp_excelExport"/>
+            </actions>
+            <columns resizable="true" sortable="true">
+                <column property="date" autoWidth="true" flexGrow="0"/>
+                <column property="order" autoWidth="true" flexGrow="0"/>
+                <column property="order.client"/>
+                <column property="amount" autoWidth="true" flexGrow="0"/>
+                <column property="invoice"/>
+            </columns>
+        </dataGrid>
+        <hbox id="lookupActions" visible="false">
+            <button id="selectButton" action="selectAction"/>
+            <button id="discardButton" action="discardAction"/>
+        </hbox>
+    </layout>
+</view>

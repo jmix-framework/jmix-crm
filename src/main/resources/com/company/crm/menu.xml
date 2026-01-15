@@ -1,31 +1,51 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <menu-config xmlns="http://jmix.io/schema/flowui/menu">
 
-    <item view="HomeView" id="home" description="msg://com.company.crm/menu_config.home.description"
-          title="msg://com.company.crm/menu_config.home.title" icon="vaadin:home"/>
+    <item view="HomeView" id="home"
+          title="msg:///menu_config.home.title"
+          description="msg:///menu_config.home.description"
+          icon="vaadin:home"/>
 
-    <item view="UserTask.list" id="tasks" title="msg://com.company.crm/menu_config.tasks.title"
+    <item view="UserTask.list" id="tasks"
+          title="msg:///menu_config.tasks.title"
           icon="vaadin:check-square"/>
 
-    <item view="CatalogView"
-          title="msg://com.company.crm/menu_config.catalog.title"
-          icon="vaadin:open-book"/>
+    <menu id="catalog"
+          title="msg:///menu_config.catalog.title"
+          icon="vaadin:open-book">
+        <item view="Category.list" id="categories"
+              title="msg:///menu_config.catalog.categories.title"
+              icon="vaadin:list-ul"/>
+        <item view="CategoryItem.list" id="products"
+              title="msg:///menu_config.catalog.categoryItems.title"
+              icon="vaadin:cubes"/>
+        <item view="PricingView" id="pricing"
+              title="msg:///menu_config.catalog.pricing.title"
+              icon="vaadin:tags"/>
+    </menu>
 
     <item view="Client.list" id="clients"
-          title="msg://com.company.crm/menu_config.clients.title"
+          title="msg:///menu_config.clients.title"
           icon="vaadin:users"/>
 
     <item view="Order.list" id="orders"
-          title="msg://com.company.crm/menu_config.orders.title"
+          title="msg:///menu_config.orders.title"
           icon="vaadin:cart"/>
 
-    <item view="FinanceView" id="finance"
-          title="msg://com.company.crm/menu_config.finance.title"
-          icon="vaadin:pie-chart"/>
+    <menu id="finance"
+          title="msg:///menu_config.finance.title"
+          icon="vaadin:pie-chart">
+        <item view="Invoice.list" id="invoices"
+              title="msg:///menu_config.finance.invoices.title"
+              icon="vaadin:file-text"/>
+        <item view="Payment.list" id="payments"
+              title="msg:///menu_config.finance.payments.title"
+              icon="vaadin:wallet"/>
+    </menu>
 
     <menu id="administration"
-          description="msg://com.company.crm/menu_config.administration.description"
-          title="msg://com.company.crm/menu_config.administration.title"
+          description="msg:///menu_config.administration.description"
+          title="msg:///menu_config.administration.title"
           icon="vaadin:cog">
         <item view="dynat_CategoryView.list" id="dynamic_attributes"
               icon="vaadin:table"

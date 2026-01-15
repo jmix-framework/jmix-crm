@@ -3,6 +3,7 @@ package com.company.crm.view.invoice;
 import com.company.crm.app.feature.queryparameters.filters.FieldValueQueryParameterBinder;
 import com.company.crm.app.service.datetime.DateTimeService;
 import com.company.crm.app.service.finance.InvoiceService;
+import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.app.util.date.range.LocalDateRange;
 import com.company.crm.app.util.ui.chart.ChartsUtils;
 import com.company.crm.app.util.ui.renderer.CrmRenderers;
@@ -14,10 +15,11 @@ import com.company.crm.model.order.Order;
 import com.company.crm.view.invoice.charts.InvoiceStatusAmountItem;
 import com.company.crm.view.invoice.charts.InvoiceStatusAmountValueDescription;
 import com.company.crm.view.invoice.charts.InvoiceStatusTotalCountValueDescription;
+import com.company.crm.view.main.MainView;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.HasValue;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.renderer.Renderer;
+import com.vaadin.flow.router.Route;
 import io.jmix.chartsflowui.component.Chart;
 import io.jmix.chartsflowui.data.item.SimpleDataItem;
 import io.jmix.chartsflowui.kit.component.model.DataSet;
@@ -32,8 +34,6 @@ import io.jmix.flowui.component.combobox.EntityComboBox;
 import io.jmix.flowui.component.datepicker.TypedDatePicker;
 import io.jmix.flowui.component.formlayout.JmixFormLayout;
 import io.jmix.flowui.component.select.JmixSelect;
-import io.jmix.flowui.fragment.Fragment;
-import io.jmix.flowui.fragment.FragmentDescriptor;
 import io.jmix.flowui.kit.action.ActionPerformedEvent;
 import io.jmix.flowui.model.CollectionContainer;
 import io.jmix.flowui.model.CollectionLoader;
@@ -42,10 +42,13 @@ import io.jmix.flowui.view.Install;
 import io.jmix.flowui.view.LookupComponent;
 import io.jmix.flowui.view.MessageBundle;
 import io.jmix.flowui.view.PrimaryListView;
+import io.jmix.flowui.view.StandardListView;
 import io.jmix.flowui.view.Subscribe;
 import io.jmix.flowui.view.Supply;
 import io.jmix.flowui.view.Target;
 import io.jmix.flowui.view.ViewComponent;
+import io.jmix.flowui.view.ViewController;
+import io.jmix.flowui.view.ViewDescriptor;
 import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
@@ -64,11 +67,13 @@ import static io.jmix.core.querycondition.PropertyCondition.greaterOrEqual;
 import static io.jmix.core.querycondition.PropertyCondition.lessOrEqual;
 import static io.jmix.flowui.component.UiComponentUtils.getCurrentView;
 
-@FragmentDescriptor("invoice-list-view.xml")
+@Route(value = "invoices", layout = MainView.class)
+@ViewDescriptor("invoice-list-view.xml")
+@ViewController(CrmConstants.ViewIds.INVOICE_LIST)
 @LookupComponent("invoicesDataGrid")
 @PrimaryListView(Invoice.class)
 @DialogMode(width = "90%", resizable = true)
-public class InvoicesFragment extends Fragment<VerticalLayout> {
+public class InvoiceListView extends StandardListView<Invoice> {
 
     @Autowired
     private Messages messages;

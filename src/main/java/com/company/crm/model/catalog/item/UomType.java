@@ -4,8 +4,10 @@ import com.company.crm.app.util.enums.EnumUtils;
 import com.company.crm.model.base.DefaultStringEnumClass;
 
 public enum UomType implements DefaultStringEnumClass<UomType> {
-    PCS,
-    KG;
+    PIECES,
+    KILOGRAM,
+    LITER,
+    METER;
 
     static UomType fromId(String id) {
         return EnumUtils.fromId(UomType.class, id);

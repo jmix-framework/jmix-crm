@@ -61,7 +61,7 @@
                 <button id="excelExport" action="ordersDataGrid.excelExport"/>
             </startSlot>
             <endSlot>
-                <simplePagination id="pagination" dataLoader="ordersDl" classNames="ml-auto"/>
+                <simplePagination id="pagination" dataLoader="ordersDl"/>
                 <gridColumnVisibility dataGrid="ordersDataGrid" icon="COG_O"
                                       themeNames="tertiary-inline" hideAllEnabled="false"/>
             </endSlot>

@@ -55,11 +55,9 @@ public class ChartsUtils {
     public CrmCard createViewStatChartWrapper(Chart chart, boolean applySkeleton) {
         var flexContainer = new VerticalLayout(chart);
         flexContainer.addClassNames(LumoUtility.Flex.GROW);
-        setBackgroundTransparent(flexContainer);
         flexContainer.setPadding(false);
 
         CrmCard card = uiComponents.create(CrmCard.class);
-        card.withoutBackground(true);
         card.setWidthFull();
         card.add(flexContainer);
 

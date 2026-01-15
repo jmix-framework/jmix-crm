@@ -13,6 +13,7 @@
         </instance>
     </data>
     <facets>
+        <settings auto="true"/>
         <dataLoadCoordinator auto="true"/>
         <dynattr:dynamicAttributes/>
     </facets>
@@ -92,7 +93,7 @@
                         </action>
                         <action id="removeAction" type="list_remove"/>
                     </actions>
-                    <columns>
+                    <columns resizable="true" sortable="true">
                         <column property="categoryItem.name" autoWidth="true" flexGrow="0"/>
                         <column property="categoryItem.code" autoWidth="true" flexGrow="0"/>
                         <column property="netPrice" autoWidth="true" flexGrow="0"/>

@@ -2,12 +2,14 @@ package com.company.crm.model.catalog.item;
 
 import com.company.crm.model.base.FullAuditEntity;
 import com.company.crm.model.catalog.category.Category;
+import com.company.crm.model.datatype.PriceDataType;
 import io.jmix.core.DeletePolicy;
 import io.jmix.core.FileRef;
 import io.jmix.core.entity.annotation.OnDeleteInverse;
 import io.jmix.core.metamodel.annotation.Composition;
 import io.jmix.core.metamodel.annotation.InstanceName;
 import io.jmix.core.metamodel.annotation.JmixEntity;
+import io.jmix.core.metamodel.annotation.PropertyDatatype;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -20,6 +22,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Entity
@@ -50,6 +53,10 @@ public class CategoryItem extends FullAuditEntity {
 
     @Column(name = "UOM")
     private String uom;
+
+    @PropertyDatatype(PriceDataType.NAME)
+    @Column(name = "PRICE")
+    private BigDecimal price;
 
     @Composition
     @OrderBy("createdDate")
@@ -110,5 +117,13 @@ public class CategoryItem extends FullAuditEntity {
 
     public void setCategory(Category category) {
         this.category = category;
+    }
+
+    public BigDecimal getPrice() {
+        return price;
+    }
+
+    public void setPrice(BigDecimal price) {
+        this.price = price;
     }
 }

@@ -11,6 +11,7 @@
         </instance>
     </data>
     <facets>
+        <settings auto="true"/>
         <dataLoadCoordinator auto="true"/>
         <dynattr:dynamicAttributes/>
     </facets>
@@ -26,7 +27,9 @@
                         <responsiveStep minWidth="0" columns="1"/>
                         <responsiveStep minWidth="40em" columns="2"/>
                     </responsiveSteps>
-                    <entityComboBox id="categoriesComboBox" property="category" colspan="2"
+                    <textField property="code"/>
+                    <textField property="name"/>
+                    <entityComboBox id="categoriesComboBox" property="category"
                                     dataContainer="categoryItemDc">
                         <actions>
                             <action id="lookupAction" type="entity_lookup"/>
@@ -40,14 +43,18 @@
                             </query>
                         </itemsQuery>
                     </entityComboBox>
-                    <textField property="name"/>
-                    <textField property="code"/>
                     <select property="uom"/>
                     <textArea property="description" height="15em"/>
+                    <bigDecimalField id="priceField" property="price">
+                        <prefix>
+                            <span text="$"/>
+                        </prefix>
+                    </bigDecimalField>
                 </formLayout>
             </vbox>
             <vbox alignItems="CENTER" maxWidth="40em" minWidth="30em" classNames="pt-xl">
-                <image id="image" classNames="border rounded-l" resource="images/no_image.svg" width="20em" height="20em"/>
+                <image id="image" classNames="border rounded-l" resource="images/no_image.svg" width="20em"
+                       height="20em"/>
                 <fileStorageUploadField id="imageUpload" dataContainer="categoryItemDc" property="image"
                                         dropAllowed="true" clearButtonVisible="true" fileNameVisible="true"/>
             </vbox>

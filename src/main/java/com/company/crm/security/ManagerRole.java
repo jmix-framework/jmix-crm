@@ -26,8 +26,8 @@ public interface ManagerRole extends UiMinimalRole {
     String CODE = "manager";
     String NAME = "Manager";
 
-    @MenuPolicy(menuIds = {"home", "tasks", "categories", "categoryItems", "clients", "orders", "finance"})
-    @ViewPolicy(viewIds = {"HomeView", "UserTask.list", "Category.list", "CategoryItem.list", "Client.list", "Order.list", "FinanceView", "CategoryItem.detail", "Category.detail", "Client.detail", "Invoice.detail", "Invoice.list", "OrderItem.detail", "Order.detail", "Payment.detail", "Payment.list", "AddressFragment", "InvoicesFragment", "PaymentsFragment", "Contact.detail"})
+    @MenuPolicy(menuIds = {"home", "tasks", "catalog", "pricing", "clients", "orders", "finance", "pricing"})
+    @ViewPolicy(viewIds = {"HomeView", "UserTask.list", "Client.list", "Order.list", "FinanceView", "CategoryItem.detail", "Category.detail", "Client.detail", "Invoice.detail", "Invoice.list", "OrderItem.detail", "Order.detail", "Payment.detail", "Payment.list", "AddressFragment", "InvoicesFragment", "PaymentsFragment", "Contact.detail", "PricingView"})
     void screens();
 
     @EntityAttributePolicy(entityClass = Address.class, attributes = "*", action = EntityAttributePolicyAction.MODIFY)

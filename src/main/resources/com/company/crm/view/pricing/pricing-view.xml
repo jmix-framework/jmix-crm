@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      title="msg://pricingView.title">
+    <data>
+        <collection id="categoryItemsDc"
+                    class="com.company.crm.model.catalog.item.CategoryItem">
+            <fetchPlan extends="_base">
+                <property name="category" fetchPlan="_base"/>
+            </fetchPlan>
+            <loader id="categoryItemsDl" readOnly="true"/>
+        </collection>
+    </data>
+    <facets>
+        <settings auto="true"/>
+        <dataLoadCoordinator auto="true"/>
+        <urlQueryParameters/>
+    </facets>
+    <layout>
+        <textField id="items_searchField" width="100%" maxWidth="26em"
+                   placeholder="msg:///searchField.placeholder" clearButtonVisible="true">
+            <prefix>
+                <icon icon="SEARCH"/>
+            </prefix>
+        </textField>
+        <hbox id="buttonsPanel" classNames="buttons-panel">
+            <startSlot>
+                <button id="createButton" action="categoryItemsDataGrid.createAction"/>
+                <button id="editButton" action="categoryItemsDataGrid.editAction"/>
+                <button id="removeButton" action="categoryItemsDataGrid.removeAction"/>
+                <button id="updateFromXlsButton" action="categoryItemsDataGrid.updateFromXls" themeNames="contrast"/>
+                <button id="downloadButton" action="categoryItemsDataGrid.downloadXls" themeNames="contrast"/>
+                <button id="changeVatButton" action="categoryItemsDataGrid.changeVat" themeNames="contrast"/>
+            </startSlot>
+            <endSlot>
+                <simplePagination id="items_pagination" dataLoader="categoryItemsDl"/>
+                <gridColumnVisibility dataGrid="categoryItemsDataGrid" icon="COG_O"
+                                      themeNames="tertiary-inline" hideAllEnabled="false"/>
+            </endSlot>
+        </hbox>
+        <dataGrid id="categoryItemsDataGrid"
+                  width="100%"
+                  minHeight="20em"
+                  dataContainer="categoryItemsDc"
+                  multiSort="true"
+                  columnReorderingAllowed="true">
+            <actions>
+                <action id="createAction" type="list_add">
+                    <properties>
+                        <property name="openMode" value="DIALOG"/>
+                    </properties>
+                </action>
+                <action id="editAction" type="list_edit">
+                    <properties>
+                        <property name="openMode" value="DIALOG"/>
+                    </properties>
+                </action>
+                <action id="removeAction" type="list_remove"/>
+                <action id="updateFromXls" text="msg://updateFromXls" icon="vaadin:table"/>
+                <action id="downloadXls" text="msg://downloadXls" icon="DOWNLOAD_ALT" type="grdexp_excelExport"/>
+                <action id="changeVat" text="msg://changeVat" icon="PENCIL"/>
+            </actions>
+            <columns resizable="true" sortable="true">
+                <column property="name" filterable="true"/>
+                <column property="code" filterable="true"/>
+                <column property="price" filterable="true"/>
+            </columns>
+        </dataGrid>
+    </layout>
+</view>

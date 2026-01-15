@@ -90,8 +90,8 @@ public class CategoryItemListView extends StandardListView<CategoryItem> {
 
     @Override
     protected void onAttach(AttachEvent attachEvent) {
-        initialize();
         super.onAttach(attachEvent);
+        initialize();
     }
 
     @Install(to = "categoryItemsDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")

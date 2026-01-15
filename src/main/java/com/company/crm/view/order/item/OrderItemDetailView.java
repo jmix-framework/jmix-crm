@@ -1,6 +1,7 @@
 package com.company.crm.view.order.item;
 
 import com.company.crm.app.util.constant.CrmConstants;
+import com.company.crm.model.catalog.item.CategoryItem;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.order.Order;
 import com.company.crm.model.order.OrderItem;
@@ -95,6 +96,10 @@ public class OrderItemDetailView extends StandardDetailView<OrderItem> {
 
     private void initializeDefaultValues(OrderItem entity) {
         entity.setQuantity(BigDecimal.ONE);
+        CategoryItem categoryItem = entity.getCategoryItem();
+        if (categoryItem != null) {
+            entity.setNetPrice(categoryItem.getPrice());
+        }
     }
 
     private void initializePreservedState(OrderItem entity) {

@@ -13,6 +13,7 @@
         <action id="closeAction" type="detail_close"/>
     </actions>
     <facets>
+        <settings auto="true"/>
         <dataLoadCoordinator auto="true"/>
     </facets>
     <layout>

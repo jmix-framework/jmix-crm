@@ -419,6 +419,7 @@ public class HomeView extends StandardView implements WidthResizeListener {
         var wrapper = chartsUtils.createViewStatChartWrapper(chart, false);
         wrapper.removeThemeVariants(CardVariant.values());
         wrapper.getStyle().setMarginTop("1em");
+        setBackgroundTransparent(wrapper);
 
         return wrapper;
     }

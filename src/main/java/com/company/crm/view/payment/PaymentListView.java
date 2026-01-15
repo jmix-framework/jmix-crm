@@ -2,6 +2,7 @@ package com.company.crm.view.payment;
 
 import com.company.crm.app.feature.queryparameters.filters.FieldValueQueryParameterBinder;
 import com.company.crm.app.service.finance.PaymentService;
+import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.app.util.ui.chart.ChartsUtils;
 import com.company.crm.app.util.ui.renderer.CrmRenderers;
 import com.company.crm.model.client.Client;
@@ -9,11 +10,12 @@ import com.company.crm.model.invoice.Invoice;
 import com.company.crm.model.order.Order;
 import com.company.crm.model.payment.Payment;
 import com.company.crm.model.payment.PaymentRepository;
+import com.company.crm.view.main.MainView;
 import com.company.crm.view.payment.charts.ClientTotalPaymentsValueDescription;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.HasValue;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.renderer.Renderer;
+import com.vaadin.flow.router.Route;
 import io.jmix.chartsflowui.component.Chart;
 import io.jmix.chartsflowui.data.item.SimpleDataItem;
 import io.jmix.chartsflowui.kit.component.model.DataSet;
@@ -27,17 +29,19 @@ import io.jmix.flowui.component.datepicker.TypedDatePicker;
 import io.jmix.flowui.component.formlayout.JmixFormLayout;
 import io.jmix.flowui.component.grid.DataGrid;
 import io.jmix.flowui.data.grid.DataGridItems;
-import io.jmix.flowui.fragment.Fragment;
-import io.jmix.flowui.fragment.FragmentDescriptor;
 import io.jmix.flowui.model.CollectionContainer;
 import io.jmix.flowui.model.CollectionLoader;
 import io.jmix.flowui.view.DialogMode;
 import io.jmix.flowui.view.Install;
 import io.jmix.flowui.view.LookupComponent;
 import io.jmix.flowui.view.MessageBundle;
+import io.jmix.flowui.view.StandardListView;
+import io.jmix.flowui.view.Subscribe;
 import io.jmix.flowui.view.Supply;
 import io.jmix.flowui.view.Target;
 import io.jmix.flowui.view.ViewComponent;
+import io.jmix.flowui.view.ViewController;
+import io.jmix.flowui.view.ViewDescriptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 
@@ -55,10 +59,12 @@ import static io.jmix.core.querycondition.PropertyCondition.equal;
 import static io.jmix.core.querycondition.PropertyCondition.greaterOrEqual;
 import static io.jmix.core.querycondition.PropertyCondition.lessOrEqual;
 
-@FragmentDescriptor("payment-list-view.xml")
+@Route(value = "payments", layout = MainView.class)
+@ViewDescriptor("payment-list-view.xml")
+@ViewController(CrmConstants.ViewIds.PAYMENT_LIST)
 @LookupComponent("paymentsDataGrid")
 @DialogMode(width = "90%", resizable = true)
-public class PaymentsFragment extends Fragment<VerticalLayout> {
+public class PaymentListView extends StandardListView<Payment> {
 
     @Autowired
     private CrmRenderers crmRenderers;
@@ -89,6 +95,8 @@ public class PaymentsFragment extends Fragment<VerticalLayout> {
     @ViewComponent
     private JmixFormLayout chartsBlock;
     @ViewComponent
+    private DataGrid<Payment> paymentsDataGrid;
+    @ViewComponent
     private EntityComboBox<Client> payments_ClientComboBox;
     @ViewComponent
     private EntityComboBox<Order> payments_OrderComboBox;
@@ -100,16 +108,16 @@ public class PaymentsFragment extends Fragment<VerticalLayout> {
     private TypedDatePicker<LocalDate> payments_ToDatePicker;
 
     private final LogicalCondition filtersCondition = LogicalCondition.and();
-    @ViewComponent
-    private DataGrid<Payment> paymentsDataGrid;
 
     @Override
     protected void onAttach(AttachEvent attachEvent) {
         super.onAttach(attachEvent);
-        if (paymentsDataGrid.getItems() instanceof DataGridItems.Sortable<Payment> sortable) {
-            sortable.sort(new String[]{"date"}, new boolean[]{false});
-        }
         initialize();
+    }
+
+    @Subscribe
+    private void onInit(final InitEvent event) {
+        installGridDefaultSorting();
     }
 
     @Install(to = "paymentsDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
@@ -140,6 +148,12 @@ public class PaymentsFragment extends Fragment<VerticalLayout> {
     @Supply(to = "paymentsDataGrid.invoice", subject = "renderer")
     private Renderer<Payment> paymentsDataGridInvoiceRenderer() {
         return crmRenderers.entityLink(Payment::getInvoice);
+    }
+
+    private void installGridDefaultSorting() {
+        if (paymentsDataGrid.getItems() instanceof DataGridItems.Sortable<Payment> sortable) {
+            sortable.sort(new String[]{"date"}, new boolean[]{false});
+        }
     }
 
     private void initialize() {

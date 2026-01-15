@@ -321,6 +321,7 @@
             <column name="CODE" type="VARCHAR(255)">
                 <constraints nullable="false" unique="true"/>
             </column>
+            <column name="PRICE" type="DECIMAL(19, 2)"/>
             <column name="IMAGE" type="VARCHAR(1024)"/>
             <column name="DESCRIPTION" type="CLOB"/>
             <column name="UOM" type="VARCHAR(255)"/>
