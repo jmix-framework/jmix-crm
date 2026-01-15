@@ -77,6 +77,13 @@ public class CrmRenderers {
 
     public <E extends UuidEntity, LINK extends UuidEntity> Renderer<E> entityLink(Function<E, LINK> linkGetter,
                                                                                   Function<LINK, String> textProvider) {
+        return entityLink(linkGetter, textProvider, false);
+    }
+
+
+    public <E extends UuidEntity, LINK extends UuidEntity> Renderer<E> entityLink(Function<E, LINK> linkGetter,
+                                                                                  Function<LINK, String> textProvider,
+                                                                                  boolean readOnly) {
         return new ComponentRenderer<>(entity -> {
             LINK link = linkGetter.apply(entity);
             JmixButton button = entityLinkButton(link, textProvider, textProvider);
@@ -86,7 +93,7 @@ public class CrmRenderers {
                         .editEntity(link)
                         .withViewConfigurer(v -> {
                             if (v instanceof StandardDetailView<?> detailView) {
-                                detailView.setReadOnly(true);
+                                detailView.setReadOnly(readOnly);
                             }
                         }).open();
             });
@@ -254,7 +261,7 @@ public class CrmRenderers {
         JmixButton button =
                 entityLinkButton(client, Client::getName, Client::getFullName);
         button.addClickListener(event ->
-                openReadOnlyDetailDialog(client, Client.class, ClientDetailView.class));
+                openDetailDialog(client, Client.class, ClientDetailView.class));
         return button;
     }
 
@@ -262,7 +269,7 @@ public class CrmRenderers {
         JmixButton button =
                 entityLinkButton(order, metadataTools::getInstanceName, metadataTools::getInstanceName);
         button.addClickListener(event ->
-                openReadOnlyDetailDialog(order, Order.class, OrderDetailView.class));
+                openDetailDialog(order, Order.class, OrderDetailView.class));
         return button;
     }
 
@@ -270,7 +277,7 @@ public class CrmRenderers {
         JmixButton button =
                 entityLinkButton(client.getAccountManager(), User::getDisplayName, User::getFullName);
         button.addClickListener(event ->
-                openReadOnlyDetailDialog(client.getAccountManager(), User.class, UserDetailView.class));
+                openDetailDialog(client.getAccountManager(), User.class, UserDetailView.class, true));
         return button;
     }
 
@@ -284,13 +291,20 @@ public class CrmRenderers {
         return button;
     }
 
-    private <E extends UuidEntity, V extends StandardDetailView<E>> void openReadOnlyDetailDialog(E entity,
-                                                                                                  Class<E> entityClass,
-                                                                                                  Class<V> detailClass) {
+    private <E extends UuidEntity, V extends StandardDetailView<E>> void openDetailDialog(E entity,
+                                                                                          Class<E> entityClass,
+                                                                                          Class<V> detailClass) {
+        openDetailDialog(entity, entityClass, detailClass, false);
+    }
+
+    private <E extends UuidEntity, V extends StandardDetailView<E>> void openDetailDialog(E entity,
+                                                                                          Class<E> entityClass,
+                                                                                          Class<V> detailClass,
+                                                                                          boolean readOnly) {
         dialogWindows.detail(getCurrentView(), entityClass)
                 .withViewClass(detailClass)
                 .editEntity(entity)
-                .withViewConfigurer(v -> v.setReadOnly(true))
+                .withViewConfigurer(v -> v.setReadOnly(readOnly))
                 .open();
     }
 }

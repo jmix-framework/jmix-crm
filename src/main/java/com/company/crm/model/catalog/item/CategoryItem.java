@@ -17,6 +17,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 
 import java.util.List;
@@ -51,6 +52,7 @@ public class CategoryItem extends FullAuditEntity {
     private String uom;
 
     @Composition
+    @OrderBy("createdDate")
     @OneToMany(mappedBy = "categoryItem", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CategoryItemComment> comments;
 

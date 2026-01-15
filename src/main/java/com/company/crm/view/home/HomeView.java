@@ -20,11 +20,11 @@ import com.company.crm.model.order.OrderStatus;
 import com.company.crm.model.payment.Payment;
 import com.company.crm.view.main.MainView;
 import com.company.crm.view.usertask.UserTaskListView;
-import com.company.crm.view.util.SkeletonStyler;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.card.CardVariant;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H4;
@@ -39,7 +39,7 @@ import io.jmix.chartsflowui.kit.component.model.DataSet;
 import io.jmix.chartsflowui.kit.component.model.Grid;
 import io.jmix.chartsflowui.kit.component.model.Title;
 import io.jmix.chartsflowui.kit.component.model.Tooltip;
-import io.jmix.chartsflowui.kit.component.model.legend.Legend;
+import io.jmix.chartsflowui.kit.component.model.legend.ScrollableLegend;
 import io.jmix.chartsflowui.kit.component.model.series.Label;
 import io.jmix.chartsflowui.kit.component.model.series.PieSeries;
 import io.jmix.chartsflowui.kit.component.model.shared.FontStyle;
@@ -79,6 +79,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.company.crm.app.feature.sortable.SortableFeature.makeSortable;
+import static com.company.crm.app.util.ui.CrmUiUtils.setBackgroundTransparent;
 import static com.company.crm.app.util.ui.listener.resize.WidthResizeListener.isWidthChanged;
 import static io.jmix.flowui.component.UiComponentUtils.traverseComponents;
 
@@ -402,7 +403,8 @@ public class HomeView extends StandardView implements WidthResizeListener {
                         .withTextStyle(new Title.TextStyle()
                                 .withFontSize(12)
                                 .withFontStyle(FontStyle.NORMAL)))
-                .withLegend(new Legend()
+                .withLegend(new ScrollableLegend()
+                        .withHeight("100")
                         .withTop("20")
                         .withLeft("0")
                         .withOrientation(Orientation.VERTICAL))
@@ -412,10 +414,11 @@ public class HomeView extends StandardView implements WidthResizeListener {
                         .withRight("0"));
 
         chart.setHeight(30, Unit.EM);
+        setBackgroundTransparent(chart);
 
-        var wrapper = chartsUtils.createViewStatChartWrapper(chart);
+        var wrapper = chartsUtils.createViewStatChartWrapper(chart, false);
+        wrapper.removeThemeVariants(CardVariant.values());
         wrapper.getStyle().setMarginTop("1em");
-        SkeletonStyler.remove(chart);
 
         return wrapper;
     }

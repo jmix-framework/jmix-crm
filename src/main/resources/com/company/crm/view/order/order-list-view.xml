@@ -54,13 +54,17 @@
         </div>
 
         <hbox id="buttonsPanel" classNames="buttons-panel">
-            <button id="createButton" action="ordersDataGrid.createAction"/>
-            <button id="editButton" action="ordersDataGrid.editAction"/>
-            <button id="removeButton" action="ordersDataGrid.removeAction"/>
-            <button id="excelExport" action="ordersDataGrid.excelExport"/>
-            <simplePagination id="pagination" dataLoader="ordersDl" classNames="ml-auto"/>
-            <gridColumnVisibility dataGrid="ordersDataGrid" icon="COG_O"
-                                  themeNames="tertiary-inline" hideAllEnabled="false"/>
+            <startSlot>
+                <button id="createButton" action="ordersDataGrid.createAction"/>
+                <button id="editButton" action="ordersDataGrid.editAction"/>
+                <button id="removeButton" action="ordersDataGrid.removeAction"/>
+                <button id="excelExport" action="ordersDataGrid.excelExport"/>
+            </startSlot>
+            <endSlot>
+                <simplePagination id="pagination" dataLoader="ordersDl" classNames="ml-auto"/>
+                <gridColumnVisibility dataGrid="ordersDataGrid" icon="COG_O"
+                                      themeNames="tertiary-inline" hideAllEnabled="false"/>
+            </endSlot>
         </hbox>
         <component id="pipeLineFilter" class="com.company.crm.app.ui.component.OrderStatusPipeline"/>
         <dataGrid id="ordersDataGrid" dataContainer="ordersDc"

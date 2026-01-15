@@ -2,7 +2,6 @@ package com.company.crm.app.util.ui.chart;
 
 import com.company.crm.app.ui.component.card.CrmCard;
 import com.company.crm.view.util.SkeletonStyler;
-import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.spring.annotation.SpringComponent;
@@ -15,7 +14,7 @@ import io.jmix.chartsflowui.kit.component.model.Tooltip;
 import io.jmix.chartsflowui.kit.component.model.axis.AxisType;
 import io.jmix.chartsflowui.kit.component.model.axis.XAxis;
 import io.jmix.chartsflowui.kit.component.model.axis.YAxis;
-import io.jmix.chartsflowui.kit.component.model.legend.Legend;
+import io.jmix.chartsflowui.kit.component.model.legend.ScrollableLegend;
 import io.jmix.chartsflowui.kit.component.model.series.BarSeries;
 import io.jmix.chartsflowui.kit.component.model.series.Label;
 import io.jmix.chartsflowui.kit.component.model.series.LineSeries;
@@ -36,6 +35,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
+import static com.company.crm.app.util.ui.CrmUiUtils.setBackgroundTransparent;
+
 @SpringComponent
 public class ChartsUtils {
     private static final Logger log = LoggerFactory.getLogger(ChartsUtils.class);
@@ -47,9 +48,14 @@ public class ChartsUtils {
         this.uiComponents = uiComponents;
     }
 
-    public Component createViewStatChartWrapper(Chart chart) {
+    public CrmCard createViewStatChartWrapper(Chart chart) {
+        return createViewStatChartWrapper(chart, true);
+    }
+
+    public CrmCard createViewStatChartWrapper(Chart chart, boolean applySkeleton) {
         var flexContainer = new VerticalLayout(chart);
         flexContainer.addClassNames(LumoUtility.Flex.GROW);
+        setBackgroundTransparent(flexContainer);
         flexContainer.setPadding(false);
 
         CrmCard card = uiComponents.create(CrmCard.class);
@@ -57,7 +63,10 @@ public class ChartsUtils {
         card.setWidthFull();
         card.add(flexContainer);
 
-        SkeletonStyler.apply(chart);
+        if (applySkeleton) {
+            SkeletonStyler.apply(chart);
+        }
+
         return card;
     }
 
@@ -88,7 +97,8 @@ public class ChartsUtils {
 
     public Chart createViewStatChart(String title, SeriesType seriesType) {
         Chart chart = uiComponents.create(Chart.class)
-                .withLegend(new Legend()
+                .withLegend(new ScrollableLegend()
+                        .withHeight("100")
                         .withTop("20")
                         .withLeft("0")
                         .withOrientation(Orientation.VERTICAL))
@@ -144,5 +154,6 @@ public class ChartsUtils {
         chart.setWidthFull();
         chart.setHeight(12, Unit.EM);
         chart.setMinWidth(20, Unit.EM);
+        setBackgroundTransparent(chart);
     }
 }

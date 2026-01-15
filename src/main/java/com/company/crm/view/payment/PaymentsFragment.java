@@ -10,6 +10,7 @@ import com.company.crm.model.order.Order;
 import com.company.crm.model.payment.Payment;
 import com.company.crm.model.payment.PaymentRepository;
 import com.company.crm.view.payment.charts.ClientTotalPaymentsValueDescription;
+import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.HasValue;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.renderer.Renderer;
@@ -18,7 +19,6 @@ import io.jmix.chartsflowui.data.item.SimpleDataItem;
 import io.jmix.chartsflowui.kit.component.model.DataSet;
 import io.jmix.chartsflowui.kit.data.chart.ListChartItems;
 import io.jmix.core.common.datastruct.Pair;
-import io.jmix.core.metamodel.datatype.DatatypeFormatter;
 import io.jmix.core.querycondition.LogicalCondition;
 import io.jmix.core.repository.JmixDataRepositoryContext;
 import io.jmix.flowui.component.UiComponentUtils;
@@ -33,10 +33,8 @@ import io.jmix.flowui.view.DialogMode;
 import io.jmix.flowui.view.Install;
 import io.jmix.flowui.view.LookupComponent;
 import io.jmix.flowui.view.MessageBundle;
-import io.jmix.flowui.view.Subscribe;
 import io.jmix.flowui.view.Supply;
 import io.jmix.flowui.view.Target;
-import io.jmix.flowui.view.View;
 import io.jmix.flowui.view.ViewComponent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
@@ -68,8 +66,6 @@ public class PaymentsFragment extends Fragment<VerticalLayout> {
     private PaymentService paymentService;
     @Autowired
     private PaymentRepository paymentRepository;
-    @Autowired
-    private DatatypeFormatter datatypeFormatter;
 
     @ViewComponent
     private MessageBundle messageBundle;
@@ -103,8 +99,9 @@ public class PaymentsFragment extends Fragment<VerticalLayout> {
 
     private final LogicalCondition filtersCondition = LogicalCondition.and();
 
-    @Subscribe(target = Target.HOST_CONTROLLER)
-    private void onHostReady(final View.ReadyEvent event) {
+    @Override
+    protected void onAttach(AttachEvent attachEvent) {
+        super.onAttach(attachEvent);
         initialize();
     }
 
@@ -140,12 +137,12 @@ public class PaymentsFragment extends Fragment<VerticalLayout> {
 
     private void initialize() {
         loadData();
-        initChartsBlock();
+        initializeChartsBlock();
         registerUrlQueryParametersBinders();
         applyFilters();
     }
 
-    private void initChartsBlock() {
+    private void initializeChartsBlock() {
         chartsUtils.initializeChartsAsync(getChartsLoaders());
     }
 

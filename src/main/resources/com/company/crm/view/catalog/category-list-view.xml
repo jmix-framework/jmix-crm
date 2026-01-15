@@ -34,7 +34,9 @@
                 <button id="excelExport" action="categoriesDataGrid.excelExport"/>
             </startSlot>
             <endSlot>
-                <simplePagination id="pagination" dataLoader="categoriesDl"/>
+                <simplePagination id="pagination" dataLoader="categoriesDl" classNames="ml-auto"/>
+                <gridColumnVisibility dataGrid="categoriesDataGrid" icon="COG_O"
+                                      themeNames="tertiary-inline" hideAllEnabled="false"/>
             </endSlot>
         </hbox>
         <treeDataGrid id="categoriesDataGrid"

@@ -14,6 +14,7 @@ import com.company.crm.model.order.Order;
 import com.company.crm.view.invoice.charts.InvoiceStatusAmountItem;
 import com.company.crm.view.invoice.charts.InvoiceStatusAmountValueDescription;
 import com.company.crm.view.invoice.charts.InvoiceStatusTotalCountValueDescription;
+import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.HasValue;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.renderer.Renderer;
@@ -44,7 +45,6 @@ import io.jmix.flowui.view.PrimaryListView;
 import io.jmix.flowui.view.Subscribe;
 import io.jmix.flowui.view.Supply;
 import io.jmix.flowui.view.Target;
-import io.jmix.flowui.view.View;
 import io.jmix.flowui.view.ViewComponent;
 import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -111,8 +111,9 @@ public class InvoicesFragment extends Fragment<VerticalLayout> {
 
     private final LogicalCondition filtersCondition = LogicalCondition.and();
 
-    @Subscribe(target = Target.HOST_CONTROLLER)
-    private void onHostBeforeShow(final View.ReadyEvent event) {
+    @Override
+    protected void onAttach(AttachEvent attachEvent) {
+        super.onAttach(attachEvent);
         initialize();
     }
 
@@ -230,9 +231,11 @@ public class InvoicesFragment extends Fragment<VerticalLayout> {
 
         //noinspection unchecked
         FieldValueQueryParameterBinder.builder(getCurrentView())
+                .addEnumBinding(InvoiceStatus.class, invoices_StatusSelect)
                 .addComboboxBinding(invoices_OrderComboBox, () -> ordersDc.getItems())
                 .addComboboxBinding(invoices_ClientComboBox, () -> clientsDc.getItems())
-                .addEnumBinding(InvoiceStatus.class, invoices_StatusSelect)
+                .addDatePickerBinding(invoices_FromDatePicker)
+                .addDatePickerBinding(invoices_ToDatePicker)
                 .build();
     }
 

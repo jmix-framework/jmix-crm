@@ -40,8 +40,12 @@
                     <responsiveSteps>
                         <responsiveStep minWidth="0" columns="1"/>
                         <responsiveStep minWidth="20em" columns="3"/>
-                        <responsiveStep minWidth="40em" columns="5"/>
                     </responsiveSteps>
+                    <datePicker id="payments_FromDatePicker"
+                                placeholder="msg:///fromDatePicker.label" clearButtonVisible="true"/>
+                    <datePicker id="payments_ToDatePicker"
+                                placeholder="msg:///toDatePicker.label" clearButtonVisible="true"/>
+                    <div/>
                     <entityComboBox id="payments_ClientComboBox"
                                     placeholder="msg:///clientComboBox.placeholder"
                                     metaClass="Client" itemsContainer="clientsDc">
@@ -63,10 +67,6 @@
                             <action id="clear" type="value_clear"/>
                         </actions>
                     </entityComboBox>
-                    <datePicker id="payments_FromDatePicker"
-                                placeholder="msg:///fromDatePicker.label" clearButtonVisible="true"/>
-                    <datePicker id="payments_ToDatePicker"
-                                placeholder="msg:///toDatePicker.label" clearButtonVisible="true"/>
                 </formLayout>
                 <genericFilter id="payments_AdvancedFilter" dataLoader="paymentsDl" maxWidth="60em"
                                opened="false" summaryText="msg:///advanced" themeNames="filled">
@@ -82,7 +82,9 @@
                     <button id="excelExport" action="paymentsDataGrid.excelExport"/>
                 </startSlot>
                 <endSlot>
-                    <simplePagination id="payments_pagination" dataLoader="paymentsDl"/>
+                    <simplePagination id="payments_pagination" dataLoader="paymentsDl" classNames="ml-auto"/>
+                    <gridColumnVisibility dataGrid="paymentsDataGrid" icon="COG_O"
+                                          themeNames="tertiary-inline" hideAllEnabled="false"/>
                 </endSlot>
             </hbox>
             <dataGrid id="paymentsDataGrid"

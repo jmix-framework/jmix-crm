@@ -14,6 +14,7 @@ import io.jmix.core.SaveContext;
 import io.jmix.flowui.DialogWindows;
 import io.jmix.flowui.component.combobox.EntityComboBox;
 import io.jmix.flowui.kit.action.ActionPerformedEvent;
+import io.jmix.flowui.model.CollectionLoader;
 import io.jmix.flowui.view.EditedEntityContainer;
 import io.jmix.flowui.view.Install;
 import io.jmix.flowui.view.StandardDetailView;
@@ -45,9 +46,13 @@ public class InvoiceDetailView extends StandardDetailView<Invoice> {
     private EntityComboBox<Client> clientsComboBox;
     @ViewComponent
     private EntityComboBox<Order> ordersComboBox;
+    @ViewComponent
+    private CollectionLoader<Order> ordersDl;
 
     @Subscribe
     private void onInitEntity(final InitEntityEvent<Invoice> event) {
+        ordersDl.setQuery("select o from Order_ o");
+
         Invoice invoice = event.getEntity();
         invoice.setDate(dateTimeService.now().toLocalDate());
         invoice.setStatus(InvoiceStatus.NEW);

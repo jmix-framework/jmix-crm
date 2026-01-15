@@ -6,6 +6,7 @@
                   class="com.company.crm.model.invoice.Invoice">
             <fetchPlan extends="_base">
                 <property name="client" fetchPlan="_base"/>
+                <property name="order" fetchPlan="_base"/>
             </fetchPlan>
             <loader id="invoiceDl"/>
             <instance id="clientDc" property="client"/>

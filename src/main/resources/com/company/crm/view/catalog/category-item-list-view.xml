@@ -52,11 +52,17 @@
         </div>
 
         <hbox id="buttonsPanel" classNames="buttons-panel">
-            <button id="createButton" action="categoryItemsDataGrid.createAction"/>
-            <button id="editButton" action="categoryItemsDataGrid.editAction"/>
-            <button id="removeButton" action="categoryItemsDataGrid.removeAction"/>
-            <button id="excelExport" action="categoryItemsDataGrid.excelExport"/>
-            <simplePagination id="items_pagination" dataLoader="categoryItemsDl"/>
+            <startSlot>
+                <button id="createButton" action="categoryItemsDataGrid.createAction"/>
+                <button id="editButton" action="categoryItemsDataGrid.editAction"/>
+                <button id="removeButton" action="categoryItemsDataGrid.removeAction"/>
+                <button id="excelExport" action="categoryItemsDataGrid.excelExport"/>
+            </startSlot>
+            <endSlot>
+                <simplePagination id="items_pagination" dataLoader="categoryItemsDl" classNames="ml-auto"/>
+                <gridColumnVisibility dataGrid="categoryItemsDataGrid" icon="COG_O"
+                                      themeNames="tertiary-inline" hideAllEnabled="false"/>
+            </endSlot>
         </hbox>
         <dataGrid id="categoryItemsDataGrid"
                   width="100%"

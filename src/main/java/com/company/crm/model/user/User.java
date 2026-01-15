@@ -17,6 +17,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Index;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import jakarta.validation.constraints.Email;
@@ -38,6 +39,7 @@ public class User extends FullAuditEntity implements JmixUserDetails, HasTimeZon
     private String username;
 
     @Composition
+    @OrderBy("createdDate")
     @OnDelete(DeletePolicy.CASCADE)
     @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserTask> tasks;

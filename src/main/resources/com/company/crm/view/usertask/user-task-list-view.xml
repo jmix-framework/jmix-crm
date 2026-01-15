@@ -44,7 +44,9 @@
                         <button id="excelExportBtn" action="userTasksDataGrid.excelExport"/>
                     </startSlot>
                     <endSlot>
-                        <simplePagination id="pagination" dataLoader="userTasksDl"/>
+                        <simplePagination id="pagination" dataLoader="userTasksDl" classNames="ml-auto"/>
+                        <gridColumnVisibility dataGrid="userTasksDataGrid" icon="COG_O"
+                                              themeNames="tertiary-inline" hideAllEnabled="false"/>
                     </endSlot>
                 </hbox>
                 <dataGrid id="userTasksDataGrid"

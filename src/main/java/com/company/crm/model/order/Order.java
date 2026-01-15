@@ -7,6 +7,7 @@ import com.company.crm.model.client.Client;
 import com.company.crm.model.datatype.PercentDataType;
 import com.company.crm.model.datatype.PriceDataType;
 import io.jmix.core.DeletePolicy;
+import io.jmix.core.Messages;
 import io.jmix.core.entity.annotation.OnDelete;
 import io.jmix.core.metamodel.annotation.Composition;
 import io.jmix.core.metamodel.annotation.DependsOnProperties;
@@ -24,6 +25,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Max;
@@ -49,6 +51,7 @@ public class Order extends FullAuditEntity {
     private Client client;
 
     @Composition
+    @OrderBy("createdDate")
     @OnDelete(DeletePolicy.CASCADE)
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> orderItems;
@@ -131,6 +134,16 @@ public class Order extends FullAuditEntity {
         return total;
     }
 
+    @InstanceName
+    @DependsOnProperties({"number", "date", "total"})
+    public String getInstanceName(DatatypeFormatter datatypeFormatter, Messages messages) {
+        if (StringUtils.isNotBlank(number)) {
+            return String.format("№ %s from %s", number, datatypeFormatter.formatLocalDate(date));
+        } else {
+            return messages.getMessage("newOrder");
+        }
+    }
+
     public String getComment() {
         return comment;
     }
@@ -161,17 +174,6 @@ public class Order extends FullAuditEntity {
 
     public void setClient(Client client) {
         this.client = client;
-    }
-
-    @InstanceName
-    @DependsOnProperties({"number", "date", "total"})
-    public String getInstanceName(DatatypeFormatter datatypeFormatter) {
-        String orderNumber = getNumber();
-        if (StringUtils.isNotBlank(orderNumber)) {
-            return String.format("Order %s from %s", orderNumber, datatypeFormatter.formatLocalDate(date));
-        } else {
-            return "New Order";
-        }
     }
 
     public String getNumber() {

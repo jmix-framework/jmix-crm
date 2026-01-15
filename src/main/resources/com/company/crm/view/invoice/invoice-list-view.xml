@@ -35,8 +35,12 @@
                     <responsiveSteps>
                         <responsiveStep minWidth="0" columns="1"/>
                         <responsiveStep minWidth="20em" columns="3"/>
-                        <responsiveStep minWidth="40em" columns="5"/>
                     </responsiveSteps>
+                    <datePicker id="invoices_FromDatePicker"
+                                placeholder="msg:///fromDatePicker.label" clearButtonVisible="true"/>
+                    <datePicker id="invoices_ToDatePicker"
+                                placeholder="msg:///toDatePicker.label" clearButtonVisible="true"/>
+                    <div/>
                     <entityComboBox id="invoices_ClientComboBox"
                                     placeholder="msg:///clientComboBox.placeholder"
                                     metaClass="Client" itemsContainer="clientsDc">
@@ -54,10 +58,6 @@
                     <select id="invoices_StatusSelect" itemsEnum="com.company.crm.model.invoice.InvoiceStatus"
                             placeholder="msg://com.company.crm.view.invoice/statusSelect.placeholder"
                             emptySelectionAllowed="true" emptySelectionCaption="msg://allInvoices"/>
-                    <datePicker id="invoices_FromDatePicker"
-                                placeholder="msg:///fromDatePicker.label" clearButtonVisible="true"/>
-                    <datePicker id="invoices_ToDatePicker"
-                                placeholder="msg:///toDatePicker.label" clearButtonVisible="true"/>
                 </formLayout>
                 <genericFilter id="invoices_AdvancedFilter" dataLoader="invoicesDl" maxWidth="60em"
                                opened="false" summaryText="msg:///advanced" themeNames="filled">
@@ -66,14 +66,20 @@
             </div>
 
             <hbox id="buttonsPanel" classNames="buttons-panel">
-                <button id="createButton" action="invoicesDataGrid.createAction"/>
-                <button id="editButton" action="invoicesDataGrid.editAction"/>
-                <button id="downloadButton" action="invoicesDataGrid.downloadAction"/>
-                <button id="emailButton" action="invoicesDataGrid.emailAction"/>
-                <button id="viewPaymentsButton" action="invoicesDataGrid.viewPaymentsAction"/>
-                <button id="removeButton" action="invoicesDataGrid.removeAction"/>
-                <button id="excelExport" action="invoicesDataGrid.excelExport"/>
-                <simplePagination id="invoices_pagination" dataLoader="invoicesDl"/>
+                <startSlot>
+                    <button id="createButton" action="invoicesDataGrid.createAction"/>
+                    <button id="editButton" action="invoicesDataGrid.editAction"/>
+                    <button id="downloadButton" action="invoicesDataGrid.downloadAction"/>
+                    <button id="emailButton" action="invoicesDataGrid.emailAction"/>
+                    <button id="viewPaymentsButton" action="invoicesDataGrid.viewPaymentsAction"/>
+                    <button id="removeButton" action="invoicesDataGrid.removeAction"/>
+                    <button id="excelExport" action="invoicesDataGrid.excelExport"/>
+                </startSlot>
+                <endSlot>
+                    <simplePagination id="invoices_pagination" dataLoader="invoicesDl" classNames="ml-auto"/>
+                    <gridColumnVisibility dataGrid="invoicesDataGrid" icon="COG_O"
+                                          themeNames="tertiary-inline" hideAllEnabled="false"/>
+                </endSlot>
             </hbox>
             <dataGrid id="invoicesDataGrid" dataContainer="invoicesDc"
                       width="100%"

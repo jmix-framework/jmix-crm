@@ -13,6 +13,8 @@ import com.vaadin.flow.data.selection.SingleSelect;
 import com.vaadin.flow.dom.Style;
 import com.vaadin.flow.router.QueryParameters;
 import com.vaadin.flow.shared.Registration;
+import io.jmix.chartsflowui.component.Chart;
+import io.jmix.chartsflowui.kit.component.model.shared.Color;
 import io.jmix.flowui.component.grid.DataGrid;
 import io.jmix.flowui.component.grid.DataGridColumn;
 import io.jmix.flowui.fragment.FragmentUtils;
@@ -37,6 +39,14 @@ public final class CrmUiUtils {
 
     public static Optional<String> getComponentId(Component component) {
         return component.getId().or(() -> FragmentUtils.getComponentId(component));
+    }
+
+    public static void setBackgroundTransparent(Chart chart) {
+        chart.setBackgroundColor(new Color("rgba(255, 255, 255, 0)"));
+    }
+
+    public static void setBackgroundTransparent(Component component) {
+        component.getStyle().setBackground("transparent");
     }
 
     public static void openLink(String link) {

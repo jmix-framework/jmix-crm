@@ -159,6 +159,7 @@ public class CrmCard extends JmixCard implements ApplicationContextAware {
     public CrmCard withoutBackground(boolean withoutBackground) {
         this.withoutBackground = withoutBackground;
         getStyle().setBackground(null);
+        updateBackground();
         return this;
     }
 
