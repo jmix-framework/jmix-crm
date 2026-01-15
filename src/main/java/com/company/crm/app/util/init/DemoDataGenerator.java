@@ -1,10 +1,10 @@
 package com.company.crm.app.util.init;
 
+import com.company.crm.app.service.catalog.CatalogService;
 import com.company.crm.model.address.Address;
 import com.company.crm.model.catalog.category.Category;
 import com.company.crm.model.catalog.item.CategoryItem;
 import com.company.crm.model.catalog.item.CategoryItemComment;
-import com.company.crm.model.catalog.item.UomType;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.client.ClientType;
 import com.company.crm.model.contact.Contact;
@@ -37,13 +37,14 @@ import org.springframework.core.env.Environment;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -65,14 +66,17 @@ public class DemoDataGenerator {
     private final UnconstrainedDataManager dataManager;
     private final PasswordEncoder passwordEncoder;
     private final Environment environment;
+    private final CatalogService catalogService;
 
     public DemoDataGenerator(RoleAssignmentRepository roleAssignmentRepository,
                              UnconstrainedDataManager dataManager,
-                             PasswordEncoder passwordEncoder, Environment environment) {
+                             PasswordEncoder passwordEncoder, Environment environment,
+                             CatalogService catalogService) {
         this.roleAssignmentRepository = roleAssignmentRepository;
         this.passwordEncoder = passwordEncoder;
         this.dataManager = dataManager;
         this.environment = environment;
+        this.catalogService = catalogService;
     }
 
     @EventListener(ApplicationReadyEvent.class)
@@ -101,7 +105,7 @@ public class DemoDataGenerator {
         List<Client> clients = generateClients(60, users);
         generateContacts(clients);
 
-        Map<Category, List<CategoryItem>> catalog = generateCatalog(10, 10);
+        Map<Category, List<CategoryItem>> catalog = generateCatalog();
         List<Order> orders = generateOrders(clients, catalog);
 
         List<Invoice> invoices = generateInvoices(orders);
@@ -176,54 +180,30 @@ public class DemoDataGenerator {
         }
     }
 
-    private Map<Category, List<CategoryItem>> generateCatalog(int categoriesCount, int categoryItemsCount) {
-        log.info("Generating catalog with {} categories and {} items per category...", categoriesCount, categoryItemsCount);
-
-        ThreadLocalRandom random = ThreadLocalRandom.current();
-
-        Map<Category, List<CategoryItem>> result = new HashMap<>();
-        for (int i = 0; i < categoriesCount; i++) {
-            int categoryNumber = i + 1;
-            Category category = dataManager.create(Category.class);
-            category.setName("Category " + categoryNumber);
-            category.setDescription("Category description");
-            category.setCode(generateUniqueHumanReadableCode(random) + categoryNumber);
-            if (i > 0 && random.nextBoolean()) {
-                category.setParent(new ArrayList<>(result.keySet()).get(random.nextInt(result.size())));
+    private Map<Category, List<CategoryItem>> generateCatalog() {
+        log.info("Generating catalog from catalog.xlsx...");
+        try (InputStream inputStream = getClass().getResourceAsStream("/demo-data/catalog.xlsx")) {
+            if (inputStream == null) {
+                log.error("catalog.xlsx not found in classpath!");
+                return Map.of();
             }
+            Map<Category, List<CategoryItem>> catalog = catalogService.importCatalog(inputStream, imageName ->
+                    getClass().getResourceAsStream("/demo-data/images/" + imageName));
 
-            dataManager.saveWithoutReload(category);
+            ThreadLocalRandom random = ThreadLocalRandom.current();
+            catalog.values().forEach(items -> items.forEach(item -> {
+                if (random.nextBoolean()) categoryItemComment(item);
+            }));
 
-            List<CategoryItem> categoryItems = new ArrayList<>();
-            for (int j = 0; j < categoryItemsCount; j++) {
-                int itemNumber = j + 1;
-                CategoryItem categoryItem = dataManager.create(CategoryItem.class);
-                categoryItem.setCategory(category);
-                categoryItem.setName("Product %d in category %d".formatted(itemNumber, categoryNumber));
-                categoryItem.setCode(generateUniqueHumanReadableCode(random) + itemNumber);
-                categoryItem.setUom(random.nextBoolean() ? UomType.KILOGRAM : UomType.PIECES);
-                categoryItems.add(dataManager.save(categoryItem));
-                if (random.nextBoolean()) categoryItemComment(categoryItem);
-            }
-
-            result.put(category, categoryItems);
+            return catalog;
+        } catch (IOException e) {
+            log.error("Failed to load catalog.xlsx", e);
+            return Map.of();
         }
-
-        return result;
-    }
-
-    private String generateUniqueHumanReadableCode(ThreadLocalRandom random) {
-        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        StringBuilder code = new StringBuilder();
-        int length = 6 + random.nextInt(3); // 6-8 characters
-        for (int i = 0; i < length; i++) {
-            code.append(chars.charAt(random.nextInt(chars.length())));
-        }
-        return code.toString();
     }
 
     private boolean shouldInitializeDemoData() {
-        if (!Boolean.valueOf(environment.getProperty("crm.generateDemoData", "false"))) {
+        if (!Boolean.parseBoolean(environment.getProperty("crm.generateDemoData", "false"))) {
             log.info("Demo data generation is disabled, skipping...");
             return false;
         }
@@ -327,7 +307,7 @@ public class DemoDataGenerator {
             ClientUserActivity userActivity = dataManager.create(ClientUserActivity.class);
             userActivity.setClient(client);
             userActivity.setUser(users.get(random.nextInt(users.size())));
-            userActivity.setActionDescription("Update client profile");
+            userActivity.setActionDescription("%s profile updated".formatted(client.getName()));
             userActivity.setCreatedDate(random.nextBoolean() ? now.minusDays(1) : now);
             dataManager.saveWithoutReload(userActivity);
         });

@@ -221,7 +221,9 @@ public class OrderDetailView extends StandardDetailView<Order> {
     }
 
     private void onSendEmail(ActionPerformedEvent e) {
-        notifications.show(messageBundle.formatMessage("emailSentNotification"));
+        notifications.create(messageBundle.formatMessage("emailSentNotification"))
+                .withType(Notifications.Type.SYSTEM)
+                .show();
         closeEmailDialog(e);
     }
 

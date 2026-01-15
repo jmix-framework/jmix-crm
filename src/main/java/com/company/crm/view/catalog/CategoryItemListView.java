@@ -27,12 +27,15 @@ import io.jmix.core.repository.JmixDataRepositoryContext;
 import io.jmix.flowui.component.formlayout.JmixFormLayout;
 import io.jmix.flowui.component.select.JmixSelect;
 import io.jmix.flowui.component.textfield.TypedTextField;
+import io.jmix.flowui.component.upload.FileUploadField;
+import io.jmix.flowui.kit.component.upload.event.FileUploadSucceededEvent;
 import io.jmix.flowui.model.CollectionLoader;
 import io.jmix.flowui.view.DialogMode;
 import io.jmix.flowui.view.Install;
 import io.jmix.flowui.view.LookupComponent;
 import io.jmix.flowui.view.MessageBundle;
 import io.jmix.flowui.view.StandardListView;
+import io.jmix.flowui.view.Subscribe;
 import io.jmix.flowui.view.Supply;
 import io.jmix.flowui.view.Target;
 import io.jmix.flowui.view.ViewComponent;
@@ -42,6 +45,7 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 
+import java.io.ByteArrayInputStream;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -85,8 +89,19 @@ public class CategoryItemListView extends StandardListView<CategoryItem> {
     private JmixSelect<Category> items_categorySelect;
     @ViewComponent
     private CollectionLoader<CategoryItem> categoryItemsDl;
+    @ViewComponent
+    private FileUploadField importCatalogField;
 
     private final LogicalCondition filtersCondition = LogicalCondition.and();
+
+    @Subscribe("importCatalogField")
+    public void onImportCatalogFieldFileUploadSucceeded(FileUploadSucceededEvent<FileUploadField> event) {
+        byte[] content = importCatalogField.getValue();
+        if (content != null) {
+            catalogService.importCatalog(new ByteArrayInputStream(content), null);
+            categoryItemsDl.load();
+        }
+    }
 
     @Override
     protected void onAttach(AttachEvent attachEvent) {

@@ -57,6 +57,10 @@
                 <button id="editButton" action="categoryItemsDataGrid.editAction"/>
                 <button id="removeButton" action="categoryItemsDataGrid.removeAction"/>
                 <button id="excelExport" action="categoryItemsDataGrid.excelExport"/>
+                <fileUploadField id="importCatalogField"
+                            uploadIcon="UPLOAD"
+                            uploadText="msg:///importCatalog"
+                            acceptedFileTypes=".xlsx"/>
             </startSlot>
             <endSlot>
                 <simplePagination id="items_pagination" dataLoader="categoryItemsDl"/>

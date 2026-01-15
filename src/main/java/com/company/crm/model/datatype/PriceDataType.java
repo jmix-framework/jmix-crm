@@ -41,7 +41,7 @@ public class PriceDataType implements Datatype<BigDecimal> {
     private static String doFormatValueWithCurrency(Object value, CurrencyPosition currencyPosition) {
         String withoutCurrency = formatWithoutCurrency(value);
         return switch (currencyPosition) {
-            case START -> getCurrencyPrefix() + withoutCurrency;
+            case START -> getCurrencySymbol() + withoutCurrency;
             case END -> withoutCurrency + getCurrencySuffix();
         };
     }
@@ -80,6 +80,7 @@ public class PriceDataType implements Datatype<BigDecimal> {
     public BigDecimal parse(@Nullable String value) {
         value = StringUtils.substringBefore(value, getCurrencySuffix());
         value = StringUtils.substringAfter(value, getCurrencySuffix());
+        value = StringUtils.trim(value);
 
         if (StringUtils.isBlank(value)) {
             return null;
@@ -105,10 +106,6 @@ public class PriceDataType implements Datatype<BigDecimal> {
 
     public static String getCurrencySuffix() {
         return " " + getCurrencySymbol();
-    }
-
-    public static String getCurrencyPrefix() {
-        return getCurrencySymbol() + " ";
     }
 
     public static String getCurrencySymbol() {

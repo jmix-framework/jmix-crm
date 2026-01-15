@@ -9,6 +9,7 @@
         </instance>
     </data>
     <actions>
+        <action id="resetUiSettingsAction" text="msg://resetUiSettings"/>
         <action id="saveCloseAction" type="detail_saveClose"/>
         <action id="closeAction" type="detail_close"/>
     </actions>
@@ -36,7 +37,10 @@
         <hbox id="detailActions">
             <button id="saveAndCloseButton" action="saveCloseAction"/>
             <button id="closeButton" action="closeAction"/>
-            <button id="changePasswordButton" visible="false" themeNames="warning" text="msg:///actions.changePassword" icon="vaadin:password"/>
+            <button id="clearUiSettingsBtn" action="resetUiSettingsAction" themeNames="warning">
+                <tooltip text="msg://resetUiSettings.tooltip"/>
+            </button>
+            <button id="changePasswordButton" visible="false" themeNames="error" text="msg:///actions.changePassword" icon="vaadin:password"/>
         </hbox>
     </layout>
 </view>

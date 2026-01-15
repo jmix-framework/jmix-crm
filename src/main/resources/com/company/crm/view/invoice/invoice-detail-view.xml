@@ -15,11 +15,7 @@
             <fetchPlan extends="_base">
                 <property name="client" fetchPlan="_base"/>
             </fetchPlan>
-            <loader id="ordersDl">
-                <query>
-                    <![CDATA[select e from Order_ e where e.client = :container_clientDc order by e.number asc]]>
-                </query>
-            </loader>
+            <loader id="ordersDl" readOnly="true"/>
         </collection>
     </data>
     <facets>
@@ -36,12 +32,6 @@
                 <responsiveStep minWidth="0" columns="1"/>
                 <responsiveStep minWidth="40em" columns="2"/>
             </responsiveSteps>
-            <entityComboBox id="ordersComboBox" property="order" itemsContainer="ordersDc" colspan="2">
-                <actions>
-                    <action id="entityLookupAction" icon="PLUS"/>
-                    <action id="entityClearAction" type="entity_clear"/>
-                </actions>
-            </entityComboBox>
             <entityComboBox id="clientsComboBox" property="client" colspan="2">
                 <actions>
                     <action id="entityLookupAction" type="entity_lookup"/>
@@ -54,6 +44,12 @@
                         <![CDATA[select e from Client e where e.name like :searchString escape '\' order by e.name]]>
                     </query>
                 </itemsQuery>
+            </entityComboBox>
+            <entityComboBox id="ordersComboBox" property="order" itemsContainer="ordersDc" colspan="2">
+                <actions>
+                    <action id="entityLookupAction" icon="PLUS"/>
+                    <action id="entityClearAction" type="entity_clear"/>
+                </actions>
             </entityComboBox>
             <datePicker id="dateField" property="date"/>
             <datePicker id="dueDateField" property="dueDate"/>

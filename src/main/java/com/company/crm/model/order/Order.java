@@ -138,7 +138,7 @@ public class Order extends FullAuditEntity {
     @DependsOnProperties({"number", "date", "total"})
     public String getInstanceName(DatatypeFormatter datatypeFormatter, Messages messages) {
         if (StringUtils.isNotBlank(number)) {
-            return String.format("№ %s from %s", number, datatypeFormatter.formatLocalDate(date));
+            return String.format("%s from %s", number, datatypeFormatter.formatLocalDate(date));
         } else {
             return messages.getMessage("newOrder");
         }

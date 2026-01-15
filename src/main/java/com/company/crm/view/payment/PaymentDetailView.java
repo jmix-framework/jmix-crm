@@ -25,6 +25,7 @@ import io.jmix.flowui.view.ViewDescriptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -54,7 +55,9 @@ public class PaymentDetailView extends StandardDetailView<Payment> {
 
     @Subscribe
     private void onInitEntity(final InitEntityEvent<Payment> event) {
-        invoiceField.setReadOnly(event.getEntity().getInvoice() != null);
+        Payment payment = event.getEntity();
+        payment.setDate(LocalDate.now());
+        invoiceField.setReadOnly(payment.getInvoice() != null);
     }
 
     @Install(to = "paymentDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
