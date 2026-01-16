@@ -86,6 +86,10 @@ dependencies {
     //              --- [ DATABASE ] ---
     runtimeOnly 'org.hsqldb:hsqldb'
 
+    //              --- [ AI ] ---
+    implementation platform("org.springframework.ai:spring-ai-bom:1.0.1")
+    implementation 'org.springframework.ai:spring-ai-starter-model-bedrock-converse'
+
     //              --- [ OTHER ] ---
     // Java Faker for demo data generation
     implementation 'net.datafaker:datafaker:2.5.0'
