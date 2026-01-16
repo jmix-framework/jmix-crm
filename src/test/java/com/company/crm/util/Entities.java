@@ -83,6 +83,7 @@ public class Entities {
         address.setCountry(fakeAddress.country());
         address.setCity(fakeAddress.city());
         address.setStreet(fakeAddress.streetAddress());
+        address.setBuilding(fakeAddress.buildingNumber());
         address.setPostalCode(fakeAddress.postcode());
         address.setApartment(RANDOM.nextInt(50) + "");
         return address;

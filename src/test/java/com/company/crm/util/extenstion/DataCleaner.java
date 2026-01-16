@@ -2,9 +2,11 @@ package com.company.crm.util.extenstion;
 
 import com.company.crm.model.base.UuidEntity;
 import com.company.crm.model.catalog.category.Category;
+import com.company.crm.model.catalog.item.CategoryItem;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.invoice.Invoice;
 import com.company.crm.model.order.Order;
+import com.company.crm.model.order.OrderItem;
 import com.company.crm.model.payment.Payment;
 import com.company.crm.model.user.User;
 import com.company.crm.model.user.task.UserTask;
@@ -28,8 +30,10 @@ public class DataCleaner implements AfterAllCallback, AfterEachCallback {
     private static final List<Class<? extends UuidEntity>> ENTITIES_REMOVING_ORDER = List.of(
             Payment.class,
             Invoice.class,
+            OrderItem.class,
             Order.class,
             Client.class,
+            CategoryItem.class,
             Category.class,
             UserTask.class
     );

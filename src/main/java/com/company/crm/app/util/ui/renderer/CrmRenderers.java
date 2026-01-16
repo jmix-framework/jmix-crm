@@ -135,6 +135,9 @@ public class CrmRenderers {
     public Renderer<CategoryItem> categoryItemCode() {
         return badgeWithCopyRenderer(CategoryItem::getCode);
     }
+    public Renderer<CategoryItem> categoryItemCategoryCode() {
+        return badgeWithCopyRenderer(item -> item.getCategory().getCode());
+    }
 
     public Renderer<OrderItem> orderItemItemCode() {
         return badgeWithCopyRenderer(item -> item.getCategoryItem().getCode());

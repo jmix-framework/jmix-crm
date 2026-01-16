@@ -419,8 +419,8 @@
                 <constraints nullable="false"/>
             </column>
 
-            <column name="NAVIGATION_BAR_TOUCH_OPTIMIZED"
-                    type="BOOLEAN"/>
+            <column name="NAVIGATION_BAR_TOUCH_OPTIMIZED" type="BOOLEAN"/>
+            <column name="DEFAULT_VAT" type="DECIMAL(19, 2)"/>
         </createTable>
     </changeSet>
 

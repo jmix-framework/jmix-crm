@@ -1,5 +1,6 @@
 package com.company.crm.app.util.init;
 
+import com.company.crm.app.service.catalog.CatalogImportSettings;
 import com.company.crm.app.service.catalog.CatalogService;
 import com.company.crm.model.address.Address;
 import com.company.crm.model.catalog.category.Category;
@@ -23,6 +24,7 @@ import com.company.crm.security.SupervisorRole;
 import com.company.crm.security.UiMinimalRole;
 import io.jmix.core.SaveContext;
 import io.jmix.core.UnconstrainedDataManager;
+import io.jmix.core.security.SystemAuthenticator;
 import io.jmix.data.PersistenceHints;
 import io.jmix.security.role.assignment.RoleAssignment;
 import io.jmix.security.role.assignment.RoleAssignmentRepository;
@@ -62,26 +64,28 @@ public class DemoDataGenerator {
 
     private static final Logger log = LoggerFactory.getLogger(DemoDataGenerator.class);
 
-    private final RoleAssignmentRepository roleAssignmentRepository;
-    private final UnconstrainedDataManager dataManager;
-    private final PasswordEncoder passwordEncoder;
     private final Environment environment;
     private final CatalogService catalogService;
+    private final PasswordEncoder passwordEncoder;
+    private final UnconstrainedDataManager dataManager;
+    private final SystemAuthenticator systemAuthenticator;
+    private final RoleAssignmentRepository roleAssignmentRepository;
 
     public DemoDataGenerator(RoleAssignmentRepository roleAssignmentRepository,
                              UnconstrainedDataManager dataManager,
                              PasswordEncoder passwordEncoder, Environment environment,
-                             CatalogService catalogService) {
-        this.roleAssignmentRepository = roleAssignmentRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.dataManager = dataManager;
+                             CatalogService catalogService, SystemAuthenticator systemAuthenticator) {
         this.environment = environment;
+        this.dataManager = dataManager;
         this.catalogService = catalogService;
+        this.passwordEncoder = passwordEncoder;
+        this.systemAuthenticator = systemAuthenticator;
+        this.roleAssignmentRepository = roleAssignmentRepository;
     }
 
     @EventListener(ApplicationReadyEvent.class)
     public void onApplicationReadyEvent(ApplicationReadyEvent event) {
-        initDataIfNeeded();
+        systemAuthenticator.runWithSystem(this::initDataIfNeeded);
     }
 
     public void resetDemoData() {
@@ -187,8 +191,7 @@ public class DemoDataGenerator {
                 log.error("catalog.xlsx not found in classpath!");
                 return Map.of();
             }
-            Map<Category, List<CategoryItem>> catalog = catalogService.importCatalog(inputStream, imageName ->
-                    getClass().getResourceAsStream("/demo-data/images/" + imageName));
+            Map<Category, List<CategoryItem>> catalog = catalogService.updateCatalog(new CatalogImportSettings(inputStream));
 
             ThreadLocalRandom random = ThreadLocalRandom.current();
             catalog.values().forEach(items -> items.forEach(item -> {

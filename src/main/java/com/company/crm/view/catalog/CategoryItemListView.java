@@ -1,6 +1,7 @@
 package com.company.crm.view.catalog;
 
 import com.company.crm.app.feature.queryparameters.filters.FieldValueQueryParameterBinder;
+import com.company.crm.app.service.catalog.CatalogImportSettings;
 import com.company.crm.app.service.catalog.CatalogService;
 import com.company.crm.app.service.datetime.DateTimeService;
 import com.company.crm.app.util.constant.CrmConstants;
@@ -98,7 +99,9 @@ public class CategoryItemListView extends StandardListView<CategoryItem> {
     public void onImportCatalogFieldFileUploadSucceeded(FileUploadSucceededEvent<FileUploadField> event) {
         byte[] content = importCatalogField.getValue();
         if (content != null) {
-            catalogService.importCatalog(new ByteArrayInputStream(content), null);
+            ByteArrayInputStream inputStream = new ByteArrayInputStream(content);
+            CatalogImportSettings importSettings = new CatalogImportSettings(inputStream);
+            catalogService.updateCatalog(importSettings);
             categoryItemsDl.load();
         }
     }

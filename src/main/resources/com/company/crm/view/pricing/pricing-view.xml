@@ -16,19 +16,23 @@
         <urlQueryParameters/>
     </facets>
     <layout>
-        <textField id="items_searchField" width="100%" maxWidth="26em"
-                   placeholder="msg:///searchField.placeholder" clearButtonVisible="true">
-            <prefix>
-                <icon icon="SEARCH"/>
-            </prefix>
-        </textField>
+        <hbox width="100%">
+            <startSlot>
+                <textField id="items_searchField" width="100%" maxWidth="26em"
+                           placeholder="msg:///searchField.placeholder" clearButtonVisible="true">
+                    <prefix>
+                        <icon icon="SEARCH"/>
+                    </prefix>
+                </textField>
+            </startSlot>
+            <endSlot>
+                <span id="currentVatValue" themeNames="badge contrast" classNames="mt-auto mb-auto mr-xl"/>
+            </endSlot>
+        </hbox>
         <hbox id="buttonsPanel" classNames="buttons-panel">
             <startSlot>
-                <button id="createButton" action="categoryItemsDataGrid.createAction"/>
-                <button id="editButton" action="categoryItemsDataGrid.editAction"/>
-                <button id="removeButton" action="categoryItemsDataGrid.removeAction"/>
                 <button id="updateFromXlsButton" action="categoryItemsDataGrid.updateFromXls" themeNames="contrast"/>
-                <button id="downloadButton" action="categoryItemsDataGrid.downloadXls" themeNames="contrast"/>
+                <button id="downloadXlsButton" action="categoryItemsDataGrid.downloadXls" themeNames="contrast"/>
                 <button id="changeVatButton" action="categoryItemsDataGrid.changeVat" themeNames="contrast"/>
             </startSlot>
             <endSlot>
@@ -44,25 +48,16 @@
                   multiSort="true"
                   columnReorderingAllowed="true">
             <actions>
-                <action id="createAction" type="list_add">
-                    <properties>
-                        <property name="openMode" value="DIALOG"/>
-                    </properties>
-                </action>
-                <action id="editAction" type="list_edit">
-                    <properties>
-                        <property name="openMode" value="DIALOG"/>
-                    </properties>
-                </action>
-                <action id="removeAction" type="list_remove"/>
                 <action id="updateFromXls" text="msg://updateFromXls" icon="vaadin:table"/>
-                <action id="downloadXls" text="msg://downloadXls" icon="DOWNLOAD_ALT" type="grdexp_excelExport"/>
+                <action id="downloadXls" text="msg://downloadXls" icon="DOWNLOAD_ALT"/>
                 <action id="changeVat" text="msg://changeVat" icon="PENCIL"/>
             </actions>
             <columns resizable="true" sortable="true">
                 <column property="name" filterable="true"/>
                 <column property="code" filterable="true"/>
                 <column property="price" filterable="true"/>
+                <column property="category.code" filterable="true"
+                        header="msg://com.company.crm.model.catalog.category/Category"/>
             </columns>
         </dataGrid>
     </layout>
