@@ -2,7 +2,6 @@ package com.company.crm.service.ai;
 
 import com.company.crm.AbstractTest;
 import com.company.crm.app.service.ai.CrmAnalyticsService;
-import com.company.crm.app.service.ai.JpqlQueryTool;
 import com.company.crm.model.client.Client;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,13 +26,9 @@ class CrmAnalyticsServiceIntegrationTest extends AbstractTest {
     @Autowired
     private CrmAnalyticsService analyticsService;
 
-    @Autowired
-    private JpqlQueryTool jpqlQueryTool;
-
     @BeforeEach
     void setUp() {
-        // Create comprehensive test data for AI analysis
-        setupComprehensiveTestData();
+        setupTestData();
     }
 
     @Test
@@ -141,13 +136,60 @@ class CrmAnalyticsServiceIntegrationTest extends AbstractTest {
         log.info("Comparison question result: {}", result);
     }
 
+    @Test
+    void testAnalytics_DateParameterQuestion() {
+        // Test LLM understanding of JPQL date parameters (:param syntax)
+        String question = "Show me all orders from the last 30 days with their order numbers and totals. " +
+                         "IMPORTANT: You MUST use JPQL parameters (like :startDate) in your query - do NOT load all data and filter afterwards. " +
+                         "Use the parameter feature of the JPQL tool to filter at database level.";
+        String result = analyticsService.processBusinessQuestion(question);
+
+        assertThat(result).as("Date parameter result should not be null").isNotNull();
+        assertThat(result.trim()).as("Date parameter result should not be empty").isNotEmpty();
+        assertThat(result.toLowerCase()).as("Result should mention recent orders or dates").containsAnyOf("order", "recent", "30", "day");
+        assertThat(result.length()).as("Result should be a comprehensive response").isGreaterThan(50);
+
+        log.info("Date parameter question result: {}", result);
+    }
+
+    @Test
+    void testAnalytics_MinimumValueParameterQuestion() {
+        // Test LLM understanding of JPQL value parameters
+        String question = "Find all orders with a value of at least 10000 euros. Show me the client names and order totals. " +
+                         "CRITICAL: You MUST use JPQL WHERE clause with parameters (like :minValue) - never load all orders and filter in code. " +
+                         "Use database-level filtering with the parameters feature.";
+        String result = analyticsService.processBusinessQuestion(question);
+
+        assertThat(result).as("Value parameter result should not be null").isNotNull();
+        assertThat(result.trim()).as("Value parameter result should not be empty").isNotEmpty();
+        assertThat(result.toLowerCase()).as("Result should mention high-value orders").containsAnyOf("order", "client", "10000", "value", "euro");
+        assertThat(result.length()).as("Result should be a comprehensive response").isGreaterThan(50);
+
+        log.info("Minimum value parameter question result: {}", result);
+    }
+
+    @Test
+    void testAnalytics_StringPatternParameterQuestion() {
+        // Test LLM understanding of JPQL LIKE parameters with patterns
+        String question = "Show me all clients whose name contains 'Corp' or 'Enterprise' and count their orders. " +
+                         "MANDATORY: Use JPQL WHERE clause with LIKE parameters (e.g., :pattern) - do not fetch all clients and search afterwards. " +
+                         "Filter must happen at database level using the query tool's parameter functionality.";
+        String result = analyticsService.processBusinessQuestion(question);
+
+        assertThat(result).as("Pattern parameter result should not be null").isNotNull();
+        assertThat(result.trim()).as("Pattern parameter result should not be empty").isNotEmpty();
+        assertThat(result.toLowerCase()).as("Result should mention corp/enterprise clients").containsAnyOf("corp", "enterprise", "client", "count", "order");
+        assertThat(result.length()).as("Result should be a comprehensive response").isGreaterThan(50);
+
+        log.info("String pattern parameter question result: {}", result);
+    }
+
     /**
      * Setup comprehensive test data for AI-driven analytics questions.
      * This creates a realistic dataset with diverse clients and order patterns
      * that can be used to test various analytical questions.
      */
-    private void setupComprehensiveTestData() {
-        // Create enterprise clients with high order values
+    private void setupTestData() {
         var enterpriseClient1 = entities.client("TechCorp Enterprise Solutions");
         createTestOrder(enterpriseClient1, "ENT-001", new BigDecimal("15000.00"), LocalDate.now().minusDays(5));
         createTestOrder(enterpriseClient1, "ENT-002", new BigDecimal("22000.00"), LocalDate.now().minusDays(15));

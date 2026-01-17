@@ -1,15 +1,15 @@
 package com.company.crm.app.service.ai;
 
+import com.company.crm.ai.jmix.introspection.EntityListTool;
+import com.company.crm.ai.jmix.query.JpqlQueryTool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
 import org.springframework.ai.chat.messages.UserMessage;
-import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 
@@ -24,12 +24,16 @@ public class CrmAnalyticsService {
 
     private final ChatClient chatClient;
     private final JpqlQueryTool jpqlQueryTool;
+    private final CrmDomainModelIntrospectionTool crmDomainModelIntrospectionTool;
+    private final EntityListTool entityListTool;
 
     @Autowired
     public CrmAnalyticsService(
             ChatClient.Builder chatClientBuilder,
             @Value("classpath:prompts/crm-system-prompt.st") Resource systemPrompt,
-            JpqlQueryTool jpqlQueryTool
+            JpqlQueryTool jpqlQueryTool,
+            CrmDomainModelIntrospectionTool crmDomainModelIntrospectionTool,
+            EntityListTool entityListTool
     ) {
         // Build use-case specific ChatClient with CRM system prompt and logging
         this.chatClient = chatClientBuilder
@@ -39,6 +43,8 @@ public class CrmAnalyticsService {
 
         // Store tools for explicit use in queries
         this.jpqlQueryTool = jpqlQueryTool;
+        this.crmDomainModelIntrospectionTool = crmDomainModelIntrospectionTool;
+        this.entityListTool = entityListTool;
 
         log.info("CRM Analytics Service initialized with custom ChatClient configuration");
     }
@@ -57,7 +63,7 @@ public class CrmAnalyticsService {
             Prompt prompt = new Prompt(userMessage);
 
             String answer = chatClient.prompt(prompt)
-                    .tools(jpqlQueryTool)
+                    .tools(jpqlQueryTool, crmDomainModelIntrospectionTool, entityListTool)
                     .call()
                     .content();
 
