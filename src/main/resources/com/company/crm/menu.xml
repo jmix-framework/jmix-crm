@@ -36,4 +36,6 @@
               icon="vaadin:list-select"
               title="msg://io.jmix.jmxconsole/jmxConsoleView.menu"/>
     </menu>
+    <item view="AiConversation.list"
+          title="msg://com.company.crm.ai.jmix.view.aiconversation/aiConversationListView.title"/>
 </menu-config>

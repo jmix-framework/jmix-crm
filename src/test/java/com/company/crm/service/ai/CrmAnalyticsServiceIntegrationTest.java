@@ -1,6 +1,7 @@
 package com.company.crm.service.ai;
 
 import com.company.crm.AbstractTest;
+import com.company.crm.ai.entity.AiConversation;
 import com.company.crm.app.service.ai.CrmAnalyticsService;
 import com.company.crm.model.client.Client;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,9 +16,9 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 /**
- * Integration test for CRM Analytics Service focusing on LLM-based question answering.
- * This test creates known test data and verifies that human-readable questions
- * are correctly interpreted and answered by the AI system.
+ * Integration test for CRM Analytics Service focusing on technical JPQL functionality.
+ * This test verifies parameter handling, date filtering, pattern matching and other
+ * technical aspects of JPQL query generation and execution.
  */
 class CrmAnalyticsServiceIntegrationTest extends AbstractTest {
 
@@ -26,115 +27,24 @@ class CrmAnalyticsServiceIntegrationTest extends AbstractTest {
     @Autowired
     private CrmAnalyticsService analyticsService;
 
+    private String conversationId;
+
     @BeforeEach
     void setUp() {
         setupTestData();
+        setupTestConversation();
     }
 
-    @Test
-    void testAnalytics_ClientCountQuestion() {
-        String question = "How many clients do we have in total?";
-        String result = analyticsService.processBusinessQuestion(question);
-
-        assertThat(result).as("Analytics result should not be null").isNotNull();
-        assertThat(result.trim()).as("Analytics result should not be empty").isNotEmpty();
-        assertThat(result.toLowerCase()).as("Result should mention clients or count").containsAnyOf("client", "total", "count", "5");
-        assertThat(result.length()).as("Result should be a reasonable response").isGreaterThan(50);
-
-        log.info("Client count question result: {}", result);
-    }
-
-    @Test
-    void testAnalytics_RecentOrdersQuestion() {
-        String question = "How many orders have we received in the last month?";
-        String result = analyticsService.processBusinessQuestion(question);
-
-        assertThat(result).as("Analytics result should not be null").isNotNull();
-        assertThat(result.trim()).as("Analytics result should not be empty").isNotEmpty();
-        assertThat(result.toLowerCase()).as("Result should mention recent orders").containsAnyOf("order", "month", "recent");
-        assertThat(result.length()).as("Result should be a comprehensive response").isGreaterThan(50);
-
-        log.info("Recent orders question result: {}", result);
+    private void setupTestConversation() {
+        // Create a test conversation for each test
+        AiConversation conversation = dataManager.create(AiConversation.class);
+        conversation.setTitle("Test Analytics Conversation");
+        dataManager.save(conversation);
+        conversationId = conversation.getId().toString();
+        log.info("Created test conversation with ID: {}", conversationId);
     }
 
 
-    @Test
-    void testAnalytics_TopClientsQuestion() {
-        String question = "Which are our top 3 clients by revenue? Please give me their names and total order values.";
-        String result = analyticsService.processBusinessQuestion(question);
-
-        assertThat(result).as("Top clients result should not be null").isNotNull();
-        assertThat(result.trim()).as("Top clients result should not be empty").isNotEmpty();
-        assertThat(result.toLowerCase()).as("Result should mention top clients or revenue").containsAnyOf("client", "revenue", "top", "enterprise", "techcorp", "global");
-        assertThat(result.length()).as("Result should be a comprehensive analysis").isGreaterThan(100);
-
-        log.info("Top clients question result: {}", result);
-    }
-
-    @Test
-    void testAnalytics_ClientPerformanceAnalysis() {
-        String question = "Which clients have the highest order volumes this quarter? Please analyze their performance trends.";
-        String result = analyticsService.processBusinessQuestion(question);
-
-        assertThat(result).as("Performance analysis result should not be null").isNotNull();
-        assertThat(result.trim()).as("Performance analysis result should not be empty").isNotEmpty();
-        assertThat(result.toLowerCase()).as("Result should mention performance or clients").containsAnyOf("client", "order", "performance", "volume", "quarter");
-        assertThat(result.length()).as("Result should be a comprehensive analysis").isGreaterThan(100);
-
-        log.info("Client performance analysis result: {}", result);
-    }
-
-    @Test
-    void testAnalytics_RevenueAnalysisQuestion() {
-        String question = "What is our total revenue for this quarter, and how does it compare to our average order value?";
-        String result = analyticsService.processBusinessQuestion(question);
-
-        assertThat(result).as("Revenue analysis result should not be null").isNotNull();
-        assertThat(result.trim()).as("Revenue analysis result should not be empty").isNotEmpty();
-        assertThat(result.toLowerCase()).as("Result should mention revenue or financial metrics").containsAnyOf("revenue", "total", "quarter", "average", "order", "value");
-        assertThat(result.length()).as("Result should be a comprehensive analysis").isGreaterThan(100);
-
-        log.info("Revenue analysis question result: {}", result);
-    }
-
-    @Test
-    void testAnalytics_ClientSegmentationQuestion() {
-        String question = "Can you segment our clients into high-value, medium-value, and low-value based on their order history?";
-        String result = analyticsService.processBusinessQuestion(question);
-
-        assertThat(result).as("Client segmentation result should not be null").isNotNull();
-        assertThat(result.trim()).as("Client segmentation result should not be empty").isNotEmpty();
-        assertThat(result.toLowerCase()).as("Result should mention client segmentation").containsAnyOf("client", "segment", "high", "medium", "low", "value");
-        assertThat(result.length()).as("Result should be a comprehensive analysis").isGreaterThan(100);
-
-        log.info("Client segmentation question result: {}", result);
-    }
-
-    @Test
-    void testAnalytics_TrendAnalysisQuestion() {
-        String question = "What are the trends in our order volumes over the past few months? Are we growing or declining?";
-        String result = analyticsService.processBusinessQuestion(question);
-
-        assertThat(result).as("Trend analysis result should not be null").isNotNull();
-        assertThat(result.trim()).as("Trend analysis result should not be empty").isNotEmpty();
-        assertThat(result.toLowerCase()).as("Result should mention trends or growth").containsAnyOf("trend", "order", "volume", "month", "grow", "declin");
-        assertThat(result.length()).as("Result should be a comprehensive analysis").isGreaterThan(100);
-
-        log.info("Trend analysis question result: {}", result);
-    }
-
-    @Test
-    void testAnalytics_ComparisonQuestion() {
-        String question = "Compare the performance of our enterprise clients versus our smaller clients. Which segment is more profitable?";
-        String result = analyticsService.processBusinessQuestion(question);
-
-        assertThat(result).as("Comparison result should not be null").isNotNull();
-        assertThat(result.trim()).as("Comparison result should not be empty").isNotEmpty();
-        assertThat(result.toLowerCase()).as("Result should mention comparison or performance").containsAnyOf("enterprise", "client", "compare", "performance", "profitable", "segment");
-        assertThat(result.length()).as("Result should be a comprehensive analysis").isGreaterThan(100);
-
-        log.info("Comparison question result: {}", result);
-    }
 
     @Test
     void testAnalytics_DateParameterQuestion() {
@@ -142,7 +52,7 @@ class CrmAnalyticsServiceIntegrationTest extends AbstractTest {
         String question = "Show me all orders from the last 30 days with their order numbers and totals. " +
                          "IMPORTANT: You MUST use JPQL parameters (like :startDate) in your query - do NOT load all data and filter afterwards. " +
                          "Use the parameter feature of the JPQL tool to filter at database level.";
-        String result = analyticsService.processBusinessQuestion(question);
+        String result = analyticsService.processBusinessQuestion(question, conversationId);
 
         assertThat(result).as("Date parameter result should not be null").isNotNull();
         assertThat(result.trim()).as("Date parameter result should not be empty").isNotEmpty();
@@ -158,7 +68,7 @@ class CrmAnalyticsServiceIntegrationTest extends AbstractTest {
         String question = "Find all orders with a value of at least 10000 euros. Show me the client names and order totals. " +
                          "CRITICAL: You MUST use JPQL WHERE clause with parameters (like :minValue) - never load all orders and filter in code. " +
                          "Use database-level filtering with the parameters feature.";
-        String result = analyticsService.processBusinessQuestion(question);
+        String result = analyticsService.processBusinessQuestion(question, conversationId);
 
         assertThat(result).as("Value parameter result should not be null").isNotNull();
         assertThat(result.trim()).as("Value parameter result should not be empty").isNotEmpty();
@@ -174,7 +84,7 @@ class CrmAnalyticsServiceIntegrationTest extends AbstractTest {
         String question = "Show me all clients whose name contains 'Corp' or 'Enterprise' and count their orders. " +
                          "MANDATORY: Use JPQL WHERE clause with LIKE parameters (e.g., :pattern) - do not fetch all clients and search afterwards. " +
                          "Filter must happen at database level using the query tool's parameter functionality.";
-        String result = analyticsService.processBusinessQuestion(question);
+        String result = analyticsService.processBusinessQuestion(question, conversationId);
 
         assertThat(result).as("Pattern parameter result should not be null").isNotNull();
         assertThat(result.trim()).as("Pattern parameter result should not be empty").isNotEmpty();

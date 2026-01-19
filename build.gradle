@@ -87,7 +87,7 @@ dependencies {
     runtimeOnly 'org.hsqldb:hsqldb'
 
     //              --- [ AI ] ---
-    implementation platform("org.springframework.ai:spring-ai-bom:1.0.1")
+    implementation platform("org.springframework.ai:spring-ai-bom:1.1.2")
     implementation 'org.springframework.ai:spring-ai-starter-model-bedrock-converse'
 
     //              --- [ YAML ] ---

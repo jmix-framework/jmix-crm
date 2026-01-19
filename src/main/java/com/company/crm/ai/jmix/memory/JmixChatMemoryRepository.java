@@ -1,0 +1,201 @@
+package com.company.crm.ai.jmix.memory;
+
+import com.company.crm.ai.entity.AiConversation;
+import com.company.crm.ai.entity.ChatMessage;
+import com.company.crm.ai.entity.ChatMessageType;
+import io.jmix.core.DataManager;
+import io.jmix.core.SaveContext;
+import io.jmix.core.querycondition.PropertyCondition;
+import io.jmix.core.Sort;
+import org.jspecify.annotations.NonNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.ai.chat.memory.ChatMemoryRepository;
+import org.springframework.ai.chat.messages.AssistantMessage;
+import org.springframework.ai.chat.messages.Message;
+import org.springframework.ai.chat.messages.SystemMessage;
+import org.springframework.ai.chat.messages.UserMessage;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+
+@Component
+public class JmixChatMemoryRepository implements ChatMemoryRepository {
+
+    private final DataManager dataManager;
+    private static final Logger log = LoggerFactory.getLogger(JmixChatMemoryRepository.class);
+
+    public JmixChatMemoryRepository(DataManager dataManager) {
+        this.dataManager = dataManager;
+    }
+
+    @Override
+    public List<String> findConversationIds() {
+        log.debug("Finding all conversation IDs");
+        try {
+            List<AiConversation> conversations = dataManager.load(AiConversation.class)
+                    .all()
+                    .list();
+            return conversations.stream()
+                    .map(conversation -> conversation.getId().toString())
+                    .toList();
+        } catch (Exception e) {
+            log.error("Error finding conversation IDs", e);
+            return Collections.emptyList();
+        }
+    }
+
+    @Override
+    public List<Message> findByConversationId(@NonNull String conversationId) {
+        log.debug("Finding messages for conversation: {}", conversationId);
+        if (conversationId.trim().isEmpty()) {
+            log.warn("Conversation ID is empty");
+            return Collections.emptyList();
+        }
+
+        UUID uuid = parseConversationId(conversationId);
+        return dataManager.load(AiConversation.class)
+                .id(uuid)
+                .optional()
+                .map(conversation -> loadChatMessages(uuid).stream()
+                        .map(this::mapEntityToMessage)
+                        .toList())
+                .orElse(Collections.emptyList());
+
+    }
+
+    @Override
+    @Transactional
+    public void saveAll(@NonNull String conversationId, List<Message> messages) {
+        log.debug("Saving {} messages for conversation: {}", messages.size(), conversationId);
+        if (conversationId.trim().isEmpty()) {
+            log.warn("Cannot save messages: conversation ID is empty");
+            return;
+        }
+
+        try {
+            UUID uuid = parseConversationId(conversationId);
+            AiConversation conversation = findOrCreateConversation(uuid);
+
+            // Create save context for atomic transaction
+            SaveContext saveContext = new SaveContext();
+
+            // Delete existing messages for this conversation (replace semantics)
+            loadChatMessages(uuid).forEach(saveContext::removing);
+
+            // Create new messages with explicit ordering
+            OffsetDateTime baseTime = OffsetDateTime.now();
+            for (int i = 0; i < messages.size(); i++) {
+                Message message = messages.get(i);
+                ChatMessage chatMessage = mapMessageToEntity(message, conversation);
+                // Set explicit creation time with microsecond increments to preserve order
+                chatMessage.setCreatedDate(baseTime.plusNanos(i * 1000L));
+                saveContext.saving(chatMessage);
+            }
+
+            dataManager.save(saveContext);
+            log.debug("Successfully saved {} messages for conversation: {}", messages.size(), conversationId);
+        } catch (IllegalArgumentException e) {
+            // Already logged in parseConversationId
+        } catch (Exception e) {
+            log.error("Error saving messages for conversation: {}", conversationId, e);
+        }
+    }
+
+    @Override
+    @Transactional
+    public void deleteByConversationId(@NonNull String conversationId) {
+        log.debug("Deleting conversation: {}", conversationId);
+        if (conversationId.trim().isEmpty()) {
+            log.warn("Cannot delete conversation: ID is empty");
+            return;
+        }
+
+        UUID uuid = parseConversationId(conversationId);
+        dataManager.load(AiConversation.class)
+                .id(uuid)
+                .optional()
+                .ifPresent(conversation -> {
+                    SaveContext saveContext = new SaveContext();
+
+                    loadChatMessages(uuid).forEach(saveContext::removing);
+                    saveContext.removing(conversation);
+
+                    dataManager.save(saveContext);
+                    log.debug("Successfully deleted conversation: {}", conversationId);
+                });
+
+    }
+
+    private AiConversation findOrCreateConversation(UUID conversationId) {
+        return dataManager.load(AiConversation.class)
+                .id(conversationId)
+                .optional()
+                .orElseGet(() -> createNewConversation(conversationId));
+    }
+
+    private AiConversation createNewConversation(UUID id) {
+        AiConversation conversation = dataManager.create(AiConversation.class);
+        conversation.setId(id);
+        conversation.setTitle("Chat " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
+        return dataManager.save(conversation);
+    }
+
+    private ChatMessage mapMessageToEntity(Message message, AiConversation conversation) {
+        ChatMessage chatMessage = dataManager.create(ChatMessage.class);
+        chatMessage.setConversation(conversation);
+        chatMessage.setContent(message.getText());
+        chatMessage.setType(mapMessageToType(message));
+        return chatMessage;
+    }
+
+    private Message mapEntityToMessage(ChatMessage chatMessage) {
+        String content = chatMessage.getContent();
+        ChatMessageType type = chatMessage.getType();
+        return mapTypeToMessage(content, type);
+    }
+
+    private ChatMessageType mapMessageToType(Message message) {
+        return switch (message) {
+            case UserMessage ignored -> ChatMessageType.USER;
+            case AssistantMessage ignored -> ChatMessageType.ASSISTANT;
+            case SystemMessage ignored -> ChatMessageType.SYSTEM;
+            case null, default -> ChatMessageType.TOOL;
+        };
+    }
+
+    private Message mapTypeToMessage(String content, ChatMessageType type) {
+        if (type == null) {
+            return new SystemMessage(content != null ? content : "");
+        }
+
+        return switch (type) {
+            case USER -> new UserMessage(content != null ? content : "");
+            case ASSISTANT -> new AssistantMessage(content != null ? content : "");
+            case SYSTEM -> new SystemMessage(content != null ? content : "");
+            case TOOL -> new AssistantMessage(content != null ? content : ""); // Fallback to assistant
+        };
+    }
+
+    private UUID parseConversationId(String conversationId) {
+        try {
+            return UUID.fromString(conversationId);
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid UUID format for conversation ID: {}", conversationId, e);
+            throw new IllegalArgumentException("Invalid conversation ID format: " + conversationId, e);
+        }
+    }
+
+    private List<ChatMessage> loadChatMessages(UUID conversationId) {
+        return dataManager.load(ChatMessage.class)
+                .condition(PropertyCondition.equal("conversation.id", conversationId))
+                .sort(Sort.by("createdDate"))
+                .list();
+    }
+}
