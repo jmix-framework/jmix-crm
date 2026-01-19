@@ -25,6 +25,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.PositiveOrZero;
 import org.apache.commons.lang3.StringUtils;
 
 import java.math.BigDecimal;
@@ -61,14 +62,17 @@ public class Invoice extends FullAuditEntity {
     @Column(name = "DUE_DATE")
     private LocalDate dueDate;
 
+    @PositiveOrZero
     @PropertyDatatype(PriceDataType.NAME)
     @Column(name = "SUBTOTAL")
     private BigDecimal subtotal;
 
+    @PositiveOrZero
     @PropertyDatatype(PriceDataType.NAME)
     @Column(name = "VAT")
     private BigDecimal vat;
 
+    @PositiveOrZero
     @PropertyDatatype(PriceDataType.NAME)
     @Column(name = "TOTAL")
     private BigDecimal total;

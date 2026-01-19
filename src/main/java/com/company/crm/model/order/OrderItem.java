@@ -1,7 +1,9 @@
 package com.company.crm.model.order;
 
+import com.company.crm.app.util.price.PriceCalculator;
 import com.company.crm.model.base.FullAuditEntity;
 import com.company.crm.model.catalog.item.CategoryItem;
+import com.company.crm.model.datatype.PercentDataType;
 import com.company.crm.model.datatype.PriceDataType;
 import io.jmix.core.DeletePolicy;
 import io.jmix.core.MetadataTools;
@@ -19,6 +21,7 @@ import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.PositiveOrZero;
 
 import java.math.BigDecimal;
 
@@ -41,16 +44,20 @@ public class OrderItem extends FullAuditEntity {
     @Column(name = "DISCOUNT", precision = 19, scale = 2)
     private BigDecimal discount;
 
+    @PositiveOrZero
     @PropertyDatatype(PriceDataType.NAME)
     @Column(name = "NET_PRICE", nullable = false)
     private BigDecimal netPrice;
 
+    @PositiveOrZero
     @PropertyDatatype(PriceDataType.NAME)
     @Column(name = "GROSS_PRICE", nullable = false)
     private BigDecimal grossPrice;
 
+    @PositiveOrZero
+    @PropertyDatatype(PercentDataType.NAME)
     @Column(name = "VAT_AMOUNT", nullable = false, precision = 19, scale = 2)
-    private BigDecimal vatAmount;
+    private BigDecimal vatAmount = BigDecimal.ZERO;
 
     @Column(name = "VAT_INCLUDED")
     private Boolean vatIncluded;
@@ -70,7 +77,17 @@ public class OrderItem extends FullAuditEntity {
 
     @JmixProperty
     public BigDecimal getTotal() {
-        return netPrice.multiply(getQuantity()).subtract(getDiscount());
+        return PriceCalculator.calculateTotal(this);
+    }
+
+    @JmixProperty
+    @DependsOnProperties("categoryItem")
+    @PropertyDatatype(PriceDataType.NAME)
+    public BigDecimal getUnitPrice() {
+        if (categoryItem == null) {
+            return BigDecimal.ZERO;
+        }
+        return categoryItem.getPrice();
     }
 
     public Boolean getVatIncluded() {
@@ -82,7 +99,7 @@ public class OrderItem extends FullAuditEntity {
     }
 
     public BigDecimal getVatAmount() {
-        return vatAmount;
+        return vatAmount == null ? BigDecimal.ZERO : vatAmount;
     }
 
     public void setVatAmount(BigDecimal vatAmount) {
@@ -98,7 +115,7 @@ public class OrderItem extends FullAuditEntity {
     }
 
     public BigDecimal getNetPrice() {
-        return netPrice;
+        return netPrice == null ? BigDecimal.ZERO : netPrice;
     }
 
     public void setNetPrice(BigDecimal netPrice) {

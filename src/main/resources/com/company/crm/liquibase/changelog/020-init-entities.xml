@@ -224,7 +224,7 @@
                 <constraints nullable="false"/>
             </column>
             <column name="DATE_" type="DATE"/>
-            <column name="QUOTE" type="VARCHAR(255)"/>
+            <column name="PURCHASE_ORDER" type="VARCHAR(255)"/>
             <column name="COMMENT_" type="CLOB"/>
             <column name="TOTAL" type="DECIMAL(19, 2)"/>
             <column name="DISCOUNT_VALUE" type="DECIMAL(19, 2)"/>
@@ -321,7 +321,9 @@
             <column name="CODE" type="VARCHAR(255)">
                 <constraints nullable="false" unique="true"/>
             </column>
-            <column name="PRICE" type="DECIMAL(19, 2)"/>
+            <column name="PRICE" type="DECIMAL(19, 2)">
+                <constraints nullable="false"/>
+            </column>
             <column name="IMAGE" type="VARCHAR(1024)"/>
             <column name="DESCRIPTION" type="CLOB"/>
             <column name="UOM" type="VARCHAR(255)"/>
@@ -384,12 +386,10 @@
                     type="DECIMAL(19, 2)">
                 <constraints nullable="false"/>
             </column>
-            <column name="GROSS_PRICE"
-                    type="DECIMAL(19, 2)">
+            <column name="GROSS_PRICE" type="DECIMAL(19, 2)">
                 <constraints nullable="false"/>
             </column>
-            <column name="VAT_AMOUNT"
-                    type="DECIMAL(19, 2)">
+            <column name="VAT_AMOUNT" type="DECIMAL(19, 2)">
                 <constraints nullable="false"/>
             </column>
             <column name="VAT_INCLUDED"

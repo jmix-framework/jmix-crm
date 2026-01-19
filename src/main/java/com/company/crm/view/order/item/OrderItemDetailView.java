@@ -6,11 +6,17 @@ import com.company.crm.model.client.Client;
 import com.company.crm.model.order.Order;
 import com.company.crm.model.order.OrderItem;
 import com.company.crm.model.order.OrderItemRepository;
+import com.company.crm.model.settings.CrmSettings;
 import com.company.crm.view.main.MainView;
+import com.vaadin.flow.component.AbstractField.ComponentValueChangeEvent;
 import com.vaadin.flow.router.Route;
+import io.jmix.appsettings.AppSettings;
 import io.jmix.core.EntityStates;
 import io.jmix.core.FetchPlan;
 import io.jmix.core.SaveContext;
+import io.jmix.flowui.component.checkbox.Switch;
+import io.jmix.flowui.component.combobox.EntityComboBox;
+import io.jmix.flowui.component.textfield.JmixBigDecimalField;
 import io.jmix.flowui.component.valuepicker.EntityPicker;
 import io.jmix.flowui.view.DialogMode;
 import io.jmix.flowui.view.EditedEntityContainer;
@@ -30,6 +36,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
+import static com.company.crm.app.util.price.PriceCalculator.calculateNetPrice;
+import static com.company.crm.app.util.price.PriceCalculator.recalculatePricing;
+
 @Route(value = "order-items/:id", layout = MainView.class)
 @ViewController(id = CrmConstants.ViewIds.ORDER_ITEM_DETAIL)
 @ViewDescriptor(path = "order-item-detail-view.xml")
@@ -43,14 +52,17 @@ public class OrderItemDetailView extends StandardDetailView<OrderItem> {
     private OrderItemRepository itemRepository;
     @Autowired
     private OrderItemPreservedState preservedState;
+    @Autowired
+    private AppSettings appSettings;
 
     @ViewComponent
     private EntityPicker<Order> orderField;
     @ViewComponent
     private EntityPicker<Client> clientField;
+    @ViewComponent
+    private JmixBigDecimalField vatAmountField;
 
     private boolean preventUnsavedChanges = true;
-
 
     @Override
     protected void preventUnsavedChanges(BeforeCloseEvent event) {
@@ -94,12 +106,25 @@ public class OrderItemDetailView extends StandardDetailView<OrderItem> {
         return Set.of(itemRepository.save(getEditedEntity()));
     }
 
-    private void initializeDefaultValues(OrderItem entity) {
-        entity.setQuantity(BigDecimal.ONE);
-        CategoryItem categoryItem = entity.getCategoryItem();
-        if (categoryItem != null) {
-            entity.setNetPrice(categoryItem.getPrice());
-        }
+    @Subscribe("vatIncludedField")
+    private void onVatIncludedFieldComponentValueChange(final ComponentValueChangeEvent<Switch, Boolean> event) {
+        vatAmountField.setEnabled(event.getValue());
+    }
+
+    @Subscribe("categoryItemField")
+    private void onCategoryItemFieldComponentValueChange(final ComponentValueChangeEvent<EntityComboBox<CategoryItem>, CategoryItem> event) {
+        recalculatePricing(getEditedEntity());
+    }
+
+    private void initializeDefaultValues(OrderItem orderItem) {
+        orderItem.setVatIncluded(true);
+        orderItem.setVatAmount(getDefaultVatPercent());
+        orderItem.setQuantity(BigDecimal.ONE);
+        orderItem.setNetPrice(calculateNetPrice(orderItem));
+    }
+
+    private BigDecimal getDefaultVatPercent() {
+        return appSettings.load(CrmSettings.class).getDefaultVatPercent();
     }
 
     private void initializePreservedState(OrderItem entity) {

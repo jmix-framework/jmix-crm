@@ -50,6 +50,7 @@ import io.jmix.flowui.model.CollectionLoader;
 import io.jmix.flowui.view.DialogMode;
 import io.jmix.flowui.view.Install;
 import io.jmix.flowui.view.LookupComponent;
+import io.jmix.flowui.view.MessageBundle;
 import io.jmix.flowui.view.StandardListView;
 import io.jmix.flowui.view.Subscribe;
 import io.jmix.flowui.view.Supply;
@@ -134,6 +135,8 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
     private final AsyncTasksRegistry asyncTasksRegistry = AsyncTasksRegistry.newInstance();
 
     private final LogicalCondition filtersCondition = LogicalCondition.and();
+    @ViewComponent
+    private MessageBundle messageBundle;
 
     @Override
     public void configureUiForWidth(int width) {
@@ -392,17 +395,17 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
         Client[] selectedClients = getSelectedClients();
 
         if (selectedClients.length == 1) {
-            mainText = new Span("for " + selectedClients[0].getName());
-            badge = "warning";
+            mainText = new Span(messageBundle.getMessage("for") + " " +  selectedClients[0].getName());
+            badge = CrmUiUtils.WARNING_BADGE;
         } else if (selectedClients.length == 0 && isFilterConditionEmpty()) {
-            mainText = new Span("for all clients");
-            badge = "default";
+            mainText = new Span(messageBundle.getMessage("forAllClients"));
+            badge = CrmUiUtils.DEFAULT_BADGE;
         } else if (selectedClients.length > 0) {
-            mainText = new Span("for %d selected clients".formatted(selectedClients.length));
-            badge = "warning";
+            mainText = new Span(messageBundle.formatMessage("mainText", selectedClients.length));
+            badge = CrmUiUtils.WARNING_BADGE;
         } else {
-            mainText = new Span("for filtered clients");
-            badge = "success";
+            mainText = new Span(messageBundle.getMessage("forFilteredClients"));
+            badge = CrmUiUtils.SUCCESS_BADGE;
         }
 
         CrmUiUtils.setBadge(mainText, badge);

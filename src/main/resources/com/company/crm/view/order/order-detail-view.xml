@@ -49,7 +49,7 @@
                     <entityPicker property="client" readOnly="true"/>
                     <select id="statusSelect" property="status"/>
                     <datePicker id="dateField" property="date"/>
-                    <textField id="quoteField" property="quote"/>
+                    <textField id="purchaseOrderField" property="purchaseOrder"/>
                     <bigDecimalField id="discountValueField" property="discountValue" clearButtonVisible="true">
                         <prefix>
                             <span text="$"/>
@@ -67,6 +67,8 @@
                             <decimalMin value="0.00"/>
                         </validators>
                     </bigDecimalField>
+                    <textField id="subtotalField" property="subTotal" readOnly="true"/>
+                    <textField id="vatField" property="vat" readOnly="true"/>
                     <textField id="totalField" property="total" readOnly="true" colspan="2"/>
                     <textArea id="commentField" height="8em" colspan="2" property="comment"/>
                 </formLayout>
@@ -96,8 +98,11 @@
                     <columns resizable="true" sortable="true">
                         <column property="categoryItem.name" autoWidth="true" flexGrow="0"/>
                         <column property="categoryItem.code" autoWidth="true" flexGrow="0"/>
-                        <column property="netPrice" autoWidth="true" flexGrow="0"/>
                         <column property="quantity" autoWidth="true" flexGrow="0"/>
+                        <column property="netPrice" autoWidth="true" flexGrow="0"/>
+                        <column property="grossPrice" autoWidth="true" flexGrow="0"/>
+                        <column property="vatAmount" autoWidth="true" flexGrow="0"/>
+                        <column property="vatIncluded" autoWidth="true" flexGrow="0"/>
                         <column property="discount" autoWidth="true" flexGrow="0"/>
                         <column property="total"/>
                     </columns>

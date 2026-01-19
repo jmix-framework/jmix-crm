@@ -2,6 +2,7 @@ package com.company.crm.model.order;
 
 import com.company.crm.app.service.order.OrderService;
 import com.company.crm.app.util.context.AppContext;
+import com.company.crm.app.util.price.PriceCalculator;
 import com.company.crm.model.base.FullAuditEntity;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.datatype.PercentDataType;
@@ -30,11 +31,14 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.PositiveOrZero;
 import org.apache.commons.lang3.StringUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+
+import static com.company.crm.app.util.price.PriceCalculator.calculateSubtotal;
 
 @Entity(name = "Order_")
 @JmixEntity
@@ -59,22 +63,22 @@ public class Order extends FullAuditEntity {
     @Column(name = "DATE_")
     private LocalDate date;
 
-    @Column(name = "QUOTE")
-    private String quote;
+    @Column(name = "PURCHASE_ORDER")
+    private String purchaseOrder;
 
     @Lob
     @Column(name = "COMMENT_")
     private String comment;
 
+    @PositiveOrZero
     @PropertyDatatype(PriceDataType.NAME)
     @Column(name = "TOTAL")
     private BigDecimal total;
 
-    // TODO: OVERALL_DISCOUNT_VALUE?
+    @PositiveOrZero
     @Column(name = "DISCOUNT_VALUE", precision = 19, scale = 2)
     private BigDecimal discountValue;
 
-    // TODO: OVERALL_DISCOUNT_PERCENT?
     @Min(0)
     @Max(100)
     @PropertyDatatype(PercentDataType.NAME)
@@ -117,7 +121,7 @@ public class Order extends FullAuditEntity {
     }
 
     public BigDecimal getTotal() {
-        return total == null ? BigDecimal.ZERO : total;
+        return total == null ? PriceCalculator.calculateTotal(this) : total;
     }
 
     public void setTotal(BigDecimal total) {
@@ -126,11 +130,32 @@ public class Order extends FullAuditEntity {
 
     @JmixProperty
     @DependsOnProperties("orderItems")
+    @PropertyDatatype(PriceDataType.NAME)
+    public BigDecimal getSubTotal() {
+        return calculateSubtotal(this);
+    }
+
+    @JmixProperty
+    @DependsOnProperties("orderItems")
+    @PropertyDatatype(PriceDataType.NAME)
+    public BigDecimal getVat() {
+        return PriceCalculator.calculateVat(this);
+    }
+
+    @JmixProperty
+    @DependsOnProperties("orderItems")
+    @PropertyDatatype(PriceDataType.NAME)
     public BigDecimal getItemsTotal() {
         BigDecimal total = BigDecimal.ZERO;
+
+        if (orderItems == null) {
+            return total;
+        }
+
         for (OrderItem orderItem : getOrderItems()) {
             total = total.add(orderItem.getTotal());
         }
+
         return total;
     }
 
@@ -152,12 +177,12 @@ public class Order extends FullAuditEntity {
         this.comment = comment;
     }
 
-    public String getQuote() {
-        return quote;
+    public String getPurchaseOrder() {
+        return purchaseOrder;
     }
 
-    public void setQuote(String quote) {
-        this.quote = quote;
+    public void setPurchaseOrder(String purchaseOrder) {
+        this.purchaseOrder = purchaseOrder;
     }
 
     public LocalDate getDate() {

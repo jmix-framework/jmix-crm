@@ -53,6 +53,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
 
+import static com.company.crm.app.util.price.PriceCalculator.calculateGrossPrice;
+import static com.company.crm.app.util.price.PriceCalculator.calculateNetPrice;
 import static com.company.crm.app.util.price.PriceCalculator.calculateTotal;
 
 /**
@@ -406,7 +408,7 @@ public class DemoDataGenerator {
                 order.setClient(client);
                 LocalDate date = randomDateWithinYears(2, random);
                 order.setDate(date);
-                order.setQuote("Q-" + date.getYear() + "-" + (1000 + random.nextInt(9000)));
+                order.setPurchaseOrder("PO-" + date.getYear() + "-" + (1000 + random.nextInt(9000)));
                 if (random.nextBoolean()) order.setComment(orderComment(random));
                 order.setStatus(OrderStatus.values()[random.nextInt(OrderStatus.values().length)]);
                 List<OrderItem> orderItems = generateOrderItems(order, categoryItems.subList(0, random.nextInt(1, categoryItemsSize / 3)));
@@ -415,8 +417,7 @@ public class DemoDataGenerator {
                     // discount either value or percent
                     if (random.nextBoolean()) {
                         order.setDiscountValue(
-                                BigDecimal.valueOf(
-                                        random.nextInt(10, itemsTotal.subtract(BigDecimal.ONE).intValue())));
+                                BigDecimal.valueOf(random.nextInt(0, itemsTotal.divide(BigDecimal.valueOf(2), RoundingMode.HALF_UP).intValue())));
                     } else {
                         order.setDiscountPercent(
                                 BigDecimal.valueOf(random.nextInt(1, 30)));
@@ -441,10 +442,15 @@ public class DemoDataGenerator {
             OrderItem orderItem = dataManager.create(OrderItem.class);
             orderItem.setCategoryItem(categoryItem);
             orderItem.setOrder(order);
-            orderItem.setVatAmount(BigDecimal.valueOf(random.nextInt(100, 200)));
-            orderItem.setNetPrice(BigDecimal.valueOf(random.nextInt(1000, 10000)));
-            orderItem.setGrossPrice(BigDecimal.valueOf(random.nextInt(2000, 20000)));
+            orderItem.setVatIncluded(random.nextBoolean());
+
+            if (orderItem.getVatIncluded()) {
+                orderItem.setVatAmount(BigDecimal.valueOf(random.nextInt(15, 35)));
+            }
+
             orderItem.setQuantity(BigDecimal.valueOf(random.nextInt(2, 10)));
+            orderItem.setNetPrice(calculateNetPrice(orderItem));
+            orderItem.setGrossPrice(calculateGrossPrice(orderItem));
             generatedItems.add(orderItem);
         }
 

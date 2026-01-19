@@ -21,6 +21,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.PositiveOrZero;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -54,8 +55,9 @@ public class CategoryItem extends FullAuditEntity {
     @Column(name = "UOM")
     private String uom;
 
+    @PositiveOrZero
     @PropertyDatatype(PriceDataType.NAME)
-    @Column(name = "PRICE")
+    @Column(name = "PRICE", nullable = false)
     private BigDecimal price;
 
     @Composition
@@ -120,7 +122,7 @@ public class CategoryItem extends FullAuditEntity {
     }
 
     public BigDecimal getPrice() {
-        return price;
+        return price == null ? BigDecimal.ZERO : price;
     }
 
     public void setPrice(BigDecimal price) {

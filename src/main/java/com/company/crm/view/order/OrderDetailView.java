@@ -3,6 +3,7 @@ package com.company.crm.view.order;
 import com.company.crm.app.service.datetime.DateTimeService;
 import com.company.crm.app.ui.component.OrderStatusPipeline;
 import com.company.crm.app.util.constant.CrmConstants;
+import com.company.crm.app.util.ui.CrmUiUtils;
 import com.company.crm.app.util.ui.renderer.CrmRenderers;
 import com.company.crm.model.order.Order;
 import com.company.crm.model.order.OrderItem;
@@ -10,6 +11,7 @@ import com.company.crm.model.order.OrderRepository;
 import com.company.crm.model.order.OrderStatus;
 import com.company.crm.view.main.MainView;
 import com.vaadin.flow.component.AbstractField.ComponentValueChangeEvent;
+import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Span;
@@ -62,7 +64,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import static com.company.crm.app.util.price.PriceCalculator.calculateTotal;
-import static com.company.crm.model.datatype.PriceDataType.formatWithoutCurrency;
+import static com.company.crm.model.datatype.PriceDataType.defaultFormat;
 
 @Route(value = "orders/:id", layout = MainView.class)
 @ViewController(id = CrmConstants.ViewIds.ORDER_DETAIL)
@@ -82,12 +84,16 @@ public class OrderDetailView extends StandardDetailView<Order> {
     @Autowired
     private CrmRenderers crmRenderers;
     @Autowired
+    private Notifications notifications;
+    @Autowired
     private ExcelExporter excelExporter;
     @Autowired
     private OrderRepository orderRepository;
     @Autowired
     private DateTimeService dateTimeService;
 
+    @ViewComponent
+    private MessageBundle messageBundle;
     @ViewComponent
     private OrderStatusPipeline statusPipeline;
     @ViewComponent
@@ -98,12 +104,8 @@ public class OrderDetailView extends StandardDetailView<Order> {
     private H3 orderItemsCount;
     @ViewComponent
     private DataGrid<OrderItem> orderItemsGrid;
-    @Autowired
-    private Notifications notifications;
     @ViewComponent
-    private MessageBundle messageBundle;
-    @ViewComponent
-    private DetailSaveCloseAction<Object> saveCloseAction;
+    private DetailSaveCloseAction<Order> saveCloseAction;
 
     @Override
     public void setReadOnly(boolean readOnly) {
@@ -151,12 +153,12 @@ public class OrderDetailView extends StandardDetailView<Order> {
 
     @Subscribe("discountPercentField")
     private void onDiscountPercentFieldTypedValueChange(final ComponentValueChangeEvent<JmixBigDecimalField, BigDecimal> event) {
-        recalculateTotalIfNeeded(event);
+        recalculateFieldsIfNeeded(event);
     }
 
     @Subscribe("discountValueField")
     private void onDiscountValueFieldTypedValueChange(final ComponentValueChangeEvent<JmixBigDecimalField, BigDecimal> event) {
-        recalculateTotalIfNeeded(event);
+        recalculateFieldsIfNeeded(event);
     }
 
     @Supply(to = "orderItemsGrid.[categoryItem.code]", subject = "renderer")
@@ -164,10 +166,31 @@ public class OrderDetailView extends StandardDetailView<Order> {
         return crmRenderers.orderItemItemCode();
     }
 
+    @Supply(to = "orderItemsGrid.vatIncluded", subject = "renderer")
+    private Renderer<OrderItem> orderItemsGridVatIncludedRenderer() {
+        return new ComponentRenderer<>(orderItem -> {
+            Checkbox checkbox = new Checkbox(orderItem.getVatIncluded());
+            checkbox.setReadOnly(true);
+            return checkbox;
+        });
+    }
+
+    @Supply(to = "orderItemsGrid.netPrice", subject = "renderer")
+    private Renderer<OrderItem> orderItemsGridNetPriceRenderer() {
+        return crmRenderers.badgeRenderer(item ->
+                defaultFormat(item.getNetPrice()), CrmUiUtils.CONTRAST_BADGE);
+    }
+
+    @Supply(to = "orderItemsGrid.grossPrice", subject = "renderer")
+    private Renderer<OrderItem> orderItemsGridGrossPriceRenderer() {
+        return crmRenderers.badgeRenderer(item ->
+                defaultFormat(item.getGrossPrice()), CrmUiUtils.CONTRAST_BADGE);
+    }
+
     @Supply(to = "orderItemsGrid.total", subject = "renderer")
     private Renderer<OrderItem> orderItemsGridTotalRenderer() {
         return crmRenderers.badgeRenderer(item ->
-                formatWithoutCurrency(item.getTotal()), "default");
+                defaultFormat(item.getTotal()), CrmUiUtils.DEFAULT_BADGE);
     }
 
     @Supply(to = "statusSelect", subject = "renderer")
@@ -236,7 +259,7 @@ public class OrderDetailView extends StandardDetailView<Order> {
         statusPipeline.selectUntil(getEditedEntity().getStatus());
     }
 
-    private void recalculateTotalIfNeeded(ComponentValueChangeEvent<JmixBigDecimalField, BigDecimal> event) {
+    private void recalculateFieldsIfNeeded(ComponentValueChangeEvent<JmixBigDecimalField, BigDecimal> event) {
         if (event.isFromClient() && !event.getSource().isInvalid()) {
             recalculateTotal(event.getSource());
         }
@@ -250,6 +273,7 @@ public class OrderDetailView extends StandardDetailView<Order> {
     private void recalculateTotal(JmixBigDecimalField changesOwner) {
         Order order = getEditedEntity();
         BigDecimal itemsTotal = order.getItemsTotal();
+
         if (changesOwner.equals(discountValueField)) {
             BigDecimal discountValue = order.getDiscountValue();
             if (discountValue != null && itemsTotal.compareTo(BigDecimal.ZERO) > 0) {

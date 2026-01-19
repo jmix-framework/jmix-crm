@@ -12,7 +12,8 @@
 
     <menu id="catalog"
           title="msg:///menu_config.catalog.title"
-          icon="vaadin:open-book">
+          icon="vaadin:open-book"
+          opened="true">
         <item view="Category.list" id="categories"
               title="msg:///menu_config.catalog.categories.title"
               icon="vaadin:list-ul"/>
@@ -34,7 +35,8 @@
 
     <menu id="finance"
           title="msg:///menu_config.finance.title"
-          icon="vaadin:pie-chart">
+          icon="vaadin:pie-chart"
+          opened="true">
         <item view="Invoice.list" id="invoices"
               title="msg:///menu_config.finance.invoices.title"
               icon="vaadin:file-text"/>

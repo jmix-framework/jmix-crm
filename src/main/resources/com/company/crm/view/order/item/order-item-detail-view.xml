@@ -49,7 +49,12 @@
             </entityComboBox>
             <bigDecimalField id="quantityField" property="quantity"/>
             <bigDecimalField id="discountField" property="discount"/>
-            <bigDecimalField id="netPriceField" property="netPrice">
+            <bigDecimalField id="unitPriceField" property="unitPrice" readOnly="true">
+                <prefix>
+                    <span text="$"/>
+                </prefix>
+            </bigDecimalField>
+            <bigDecimalField id="netPriceField" property="netPrice" readOnly="true">
                 <prefix>
                     <span text="$"/>
                 </prefix>
