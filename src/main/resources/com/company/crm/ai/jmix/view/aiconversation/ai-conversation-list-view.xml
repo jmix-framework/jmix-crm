@@ -9,7 +9,7 @@
             <fetchPlan extends="_base"/>
             <loader id="aiConversationsDl" readOnly="true">
                 <query>
-                    <![CDATA[select e from AiConversation e]]>
+                    <![CDATA[select e from AiConversation e order by e.createdDate desc]]>
                 </query>
             </loader>
         </collection>
@@ -17,7 +17,6 @@
     <facets>
         <dataLoadCoordinator auto="true"/>
         <urlQueryParameters>
-            <genericFilter component="genericFilter"/>
             <pagination component="pagination"/>
         </urlQueryParameters>
     </facets>
@@ -26,10 +25,6 @@
         <action id="discardAction" type="lookup_discard"/>
     </actions>
     <layout>
-        <genericFilter id="genericFilter"
-                       dataLoader="aiConversationsDl">
-            <properties include=".*"/>
-        </genericFilter>
         <hbox id="buttonsPanel" classNames="buttons-panel">
             <startSlot>
                 <button id="createButton" action="aiConversationsDataGrid.createAction"/>
@@ -46,12 +41,13 @@
                   dataContainer="aiConversationsDc"
                   columnReorderingAllowed="true">
             <actions>
-                <action id="createAction" type="list_create"/>
-                <action id="editAction" type="list_edit"/>
+                <action id="createAction" type="list_create" text="msg://aiConversationListView.createAction.text" icon="vaadin:magic"/>
+                <action id="editAction" type="list_edit" text="msg://aiConversationListView.editAction.text" icon="vaadin:external-link"/>
                 <action id="removeAction" type="list_remove"/>
             </actions>
             <columns resizable="true">
-                <column property="title"/>
+                <column property="title" width="60%"/>
+                <column property="createdDate" width="40%"/>
             </columns>
         </dataGrid>
         <hbox id="lookupActions" visible="false">

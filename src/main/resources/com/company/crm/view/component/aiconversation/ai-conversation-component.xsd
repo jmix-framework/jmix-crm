@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<xs:schema xmlns="http://company.crm/ai-conversation-component.xsd"
+           elementFormDefault="qualified"
+           targetNamespace="http://company.crm/ai-conversation-component.xsd"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:layout="http://jmix.io/schema/flowui/layout">
+
+    <xs:element name="aiConversation">
+        <xs:complexType>
+            <xs:complexContent>
+                <xs:extension base="layout:baseComponent">
+                    <xs:attribute name="conversationId" type="xs:string"/>
+                    <xs:attribute name="showHeader" type="xs:boolean"/>
+                    <xs:attribute name="headerTitle" type="xs:string"/>
+                    <xs:attribute name="welcomeMessage" type="xs:string"/>
+                </xs:extension>
+            </xs:complexContent>
+        </xs:complexType>
+    </xs:element>
+</xs:schema>

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <view xmlns="http://jmix.io/schema/flowui/view"
+      xmlns:ai="http://company.crm/ai-conversation-component.xsd"
       title="msg://aiConversationDetailView.title"
       focusComponent="form">
     <data>
@@ -12,31 +13,14 @@
     <facets>
         <dataLoadCoordinator auto="true"/>
     </facets>
-    <actions>
-        <action id="saveCloseAction" type="detail_saveClose"/>
-        <action id="closeAction" type="detail_close"/>
-    </actions>
     <layout>
 
-        <!-- Chat Section -->
-        <vbox id="chatSection" expand="messageListWrapper" height="100%" spacing="true">
-
-            <!-- Message List Wrapper -->
-            <vbox id="messageListWrapper" width="100%" height="400px">
-                <vbox id="messageList" width="100%" height="100%"/>
-            </vbox>
-
-            <!-- Progress Bar -->
-            <vbox padding="true">
-                <progressBar id="aiProcessingProgress" indeterminate="true" visible="false" width="100%"/>
-            </vbox>
-
-            <!-- Message Input Container -->
-            <vbox id="messageInputContainer" width="100%" padding="true"/>
+        <!-- Chat Section with @Install pattern integration -->
+        <vbox id="chatSection" expand="aiComponent" height="100%" spacing="true">
+            <!-- AI Conversation Component configured via @Install annotations -->
+            <ai:aiConversation id="aiComponent"
+                               showHeader="false"
+                               width="100%" height="100%"/>
         </vbox>
-        <hbox id="detailActions">
-            <button id="saveAndCloseButton" action="saveCloseAction"/>
-            <button id="closeButton" action="closeAction"/>
-        </hbox>
     </layout>
 </view>

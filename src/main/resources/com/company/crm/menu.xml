@@ -37,5 +37,6 @@
               title="msg://io.jmix.jmxconsole/jmxConsoleView.menu"/>
     </menu>
     <item view="AiConversation.list"
-          title="msg://com.company.crm.ai.jmix.view.aiconversation/aiConversationListView.title"/>
+          title="msg://com.company.crm.ai.jmix.view.aiconversation/aiConversationListView.title"
+          icon="vaadin:magic"/>
 </menu-config>
