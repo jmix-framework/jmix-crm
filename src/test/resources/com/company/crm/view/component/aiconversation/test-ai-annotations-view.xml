@@ -16,7 +16,9 @@
 
             <ai:aiConversation id="aiComponent"
                                showHeader="true"
-                               headerTitle="Annotation Test"
+                               headerTitle="msg://crm.chat.title"
+                               assistantName="msg://crm.assistant.name"
+                               userName="msg://crm.user.name"
                                width="100%" height="400px"/>
         </vbox>
     </layout>

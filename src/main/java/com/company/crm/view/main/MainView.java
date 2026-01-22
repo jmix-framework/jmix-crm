@@ -1,6 +1,6 @@
 package com.company.crm.view.main;
 
-import com.company.crm.app.service.ai.CrmAnalyticsService;
+import com.company.crm.app.service.ai.CrmAnalyticsAsyncLoader;
 import com.company.crm.app.ui.component.CrmLoader;
 import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.model.client.Client;
@@ -17,6 +17,7 @@ import com.vaadin.flow.component.avatar.AvatarVariant;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
@@ -25,6 +26,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.popover.Popover;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.messages.MessageListItem;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.Route;
 import io.jmix.core.DataManager;
@@ -96,9 +98,9 @@ public class MainView extends StandardMainView {
     @Autowired
     private DataManager dataManager;
     @Autowired
-    private UiAsyncTasks uiAsyncTasks;
+    private CrmAnalyticsAsyncLoader crmAnalyticsAsyncLoader;
     @Autowired
-    private CrmAnalyticsService crmAnalyticsService;
+    private UiAsyncTasks uiAsyncTasks;
 
     @ViewComponent
     private JmixListMenu menu;
@@ -272,68 +274,92 @@ public class MainView extends StandardMainView {
         notificationsPopover[0] = popover;
     }
 
+    private HorizontalLayout createPopoverHeader(AiConversation conversation) {
+        HorizontalLayout header = uiComponents.create(HorizontalLayout.class);
+        header.setDefaultVerticalComponentAlignment(HorizontalLayout.Alignment.CENTER);
+        header.setWidthFull();
+        header.setPadding(true);
+        header.getStyle().set("border-bottom", "1px solid var(--lumo-contrast-10pct)");
+
+        // Title
+        H3 title = uiComponents.create(H3.class);
+        title.setText("CRM AI Assistant");
+
+        // Open in View button
+        JmixButton openInViewButton = uiComponents.create(JmixButton.class);
+        openInViewButton.setText("Open in View");
+        openInViewButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_SMALL);
+        openInViewButton.setIcon(VaadinIcon.EXTERNAL_LINK.create());
+
+        openInViewButton.addClickListener(click -> {
+            // Close the popover
+            Optional.ofNullable(chatPopover[0]).ifPresent(Popover::close);
+
+            // Navigate to detail view with the conversation entity
+            viewNavigators.detailView(this, AiConversation.class)
+                    .editEntity(conversation)
+                    .navigate();
+        });
+
+        header.add(title, openInViewButton);
+        header.setFlexGrow(1, title);
+
+        return header;
+    }
+
     private void onChatButtonClick() {
         Optional.ofNullable(chatPopover[0]).ifPresent(Popover::removeFromParent);
-
-        // Create AI conversation component (it will create conversation when needed)
-        AiConversationComponent aiComponent = uiComponents.create(AiConversationComponent.class);
-
 
         // Create new conversation for this popover session immediately
         AiConversation conversation = dataManager.create(AiConversation.class);
         conversation.setTitle("AI Chat Conversation");
         conversation.setCreatedDate(OffsetDateTime.now());
-        conversation = dataManager.save(conversation);
-        String conversationId = conversation.getId().toString();
-        aiComponent.setConversationId(conversationId);
+        final AiConversation savedConversation = dataManager.save(conversation);
+        String conversationId = savedConversation.getId().toString();
         log.info("Created new conversation for popover session: {}", conversationId);
 
-        // Configure the component for popover use case using direct setters
-        // Implement async message processing similar to DetailView
-        aiComponent.setMessageProcessor(userMessage -> {
-            // Start async processing like in AiConversationDetailView
-            uiAsyncTasks.supplierConfigurer(() -> {
-                try {
-                    return crmAnalyticsService.processBusinessQuestion(userMessage, conversationId);
-                } catch (Exception e) {
-                    log.error("Error processing message in popover", e);
-                    return "I'm sorry, I encountered an error while processing your request: " + e.getMessage();
-                }
-            })
-            .withResultHandler(response -> {
-                // UI updates - add the response to the component
-                getUI().ifPresent(ui -> ui.access(() -> {
-                    aiComponent.addMessage(response, "Assistant", 2);
-                    aiComponent.hideProgress();
-                    aiComponent.getMessageInput().setEnabled(true);
-                }));
-            })
-            .withExceptionHandler(e -> {
-                log.error("Async processing failed in popover", e);
-                getUI().ifPresent(ui -> ui.access(() -> {
-                    aiComponent.addMessage("I'm sorry, something went wrong while processing your request.", "Assistant", 2);
-                    aiComponent.hideProgress();
-                    aiComponent.getMessageInput().setEnabled(true);
-                }));
-            })
-            .supplyAsync();
+        // Create AI conversation component with its own header
+        AiConversationComponent aiComponent = uiComponents.create(AiConversationComponent.class);
 
-            // Return null to not add immediate response
-            return null;
+        // Set current username for user messages
+        aiComponent.setUserName(((User) currentAuthentication.getUser()).getUsername());
+        aiComponent.setConversationId(savedConversation.getId().toString());
+
+        // Configure messageProcessor and historyLoader directly (no @Install pattern for dynamically created components)
+        aiComponent.setMessageProcessor(this::processPopoverMessageDirect);
+        aiComponent.setHistoryLoader(this::loadPopoverHistoryDirect);
+
+        // Configure header button provider FIRST
+        aiComponent.setHeaderButtonProvider(() -> {
+            // Create "Open in View" button for popover usage
+            JmixButton openInViewButton = uiComponents.create(JmixButton.class);
+            openInViewButton.setText("Open in View");
+            openInViewButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_SMALL);
+            openInViewButton.setIcon(VaadinIcon.EXTERNAL_LINK.create());
+            openInViewButton.addClickListener(click -> {
+                // Close the popover
+                Optional.ofNullable(chatPopover[0]).ifPresent(Popover::close);
+                // Navigate to detail view with the conversation entity
+                viewNavigators.detailView(this, AiConversation.class)
+                        .editEntity(savedConversation)
+                        .navigate();
+            });
+            return List.of(openInViewButton);
         });
-        aiComponent.addMessageSentHandler(this::handlePopoverMessage);
+
+        // Show header with title (this triggers setupHeaderWithTitle which uses the provider)
         aiComponent.setHeaderVisible(true);
-        aiComponent.setHeaderTitle("AI Assistant");
-        aiComponent.addWelcomeMessage("👋 Hi! I'm your AI assistant. I can help you with CRM analytics questions. How can I help you today?");
-        // Don't set conversation ID - let component create it when first message is sent
+        aiComponent.setHeaderTitle("CRM AI Assistant");
+
+        aiComponent.addWelcomeMessage("👋 Hi! I'm your CRM AI assistant. I can help you with analytics questions. How can I help you today?");
 
         // Store reference to current component
         currentAiComponent = aiComponent;
 
         Popover popover = new Popover(aiComponent);
         popover.setTarget(chatButton);
-        popover.setWidth("35em");  // Breiter gemacht
-        popover.setHeight("30em"); // Höher gemacht
+        popover.setWidth("40em");
+        popover.setHeight("35em");
         popover.setCloseOnEsc(true);
         popover.setCloseOnOutsideClick(false); // Keep chat open when clicking inside
         popover.open();
@@ -348,11 +374,6 @@ public class MainView extends StandardMainView {
         AiConversation conversation = dataManager.create(AiConversation.class);
         conversation.setTitle("Chat - " + java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss")));
         return dataManager.save(conversation);
-    }
-
-    private void handlePopoverMessage(String message) {
-        // No special handling needed for popover messages
-        // The component handles the AI interaction
     }
 
 
@@ -498,6 +519,35 @@ public class MainView extends StandardMainView {
                 buildMenuStructureRecursively(childItem, menuItem, menuStructure);
             }
         }
+    }
+
+    /**
+     * Direct messageProcessor for popover AI component - async processing with real CRM analytics service
+     */
+    private String processPopoverMessageDirect(String userMessage) {
+        String conversationId = getCurrentPopoverConversationId();
+
+        if (currentAiComponent != null) {
+            crmAnalyticsAsyncLoader.processMessageAsync(userMessage, conversationId, currentAiComponent);
+        }
+
+        // Return null - async processing will handle UI updates
+        return null;
+    }
+
+    /**
+     * Direct historyLoader for popover AI component - popover always starts fresh, no history
+     */
+    private List<MessageListItem> loadPopoverHistoryDirect(String conversationId) {
+        // Popover always starts fresh with no history
+        log.info("Loading popover history - returning empty list (fresh conversation)");
+        return List.of();
+    }
+
+    private String getCurrentPopoverConversationId() {
+        // For popover, we create a new conversation each time (as implemented in setupAiConversationPopover)
+        // This method should return the conversationId that was set during popover setup
+        return currentAiComponent != null ? currentAiComponent.getConversationId() : null;
     }
 
     private record MenuItemStructure(Collection<MenuItemInfo> itemsInfo) {

@@ -54,28 +54,33 @@ public class JmixChatMemoryRepository implements ChatMemoryRepository {
     @Override
     public List<Message> findByConversationId(@NonNull String conversationId) {
         log.debug("Finding messages for conversation: {}", conversationId);
-        if (conversationId.trim().isEmpty()) {
-            log.warn("Conversation ID is empty");
+        if (conversationId == null || conversationId.trim().isEmpty()) {
+            log.warn("Conversation ID is null or empty");
             return Collections.emptyList();
         }
 
-        UUID uuid = parseConversationId(conversationId);
-        return dataManager.load(AiConversation.class)
-                .id(uuid)
-                .optional()
-                .map(conversation -> loadChatMessages(uuid).stream()
-                        .map(this::mapEntityToMessage)
-                        .toList())
-                .orElse(Collections.emptyList());
-
+        try {
+            UUID uuid = parseConversationId(conversationId);
+            return dataManager.load(AiConversation.class)
+                    .id(uuid)
+                    .optional()
+                    .map(conversation -> loadChatMessages(uuid).stream()
+                            .map(this::mapEntityToMessage)
+                            .toList())
+                    .orElse(Collections.emptyList());
+        } catch (IllegalArgumentException e) {
+            // Invalid UUID format - return empty list as expected by tests
+            log.debug("Invalid UUID format for conversation ID: {}", conversationId);
+            return Collections.emptyList();
+        }
     }
 
     @Override
     @Transactional
     public void saveAll(@NonNull String conversationId, List<Message> messages) {
         log.debug("Saving {} messages for conversation: {}", messages.size(), conversationId);
-        if (conversationId.trim().isEmpty()) {
-            log.warn("Cannot save messages: conversation ID is empty");
+        if (conversationId == null || conversationId.trim().isEmpty()) {
+            log.warn("Cannot save messages: conversation ID is null or empty");
             return;
         }
 
@@ -112,8 +117,8 @@ public class JmixChatMemoryRepository implements ChatMemoryRepository {
     @Transactional
     public void deleteByConversationId(@NonNull String conversationId) {
         log.debug("Deleting conversation: {}", conversationId);
-        if (conversationId.trim().isEmpty()) {
-            log.warn("Cannot delete conversation: ID is empty");
+        if (conversationId == null || conversationId.trim().isEmpty()) {
+            log.warn("Cannot delete conversation: ID is null or empty");
             return;
         }
 

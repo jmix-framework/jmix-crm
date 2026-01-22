@@ -1,10 +1,10 @@
 package com.company.crm.view.component.aiconversation;
 
-import com.company.crm.ai.entity.AiConversation;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Composite;
+import com.vaadin.flow.component.HasEnabled;
+import com.vaadin.flow.component.HasSize;
 import com.vaadin.flow.component.html.H3;
-import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.messages.MessageInput;
 import com.vaadin.flow.component.messages.MessageList;
 import com.vaadin.flow.component.messages.MessageListItem;
@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+
 /**
  * Reusable AI conversation component that provides chat interface functionality.
  * Can be configured for different use cases (popover chat, detail view, etc.).
@@ -29,11 +30,9 @@ import java.util.function.Function;
  */
 @InstallSubject("messageProcessor")
 public class AiConversationComponent extends Composite<VerticalLayout>
-        implements InitializingBean {
+        implements InitializingBean, HasSize, HasEnabled {
 
     private static final Logger log = LoggerFactory.getLogger(AiConversationComponent.class);
-
-    // Config removed - was unnecessarily complex for demonstration purposes
 
     private MessageList messageList;
     private MessageInput messageInput;
@@ -44,11 +43,13 @@ public class AiConversationComponent extends Composite<VerticalLayout>
     private String conversationId;
     private List<Consumer<String>> messageSentHandlers = new ArrayList<>();
 
-    // Component state
-
-    // @Install support - Function-based callback pattern following Jmix conventions
     private Function<String, String> messageProcessorProvider;
     private Function<String, List<MessageListItem>> historyLoaderProvider;
+
+    private String assistantName = "Assistant";
+    private String userName = "User";
+
+    private java.util.function.Supplier<List<Component>> headerButtonProvider;
 
 
     @Override
@@ -113,6 +114,43 @@ public class AiConversationComponent extends Composite<VerticalLayout>
         return conversationId;
     }
 
+    /**
+     * Sets the username to display in user message bubbles.
+     *
+     * @param userName the name to display for user messages (default: "User")
+     */
+    public void setUserName(String userName) {
+        this.userName = userName != null ? userName : "User";
+    }
+
+    /**
+     * Gets the current user name.
+     *
+     * @return the user name
+     */
+    public String getUserName() {
+        return userName;
+    }
+
+    /**
+     * Sets the assistant name to display in message bubbles.
+     *
+     * @param assistantName the name to display for assistant messages (default: "Assistant")
+     */
+    public void setAssistantName(String assistantName) {
+        this.assistantName = assistantName != null ? assistantName : "Assistant";
+    }
+
+    /**
+     * Gets the current assistant name.
+     *
+     * @return the assistant name
+     */
+    public String getAssistantName() {
+        return assistantName;
+    }
+
+
 
     /**
      * Adds a message sent handler. Framework prefers this method for @Install pattern.
@@ -137,9 +175,6 @@ public class AiConversationComponent extends Composite<VerticalLayout>
             this.messageSentHandlers.add(handler);
         }
     }
-
-    // Configuration methods removed - unnecessarily complex for annotation demo
-
 
     /**
      * Focuses the message input field.
@@ -196,13 +231,6 @@ public class AiConversationComponent extends Composite<VerticalLayout>
         progressBar.setVisible(false);
     }
 
-    public void setEnabled(boolean enabled) {
-        getContent().setEnabled(enabled);
-        if (messageInput != null) {
-            messageInput.setEnabled(enabled);
-        }
-    }
-
 
     private void onMessageSubmit(MessageInput.SubmitEvent event) {
         String userMessage = event.getValue();
@@ -235,7 +263,7 @@ public class AiConversationComponent extends Composite<VerticalLayout>
             }
         }
 
-        MessageListItem userItem = new MessageListItem(userText, "User");
+        MessageListItem userItem = new MessageListItem(userText, userName);
         userItem.setUserColorIndex(1);
         messageList.addItem(userItem);
 
@@ -243,20 +271,15 @@ public class AiConversationComponent extends Composite<VerticalLayout>
 
         messageInput.setEnabled(false);
 
-        // Use the function-based processor for @Install pattern support
-        // Note: Async processing should be handled in the @Install method itself
         if (messageProcessorProvider == null) {
             throw new IllegalStateException("messageProcessorProvider is required");
         }
 
         try {
             String response = messageProcessorProvider.apply(userText);
-            // Only handle response if it's not null (allows async processing in @Install method)
             if (response != null) {
                 handleAiResponse(response);
             }
-            // If response is null, the @Install method handles async processing and UI updates itself
-            // The progress bar and input state should remain as set by showProgress() and setEnabled(false)
         } catch (Exception e) {
             handleAiError(e);
         }
@@ -287,14 +310,12 @@ public class AiConversationComponent extends Composite<VerticalLayout>
 
         MessageListItem errorItem = new MessageListItem(
                 text,
-                "Assistant"
+                assistantName
         );
         errorItem.setUserColorIndex(2);
         messageList.addItem(errorItem);
     }
 
-
-    // Direct configuration methods (called by ComponentLoader and Views)
 
     /**
      * Sets whether the header should be visible.
@@ -319,7 +340,7 @@ public class AiConversationComponent extends Composite<VerticalLayout>
     @SuppressWarnings("unused") // Used by views and configuration
     public void addWelcomeMessage(String message) {
         if (message != null && !message.trim().isEmpty()) {
-            MessageListItem welcomeItem = new MessageListItem(message, "Assistant");
+            MessageListItem welcomeItem = new MessageListItem(message, assistantName);
             welcomeItem.setUserColorIndex(2);
             messageList.addItem(welcomeItem);
         }
@@ -383,11 +404,13 @@ public class AiConversationComponent extends Composite<VerticalLayout>
     }
 
 
+    private HorizontalLayout headerContent;
+
     private void setupHeaderWithTitle(String title) {
         headerLayout.removeAll();
         headerLayout.setVisible(true);
 
-        HorizontalLayout headerContent = new HorizontalLayout();
+        headerContent = new HorizontalLayout();
         headerContent.setDefaultVerticalComponentAlignment(HorizontalLayout.Alignment.CENTER);
         headerContent.setWidthFull();
         headerContent.setPadding(true);
@@ -395,7 +418,35 @@ public class AiConversationComponent extends Composite<VerticalLayout>
         H3 titleComponent = new H3(title);
         titleComponent.getStyle().set("margin", "0");
         headerContent.add(titleComponent);
+        headerContent.setFlexGrow(1, titleComponent);
+
+        // Add buttons from provider if available
+        if (headerButtonProvider != null) {
+            List<Component> buttons = headerButtonProvider.get();
+            if (buttons != null) {
+                for (Component button : buttons) {
+                    headerContent.add(button);
+                }
+            }
+        }
 
         headerLayout.add(headerContent);
+    }
+
+    /**
+     * Adds a component to the header (e.g., buttons).
+     * Only works if header is visible and has been set up with a title.
+     */
+    public void addHeaderComponent(Component component) {
+        if (headerContent != null) {
+            headerContent.add(component);
+        }
+    }
+
+    /**
+     * Sets a provider that returns a list of header buttons/components when the header is created.
+     */
+    public void setHeaderButtonProvider(java.util.function.Supplier<List<Component>> provider) {
+        this.headerButtonProvider = provider;
     }
 }

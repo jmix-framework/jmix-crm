@@ -19,24 +19,28 @@ public class AiConversationComponentLoader extends AbstractComponentLoader<AiCon
             .ifPresent(resultComponent::setConversationId);
 
         loadConfiguration(resultComponent, element);
+
+        // Load standard size attributes (width, height, min/max variants)
+        componentLoader().loadSizeAttributes(resultComponent, element);
+
+        // Load other common attributes
+        componentLoader().loadClassNames(resultComponent, element);
+        componentLoader().loadEnabled(resultComponent, element);
     }
 
     protected void loadConfiguration(AiConversationComponent component, Element element) {
         // Apply XML configuration directly to the component
         boolean showHeader = loadBoolean(element, "showHeader").orElse(false);
-        String headerTitle = loadString(element, "headerTitle").orElse(null);
-        String welcomeMessage = loadString(element, "welcomeMessage").orElse(null);
+
+        // Load resource strings for internationalization
+        loadResourceString(element, "headerTitle", context.getMessageGroup(), component::setHeaderTitle);
+        loadResourceString(element, "welcomeMessage", context.getMessageGroup(), component::addWelcomeMessage);
+        loadResourceString(element, "assistantName", context.getMessageGroup(), component::setAssistantName);
+        loadResourceString(element, "userName", context.getMessageGroup(), component::setUserName);
 
         // Apply the configuration directly - no need for builder pattern
         if (showHeader) {
             component.setHeaderVisible(true);
-            if (headerTitle != null) {
-                component.setHeaderTitle(headerTitle);
-            }
-        }
-
-        if (welcomeMessage != null) {
-            component.addWelcomeMessage(welcomeMessage);
         }
 
         // Note: The view must still provide the MessageProcessor via setMessageProcessor()

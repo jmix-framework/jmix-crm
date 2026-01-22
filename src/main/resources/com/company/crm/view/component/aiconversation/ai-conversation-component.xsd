@@ -11,8 +11,13 @@
                 <xs:extension base="layout:baseComponent">
                     <xs:attribute name="conversationId" type="xs:string"/>
                     <xs:attribute name="showHeader" type="xs:boolean"/>
-                    <xs:attribute name="headerTitle" type="xs:string"/>
-                    <xs:attribute name="welcomeMessage" type="xs:string"/>
+                    <xs:attribute name="headerTitle" type="layout:resourceString"/>
+                    <xs:attribute name="welcomeMessage" type="layout:resourceString"/>
+                    <xs:attribute name="assistantName" type="layout:resourceString"/>
+                    <xs:attribute name="userName" type="layout:resourceString"/>
+
+                    <xs:attributeGroup ref="layout:hasSize"/>
+                    <xs:attributeGroup ref="layout:hasClassNames"/>
                 </xs:extension>
             </xs:complexContent>
         </xs:complexType>
