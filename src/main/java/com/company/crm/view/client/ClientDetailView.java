@@ -145,7 +145,7 @@ public class ClientDetailView extends StandardDetailView<Client> implements Widt
 
     @Install(to = "clientDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
     private Optional<Client> loadDelegate(UUID id, FetchPlan fetchPlan) {
-        return clientRepository.findById(id, fetchPlan);
+        return clientRepository.findByIdWithDynamicAttributes(id, fetchPlan);
     }
 
     @Install(target = Target.DATA_CONTEXT)

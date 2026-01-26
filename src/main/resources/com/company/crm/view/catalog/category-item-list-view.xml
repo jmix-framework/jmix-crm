@@ -63,7 +63,7 @@
                             acceptedFileTypes=".xlsx"/>
             </startSlot>
             <endSlot>
-                <simplePagination id="items_pagination" dataLoader="categoryItemsDl"/>
+                <simplePagination id="items_pagination" dataLoader="categoryItemsDl" itemsPerPageVisible="true"/>
                 <gridColumnVisibility dataGrid="categoryItemsDataGrid" icon="COG_O"
                                       themeNames="tertiary-inline" hideAllEnabled="false"/>
             </endSlot>

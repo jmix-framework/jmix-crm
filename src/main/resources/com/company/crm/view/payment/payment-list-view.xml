@@ -91,7 +91,7 @@
                 <button id="excelExport" action="paymentsDataGrid.excelExport"/>
             </startSlot>
             <endSlot>
-                <simplePagination id="payments_pagination" dataLoader="paymentsDl"/>
+                <simplePagination id="payments_pagination" dataLoader="paymentsDl" itemsPerPageVisible="true"/>
                 <gridColumnVisibility dataGrid="paymentsDataGrid" icon="COG_O"
                                       themeNames="tertiary-inline" hideAllEnabled="false"/>
             </endSlot>

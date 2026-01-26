@@ -79,7 +79,7 @@
                         <button id="excelExport" action="clientsDataGrid.excelExport"/>
                     </startSlot>
                     <endSlot>
-                        <simplePagination id="pagination" dataLoader="clientsDl" autoLoad="true"/>
+                        <simplePagination id="pagination" dataLoader="clientsDl" autoLoad="true" itemsPerPageVisible="true"/>
                         <gridColumnVisibility dataGrid="clientsDataGrid" icon="COG_O"
                                               themeNames="tertiary-inline" hideAllEnabled="false"/>
                     </endSlot>

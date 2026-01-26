@@ -92,6 +92,11 @@
                                         <textField id="vatNumberField" property="vatNumber"/>
                                         <textField id="websiteField" property="website"/>
                                         <textField id="regNumberField" property="regNumber"/>
+                                        <formLayout id="dynamicAttributes" dataContainer="clientDc">
+                                            <responsiveSteps>
+                                                <responsiveStep minWidth="0" columns="1"/>
+                                            </responsiveSteps>
+                                        </formLayout>
                                         <textArea id="addressField" colspan="2" readOnly="true"
                                                   property="address.instanceName">
                                             <suffix>

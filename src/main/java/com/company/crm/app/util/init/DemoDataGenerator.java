@@ -35,6 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.Ordered;
 import org.springframework.core.env.Environment;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -62,7 +63,7 @@ import static com.company.crm.app.util.price.PriceCalculator.calculateTotal;
  * If clients table is not empty, does nothing.
  */
 @Component
-public class DemoDataGenerator {
+public class DemoDataGenerator implements Ordered {
 
     private static final Logger log = LoggerFactory.getLogger(DemoDataGenerator.class);
 
@@ -586,5 +587,10 @@ public class DemoDataGenerator {
         String d = site.replaceFirst("https?://", "");
         int idx = d.indexOf('/');
         return idx > 0 ? d.substring(0, idx) : d;
+    }
+
+    @Override
+    public int getOrder() {
+        return Ordered.LOWEST_PRECEDENCE;
     }
 }

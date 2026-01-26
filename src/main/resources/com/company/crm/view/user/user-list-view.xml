@@ -44,7 +44,7 @@
                 </dropdownButton>
             </startSlot>
             <endSlot>
-                <simplePagination id="pagination" dataLoader="usersDl"/>
+                <simplePagination id="pagination" dataLoader="usersDl" itemsPerPageVisible="true"/>
                 <gridColumnVisibility dataGrid="usersDataGrid" icon="COG_O"
                                       themeNames="tertiary-inline" hideAllEnabled="false"/>
             </endSlot>

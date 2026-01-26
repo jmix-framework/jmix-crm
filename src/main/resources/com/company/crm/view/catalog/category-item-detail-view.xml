@@ -44,12 +44,18 @@
                         </itemsQuery>
                     </entityComboBox>
                     <select property="uom"/>
-                    <textArea property="description" height="15em"/>
                     <bigDecimalField id="priceField" property="price">
                         <prefix>
                             <span text="$"/>
                         </prefix>
                     </bigDecimalField>
+                    <formLayout id="dynamicAttributes" dataContainer="categoryItemDc" colspan="2">
+                        <responsiveSteps>
+                            <responsiveStep minWidth="0" columns="1"/>
+                            <responsiveStep minWidth="40em" columns="2"/>
+                        </responsiveSteps>
+                    </formLayout>
+                    <textArea property="description" height="15em"/>
                 </formLayout>
             </vbox>
             <vbox alignItems="CENTER" maxWidth="40em" minWidth="30em" classNames="pt-xl">

@@ -85,7 +85,7 @@
                 <button id="excelExport" action="invoicesDataGrid.excelExport"/>
             </startSlot>
             <endSlot>
-                <simplePagination id="invoices_pagination" dataLoader="invoicesDl"/>
+                <simplePagination id="invoices_pagination" dataLoader="invoicesDl" itemsPerPageVisible="true"/>
                 <gridColumnVisibility dataGrid="invoicesDataGrid" icon="COG_O"
                                       themeNames="tertiary-inline" hideAllEnabled="false"/>
             </endSlot>
