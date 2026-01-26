@@ -135,6 +135,11 @@ public class PaymentListView extends StandardListView<Payment> {
         paymentRepository.deleteAll(collection);
     }
 
+    @Supply(to = "paymentsDataGrid.number", subject = "renderer")
+    private Renderer<Payment> paymentsDataGridNumberRenderer() {
+        return crmRenderers.uniqueNumber(Payment::getNumber);
+    }
+
     @Supply(to = "paymentsDataGrid.[order.client]", subject = "renderer")
     private Renderer<Payment> paymentsDataGridOrderClientRenderer() {
         return crmRenderers.entityLink(p -> p.getOrder().getClient());

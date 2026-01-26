@@ -118,9 +118,11 @@
                 <div/>
                 <div/>
             </split>
-            <span text="Cost"/>
-            <h3 dataContainer="orderDc" property="total"/>
-            <h3 text="$"/>
+            <span text="msg://cost"/>
+            <hbox padding="false" spacing="false">
+                <h3 text="$"/>
+                <h3 dataContainer="orderDc" property="total"/>
+            </hbox>
         </hbox>
     </layout>
 </view>

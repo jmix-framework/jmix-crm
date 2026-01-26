@@ -1,4 +1,4 @@
-@NonNullApi
+@NullMarked
 package com.company.crm.app;
 
-import org.springframework.lang.NonNullApi;
+import org.jspecify.annotations.NullMarked;

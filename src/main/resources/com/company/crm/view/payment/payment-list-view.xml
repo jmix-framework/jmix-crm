@@ -118,6 +118,7 @@
                 <action id="excelExport" type="grdexp_excelExport"/>
             </actions>
             <columns resizable="true" sortable="true">
+                <column property="number" autoWidth="true" flexGrow="0"/>
                 <column property="date" autoWidth="true" flexGrow="0"/>
                 <column property="order" autoWidth="true" flexGrow="0"/>
                 <column property="order.client"/>

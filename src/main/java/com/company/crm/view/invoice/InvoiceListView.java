@@ -33,6 +33,7 @@ import io.jmix.core.repository.JmixDataRepositoryContext;
 import io.jmix.flowui.component.combobox.EntityComboBox;
 import io.jmix.flowui.component.datepicker.TypedDatePicker;
 import io.jmix.flowui.component.formlayout.JmixFormLayout;
+import io.jmix.flowui.component.grid.DataGrid;
 import io.jmix.flowui.component.select.JmixSelect;
 import io.jmix.flowui.kit.action.ActionPerformedEvent;
 import io.jmix.flowui.model.CollectionContainer;
@@ -113,6 +114,8 @@ public class InvoiceListView extends StandardListView<Invoice> {
     private TypedDatePicker<LocalDate> invoices_ToDatePicker;
     @ViewComponent
     private CollectionLoader<Invoice> invoicesDl;
+    @ViewComponent
+    private DataGrid<Invoice> invoicesDataGrid;
 
     private final LogicalCondition filtersCondition = LogicalCondition.and();
 
@@ -147,6 +150,11 @@ public class InvoiceListView extends StandardListView<Invoice> {
         return crmRenderers.invoiceOrderLink();
     }
 
+    @Supply(to = "invoicesDataGrid.number", subject = "renderer")
+    private Renderer<Invoice> invoicesDataGridNumberRenderer() {
+        return crmRenderers.uniqueNumber(Invoice::getNumber);
+    }
+
     @Supply(to = "invoicesDataGrid.client", subject = "renderer")
     private Renderer<Invoice> invoicesDataGridClientRenderer() {
         return crmRenderers.invoiceClientLink();
@@ -162,16 +170,12 @@ public class InvoiceListView extends StandardListView<Invoice> {
         // TODO:
     }
 
-    @Subscribe("invoicesDataGrid.viewPaymentsAction")
-    private void onInvoicesDataGridViewPaymentsAction(final ActionPerformedEvent event) {
-        // TODO:
-    }
-
     private void initialize() {
         loadData();
         initializeChartsBlock();
         registerUrlQueryParametersBinders();
         applyFilters();
+        invoicesDataGrid.setItemDetailsRenderer(crmRenderers.invoiceDetails());
     }
 
     private void loadData() {

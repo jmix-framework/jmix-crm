@@ -15,28 +15,35 @@ import com.company.crm.model.invoice.InvoiceStatus;
 import com.company.crm.model.order.Order;
 import com.company.crm.model.order.OrderItem;
 import com.company.crm.model.order.OrderStatus;
+import com.company.crm.model.payment.Payment;
 import com.company.crm.model.user.User;
 import com.company.crm.model.user.task.UserTask;
 import com.company.crm.view.client.ClientDetailView;
 import com.company.crm.view.order.OrderDetailView;
 import com.company.crm.view.user.UserDetailView;
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
+import com.vaadin.flow.component.Unit;
+import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.grid.GridVariant;
+import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.popover.Popover;
 import com.vaadin.flow.component.shared.Tooltip;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.Renderer;
+import com.vaadin.flow.spring.annotation.SpringComponent;
 import io.jmix.core.Messages;
 import io.jmix.core.MetadataTools;
 import io.jmix.core.metamodel.datatype.DatatypeFormatter;
 import io.jmix.flowui.DialogWindows;
 import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.asynctask.UiAsyncTasks;
-import io.jmix.flowui.component.UiComponentUtils;
+import io.jmix.flowui.component.grid.DataGrid;
 import io.jmix.flowui.kit.component.button.JmixButton;
 import io.jmix.flowui.view.StandardDetailView;
-import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -46,9 +53,10 @@ import java.util.function.Function;
 import static com.company.crm.app.util.ui.CrmUiUtils.CONTRAST_BADGE;
 import static com.company.crm.app.util.ui.CrmUiUtils.SUCCESS_BADGE;
 import static com.company.crm.app.util.ui.color.EnumClassColors.getBadgeVariant;
+import static io.jmix.flowui.component.UiComponentUtils.copyToClipboard;
 import static io.jmix.flowui.component.UiComponentUtils.getCurrentView;
 
-@Component
+@SpringComponent
 public class CrmRenderers {
 
     private final Messages messages;
@@ -60,7 +68,9 @@ public class CrmRenderers {
     private final DateTimeService dateTimeService;
     private final DatatypeFormatter datatypeFormatter;
 
-    public CrmRenderers(UiComponents uiComponents, DialogWindows dialogWindows, Messages messages, DatatypeFormatter datatypeFormatter, DateTimeService dateTimeService, UiAsyncTasks uiAsyncTasks, MetadataTools metadataTools, OrderService orderService) {
+    public CrmRenderers(UiComponents uiComponents, DialogWindows dialogWindows, Messages messages,
+                        DatatypeFormatter datatypeFormatter, DateTimeService dateTimeService,
+                        UiAsyncTasks uiAsyncTasks, MetadataTools metadataTools, OrderService orderService) {
         this.messages = messages;
         this.uiComponents = uiComponents;
         this.dialogWindows = dialogWindows;
@@ -71,6 +81,52 @@ public class CrmRenderers {
         this.orderService = orderService;
     }
 
+    public ComponentRenderer<Component, Invoice> invoiceDetails() {
+        return new ComponentRenderer<>(invoice -> {
+            var container = new VerticalLayout();
+            container.add(new H3(messages.getMessage(getClass(), "payments")));
+
+            //noinspection unchecked
+            DataGrid<Payment> paymentsGrid = uiComponents.create(DataGrid.class);
+            paymentsGrid.addThemeVariants(GridVariant.LUMO_NO_BORDER, GridVariant.LUMO_COMPACT, GridVariant.LUMO_ROW_STRIPES);
+            paymentsGrid.setMaxHeight(15, Unit.EM);
+            paymentsGrid.addColumn(Payment::getNumber)
+                    .setRenderer(uniqueNumber(Payment::getNumber))
+                    .setHeader(messages.getMessage(Payment.class, "Payment.number"));
+            paymentsGrid.addColumn(Payment::getDate)
+                    .setHeader(messages.getMessage(Payment.class, "Payment.date"));
+            paymentsGrid.addColumn(Payment::getAmount)
+                    .setHeader(messages.getMessage(Payment.class, "Payment.amount"));
+            paymentsGrid.setItems(invoice.getPayments());
+            container.add(paymentsGrid);
+
+            return container;
+        });
+    }
+
+    public ComponentRenderer<Component, Order> orderDetails() {
+        return new ComponentRenderer<>(order -> {
+            var container = new VerticalLayout();
+            container.add(new H3(messages.getMessage(getClass(), "invoices")));
+
+            //noinspection unchecked
+            DataGrid<Invoice> paymentsGrid = uiComponents.create(DataGrid.class);
+            paymentsGrid.addThemeVariants(GridVariant.LUMO_NO_BORDER, GridVariant.LUMO_COMPACT, GridVariant.LUMO_ROW_STRIPES);
+            paymentsGrid.setMaxHeight(15, Unit.EM);
+            paymentsGrid.addColumn(Invoice::getNumber)
+                    .setRenderer(uniqueNumber(Invoice::getNumber))
+                    .setHeader(messages.getMessage(Invoice.class, "Invoice.number"));
+            paymentsGrid.addColumn(Invoice::getDate)
+                    .setHeader(messages.getMessage(Invoice.class, "Invoice.date"));
+            paymentsGrid.addColumn(Invoice::getTotal)
+                    .setHeader(messages.getMessage(Invoice.class, "Invoice.total"));
+            paymentsGrid.setItems(order.getInvoices());
+            container.add(paymentsGrid);
+
+            return container;
+        });
+    }
+
     public <E extends UuidEntity, LINK extends UuidEntity> Renderer<E> entityLink(Function<E, LINK> linkGetter) {
         return entityLink(linkGetter, metadataTools::getInstanceName);
     }
@@ -79,7 +135,6 @@ public class CrmRenderers {
                                                                                   Function<LINK, String> textProvider) {
         return entityLink(linkGetter, textProvider, false);
     }
-
 
     public <E extends UuidEntity, LINK extends UuidEntity> Renderer<E> entityLink(Function<E, LINK> linkGetter,
                                                                                   Function<LINK, String> textProvider,
@@ -97,6 +152,17 @@ public class CrmRenderers {
                             }
                         }).open();
             });
+            return button;
+        });
+    }
+
+    public <E extends UuidEntity> Renderer<E> uniqueNumber(Function<E, String> numberProvider) {
+        return new ComponentRenderer<>(entity -> {
+            var button = new Button(numberProvider.apply(entity));
+            button.setTooltipText(messages.getMessage("copy"));
+            button.addThemeVariants(ButtonVariant.LUMO_ICON, ButtonVariant.LUMO_SMALL,
+                    ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_CONTRAST);
+            button.addClickListener(e -> copyToClipboard(numberProvider.apply(entity)));
             return button;
         });
     }
@@ -135,6 +201,7 @@ public class CrmRenderers {
     public Renderer<CategoryItem> categoryItemCode() {
         return badgeWithCopyRenderer(CategoryItem::getCode);
     }
+
     public Renderer<CategoryItem> categoryItemCategoryCode() {
         return badgeWithCopyRenderer(item -> item.getCategory().getCode());
     }
@@ -249,7 +316,7 @@ public class CrmRenderers {
         Tooltip.forComponent(badge).setText(messages.getMessage("copy"));
         CrmUiUtils.setCursorPointer(badge);
         badge.addClickListener(e -> {
-            UiComponentUtils.copyToClipboard(text);
+            copyToClipboard(text);
             Popover popover = new Popover(new Text(messages.getMessage("copied")));
             popover.setTarget(badge);
             popover.open();

@@ -56,6 +56,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import static com.company.crm.app.util.ui.CrmUiUtils.setSearchHintPopover;
 import static com.company.crm.app.util.ui.datacontext.DataContextUtils.wrapCondition;
 import static io.jmix.core.querycondition.PropertyCondition.contains;
 import static io.jmix.core.querycondition.PropertyCondition.equal;
@@ -172,6 +173,7 @@ public class CategoryItemListView extends StandardListView<CategoryItem> {
         List<Category> categories = categoryRepository.findAll();
         items_categorySelect.setItems(categories);
 
+        setSearchHintPopover(items_searchField);
         List.<HasValue<?, ?>>of(items_searchField, items_categorySelect)
                 .forEach(field -> field.addValueChangeListener(e -> applyFilters()));
 

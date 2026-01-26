@@ -61,7 +61,7 @@ public class CategoryItem extends FullAuditEntity {
     private BigDecimal price;
 
     @Composition
-    @OrderBy("createdDate")
+    @OrderBy("createdDate DESC")
     @OneToMany(mappedBy = "categoryItem", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CategoryItemComment> comments;
 

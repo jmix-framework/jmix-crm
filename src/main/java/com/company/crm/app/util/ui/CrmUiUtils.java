@@ -2,12 +2,15 @@ package com.company.crm.app.util.ui;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasStyle;
+import com.vaadin.flow.component.HasValue;
+import com.vaadin.flow.component.Html;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.page.BrowserWindowResizeEvent;
 import com.vaadin.flow.component.page.Page;
 import com.vaadin.flow.component.page.PendingJavaScriptResult;
+import com.vaadin.flow.component.popover.Popover;
 import com.vaadin.flow.data.selection.MultiSelect;
 import com.vaadin.flow.data.selection.SingleSelect;
 import com.vaadin.flow.dom.Style;
@@ -22,6 +25,7 @@ import io.jmix.flowui.fragment.FragmentUtils;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 import static com.company.crm.model.datatype.PriceDataType.getCurrencySymbol;
@@ -36,6 +40,41 @@ public final class CrmUiUtils {
 
     private static final String GET_CLIENT_WIDTH_FUNC = "return window.innerWidth";
     private static final String GET_CLIENT_HEIGHT_FUNC = "return window.innerHeight";
+
+    public static Popover searchHintPopover() {
+        return new Popover(new Html("<p>Press <b>Enter</b> to apply filter</p>"));
+    }
+
+    public static Popover setSearchHintPopover(Component target) {
+        return setSearchHintPopover(target, true);
+    }
+
+    public static Popover setSearchHintPopover(Component target, boolean oneTime) {
+        Popover popover = searchHintPopover();
+        popover.setTarget(target);
+        popover.setOpenOnFocus(true);
+
+
+        if (oneTime) {
+            AtomicReference<Runnable> detachRunnable = new AtomicReference<>(null);
+            popover.addOpenedChangeListener(e -> {
+                if (e.isOpened()) {
+                    detachRunnable.set(popover::removeFromParent);
+                } else {
+                    Runnable detach = detachRunnable.get();
+                    if (detach != null) {
+                        detach.run();
+                    }
+                }
+            });
+        }
+
+        if (target instanceof HasValue<?,?> hasValue) {
+            hasValue.addValueChangeListener(e -> popover.close());
+        }
+
+        return popover;
+    }
 
     public static Optional<String> getComponentId(Component component) {
         return component.getId().or(() -> FragmentUtils.getComponentId(component));

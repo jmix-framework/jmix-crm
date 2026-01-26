@@ -21,7 +21,7 @@ import static java.util.Arrays.asList;
 @Service
 public class InvoiceService {
 
-    private static final Sequence ORDER_NUMBER_SEQUENCE =
+    private static final Sequence INVOICE_NUMBER_SEQUENCE =
             Sequence.withName("CRM_INVOICE_NUMBER").setStartValue(1000);
 
     private final Sequences sequences;
@@ -33,7 +33,7 @@ public class InvoiceService {
     }
 
     public String getNextInvoiceNumber() {
-        return "INV-" + sequences.createNextValue(ORDER_NUMBER_SEQUENCE);
+        return "INV-" + sequences.createNextValue(INVOICE_NUMBER_SEQUENCE);
     }
 
     /**

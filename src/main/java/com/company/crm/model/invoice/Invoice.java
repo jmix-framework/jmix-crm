@@ -47,7 +47,7 @@ public class Invoice extends FullAuditEntity {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     private Client client;
 
-    @OrderBy("date")
+    @OrderBy("date DESC")
     @OnDelete(DeletePolicy.CASCADE)
     @OneToMany(mappedBy = "invoice")
     private List<Payment> payments;

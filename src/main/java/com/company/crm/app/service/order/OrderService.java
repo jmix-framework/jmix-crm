@@ -45,7 +45,7 @@ public class OrderService {
     }
 
     public String getNextOrderNumber() {
-        return String.valueOf(sequences.createNextValue(ORDER_NUMBER_SEQUENCE));
+        return "ORD-" + sequences.createNextValue(ORDER_NUMBER_SEQUENCE);
     }
 
     public Map<OrderStatus, BigDecimal> getOrdersAmountByStatus() {

@@ -33,7 +33,7 @@ public interface SupervisorRole extends ManagerRole {
     @EntityPolicy(entityClass = CategoryItemComment.class, actions = EntityPolicyAction.ALL)
     void categoryItemComment();
 
-    @MenuPolicy(menuIds = {"CatalogView", "categories", "products"})
-    @ViewPolicy(viewIds = {"CatalogView", "Category.list", "CategoryItem.list"})
+    @MenuPolicy(menuIds = {"categories", "products"})
+    @ViewPolicy(viewIds = {"Category.list", "CategoryItem.list"})
     void screens();
 }

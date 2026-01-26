@@ -189,6 +189,7 @@ public class HomeView extends StandardView implements WidthResizeListener {
     private CrmCard createMyTasksCard() {
         return uiComponents.create(CrmCard.class)
                 .fillAsPeriodCard("myTasks", 2, myTasksTitleComponent(), this::createMyTasksComponent)
+                .withPeriodFilter(false)
                 .withoutBackground(true);
     }
 
@@ -196,6 +197,7 @@ public class HomeView extends StandardView implements WidthResizeListener {
         return uiComponents.create(CrmCard.class)
                 .fillAsPeriodCard("overdueInvoicesCard", 2,
                         messageBundle.getMessage("cards.overdueInvoices"), this::createOverdueInvoicesComponent)
+                .withPeriodFilter(false)
                 .withoutBackground(true);
     }
 

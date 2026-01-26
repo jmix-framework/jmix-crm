@@ -264,6 +264,7 @@
                                     <action id="removeAction" type="list_remove"/>
                                 </actions>
                                 <columns resizable="true" sortable="true">
+                                    <column property="number" filterable="true"/>
                                     <column property="invoice" filterable="true"/>
                                     <column property="date" filterable="true"/>
                                     <column property="amount" filterable="true"/>

@@ -51,6 +51,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static com.company.crm.app.util.ui.CrmUiUtils.addColumnHeaderCurrencySuffix;
+import static com.company.crm.app.util.ui.CrmUiUtils.setSearchHintPopover;
 import static com.company.crm.app.util.ui.datacontext.DataContextUtils.wrapCondition;
 import static io.jmix.core.querycondition.PropertyCondition.equal;
 import static io.jmix.core.querycondition.PropertyCondition.greaterOrEqual;
@@ -83,7 +84,7 @@ public class OrderListView extends StandardListView<Order> {
     private CollectionContainer<Client> clientsDc;
 
     @ViewComponent
-    private TypedTextField<Object> searchField;
+    private TypedTextField<String> searchField;
     @ViewComponent
     private EntityComboBox<Client> clientComboBox;
     @ViewComponent
@@ -103,10 +104,15 @@ public class OrderListView extends StandardListView<Order> {
 
     @Subscribe
     private void onInit(final InitEvent event) {
-        addColumnHeaderCurrencySuffix(ordersDataGrid, "total", "paid", "leftOver");
+        configureGrid();
         clientsDl.load();
         registerUrlQueryParametersBinders();
         addDetachListener(e -> asyncTasksRegistry.cancelAll());
+    }
+
+    private void configureGrid() {
+        addColumnHeaderCurrencySuffix(ordersDataGrid, "total", "paid", "leftOver");
+        ordersDataGrid.setItemDetailsRenderer(crmRenderers.orderDetails());
     }
 
     @Subscribe
@@ -146,6 +152,11 @@ public class OrderListView extends StandardListView<Order> {
                 PriceDataType.formatWithoutCurrency(order.getTotal()));
     }
 
+    @Supply(to = "ordersDataGrid.number", subject = "renderer")
+    private Renderer<Order> ordersDataGridNumberRenderer() {
+        return crmRenderers.uniqueNumber(Order::getNumber);
+    }
+
     @Supply(to = "ordersDataGrid.paid", subject = "renderer")
     private Renderer<Order> ordersDataGridPaidRenderer() {
         return new TextRenderer<>(order ->
@@ -159,8 +170,10 @@ public class OrderListView extends StandardListView<Order> {
 
     private void initializeFilterFields() {
         initializePipelineFilter();
-        List.<HasValue<?, ?>>of(searchField, clientComboBox, fromDatePicker, toDatePicker)
-                .forEach(field -> field.addValueChangeListener(e -> applyFilters()));
+        setSearchHintPopover(searchField);
+        List.<HasValue<?, ?>>of(searchField, clientComboBox, fromDatePicker, toDatePicker).forEach(field -> {
+            field.addValueChangeListener(e -> applyFilters());
+        });
     }
 
     private void registerUrlQueryParametersBinders() {

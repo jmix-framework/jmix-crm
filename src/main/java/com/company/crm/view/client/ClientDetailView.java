@@ -9,11 +9,13 @@ import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.app.util.date.range.LocalDateRange;
 import com.company.crm.app.util.ui.chart.ChartsUtils;
 import com.company.crm.app.util.ui.listener.resize.WidthResizeListener;
+import com.company.crm.app.util.ui.renderer.CrmRenderers;
 import com.company.crm.model.address.Address;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.client.ClientRepository;
 import com.company.crm.model.invoice.Invoice;
 import com.company.crm.model.order.Order;
+import com.company.crm.model.payment.Payment;
 import com.company.crm.view.address.AddressFragment;
 import com.company.crm.view.main.MainView;
 import com.company.crm.view.payment.PaymentDetailView;
@@ -23,6 +25,7 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.splitlayout.SplitLayout.Orientation;
+import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.router.Route;
 import io.jmix.chartsflowui.component.Chart;
 import io.jmix.chartsflowui.data.item.SimpleDataItem;
@@ -53,6 +56,7 @@ import io.jmix.flowui.view.EditedEntityContainer;
 import io.jmix.flowui.view.Install;
 import io.jmix.flowui.view.StandardDetailView;
 import io.jmix.flowui.view.Subscribe;
+import io.jmix.flowui.view.Supply;
 import io.jmix.flowui.view.Target;
 import io.jmix.flowui.view.ViewComponent;
 import io.jmix.flowui.view.ViewController;
@@ -113,6 +117,8 @@ public class ClientDetailView extends StandardDetailView<Client> implements Widt
     private JmixTextArea addressField;
     @ViewComponent
     private DetailSaveCloseAction<Object> saveCloseAction;
+    @Autowired
+    private CrmRenderers crmRenderers;
 
     @Override
     public void configureUiForWidth(int width) {
@@ -153,6 +159,11 @@ public class ClientDetailView extends StandardDetailView<Client> implements Widt
         if (address != null) {
             addressField.setValue(address.getInstanceName());
         }
+    }
+
+    @Supply(to = "paymentsDataGrid.number", subject = "renderer")
+    private Renderer<Payment> paymentsDataGridNumberRenderer() {
+        return crmRenderers.uniqueNumber(Payment::getNumber);
     }
 
     @Install(to = "ordersDataGrid.createAction", subject = "initializer")

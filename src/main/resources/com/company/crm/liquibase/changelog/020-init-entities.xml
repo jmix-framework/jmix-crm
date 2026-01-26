@@ -255,6 +255,9 @@
             <column name="INVOICE_ID" type="UUID">
                 <constraints nullable="false"/>
             </column>
+            <column name="NUMBER" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
             <column name="DATE_" type="DATE"/>
             <column name="AMOUNT" type="DECIMAL(19, 2)"/>
         </createTable>

@@ -7,6 +7,7 @@ import com.company.crm.model.base.FullAuditEntity;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.datatype.PercentDataType;
 import com.company.crm.model.datatype.PriceDataType;
+import com.company.crm.model.invoice.Invoice;
 import io.jmix.core.DeletePolicy;
 import io.jmix.core.Messages;
 import io.jmix.core.entity.annotation.OnDelete;
@@ -55,7 +56,7 @@ public class Order extends FullAuditEntity {
     private Client client;
 
     @Composition
-    @OrderBy("createdDate")
+    @OrderBy("createdDate DESC")
     @OnDelete(DeletePolicy.CASCADE)
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> orderItems;
@@ -140,6 +141,11 @@ public class Order extends FullAuditEntity {
     @PropertyDatatype(PriceDataType.NAME)
     public BigDecimal getVat() {
         return PriceCalculator.calculateVat(this);
+    }
+
+    @DependsOnProperties("client")
+    public List<Invoice> getInvoices() {
+        return client.getInvoices();
     }
 
     @JmixProperty

@@ -72,6 +72,7 @@ import static com.company.crm.app.feature.sortable.SortableFeature.makeSortable;
 import static com.company.crm.app.util.demo.DemoUtils.defaultSleepForStatisticsLoading;
 import static com.company.crm.app.util.ui.CrmUiUtils.addRowSelectionInMultiSelectMode;
 import static com.company.crm.app.util.ui.CrmUiUtils.openLink;
+import static com.company.crm.app.util.ui.CrmUiUtils.setSearchHintPopover;
 import static com.company.crm.app.util.ui.datacontext.DataContextUtils.wrapCondition;
 import static com.company.crm.app.util.ui.listener.resize.WidthResizeListener.isWidthChanged;
 import static io.jmix.core.querycondition.PropertyCondition.contains;
@@ -426,6 +427,8 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
         List<User> accountManagers = new ArrayList<>(userService.loadAccountManagers());
         accountManagers.addFirst(getCurrentUser());
         accountManagerSelect.setItems(accountManagers);
+
+        setSearchHintPopover(searchField);
 
         List.<HasValue<?, ?>>of(searchField, typeSelect, accountManagerSelect, categorySelect)
                 .forEach(field -> field.addValueChangeListener(e -> applyFilters()));

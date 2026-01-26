@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <view xmlns="http://jmix.io/schema/flowui/view"
-      title="msg://orderListView.title">
+      title="msg://orderListView.title" focusMode="NO_FOCUS">
     <data>
         <collection id="ordersDc"
                     class="com.company.crm.model.order.Order">

@@ -5,6 +5,7 @@ import com.company.crm.model.order.OrderItem;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.List;
 import java.util.Objects;
 
 public final class PriceCalculator {
@@ -60,7 +61,12 @@ public final class PriceCalculator {
      * Subtotal = sum of net totals after discounts.
      */
     public static BigDecimal calculateSubtotal(Order order) {
-        return order.getOrderItems().stream()
+        List<OrderItem> orderItems = order.getOrderItems();
+        if (orderItems == null || orderItems.isEmpty()) {
+            return BigDecimal.ZERO;
+        }
+
+        return orderItems.stream()
                 .map(PriceCalculator::calculateNetTotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add)
                 .setScale(DEFAULT_SCALE, DEFAULT_ROUNDING);
@@ -89,7 +95,12 @@ public final class PriceCalculator {
      * VAT = sum of VAT for all items.
      */
     public static BigDecimal calculateVat(Order order) {
-        return order.getOrderItems().stream()
+        List<OrderItem> orderItems = order.getOrderItems();
+        if (orderItems == null || orderItems.isEmpty()) {
+            return BigDecimal.ZERO;
+        }
+
+        return orderItems.stream()
                 .map(PriceCalculator::calculateVatTotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add)
                 .setScale(DEFAULT_SCALE, DEFAULT_ROUNDING);

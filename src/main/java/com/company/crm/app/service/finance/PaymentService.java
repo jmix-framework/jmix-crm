@@ -5,6 +5,8 @@ import com.company.crm.model.client.Client;
 import com.company.crm.model.order.Order;
 import com.company.crm.model.payment.Payment;
 import com.company.crm.model.payment.PaymentRepository;
+import io.jmix.data.Sequence;
+import io.jmix.data.Sequences;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -16,10 +18,19 @@ import java.util.stream.Collectors;
 @Service
 public class PaymentService {
 
-    private final PaymentRepository paymentRepository;
+    private static final Sequence PAYMENT_NUMBER_SEQUENCE =
+            Sequence.withName("CRM_INVOICE_NUMBER").setStartValue(1000);
 
-    public PaymentService(PaymentRepository paymentRepository) {
+    private final PaymentRepository paymentRepository;
+    private final Sequences sequences;
+
+    public PaymentService(PaymentRepository paymentRepository, Sequences sequences) {
         this.paymentRepository = paymentRepository;
+        this.sequences = sequences;
+    }
+
+    public String getNextPaymentNumber() {
+        return "PAY-" + sequences.createNextValue(PAYMENT_NUMBER_SEQUENCE);
     }
 
     public List<Payment> loadPayments(LocalDateRange dateRange) {

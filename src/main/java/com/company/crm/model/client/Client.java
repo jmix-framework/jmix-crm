@@ -40,12 +40,12 @@ public class Client extends FullAuditEntity {
     @Column(name = "NAME", nullable = false)
     private String name;
 
-    @OrderBy("date")
+    @OrderBy("date DESC")
     @OnDelete(DeletePolicy.CASCADE)
     @OneToMany(mappedBy = "client")
     private List<Invoice> invoices;
 
-    @OrderBy("date")
+    @OrderBy("date DESC")
     @OnDelete(DeletePolicy.CASCADE)
     @OneToMany(mappedBy = "client")
     private List<Order> orders;

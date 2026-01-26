@@ -20,9 +20,6 @@
         <item view="CategoryItem.list" id="products"
               title="msg:///menu_config.catalog.categoryItems.title"
               icon="vaadin:cubes"/>
-        <item view="PricingView" id="pricing"
-              title="msg:///menu_config.catalog.pricing.title"
-              icon="vaadin:tags"/>
     </menu>
 
     <item view="Client.list" id="clients"

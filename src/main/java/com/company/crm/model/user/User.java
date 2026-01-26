@@ -39,7 +39,7 @@ public class User extends FullAuditEntity implements JmixUserDetails, HasTimeZon
     private String username;
 
     @Composition
-    @OrderBy("createdDate")
+    @OrderBy("createdDate DESC")
     @OnDelete(DeletePolicy.CASCADE)
     @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserTask> tasks;
