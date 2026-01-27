@@ -4,7 +4,10 @@ import com.company.crm.app.feature.queryparameters.tab.TabIndexUrlQueryParameter
 import com.company.crm.app.service.client.ClientService;
 import com.company.crm.app.service.client.CompletedOrdersByDateRangeInfo;
 import com.company.crm.app.service.datetime.DateTimeService;
+import com.company.crm.app.ui.component.CrmLoader;
 import com.company.crm.app.ui.component.RecentActivitiesBlock;
+import com.company.crm.app.ui.component.card.CrmCard;
+import com.company.crm.app.util.AsyncTasksRegistry;
 import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.app.util.date.range.LocalDateRange;
 import com.company.crm.app.util.ui.chart.ChartsUtils;
@@ -13,17 +16,23 @@ import com.company.crm.app.util.ui.renderer.CrmRenderers;
 import com.company.crm.model.address.Address;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.client.ClientRepository;
+import com.company.crm.model.datatype.PriceDataType;
 import com.company.crm.model.invoice.Invoice;
 import com.company.crm.model.order.Order;
+import com.company.crm.model.order.OrderStatus;
 import com.company.crm.model.payment.Payment;
 import com.company.crm.view.address.AddressFragment;
 import com.company.crm.view.main.MainView;
 import com.company.crm.view.payment.PaymentDetailView;
+import com.company.crm.view.util.SkeletonStyler;
 import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.html.H1;
+import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.splitlayout.SplitLayout.Orientation;
 import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.router.Route;
@@ -43,6 +52,8 @@ import io.jmix.flowui.Fragments;
 import io.jmix.flowui.Notifications;
 import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.action.view.DetailSaveCloseAction;
+import io.jmix.flowui.asynctask.UiAsyncTasks;
+import io.jmix.flowui.asynctask.UiAsyncTasks.SupplierConfigurer;
 import io.jmix.flowui.component.formlayout.JmixFormLayout;
 import io.jmix.flowui.component.splitlayout.JmixSplitLayout;
 import io.jmix.flowui.component.tabsheet.JmixTabSheet;
@@ -74,6 +85,9 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Supplier;
 
+import static com.company.crm.app.feature.sortable.SortableFeature.makeSortable;
+import static com.company.crm.app.util.demo.DemoUtils.defaultSleepForStatisticsLoading;
+
 @Route(value = "clients/:id", layout = MainView.class)
 @ViewController(id = CrmConstants.ViewIds.CLIENT_DETAIL)
 @ViewDescriptor(path = "client-detail-view.xml")
@@ -93,6 +107,8 @@ public class ClientDetailView extends StandardDetailView<Client> implements Widt
     private DateTimeService dateTimeService;
     @Autowired
     private ClientRepository clientRepository;
+    @Autowired
+    private UiAsyncTasks uiAsyncTasks;
 
     @ViewComponent
     private JmixTabSheet tabSheet;
@@ -101,7 +117,15 @@ public class ClientDetailView extends StandardDetailView<Client> implements Widt
     @ViewComponent
     private JmixSplitLayout formSplit;
     @ViewComponent
-    private JmixFormLayout chartsBlock;
+    private JmixFormLayout analyticChartsBlock;
+    @ViewComponent
+    private CrmCard ordersTotalSumCard;
+    @ViewComponent
+    private CrmCard paymentsTotalSumCard;
+    @ViewComponent
+    private CrmCard averageBillCard;
+    @ViewComponent
+    private H3 outstandingBalanceValue;
 
     @SuppressWarnings("FieldCanBeLocal")
     private final int loadStatsForLastYearsAmount = 3;
@@ -120,6 +144,10 @@ public class ClientDetailView extends StandardDetailView<Client> implements Widt
     @Autowired
     private CrmRenderers crmRenderers;
 
+    private final AsyncTasksRegistry asyncTasksRegistry = AsyncTasksRegistry.newInstance();
+    @ViewComponent
+    private JmixFormLayout summaryBlock;
+
     @Override
     public void configureUiForWidth(int width) {
         formSplit.setOrientation(width > 900 ? Orientation.HORIZONTAL : Orientation.VERTICAL);
@@ -134,13 +162,16 @@ public class ClientDetailView extends StandardDetailView<Client> implements Widt
     @Subscribe
     private void onInit(final InitEvent event) {
         TabIndexUrlQueryParameterBinder.register(this, tabSheet);
+        addDetachListener(e -> asyncTasksRegistry.cancelAll());
     }
 
     @Subscribe
     private void onBeforeShow(final BeforeShowEvent event) {
         recentActivities.setMaxWidth(27.5f, Unit.EM);
         recentActivities.setClient(getEditedEntity());
-        chartsUtils.initializeChartsAsync(getChartsLoaders());
+        initializeSummaryBlock();
+        initializeOutstandingBalance();
+        initializeAnalyticsBlock();
     }
 
     @Install(to = "clientDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
@@ -233,6 +264,99 @@ public class ClientDetailView extends StandardDetailView<Client> implements Widt
         addressDialog.open();
     }
 
+    private void initializeSummaryBlock() {
+        makeSortable(summaryBlock);
+
+        Client client = getEditedEntity();
+        installCardLoader(ordersTotalSumCard);
+        installCardLoader(paymentsTotalSumCard);
+        installCardLoader(averageBillCard);
+
+        scheduleOrdersTotalSumCalculating(client);
+        schedulePaymentsTotalSumCalculating(client);
+        scheduleAverageBillCalculating(client);
+    }
+
+    private void initializeOutstandingBalance() {
+        Client client = getEditedEntity();
+        outstandingBalanceValue.setText("...");
+
+        SupplierConfigurer<BigDecimal> taskConfigurer = uiAsyncTasks
+                .supplierConfigurer(() -> calculateOutstandingBalance(client))
+                .withExceptionHandler(e -> outstandingBalanceValue.setText("-"))
+                .withResultHandler(total -> outstandingBalanceValue.setText(PriceDataType.defaultFormat(total)));
+        asyncTasksRegistry.placeTask("outstandingBalanceTask", taskConfigurer);
+    }
+
+    private void initializeAnalyticsBlock() {
+        analyticChartsBlock.addAttachListener(e -> {
+            if (e.isInitialAttach()) {
+                chartsUtils.initializeChartsAsync(getChartsLoaders());
+            }
+        });
+    }
+
+    private void installCardLoader(CrmCard card) {
+        card.removeAll();
+        CrmLoader loader = new CrmLoader();
+        loader.startLoading();
+        card.add(loader);
+        SkeletonStyler.apply(card);
+    }
+
+    private void scheduleOrdersTotalSumCalculating(Client client) {
+        SupplierConfigurer<BigDecimal> taskConfigurer = uiAsyncTasks
+                .supplierConfigurer(() -> calculateOrdersTotalSum(client))
+                .withExceptionHandler(e -> SkeletonStyler.remove(ordersTotalSumCard))
+                .withResultHandler(total -> fillSummaryCard(messages.getMessage("ordersTotal"), ordersTotalSumCard, total));
+        asyncTasksRegistry.placeTask("ordersTotalSumTask", taskConfigurer);
+    }
+
+    private void schedulePaymentsTotalSumCalculating(Client client) {
+        SupplierConfigurer<BigDecimal> taskConfigurer = uiAsyncTasks
+                .supplierConfigurer(() -> calculatePaymentsTotalSum(client))
+                .withExceptionHandler(e -> SkeletonStyler.remove(paymentsTotalSumCard))
+                .withResultHandler(total -> fillSummaryCard(messages.getMessage("paymentsTotal"), paymentsTotalSumCard, total));
+        asyncTasksRegistry.placeTask("paymentsTotalSumTask", taskConfigurer);
+    }
+
+    private void scheduleAverageBillCalculating(Client client) {
+        SupplierConfigurer<BigDecimal> taskConfigurer = uiAsyncTasks
+                .supplierConfigurer(() -> calculateAverageBill(client))
+                .withExceptionHandler(e -> SkeletonStyler.remove(averageBillCard))
+                .withResultHandler(average -> fillSummaryCard(messages.getMessage("averageBill"), averageBillCard, average));
+        asyncTasksRegistry.placeTask("averageBillTask", taskConfigurer);
+    }
+
+    private BigDecimal calculateOrdersTotalSum(Client client) {
+        defaultSleepForStatisticsLoading();
+        return clientService.getOrdersTotalSum(OrderStatus.values(), client);
+    }
+
+    private BigDecimal calculatePaymentsTotalSum(Client client) {
+        defaultSleepForStatisticsLoading();
+        return clientService.getPaymentsTotalSum(client);
+    }
+
+    private BigDecimal calculateAverageBill(Client client) {
+        defaultSleepForStatisticsLoading();
+        return clientService.getAverageBill(client);
+    }
+
+    private BigDecimal calculateOutstandingBalance(Client client) {
+        defaultSleepForStatisticsLoading();
+        return clientService.getInvoicesTotalSum(client)
+                .subtract(clientService.getPaymentsTotalSum(client));
+    }
+
+    private void fillSummaryCard(String title, CrmCard card, BigDecimal value) {
+        VerticalLayout content = new VerticalLayout(new H1(PriceDataType.defaultFormat(value)));
+        content.setPadding(false);
+        content.setSpacing(false);
+        card.fillAsStaticCard(title, content);
+        SkeletonStyler.remove(card);
+    }
+
     private Map<Chart, Supplier<DataSet>> getChartsLoaders() {
         var chart2DataSetLoader = new HashMap<Chart, Supplier<DataSet>>();
 
@@ -248,7 +372,7 @@ public class ClientDetailView extends StandardDetailView<Client> implements Widt
                     .withInterval(0)
                     .withSplitLine(new SplitLine().withShow(false));
 
-            chartsBlock.add(chartsUtils.createViewStatChartWrapper(chart));
+            analyticChartsBlock.add(chartsUtils.createViewStatChartWrapper(chart));
             chart2DataSetLoader.put(chart, dataSetSupplier);
         });
         return chart2DataSetLoader;

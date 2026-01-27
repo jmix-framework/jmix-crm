@@ -24,13 +24,6 @@
         <action id="discardAction" type="lookup_discard"/>
     </actions>
     <layout>
-        <formLayout id="chartsBlock" width="100%">
-            <responsiveSteps>
-                <responsiveStep minWidth="0" columns="1"/>
-                <responsiveStep minWidth="60em" columns="2"/>
-            </responsiveSteps>
-        </formLayout>
-
         <div width="100%" maxWidth="40em">
             <formLayout width="100%">
                 <responsiveSteps>

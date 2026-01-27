@@ -23,7 +23,9 @@
             </loader>
         </collection>
         <collection id="invoicesDc" class="com.company.crm.model.invoice.Invoice">
-            <fetchPlan extends="_base"/>
+            <fetchPlan extends="_base">
+                <property name="order" fetchPlan="_base"/>
+            </fetchPlan>
             <loader id="invoicesDl">
                 <query>
                     <![CDATA[select e from Invoice e where e.client = :container_clientDc]]>
@@ -71,11 +73,14 @@
                 <tabSheet id="tabSheet" width="100%">
                     <tab id="infoTab" label="msg://infoTabLabel">
                         <div width="100%">
-                            <formLayout id="chartsBlock" width="100%" classNames="mb-m mt-m">
-                                <responsiveSteps>
-                                    <responsiveStep minWidth="0" columns="1"/>
-                                    <responsiveStep minWidth="60em" columns="3"/>
-                                </responsiveSteps>
+                            <formLayout id="summaryBlock" width="100%" classNames="mb-m mt-m"
+                                        autoResponsive="true" autoRows="true"
+                                        expandFields="true" expandColumns="true" rowSpacing="1em">
+                                <component id="ordersTotalSumCard"
+                                           class="com.company.crm.app.ui.component.card.CrmCard"/>
+                                <component id="paymentsTotalSumCard"
+                                           class="com.company.crm.app.ui.component.card.CrmCard"/>
+                                <component id="averageBillCard" class="com.company.crm.app.ui.component.card.CrmCard"/>
                             </formLayout>
 
                             <split width="100%" id="formSplit" themeNames="minimal" splitterPosition="70">
@@ -151,7 +156,7 @@
                                     <button id="removeContactButton" action="contactsDataGrid.removeAction"/>
                                 </startSlot>
                             </hbox>
-                            <dataGrid id="contactsDataGrid" dataContainer="contactsDc" multiSort="true">
+                            <dataGrid id="contactsDataGrid" dataContainer="contactsDc" multiSort="true" columnReorderingAllowed="true">
                                 <actions>
                                     <action id="createAction" type="list_create">
                                         <properties>
@@ -184,7 +189,7 @@
                                     <button id="removeOrderButton" action="ordersDataGrid.removeAction"/>
                                 </startSlot>
                             </hbox>
-                            <dataGrid id="ordersDataGrid" dataContainer="ordersDc" multiSort="true">
+                            <dataGrid id="ordersDataGrid" dataContainer="ordersDc" multiSort="true" columnReorderingAllowed="true">
                                 <actions>
                                     <action id="createAction" type="list_create">
                                         <properties>
@@ -199,9 +204,9 @@
                                     <action id="removeAction" type="list_remove"/>
                                 </actions>
                                 <columns resizable="true" sortable="true">
+                                    <column property="number" filterable="true"/>
                                     <column property="date" filterable="true"/>
                                     <column property="status" filterable="true"/>
-                                    <column property="itemsTotal"/>
                                     <column property="total" filterable="true"/>
                                 </columns>
                             </dataGrid>
@@ -217,7 +222,13 @@
                                     <button id="removeInvoiceButton" action="invoicesDataGrid.removeAction"/>
                                 </startSlot>
                             </hbox>
-                            <dataGrid id="invoicesDataGrid" dataContainer="invoicesDc" multiSort="true">
+                            <hbox id="invoicesOutstandingBalance" width="100%" padding="true"
+                                  justifyContent="BETWEEN" alignItems="CENTER"
+                                  classNames="mb-s mt-s bg-contrast-5 border rounded-l">
+                                <span text="msg://outstandingBalance"/>
+                                <h3 id="outstandingBalanceValue" text="-"/>
+                            </hbox>
+                            <dataGrid id="invoicesDataGrid" dataContainer="invoicesDc" multiSort="true" columnReorderingAllowed="true">
                                 <actions>
                                     <action id="createAction" type="list_create">
                                         <properties>
@@ -254,7 +265,7 @@
                                     <button id="removePaymentButton" action="paymentsDataGrid.removeAction"/>
                                 </startSlot>
                             </hbox>
-                            <dataGrid id="paymentsDataGrid" dataContainer="paymentsDc" multiSort="true">
+                            <dataGrid id="paymentsDataGrid" dataContainer="paymentsDc" multiSort="true" columnReorderingAllowed="true">
                                 <actions>
                                     <action id="createAction" type="list_create">
                                         <properties>
@@ -276,6 +287,17 @@
                                 </columns>
                             </dataGrid>
                         </vbox>
+                    </tab>
+
+                    <tab id="analyticsTab" label="msg://analyticsTabLabel">
+                        <div width="100%">
+                            <formLayout id="analyticChartsBlock" width="100%" classNames="mb-m mt-m">
+                                <responsiveSteps>
+                                    <responsiveStep minWidth="0" columns="1"/>
+                                    <responsiveStep minWidth="60em" columns="3"/>
+                                </responsiveSteps>
+                            </formLayout>
+                        </div>
                     </tab>
                 </tabSheet>
             </div>

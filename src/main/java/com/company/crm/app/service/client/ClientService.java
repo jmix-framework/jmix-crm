@@ -304,6 +304,29 @@ public class ClientService {
     }
 
     /**
+     * Calculates the total value of all invoices associated with the specified client.
+     *
+     * @param client the {@link Client}s whose total invoices value is to be calculated.
+     * @return the total value of all invoices associated with the specified client as a {@link BigDecimal}.
+     */
+    public BigDecimal getInvoicesTotalSum(Client... client) {
+        boolean clientSpecified = client.length > 0;
+
+        var loader = clientRepository.fluentValueLoader(
+                "select sum(i.total) as total " +
+                        "from Invoice i " +
+                        (clientSpecified ? "where i.client in :client" : ""),
+                BigDecimal.class
+        );
+
+        if (clientSpecified) {
+            loader.parameter("client", asList(client));
+        }
+
+        return loader.optional().orElse(BigDecimal.ZERO);
+    }
+
+    /**
      * Calculates the average bill (order value) for the specified client.
      *
      * @param client the {@link Client}s whose average bill is to be calculated.

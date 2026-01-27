@@ -36,6 +36,7 @@ import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.data.selection.SelectionEvent;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility;
+import io.jmix.core.Messages;
 import io.jmix.core.querycondition.LogicalCondition;
 import io.jmix.core.repository.JmixDataRepositoryContext;
 import io.jmix.core.security.CurrentAuthentication;
@@ -87,6 +88,8 @@ import static io.jmix.core.querycondition.PropertyCondition.isCollectionEmpty;
 public class ClientListView extends StandardListView<Client> implements WidthResizeListener {
 
     @Autowired
+    private Messages messages;
+    @Autowired
     private UserService userService;
     @Autowired
     private OrderService orderService;
@@ -129,6 +132,8 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
     private CollectionLoader<Client> clientsDl;
     @ViewComponent
     private DataGrid<Client> clientsDataGrid;
+    @ViewComponent
+    private MessageBundle messageBundle;
 
     private static volatile int lastWidth = -1;
     private static final int widthBreakpoint = 600;
@@ -136,8 +141,6 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
     private final AsyncTasksRegistry asyncTasksRegistry = AsyncTasksRegistry.newInstance();
 
     private final LogicalCondition filtersCondition = LogicalCondition.and();
-    @ViewComponent
-    private MessageBundle messageBundle;
 
     @Override
     public void configureUiForWidth(int width) {
@@ -297,7 +300,7 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
         SupplierConfigurer<?> task = uiAsyncTasks.supplierConfigurer(() -> calculateOrdersTotalSum(clients))
                 .withExceptionHandler(e -> SkeletonStyler.remove(ordersTotalSumCard))
                 .withResultHandler(ordersTotalSum ->
-                        fillStatCard("Orders Total", ordersTotalSumCard, ordersTotalSum));
+                        fillStatCard(messages.getMessage("ordersTotal"), ordersTotalSumCard, ordersTotalSum));
         asyncTasksRegistry.placeTask("ordersTotalSumTask", task);
     }
 
@@ -305,14 +308,14 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
         SupplierConfigurer<BigDecimal> taskConfigurer = uiAsyncTasks.supplierConfigurer(() -> calculatePaymentsTotalSum(clients))
                 .withExceptionHandler(e -> SkeletonStyler.remove(paymentsTotalSumCard))
                 .withResultHandler(paymentsTotalSum ->
-                        fillStatCard("Payments Total", paymentsTotalSumCard, paymentsTotalSum));
+                        fillStatCard(messages.getMessage("paymentsTotal"), paymentsTotalSumCard, paymentsTotalSum));
         asyncTasksRegistry.placeTask("paymentsTotalSumTask", taskConfigurer);
     }
 
     private void scheduleAverageBillCalculating(Client... clients) {
         SupplierConfigurer<?> task = uiAsyncTasks.supplierConfigurer(() -> calculateAverageBill(clients))
                 .withExceptionHandler(e -> SkeletonStyler.remove(averageBillCard))
-                .withResultHandler(averageBill -> fillStatCard("Average Bill", averageBillCard, averageBill));
+                .withResultHandler(averageBill -> fillStatCard(messages.getMessage("averageBill"), averageBillCard, averageBill));
         asyncTasksRegistry.placeTask("averageBillTask", task);
     }
 
