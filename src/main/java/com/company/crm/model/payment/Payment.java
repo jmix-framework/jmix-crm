@@ -1,7 +1,6 @@
 package com.company.crm.model.payment;
 
-import com.company.crm.app.service.finance.PaymentService;
-import com.company.crm.app.util.context.AppContext;
+import com.company.crm.model.HasUniqueNumber;
 import com.company.crm.model.base.FullAuditEntity;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.datatype.PriceDataType;
@@ -33,7 +32,7 @@ import java.time.LocalDate;
 @Table(name = "PAYMENT", indexes = {
         @Index(name = "IDX_PAYMENT_INVOICE", columnList = "INVOICE_ID")
 })
-public class Payment extends FullAuditEntity {
+public class Payment extends FullAuditEntity implements HasUniqueNumber {
 
     @Column(name = "NUMBER", nullable = false, unique = true)
     private String number;
@@ -112,11 +111,6 @@ public class Payment extends FullAuditEntity {
 
     @PrePersist
     public void prePersist() {
-        setNumber(generateNextOrderNumber());
+        setNumber(generateNextNumber());
     }
-
-    private String generateNextOrderNumber() {
-        return AppContext.getBean(PaymentService.class).getNextPaymentNumber();
-    }
-
 }

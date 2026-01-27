@@ -29,6 +29,7 @@ import io.jmix.flowui.component.formlayout.JmixFormLayout;
 import io.jmix.flowui.component.select.JmixSelect;
 import io.jmix.flowui.component.textfield.TypedTextField;
 import io.jmix.flowui.component.upload.FileUploadField;
+import io.jmix.flowui.kit.action.ActionPerformedEvent;
 import io.jmix.flowui.kit.component.upload.event.FileUploadSucceededEvent;
 import io.jmix.flowui.model.CollectionLoader;
 import io.jmix.flowui.view.DialogMode;
@@ -92,20 +93,9 @@ public class CategoryItemListView extends StandardListView<CategoryItem> {
     @ViewComponent
     private CollectionLoader<CategoryItem> categoryItemsDl;
     @ViewComponent
-    private FileUploadField importCatalogField;
+    private FileUploadField updateCatalogField;
 
     private final LogicalCondition filtersCondition = LogicalCondition.and();
-
-    @Subscribe("importCatalogField")
-    public void onImportCatalogFieldFileUploadSucceeded(FileUploadSucceededEvent<FileUploadField> event) {
-        byte[] content = importCatalogField.getValue();
-        if (content != null) {
-            ByteArrayInputStream inputStream = new ByteArrayInputStream(content);
-            CatalogImportSettings importSettings = new CatalogImportSettings(inputStream);
-            catalogService.updateCatalog(importSettings);
-            categoryItemsDl.load();
-        }
-    }
 
     @Override
     protected void onAttach(AttachEvent attachEvent) {
@@ -141,6 +131,23 @@ public class CategoryItemListView extends StandardListView<CategoryItem> {
     @Supply(to = "categoryItemsDataGrid.code", subject = "renderer")
     private Renderer<CategoryItem> categoryItemsDataGridCodeRenderer() {
         return crmRenderers.categoryItemCode();
+    }
+
+    @Subscribe("updateCatalogField")
+    public void onImportCatalogFieldFileUploadSucceeded(FileUploadSucceededEvent<FileUploadField> event) {
+        byte[] content = updateCatalogField.getValue();
+        if (content != null) {
+            ByteArrayInputStream inputStream = new ByteArrayInputStream(content);
+            CatalogImportSettings importSettings = new CatalogImportSettings(inputStream);
+            catalogService.updateCatalog(importSettings);
+            categoryItemsDl.load();
+        }
+    }
+
+    @Subscribe("categoryItemsDataGrid.downloadXls")
+    private void onCategoryItemsDataGridDownloadXls(final ActionPerformedEvent event) {
+        catalogService.downloadCatalogXls();
+        categoryItemsDl.load();
     }
 
     private void initialize() {

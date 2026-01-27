@@ -1,8 +1,7 @@
 package com.company.crm.model.order;
 
-import com.company.crm.app.service.order.OrderService;
-import com.company.crm.app.util.context.AppContext;
 import com.company.crm.app.util.price.PriceCalculator;
+import com.company.crm.model.HasUniqueNumber;
 import com.company.crm.model.base.FullAuditEntity;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.datatype.PercentDataType;
@@ -46,7 +45,7 @@ import static com.company.crm.app.util.price.PriceCalculator.calculateSubtotal;
 @Table(name = "ORDER_", indexes = {
         @Index(name = "IDX_ORDER__CLIENT", columnList = "CLIENT_ID")
 })
-public class Order extends FullAuditEntity {
+public class Order extends FullAuditEntity implements HasUniqueNumber {
 
     @Column(name = "NUMBER", nullable = false, unique = true)
     private String number;
@@ -217,10 +216,6 @@ public class Order extends FullAuditEntity {
 
     @PrePersist
     public void prePersist() {
-        setNumber(generateNextOrderNumber());
-    }
-
-    private String generateNextOrderNumber() {
-        return AppContext.getBean(OrderService.class).getNextOrderNumber();
+        setNumber(generateNextNumber());
     }
 }

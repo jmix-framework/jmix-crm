@@ -56,11 +56,8 @@
                 <button id="createButton" action="categoryItemsDataGrid.createAction"/>
                 <button id="editButton" action="categoryItemsDataGrid.editAction"/>
                 <button id="removeButton" action="categoryItemsDataGrid.removeAction"/>
-                <button id="excelExport" action="categoryItemsDataGrid.excelExport"/>
-                <fileUploadField id="importCatalogField"
-                            uploadIcon="UPLOAD"
-                            uploadText="msg:///importCatalog"
-                            acceptedFileTypes=".xlsx"/>
+                <button id="downloadXlsButton" action="categoryItemsDataGrid.downloadXls"/>
+                <fileUploadField id="updateCatalogField" uploadIcon="UPLOAD_ALT" uploadText="msg://updateFromXlsx" acceptedFileTypes=".xlsx"/>
             </startSlot>
             <endSlot>
                 <simplePagination id="items_pagination" dataLoader="categoryItemsDl" itemsPerPageVisible="true"/>
@@ -86,7 +83,7 @@
                     </properties>
                 </action>
                 <action id="removeAction" type="list_remove"/>
-                <action id="excelExport" type="grdexp_excelExport"/>
+                <action id="downloadXls" text="msg://downloadXlsx" icon="DOWNLOAD_ALT"/>
             </actions>
             <columns resizable="true" sortable="true">
                 <column property="name"/>

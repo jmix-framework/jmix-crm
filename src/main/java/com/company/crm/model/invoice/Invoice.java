@@ -1,7 +1,6 @@
 package com.company.crm.model.invoice;
 
-import com.company.crm.app.service.finance.InvoiceService;
-import com.company.crm.app.util.context.AppContext;
+import com.company.crm.model.HasUniqueNumber;
 import com.company.crm.model.base.FullAuditEntity;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.datatype.PriceDataType;
@@ -38,7 +37,7 @@ import java.util.List;
         @Index(name = "IDX_INVOICE_ORDER", columnList = "ORDER_ID"),
         @Index(name = "IDX_INVOICE_CLIENT", columnList = "CLIENT_ID")
 })
-public class Invoice extends FullAuditEntity {
+public class Invoice extends FullAuditEntity implements HasUniqueNumber {
 
     @Column(name = "NUMBER", nullable = false, unique = true)
     private String number;
@@ -172,10 +171,6 @@ public class Invoice extends FullAuditEntity {
 
     @PrePersist
     public void prePersist() {
-        setNumber(generateNextOrderNumber());
-    }
-
-    private String generateNextOrderNumber() {
-        return AppContext.getBean(InvoiceService.class).getNextInvoiceNumber();
+        setNumber(generateNextNumber());
     }
 }

@@ -4,8 +4,6 @@ import com.company.crm.app.util.date.range.LocalDateRange;
 import com.company.crm.model.invoice.Invoice;
 import com.company.crm.model.invoice.InvoiceRepository;
 import com.company.crm.model.invoice.InvoiceStatus;
-import io.jmix.data.Sequence;
-import io.jmix.data.Sequences;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
 
@@ -21,19 +19,11 @@ import static java.util.Arrays.asList;
 @Service
 public class InvoiceService {
 
-    private static final Sequence INVOICE_NUMBER_SEQUENCE =
-            Sequence.withName("CRM_INVOICE_NUMBER").setStartValue(1000);
 
-    private final Sequences sequences;
     private final InvoiceRepository invoiceRepository;
 
-    public InvoiceService(Sequences sequences, InvoiceRepository invoiceRepository) {
-        this.sequences = sequences;
+    public InvoiceService(InvoiceRepository invoiceRepository) {
         this.invoiceRepository = invoiceRepository;
-    }
-
-    public String getNextInvoiceNumber() {
-        return "INV-" + sequences.createNextValue(INVOICE_NUMBER_SEQUENCE);
     }
 
     /**

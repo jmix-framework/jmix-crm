@@ -6,8 +6,6 @@ import com.company.crm.model.order.Order;
 import com.company.crm.model.order.OrderRepository;
 import com.company.crm.model.order.OrderStatus;
 import io.jmix.core.entity.KeyValueEntity;
-import io.jmix.data.Sequence;
-import io.jmix.data.Sequences;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -19,15 +17,10 @@ import java.util.Map;
 @Service
 public class OrderService {
 
-    private static final Sequence ORDER_NUMBER_SEQUENCE =
-            Sequence.withName("CRM_ORDER_NUMBER").setStartValue(1000);
-
-    private final Sequences sequences;
     private final OrderRepository orderRepository;
     private final PaymentService paymentService;
 
-    public OrderService(OrderRepository orderRepository, Sequences sequences, PaymentService paymentService) {
-        this.sequences = sequences;
+    public OrderService(OrderRepository orderRepository, PaymentService paymentService) {
         this.orderRepository = orderRepository;
         this.paymentService = paymentService;
     }
@@ -42,10 +35,6 @@ public class OrderService {
             return BigDecimal.ZERO;
         }
         return result;
-    }
-
-    public String getNextOrderNumber() {
-        return "ORD-" + sequences.createNextValue(ORDER_NUMBER_SEQUENCE);
     }
 
     public Map<OrderStatus, BigDecimal> getOrdersAmountByStatus() {
