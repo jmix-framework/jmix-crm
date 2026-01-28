@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <view xmlns="http://jmix.io/schema/flowui/view" xmlns:dynattr="http://jmix.io/schema/dynattr/flowui"
-      title="msg://categoryItemDetailView.title">
+      title="msg://categoryItemDetailView.title" focusMode="NO_FOCUS">
     <data>
         <instance id="categoryItemDc"
                   class="com.company.crm.model.catalog.item.CategoryItem">
@@ -44,11 +44,7 @@
                         </itemsQuery>
                     </entityComboBox>
                     <select property="uom"/>
-                    <bigDecimalField id="priceField" property="price">
-                        <prefix>
-                            <span text="$"/>
-                        </prefix>
-                    </bigDecimalField>
+                    <textField id="priceField" property="price"/>
                     <formLayout id="dynamicAttributes" dataContainer="categoryItemDc" colspan="2">
                         <responsiveSteps>
                             <responsiveStep minWidth="0" columns="1"/>

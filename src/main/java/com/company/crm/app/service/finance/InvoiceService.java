@@ -19,7 +19,6 @@ import static java.util.Arrays.asList;
 @Service
 public class InvoiceService {
 
-
     private final InvoiceRepository invoiceRepository;
 
     public InvoiceService(InvoiceRepository invoiceRepository) {
@@ -95,6 +94,13 @@ public class InvoiceService {
         }
 
         return loader.list();
+    }
+
+    /**
+     * @see InvoiceService#getInvoicesCount(LocalDateRange, InvoiceStatus...)
+     */
+    public long getInvoicesCount(InvoiceStatus... status) {
+        return getInvoicesCount(null, status);
     }
 
     /**

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <view xmlns="http://jmix.io/schema/flowui/view"
-      title="msg://invoiceDetailView.title" focusComponent="dueDateField">
+      title="msg://invoiceDetailView.title" focusMode="NO_FOCUS">
     <data>
         <instance id="invoiceDc"
                   class="com.company.crm.model.invoice.Invoice">
@@ -53,21 +53,9 @@
             </entityComboBox>
             <datePicker id="dateField" property="date"/>
             <datePicker id="dueDateField" property="dueDate"/>
-            <bigDecimalField id="subtotalField" property="subtotal">
-                <prefix>
-                    <span text="$"/>
-                </prefix>
-            </bigDecimalField>
-            <bigDecimalField id="vatField" property="vat">
-                <prefix>
-                    <span text="$"/>
-                </prefix>
-            </bigDecimalField>
-            <bigDecimalField id="totalField" property="total">
-                <prefix>
-                    <span text="$"/>
-                </prefix>
-            </bigDecimalField>
+            <textField id="subtotalField" property="subtotal"/>
+            <textField id="vatField" property="vat"/>
+            <textField id="totalField" property="total"/>
             <select id="statusField" property="status"/>
         </formLayout>
         <hbox id="detailActions">

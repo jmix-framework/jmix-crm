@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <view xmlns="http://jmix.io/schema/flowui/view"
-      title="msg://categoryListView.title">
+      title="msg://categoryListView.title" focusMode="NO_FOCUS">
     <data>
         <collection id="categoriesDc"
                     class="com.company.crm.model.catalog.category.Category">

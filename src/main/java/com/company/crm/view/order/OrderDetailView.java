@@ -3,7 +3,6 @@ package com.company.crm.view.order;
 import com.company.crm.app.service.datetime.DateTimeService;
 import com.company.crm.app.ui.component.OrderStatusPipeline;
 import com.company.crm.app.util.constant.CrmConstants;
-import com.company.crm.app.util.ui.CrmUiUtils;
 import com.company.crm.app.util.ui.renderer.CrmRenderers;
 import com.company.crm.model.order.Order;
 import com.company.crm.model.order.OrderItem;
@@ -16,6 +15,7 @@ import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.textfield.TextFieldBase;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.router.Route;
@@ -34,6 +34,7 @@ import io.jmix.flowui.component.grid.DataGrid;
 import io.jmix.flowui.component.select.JmixSelect;
 import io.jmix.flowui.component.textfield.JmixBigDecimalField;
 import io.jmix.flowui.component.textfield.JmixEmailField;
+import io.jmix.flowui.component.textfield.TypedTextField;
 import io.jmix.flowui.download.Downloader;
 import io.jmix.flowui.exception.ValidationException;
 import io.jmix.flowui.kit.action.ActionPerformedEvent;
@@ -64,6 +65,9 @@ import java.util.Set;
 import java.util.UUID;
 
 import static com.company.crm.app.util.price.PriceCalculator.calculateTotal;
+import static com.company.crm.app.util.ui.CrmUiUtils.DEFAULT_BADGE;
+import static com.company.crm.app.util.ui.CrmUiUtils.SUCCESS_BADGE;
+import static com.company.crm.app.util.ui.CrmUiUtils.WARNING_BADGE;
 import static com.company.crm.model.datatype.PriceDataType.defaultFormat;
 
 @Route(value = "orders/:id", layout = MainView.class)
@@ -97,7 +101,7 @@ public class OrderDetailView extends StandardDetailView<Order> {
     @ViewComponent
     private OrderStatusPipeline statusPipeline;
     @ViewComponent
-    private JmixBigDecimalField discountValueField;
+    private TypedTextField<BigDecimal> discountValueField;
     @ViewComponent
     private JmixBigDecimalField discountPercentField;
     @ViewComponent
@@ -175,22 +179,29 @@ public class OrderDetailView extends StandardDetailView<Order> {
         });
     }
 
+    @Supply(to = "orderItemsGrid.vat", subject = "renderer")
+    private Renderer<OrderItem> orderItemsGridVatRenderer() {
+        return crmRenderers.badgeRenderer(item -> defaultFormat(item.getVat()), DEFAULT_BADGE);
+    }
+
     @Supply(to = "orderItemsGrid.netPrice", subject = "renderer")
     private Renderer<OrderItem> orderItemsGridNetPriceRenderer() {
-        return crmRenderers.badgeRenderer(item ->
-                defaultFormat(item.getNetPrice()), CrmUiUtils.CONTRAST_BADGE);
+        return crmRenderers.badgeRenderer(item -> defaultFormat(item.getNetPrice()), DEFAULT_BADGE);
     }
 
     @Supply(to = "orderItemsGrid.grossPrice", subject = "renderer")
     private Renderer<OrderItem> orderItemsGridGrossPriceRenderer() {
-        return crmRenderers.badgeRenderer(item ->
-                defaultFormat(item.getGrossPrice()), CrmUiUtils.CONTRAST_BADGE);
+        return crmRenderers.badgeRenderer(item -> defaultFormat(item.getGrossPrice()), DEFAULT_BADGE);
+    }
+
+    @Supply(to = "orderItemsGrid.discount", subject = "renderer")
+    private Renderer<OrderItem> orderItemsGridDiscountRenderer() {
+        return crmRenderers.badgeRenderer(item -> defaultFormat(item.getDiscount()), WARNING_BADGE);
     }
 
     @Supply(to = "orderItemsGrid.total", subject = "renderer")
     private Renderer<OrderItem> orderItemsGridTotalRenderer() {
-        return crmRenderers.badgeRenderer(item ->
-                defaultFormat(item.getTotal()), CrmUiUtils.DEFAULT_BADGE);
+        return crmRenderers.badgeRenderer(item -> defaultFormat(item.getTotal()), SUCCESS_BADGE);
     }
 
     @Supply(to = "statusSelect", subject = "renderer")
@@ -270,7 +281,7 @@ public class OrderDetailView extends StandardDetailView<Order> {
         orderItemsCount.setText((orderItems != null ? orderItems.size() : 0) + " pcs");
     }
 
-    private void recalculateTotal(JmixBigDecimalField changesOwner) {
+    private void recalculateTotal(TextFieldBase<?, ?> changesOwner) {
         Order order = getEditedEntity();
         BigDecimal itemsTotal = order.getItemsTotal();
 
@@ -287,7 +298,7 @@ public class OrderDetailView extends StandardDetailView<Order> {
             if (discountPercent != null) {
                 BigDecimal discountValue = itemsTotal.multiply(discountPercent)
                         .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
-                discountValueField.setValue(discountValue);
+                discountValueField.setTypedValue(discountValue);
             }
         } else {
             throw new IllegalStateException("Unknown changes owner for total price calculation");

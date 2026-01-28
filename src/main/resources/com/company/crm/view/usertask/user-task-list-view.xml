@@ -69,7 +69,7 @@
                     </columns>
                     <emptyStateComponent>
                         <hbox width="100%" height="100%" justifyContent="CENTER" alignItems="CENTER">
-                            <h3 text="msg://defaultGridEmptyStateText"/>
+                            <h3 text="msg:///defaultGridEmptyStateText"/>
                         </hbox>
                     </emptyStateComponent>
                 </dataGrid>
@@ -88,7 +88,7 @@
                     <textField id="titleField" property="title"/>
                     <richTextEditor id="descriptionField" height="9.5em" property="description"/>
                     <datePicker id="dueDateField" property="dueDate"/>
-                    <switch id="isCompletedField" property="isCompleted"/>
+                    <checkbox id="isCompletedField" property="isCompleted"/>
                 </formLayout>
                 <hbox id="detailActions">
                     <button id="saveButton" text="msg:///actions.Save" icon="CHECK" themeNames="primary"/>

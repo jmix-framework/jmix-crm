@@ -1,10 +1,12 @@
 package com.company.crm.model.order;
 
+import com.company.crm.app.service.order.OrderService;
+import com.company.crm.app.service.util.UniqueNumbersService;
+import com.company.crm.app.util.context.AppContext;
 import com.company.crm.app.util.price.PriceCalculator;
 import com.company.crm.model.HasUniqueNumber;
 import com.company.crm.model.base.FullAuditEntity;
 import com.company.crm.model.client.Client;
-import com.company.crm.model.datatype.PercentDataType;
 import com.company.crm.model.datatype.PriceDataType;
 import com.company.crm.model.invoice.Invoice;
 import io.jmix.core.DeletePolicy;
@@ -50,6 +52,10 @@ public class Order extends FullAuditEntity implements HasUniqueNumber {
     @Column(name = "NUMBER", nullable = false, unique = true)
     private String number;
 
+    @OnDelete(DeletePolicy.CASCADE)
+    @OneToMany(mappedBy = "order")
+    private List<Invoice> invoices;
+
     @JoinColumn(name = "CLIENT_ID", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     private Client client;
@@ -76,17 +82,26 @@ public class Order extends FullAuditEntity implements HasUniqueNumber {
     private BigDecimal total;
 
     @PositiveOrZero
-    @Column(name = "DISCOUNT_VALUE", precision = 19, scale = 2)
+    @PropertyDatatype(PriceDataType.NAME)
+    @Column(name = "DISCOUNT_VALUE")
     private BigDecimal discountValue;
 
     @Min(0)
     @Max(100)
-    @PropertyDatatype(PercentDataType.NAME)
-    @Column(name = "DISCOUNT_PERCENT", precision = 19, scale = 2)
+    @PropertyDatatype("percent")
+    @Column(name = "DISCOUNT_PERCENT")
     private BigDecimal discountPercent;
 
     @Column(name = "STATUS")
     private Integer status;
+
+    public List<Invoice> getInvoices() {
+        return invoices;
+    }
+
+    public void setInvoices(List<Invoice> invoices) {
+        this.invoices = invoices;
+    }
 
     public List<OrderItem> getOrderItems() {
         return orderItems;
@@ -129,26 +144,21 @@ public class Order extends FullAuditEntity implements HasUniqueNumber {
     }
 
     @JmixProperty
-    @DependsOnProperties("orderItems")
+    @DependsOnProperties({"orderItems"})
     @PropertyDatatype(PriceDataType.NAME)
     public BigDecimal getSubTotal() {
         return calculateSubtotal(this);
     }
 
     @JmixProperty
-    @DependsOnProperties("orderItems")
+    @DependsOnProperties({"orderItems"})
     @PropertyDatatype(PriceDataType.NAME)
     public BigDecimal getVat() {
         return PriceCalculator.calculateVat(this);
     }
 
-    @DependsOnProperties("client")
-    public List<Invoice> getInvoices() {
-        return client.getInvoices();
-    }
-
     @JmixProperty
-    @DependsOnProperties("orderItems")
+    @DependsOnProperties({"orderItems"})
     @PropertyDatatype(PriceDataType.NAME)
     public BigDecimal getItemsTotal() {
         BigDecimal total = BigDecimal.ZERO;
@@ -157,11 +167,35 @@ public class Order extends FullAuditEntity implements HasUniqueNumber {
             return total;
         }
 
-        for (OrderItem orderItem : getOrderItems()) {
+        for (OrderItem orderItem : orderItems) {
             total = total.add(orderItem.getTotal());
         }
 
         return total;
+    }
+
+    /// @see OrderService#getLeftOverSum
+    @JmixProperty
+    @PropertyDatatype(PriceDataType.NAME)
+    public BigDecimal getLeftOverSum() {
+        return getOrderService().getLeftOverSum(this);
+    }
+
+    ///  @see OrderService#getPaid
+    @JmixProperty
+    @PropertyDatatype(PriceDataType.NAME)
+    public BigDecimal getPaid() {
+        return getOrderService().getPaid(this);
+    }
+
+    /// invoiced = sum of {@link Invoice#getSubtotal()}
+    @JmixProperty
+    @DependsOnProperties({"invoices"})
+    @PropertyDatatype(PriceDataType.NAME)
+    public BigDecimal getInvoiced() {
+        return getInvoices().stream()
+                .map(Invoice::getSubtotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     @InstanceName
@@ -217,5 +251,14 @@ public class Order extends FullAuditEntity implements HasUniqueNumber {
     @PrePersist
     public void prePersist() {
         setNumber(generateNextNumber());
+        setPurchaseOrder(generateNextPurchaseOrderNumber());
+    }
+
+    private static String generateNextPurchaseOrderNumber() {
+        return AppContext.getBean(UniqueNumbersService.class).getNextPurchaseOrderNumber();
+    }
+
+    private OrderService getOrderService() {
+        return AppContext.getBean(OrderService.class);
     }
 }

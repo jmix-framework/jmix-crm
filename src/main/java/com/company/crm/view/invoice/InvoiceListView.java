@@ -1,6 +1,8 @@
 package com.company.crm.view.invoice;
 
 import com.company.crm.app.feature.queryparameters.filters.FieldValueQueryParameterBinder;
+import com.company.crm.app.service.finance.InvoiceService;
+import com.company.crm.app.ui.component.card.CrmCard;
 import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.app.util.ui.renderer.CrmRenderers;
 import com.company.crm.model.client.Client;
@@ -10,9 +12,16 @@ import com.company.crm.model.invoice.InvoiceStatus;
 import com.company.crm.model.order.Order;
 import com.company.crm.view.main.MainView;
 import com.vaadin.flow.component.AttachEvent;
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasValue;
+import com.vaadin.flow.component.html.H1;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.router.Route;
+import io.jmix.core.Messages;
 import io.jmix.core.querycondition.LogicalCondition;
 import io.jmix.core.repository.JmixDataRepositoryContext;
 import io.jmix.flowui.component.combobox.EntityComboBox;
@@ -40,6 +49,10 @@ import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 
+import static com.company.crm.app.util.ui.CrmUiUtils.ERROR_BADGE;
+import static com.company.crm.app.util.ui.CrmUiUtils.SUCCESS_BADGE;
+import static com.company.crm.app.util.ui.CrmUiUtils.WARNING_BADGE;
+import static com.company.crm.app.util.ui.CrmUiUtils.setBadge;
 import static com.company.crm.app.util.ui.datacontext.DataContextUtils.wrapCondition;
 import static io.jmix.core.querycondition.PropertyCondition.equal;
 import static io.jmix.core.querycondition.PropertyCondition.greaterOrEqual;
@@ -55,6 +68,8 @@ import static io.jmix.flowui.component.UiComponentUtils.getCurrentView;
 public class InvoiceListView extends StandardListView<Invoice> {
 
     @Autowired
+    private Messages messages;
+    @Autowired
     private CrmRenderers crmRenderers;
     @Autowired
     private InvoiceRepository invoiceRepository;
@@ -68,6 +83,8 @@ public class InvoiceListView extends StandardListView<Invoice> {
     @ViewComponent
     private CollectionLoader<Client> clientsDl;
 
+    @ViewComponent
+    private CrmCard invoiceStatusCard;
     @ViewComponent
     private EntityComboBox<Client> invoices_ClientComboBox;
     @ViewComponent
@@ -84,6 +101,8 @@ public class InvoiceListView extends StandardListView<Invoice> {
     private DataGrid<Invoice> invoicesDataGrid;
 
     private final LogicalCondition filtersCondition = LogicalCondition.and();
+    @Autowired
+    private InvoiceService invoiceService;
 
     @Override
     protected void onAttach(AttachEvent attachEvent) {
@@ -150,6 +169,7 @@ public class InvoiceListView extends StandardListView<Invoice> {
 
     private void applyFilters() {
         updateFiltersCondition();
+        updateInvoiceStatusCard();
         invoicesDl.load();
     }
 
@@ -207,5 +227,44 @@ public class InvoiceListView extends StandardListView<Invoice> {
                 .addDatePickerBinding(invoices_FromDatePicker)
                 .addDatePickerBinding(invoices_ToDatePicker)
                 .build();
+    }
+
+    private void updateInvoiceStatusCard() {
+        long paidCount = invoiceService.getInvoicesCount(InvoiceStatus.PAID);
+        long pendingCount = invoiceService.getInvoicesCount(InvoiceStatus.PENDING);
+        long overdueCount = invoiceService.getInvoicesCount(InvoiceStatus.OVERDUE);
+
+        var layout = createStatusCountsLayout();
+
+        Component paidBlock = createStatusCountBlock(messages.getMessage(InvoiceStatus.PAID), paidCount, SUCCESS_BADGE);
+        Component pendingBlock = createStatusCountBlock(messages.getMessage(InvoiceStatus.PENDING), pendingCount, WARNING_BADGE);
+        Component overdueBlock = createStatusCountBlock(messages.getMessage(InvoiceStatus.OVERDUE), overdueCount, ERROR_BADGE);
+        layout.add(pendingBlock, paidBlock, overdueBlock);
+
+        invoiceStatusCard.fillAsStaticCard(messages.getMessage("com.company.crm.view.invoice/statusCounts"), layout);
+    }
+
+    private HorizontalLayout createStatusCountsLayout() {
+        HorizontalLayout layout = new HorizontalLayout();
+        layout.setWidthFull();
+        layout.setPadding(false);
+        layout.setSpacing(true);
+        layout.setAlignItems(FlexComponent.Alignment.CENTER);
+        layout.setJustifyContentMode(FlexComponent.JustifyContentMode.CENTER);
+        return layout;
+    }
+
+    private Component createStatusCountBlock(String label, long count, String badgeVariant) {
+        Span statusLabel = new Span(label);
+        setBadge(statusLabel, badgeVariant);
+
+        H1 countValue = new H1(String.valueOf(count));
+
+        VerticalLayout block = new VerticalLayout(countValue, statusLabel);
+        block.setPadding(false);
+        block.setSpacing(false);
+        block.setAlignItems(FlexComponent.Alignment.CENTER);
+
+        return block;
     }
 }

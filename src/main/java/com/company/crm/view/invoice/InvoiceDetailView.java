@@ -1,6 +1,7 @@
 package com.company.crm.view.invoice;
 
 import com.company.crm.app.service.datetime.DateTimeService;
+import com.company.crm.app.service.settings.CrmSettingsService;
 import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.invoice.Invoice;
@@ -10,11 +11,11 @@ import com.company.crm.model.order.Order;
 import com.company.crm.view.main.MainView;
 import com.vaadin.flow.component.AbstractField.ComponentValueChangeEvent;
 import com.vaadin.flow.router.Route;
-import io.jmix.core.EntityStates;
 import io.jmix.core.FetchPlan;
 import io.jmix.core.SaveContext;
 import io.jmix.flowui.DialogWindows;
 import io.jmix.flowui.component.combobox.EntityComboBox;
+import io.jmix.flowui.component.datepicker.TypedDatePicker;
 import io.jmix.flowui.kit.action.ActionPerformedEvent;
 import io.jmix.flowui.model.CollectionLoader;
 import io.jmix.flowui.view.EditedEntityContainer;
@@ -28,10 +29,13 @@ import io.jmix.flowui.view.ViewDescriptor;
 import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.time.LocalDate;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+
+import static com.company.crm.app.util.price.PriceCalculator.calculateInvoiceFieldsFromOrder;
 
 @Route(value = "invoices/:id", layout = MainView.class)
 @ViewController(id = CrmConstants.ViewIds.INVOICE_DETAIL)
@@ -40,13 +44,13 @@ import java.util.UUID;
 public class InvoiceDetailView extends StandardDetailView<Invoice> {
 
     @Autowired
-    private EntityStates entityStates;
-    @Autowired
     private DialogWindows dialogWindows;
     @Autowired
     private DateTimeService dateTimeService;
     @Autowired
     private InvoiceRepository invoiceRepository;
+    @Autowired
+    private CrmSettingsService crmSettingsService;
 
     @ViewComponent
     private EntityComboBox<Client> clientsComboBox;
@@ -55,23 +59,43 @@ public class InvoiceDetailView extends StandardDetailView<Invoice> {
     @ViewComponent
     private CollectionLoader<Order> ordersDl;
 
+    private boolean orderChangeForbidden = false;
+    @ViewComponent
+    private TypedDatePicker<LocalDate> dueDateField;
+
+    public void forbidChangeOrder() {
+        orderChangeForbidden = true;
+        ordersComboBox.setReadOnly(true);
+        clientsComboBox.setReadOnly(true);
+    }
+
     @Subscribe
     private void onInitEntity(final InitEntityEvent<Invoice> event) {
         Invoice invoice = event.getEntity();
+        Order order = invoice.getOrder();
+
         invoice.setDate(dateTimeService.now().toLocalDate());
         invoice.setStatus(InvoiceStatus.NEW);
 
-        clientsComboBox.setReadOnly(invoice.getClient() != null);
-        ordersComboBox.setReadOnly(invoice.getOrder() != null);
+        calculateFieldsFromOrderIfPossible();
+
+        ordersComboBox.setReadOnly(order != null || orderChangeForbidden);
+        clientsComboBox.setReadOnly(invoice.getClient() != null || orderChangeForbidden);
     }
 
     @Subscribe
     private void onBeforeShow(final BeforeShowEvent event) {
-        Order order = getEditedEntity().getOrder();
+        Invoice invoice = getEditedEntity();
+        Order order = invoice.getOrder();
+
         if (order != null) {
             clientsComboBox.setValue(order.getClient());
+            if (invoice.getDueDate() == null) {
+                dueDateField.focus();
+            }
         } else {
-            loadOrders(getEditedEntity().getClient());
+            loadOrders(invoice.getClient());
+            ordersComboBox.focus();
         }
     }
 
@@ -108,6 +132,7 @@ public class InvoiceDetailView extends StandardDetailView<Invoice> {
         Order order = event.getValue();
         if (order != null) {
             clientsComboBox.setValue(order.getClient());
+            calculateFieldsFromOrderIfPossible();
         }
     }
 
@@ -120,5 +145,13 @@ public class InvoiceDetailView extends StandardDetailView<Invoice> {
             }
         });
         loadOrders(client);
+    }
+
+    private void calculateFieldsFromOrderIfPossible() {
+        Invoice invoice = getEditedEntity();
+        Order order = invoice.getOrder();
+        if (order != null) {
+            calculateInvoiceFieldsFromOrder(order, invoice, crmSettingsService.getDefaultVatPercent());
+        }
     }
 }

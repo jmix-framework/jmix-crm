@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <view xmlns="http://jmix.io/schema/flowui/view"
-      title="msg://InvoiceListView.title">
+      title="msg://InvoiceListView.title" focusMode="NO_FOCUS">
     <data>
         <collection id="invoicesDc"
                     class="com.company.crm.model.invoice.Invoice">
@@ -33,7 +33,14 @@
         </urlQueryParameters>
     </facets>
     <layout>
-        <div width="100%" maxWidth="60em">
+        <component id="invoiceStatusCard" class="com.company.crm.app.ui.component.card.CrmCard">
+            <properties>
+                <property name="width" value="100%"/>
+                <property name="maxWidth" value="60em"/>
+                <property name="minWidth" value="15em"/>
+            </properties>
+        </component>
+        <div width="100%" maxWidth="60em" css="margin-top: 1em">
             <formLayout width="100%">
                 <responsiveSteps>
                     <responsiveStep minWidth="0" columns="1"/>
@@ -87,6 +94,7 @@
                   width="100%"
                   minHeight="20em"
                   multiSort="true"
+                  selectionMode="MULTI"
                   themeNames="column-borders"
                   columnReorderingAllowed="true">
             <actions>

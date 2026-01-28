@@ -12,13 +12,16 @@ import org.springframework.stereotype.Service;
 public class UniqueNumbersService {
 
     private static final Sequence PAYMENT_NUMBER_SEQUENCE =
-            Sequence.withName("CRM_INVOICE_NUMBER").setStartValue(1000);
+            Sequence.withName("CRM_PAYMENT_NUMBER").setStartValue(1000);
 
     private static final Sequence INVOICE_NUMBER_SEQUENCE =
             Sequence.withName("CRM_INVOICE_NUMBER").setStartValue(1000);
 
     private static final Sequence ORDER_NUMBER_SEQUENCE =
             Sequence.withName("CRM_ORDER_NUMBER").setStartValue(1000);
+
+    private static final Sequence PURCHASE_ORDER_NUMBER_SEQUENCE =
+            Sequence.withName("CRM_PURCHASE_ORDER_NUMBER").setStartValue(1000);
 
     private final Sequences sequences;
 
@@ -47,5 +50,9 @@ public class UniqueNumbersService {
 
     public String getNextInvoiceNumber() {
         return "INV-" + sequences.createNextValue(INVOICE_NUMBER_SEQUENCE);
+    }
+
+    public String getNextPurchaseOrderNumber() {
+        return "POR-" + sequences.createNextValue(PURCHASE_ORDER_NUMBER_SEQUENCE);
     }
 }

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <view xmlns="http://jmix.io/schema/flowui/view" xmlns:dynattr="http://jmix.io/schema/dynattr/flowui"
-      title="msg://clientDetailView.title">
+      title="msg://clientDetailView.title" focusMode="NO_FOCUS">
     <data>
         <instance id="clientDc"
                   class="com.company.crm.model.client.Client">

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <view xmlns="http://jmix.io/schema/flowui/view"
-      title="msg://paymentDetailView.title">
+      title="msg://paymentDetailView.title" focusMode="NO_FOCUS">
     <data>
         <instance id="paymentDc"
                   class="com.company.crm.model.payment.Payment">
@@ -34,11 +34,7 @@
                 </actions>
             </entityComboBox>
             <datePicker id="dateField" property="date"/>
-            <bigDecimalField id="amountField" property="amount">
-                <prefix>
-                    <span text="$"/>
-                </prefix>
-            </bigDecimalField>
+            <textField id="amountField" property="amount"/>
         </formLayout>
         <hbox id="detailActions">
             <button id="saveAndCloseButton" action="saveCloseAction"/>

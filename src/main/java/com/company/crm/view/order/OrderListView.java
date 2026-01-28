@@ -9,10 +9,11 @@ import com.company.crm.app.util.AsyncTasksRegistry;
 import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.app.util.ui.renderer.CrmRenderers;
 import com.company.crm.model.client.Client;
-import com.company.crm.model.datatype.PriceDataType;
+import com.company.crm.model.invoice.Invoice;
 import com.company.crm.model.order.Order;
 import com.company.crm.model.order.OrderRepository;
 import com.company.crm.model.order.OrderStatus;
+import com.company.crm.view.invoice.InvoiceDetailView;
 import com.company.crm.view.main.MainView;
 import com.vaadin.flow.component.HasValue;
 import com.vaadin.flow.data.renderer.Renderer;
@@ -22,11 +23,13 @@ import com.vaadin.flow.router.Route;
 import io.jmix.core.Messages;
 import io.jmix.core.querycondition.LogicalCondition;
 import io.jmix.core.repository.JmixDataRepositoryContext;
+import io.jmix.flowui.DialogWindows;
 import io.jmix.flowui.asynctask.UiAsyncTasks;
 import io.jmix.flowui.component.combobox.EntityComboBox;
 import io.jmix.flowui.component.datepicker.TypedDatePicker;
 import io.jmix.flowui.component.grid.DataGrid;
 import io.jmix.flowui.component.textfield.TypedTextField;
+import io.jmix.flowui.kit.action.ActionPerformedEvent;
 import io.jmix.flowui.model.CollectionContainer;
 import io.jmix.flowui.model.CollectionLoader;
 import io.jmix.flowui.view.DialogMode;
@@ -53,6 +56,7 @@ import java.util.Optional;
 import static com.company.crm.app.util.ui.CrmUiUtils.addColumnHeaderCurrencySuffix;
 import static com.company.crm.app.util.ui.CrmUiUtils.setSearchHintPopover;
 import static com.company.crm.app.util.ui.datacontext.DataContextUtils.wrapCondition;
+import static com.company.crm.model.datatype.PriceDataType.formatWithoutCurrency;
 import static io.jmix.core.querycondition.PropertyCondition.equal;
 import static io.jmix.core.querycondition.PropertyCondition.greaterOrEqual;
 import static io.jmix.core.querycondition.PropertyCondition.lessOrEqual;
@@ -68,13 +72,15 @@ public class OrderListView extends StandardListView<Order> {
     @Autowired
     private Messages messages;
     @Autowired
+    private UiAsyncTasks uiAsyncTasks;
+    @Autowired
     private OrderService orderService;
     @Autowired
     private CrmRenderers crmRenderers;
     @Autowired
-    private OrderRepository orderRepository;
+    private DialogWindows dialogWindows;
     @Autowired
-    private UiAsyncTasks uiAsyncTasks;
+    private OrderRepository orderRepository;
 
     @ViewComponent
     private CollectionLoader<Order> ordersDl;
@@ -111,7 +117,7 @@ public class OrderListView extends StandardListView<Order> {
     }
 
     private void configureGrid() {
-        addColumnHeaderCurrencySuffix(ordersDataGrid, "total", "paid", "leftOver");
+        addColumnHeaderCurrencySuffix(ordersDataGrid, "total", "invoiced", "paid", "leftOver");
         ordersDataGrid.setItemDetailsRenderer(crmRenderers.orderDetails());
     }
 
@@ -136,6 +142,21 @@ public class OrderListView extends StandardListView<Order> {
         orderRepository.deleteAll(collection);
     }
 
+    @Subscribe("ordersDataGrid.addInvoice")
+    private void onOrdersDataGridAddInvoice(final ActionPerformedEvent event) {
+        Order order = ordersDataGrid.getSingleSelectedItem();
+        if (order == null) {
+            return;
+        }
+
+        dialogWindows.detail(this, Invoice.class)
+                .newEntity()
+                .withInitializer(invoice -> invoice.setOrder(order))
+                .withViewClass(InvoiceDetailView.class)
+                .withViewConfigurer(InvoiceDetailView::forbidChangeOrder)
+                .open();
+    }
+
     @Supply(to = "ordersDataGrid.client", subject = "renderer")
     private Renderer<Order> ordersDataGridClientRenderer() {
         return crmRenderers.orderClientLink();
@@ -148,8 +169,7 @@ public class OrderListView extends StandardListView<Order> {
 
     @Supply(to = "ordersDataGrid.total", subject = "renderer")
     private Renderer<Order> ordersDataGridTotalRenderer() {
-        return new TextRenderer<>(order ->
-                PriceDataType.formatWithoutCurrency(order.getTotal()));
+        return new TextRenderer<>(order -> formatWithoutCurrency(order.getTotal()));
     }
 
     @Supply(to = "ordersDataGrid.number", subject = "renderer")
@@ -157,15 +177,24 @@ public class OrderListView extends StandardListView<Order> {
         return crmRenderers.uniqueNumber(Order::getNumber);
     }
 
-    @Supply(to = "ordersDataGrid.paid", subject = "renderer")
-    private Renderer<Order> ordersDataGridPaidRenderer() {
-        return new TextRenderer<>(order ->
-                PriceDataType.formatWithoutCurrency(orderService.getOrderPaymentsSum(order)));
+    @Supply(to = "ordersDataGrid.invoiced", subject = "renderer")
+    private Renderer<Order> ordersDataGridInvoicedRenderer() {
+        return new TextRenderer<>(order -> formatWithoutCurrency(order.getInvoiced()));
     }
 
-    @Supply(to = "ordersDataGrid.leftOver", subject = "renderer")
+    @Supply(to = "ordersDataGrid.paid", subject = "renderer")
+    private Renderer<Order> ordersDataGridPaidRenderer() {
+        return new TextRenderer<>(order -> formatWithoutCurrency(order.getPaid()));
+    }
+
+    @Supply(to = "ordersDataGrid.leftOverSum", subject = "renderer")
     private Renderer<Order> ordersDataGridLeftOverRenderer() {
-        return crmRenderers.orderLeftOverRenderer();
+        return crmRenderers.orderLeftOverSumRenderer();
+    }
+
+    @Install(to = "ordersDataGrid.addInvoice", subject = "enabledRule")
+    private boolean ordersDataGridAddInvoiceEnabledRule() {
+        return ordersDataGrid.getSelectedItems().size() == 1;
     }
 
     private void initializeFilterFields() {

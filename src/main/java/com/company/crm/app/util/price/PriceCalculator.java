@@ -1,5 +1,6 @@
 package com.company.crm.app.util.price;
 
+import com.company.crm.model.invoice.Invoice;
 import com.company.crm.model.order.Order;
 import com.company.crm.model.order.OrderItem;
 
@@ -24,23 +25,23 @@ public final class PriceCalculator {
             return BigDecimal.ZERO;
         }
 
-        return unitPrice.setScale(DEFAULT_SCALE, DEFAULT_ROUNDING);
+        BigDecimal quantity = item.getQuantity();
+        if (quantity == null || quantity.compareTo(BigDecimal.ZERO) <= 0) {
+            return BigDecimal.ZERO;
+        }
+
+        return unitPrice.multiply(quantity).setScale(DEFAULT_SCALE, DEFAULT_ROUNDING);
     }
 
     public static BigDecimal calculateGrossPrice(OrderItem item) {
-        BigDecimal net = calculateNetPrice(item);
-        BigDecimal vatRate = zeroIfNull(item.getVatAmount());
+        BigDecimal netPrice = calculateNetPrice(item);
+        BigDecimal vat = zeroIfNull(item.getVat());
 
-        if (!Boolean.TRUE.equals(item.getVatIncluded()) || vatRate.compareTo(BigDecimal.ZERO) <= 0) {
-            return net;
+        if (vat.compareTo(BigDecimal.ZERO) <= 0) {
+            return netPrice;
         }
 
-        BigDecimal vatFactor = vatRate
-                .divide(BigDecimal.valueOf(100), 6, DEFAULT_ROUNDING);
-
-        return net
-                .multiply(BigDecimal.ONE.add(vatFactor))
-                .setScale(DEFAULT_SCALE, DEFAULT_ROUNDING);
+        return netPrice.add(vat).setScale(DEFAULT_SCALE, DEFAULT_ROUNDING);
     }
 
     public static BigDecimal calculateTotal(OrderItem item) {
@@ -106,16 +107,51 @@ public final class PriceCalculator {
                 .setScale(DEFAULT_SCALE, DEFAULT_ROUNDING);
     }
 
-
     public static BigDecimal calculateVat(OrderItem item) {
         return zeroIfNull(zeroIfNull(item.getGrossPrice()))
                 .subtract(zeroIfNull(item.getNetPrice()))
                 .setScale(DEFAULT_SCALE, DEFAULT_ROUNDING);
     }
 
+    public static BigDecimal calculateVat(OrderItem item, BigDecimal vatPercent) {
+        return zeroIfNull(item.getNetPrice())
+                .multiply(vatPercent)
+                .divide(BigDecimal.valueOf(100), DEFAULT_SCALE, DEFAULT_ROUNDING);
+    }
+
+    public static BigDecimal calculateVatPercent(OrderItem item) {
+        return zeroIfNull(item.getGrossPrice())
+                .subtract(zeroIfNull(item.getNetPrice()))
+                .divide(zeroIfNull(item.getGrossPrice()), DEFAULT_SCALE, DEFAULT_ROUNDING)
+                .multiply(BigDecimal.valueOf(100))
+                .setScale(DEFAULT_SCALE, DEFAULT_ROUNDING);
+    }
+
+    public static BigDecimal calculateVat(Invoice invoice, BigDecimal vatPercent) {
+        if (vatPercent == null || vatPercent.compareTo(BigDecimal.ZERO) <= 0) {
+            return BigDecimal.ZERO;
+        }
+
+        return zeroIfNull(invoice.getSubtotal())
+                .multiply(vatPercent)
+                .divide(BigDecimal.valueOf(100), DEFAULT_SCALE, DEFAULT_ROUNDING);
+    }
+
+    public static void calculateInvoiceFieldsFromOrder(Order order, Invoice invoice, BigDecimal vatPercent) {
+        BigDecimal unbilledTotal = order.getTotal().subtract(order.getInvoiced());
+        if (unbilledTotal.compareTo(BigDecimal.ZERO) > 0) {
+            invoice.setSubtotal(unbilledTotal);
+            invoice.setVat(calculateVat(invoice, vatPercent));
+            invoice.setTotal(calculateTotal(invoice));
+        }
+    }
 
     public static BigDecimal calculateVatTotal(OrderItem item) {
         return calculateVat(item).multiply(zeroIfNull(item.getQuantity()));
+    }
+
+    public static BigDecimal calculateTotal(Invoice invoice) {
+        return zeroIfNull(invoice.getSubtotal()).add(zeroIfNull(invoice.getVat()));
     }
 
     private static BigDecimal zeroIfNull(BigDecimal value) {

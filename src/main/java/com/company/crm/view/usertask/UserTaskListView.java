@@ -38,9 +38,8 @@ import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.UiViewProperties;
 import io.jmix.flowui.accesscontext.UiEntityAttributeContext;
 import io.jmix.flowui.action.SecuredBaseAction;
-import io.jmix.flowui.action.list.EditAction;
 import io.jmix.flowui.component.UiComponentUtils;
-import io.jmix.flowui.component.checkbox.Switch;
+import io.jmix.flowui.component.checkbox.JmixCheckbox;
 import io.jmix.flowui.component.formlayout.JmixFormLayout;
 import io.jmix.flowui.component.genericfilter.GenericFilter;
 import io.jmix.flowui.component.grid.DataGrid;
@@ -142,8 +141,6 @@ public class UserTaskListView extends StandardListView<UserTask> {
     private HorizontalLayout buttonsPanel;
     @ViewComponent
     private JmixFormLayout layoutWrapper;
-    @ViewComponent("userTasksDataGrid.editAction")
-    private EditAction<UserTask> userTasksDataGridEditAction;
     @ViewComponent
     private GenericFilter genericFilter;
 
@@ -357,7 +354,7 @@ public class UserTaskListView extends StandardListView<UserTask> {
     @Supply(to = "userTasksDataGrid.isCompleted", subject = "renderer")
     private Renderer<UserTask> userTasksDataGridIsCompletedRenderer() {
         return new ComponentRenderer<>(userTask -> {
-            Switch editor = uiComponents.create(Switch.class);
+            var editor = uiComponents.create(JmixCheckbox.class);
             editor.setValue(userTask.getIsCompleted());
             editor.addValueChangeListener(e -> {
                 userTask.setIsCompleted(e.getValue());
@@ -365,7 +362,7 @@ public class UserTaskListView extends StandardListView<UserTask> {
                 loadData();
             });
 
-            HorizontalLayout layout = new HorizontalLayout();
+            var layout = new HorizontalLayout();
             layout.setAlignItems(FlexComponent.Alignment.CENTER);
             layout.add(editor);
 

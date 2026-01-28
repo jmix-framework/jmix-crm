@@ -25,12 +25,12 @@ public class OrderService {
         this.paymentService = paymentService;
     }
 
-    public BigDecimal getOrderPaymentsSum(Order order) {
+    public BigDecimal getPaid(Order order) {
         return paymentService.getPaymentsTotalSum(order);
     }
 
-    public BigDecimal getOrderLeftOverSum(Order order) {
-        BigDecimal result = order.getTotal().subtract(getOrderPaymentsSum(order));
+    public BigDecimal getLeftOverSum(Order order) {
+        BigDecimal result = order.getTotal().subtract(getPaid(order));
         if (result.compareTo(BigDecimal.ZERO) < 0) {
             return BigDecimal.ZERO;
         }

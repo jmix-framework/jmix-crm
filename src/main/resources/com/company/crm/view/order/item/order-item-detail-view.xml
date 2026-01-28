@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <view xmlns="http://jmix.io/schema/flowui/view"
       title="msg://orderItemDetailView.title"
-      focusComponent="form">
+      focusMode="NO_FOCUS">
     <data>
         <instance id="orderItemDc"
                   class="com.company.crm.model.order.OrderItem">
@@ -34,7 +34,8 @@
                     <action id="entityClearAction" type="entity_clear"/>
                 </actions>
             </entityPicker>
-            <entityComboBox id="categoryItemField" property="categoryItem" colspan="2" dataContainer="orderItemDc" required="true">
+            <entityComboBox id="categoryItemField" property="categoryItem" colspan="2" dataContainer="orderItemDc"
+                            required="true">
                 <actions>
                     <action id="entityLookupAction" type="entity_lookup"/>
                     <action id="entityClearAction" type="entity_clear"/>
@@ -47,25 +48,21 @@
                     </query>
                 </itemsQuery>
             </entityComboBox>
-            <bigDecimalField id="quantityField" property="quantity"/>
-            <bigDecimalField id="discountField" property="discount"/>
-            <bigDecimalField id="unitPriceField" property="unitPrice" readOnly="true">
+            <textField id="unitPriceField" property="unitPrice" readOnly="true"/>
+            <bigDecimalField id="quantityField" property="quantity" clearButtonVisible="true">
                 <prefix>
-                    <span text="$"/>
+                    <button id="minusQuantityButton" icon="MINUS" themeNames="icon contrast small tertiary-inline"/>
                 </prefix>
+                <suffix>
+                    <button id="plusQuantityButton" icon="PLUS" themeNames="icon contrast small tertiary-inline"/>
+                </suffix>
             </bigDecimalField>
-            <bigDecimalField id="netPriceField" property="netPrice" readOnly="true">
-                <prefix>
-                    <span text="$"/>
-                </prefix>
-            </bigDecimalField>
-            <bigDecimalField id="vatAmountField" property="vatAmount"/>
-            <bigDecimalField id="grossPriceField" property="grossPrice">
-                <prefix>
-                    <span text="$"/>
-                </prefix>
-            </bigDecimalField>
+            <textField id="netPriceField" property="netPrice" readOnly="true"/>
+            <textField id="vatField" property="vat" clearButtonVisible="true"/>
+            <textField id="grossPriceField" property="grossPrice" readOnly="true"/>
             <switch id="vatIncludedField" property="vatIncluded"/>
+            <textField id="discountField" property="discount" clearButtonVisible="true"/>
+            <textField id="totalField" property="total" readOnly="true" colspan="2"/>
         </formLayout>
         <hbox id="detailActions">
             <button id="saveAndCloseButton" action="saveCloseAction"/>

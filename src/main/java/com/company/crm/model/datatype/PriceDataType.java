@@ -9,11 +9,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.jspecify.annotations.Nullable;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.Locale;
+
+import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
+import static org.apache.commons.lang3.StringUtils.substringAfter;
+import static org.apache.commons.lang3.StringUtils.substringBefore;
 
 @DatatypeDef(id = PriceDataType.NAME, javaClass = BigDecimal.class)
 @Ddl("DECIMAL(19,2)")
@@ -55,21 +56,17 @@ public class PriceDataType implements Datatype<BigDecimal> {
     @Nullable
     @Override
     public BigDecimal parse(@Nullable String value) {
-        value = StringUtils.substringBefore(value, getCurrencySuffix());
-        value = StringUtils.substringAfter(value, getCurrencySuffix());
+        value = defaultIfBlank(substringBefore(value, getCurrencySymbol()), value);
+        value = defaultIfBlank(substringAfter(value, getCurrencySymbol()), value);
         value = StringUtils.trim(value);
 
         if (StringUtils.isBlank(value)) {
             return null;
         }
 
-        final NumberFormat numberInstance = NumberFormat.getNumberInstance();
-        DecimalFormat decimalFormat = (DecimalFormat) numberInstance;
-        decimalFormat.setParseBigDecimal(true);
-
         try {
-            BigDecimal price = ((BigDecimal) decimalFormat.parse(value)).setScale(0, RoundingMode.DOWN);
-            return price.compareTo(BigDecimal.ZERO) < 0 ? BigDecimal.ZERO : price;
+            BigDecimal price = getDatatypeFormatter().parseBigDecimal(value);
+            return (price == null || price.compareTo(BigDecimal.ZERO) < 0) ? BigDecimal.ZERO : price;
         } catch (ParseException e) {
             return BigDecimal.ZERO;
         }
@@ -81,20 +78,15 @@ public class PriceDataType implements Datatype<BigDecimal> {
         return parse(value);
     }
 
-    public static String getCurrencySuffix() {
-        return " " + getCurrencySymbol();
-    }
-
     public static String getCurrencySymbol() {
         return "$";
     }
-
 
     private static String doFormatValueWithCurrency(Object value, CurrencyPosition currencyPosition) {
         String withoutCurrency = formatWithoutCurrency(value);
         return switch (currencyPosition) {
             case START -> getCurrencySymbol() + withoutCurrency;
-            case END -> withoutCurrency + getCurrencySuffix();
+            case END -> withoutCurrency + getCurrencySymbol();
         };
     }
 
@@ -105,7 +97,7 @@ public class PriceDataType implements Datatype<BigDecimal> {
 
         BigDecimal decimalValue = resolveBigDecimalValue(value);
         if (decimalValue != null) {
-            return AppContext.getBean(DatatypeFormatter.class).formatBigDecimal(decimalValue);
+            return getDatatypeFormatter().formatBigDecimal(decimalValue);
         }
 
         return "[NaN]";
@@ -126,5 +118,9 @@ public class PriceDataType implements Datatype<BigDecimal> {
             throw new IllegalStateException("Unsupported value type for price formatting: " + value.getClass().getName());
         }
         return decimalValue;
+    }
+
+    private static DatatypeFormatter getDatatypeFormatter() {
+        return AppContext.getBean(DatatypeFormatter.class);
     }
 }

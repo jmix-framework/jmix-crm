@@ -392,11 +392,9 @@
             <column name="GROSS_PRICE" type="DECIMAL(19, 2)">
                 <constraints nullable="false"/>
             </column>
-            <column name="VAT_AMOUNT" type="DECIMAL(19, 2)">
+            <column name="VAT" type="DECIMAL(19, 2)">
                 <constraints nullable="false"/>
             </column>
-            <column name="VAT_INCLUDED"
-                    type="BOOLEAN"/>
             <column name="ORDER_ID"
                     type="UUID">
                 <constraints nullable="false"/>

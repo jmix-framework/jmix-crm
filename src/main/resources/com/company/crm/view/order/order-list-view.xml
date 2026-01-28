@@ -6,6 +6,7 @@
                     class="com.company.crm.model.order.Order">
             <fetchPlan extends="_base">
                 <property name="client" fetchPlan="_base"/>
+                <property name="invoices" fetchPlan="_base"/>
             </fetchPlan>
             <loader id="ordersDl" readOnly="true"/>
         </collection>
@@ -58,6 +59,7 @@
                 <button id="createButton" action="ordersDataGrid.createAction"/>
                 <button id="editButton" action="ordersDataGrid.editAction"/>
                 <button id="removeButton" action="ordersDataGrid.removeAction"/>
+                <button id="addInvoice" action="ordersDataGrid.addInvoice"/>
                 <button id="excelExport" action="ordersDataGrid.excelExport"/>
             </startSlot>
             <endSlot>
@@ -71,12 +73,16 @@
                   width="100%"
                   minHeight="20em"
                   multiSort="true"
+                  selectionMode="MULTI"
                   themeNames="column-borders"
-                  columnReorderingAllowed="true">
+                  columnReorderingAllowed="true"
+                  aggregatable="true"
+                  aggregationPosition="BOTTOM">
             <actions>
                 <action id="createAction" type="list_create"/>
                 <action id="editAction" type="list_edit"/>
                 <action id="removeAction" type="list_remove"/>
+                <action id="addInvoice" type="list_itemTracking" text="msg://addInvoice" icon="INVOICE"/>
                 <action id="excelExport" type="grdexp_excelExport"/>
             </actions>
             <columns resizable="true" sortable="true">
@@ -84,9 +90,34 @@
                 <column property="status" autoWidth="true" flexGrow="0" filterable="true"/>
                 <column property="date" autoWidth="true" flexGrow="0"/>
                 <column property="client"/>
-                <column property="total" autoWidth="true" flexGrow="0"/>
-                <column key="paid" header="msg://paidColumnHeader" autoWidth="true" flexGrow="0"/>
-                <column key="leftOver" header="msg://leftOverColumnHeader"/>
+                <column property="total" autoWidth="true" flexGrow="0">
+                    <aggregation type="SUM">
+                        <formatter>
+                            <number/>
+                        </formatter>
+                    </aggregation>
+                </column>
+                <column property="invoiced" autoWidth="true" flexGrow="0">
+                    <aggregation type="SUM">
+                        <formatter>
+                            <number/>
+                        </formatter>
+                    </aggregation>
+                </column>
+                <column property="paid" autoWidth="true" flexGrow="0">
+                    <aggregation type="SUM">
+                        <formatter>
+                            <number/>
+                        </formatter>
+                    </aggregation>
+                </column>
+                <column property="leftOverSum">
+                    <aggregation type="SUM">
+                        <formatter>
+                            <number/>
+                        </formatter>
+                    </aggregation>
+                </column>
             </columns>
         </dataGrid>
         <hbox id="lookupActions" visible="false">

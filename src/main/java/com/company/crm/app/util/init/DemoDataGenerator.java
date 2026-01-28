@@ -2,6 +2,7 @@ package com.company.crm.app.util.init;
 
 import com.company.crm.app.service.catalog.CatalogImportSettings;
 import com.company.crm.app.service.catalog.CatalogService;
+import com.company.crm.app.service.settings.CrmSettingsService;
 import com.company.crm.model.address.Address;
 import com.company.crm.model.catalog.category.Category;
 import com.company.crm.model.catalog.item.CategoryItem;
@@ -55,8 +56,10 @@ import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static com.company.crm.app.util.price.PriceCalculator.calculateGrossPrice;
+import static com.company.crm.app.util.price.PriceCalculator.calculateInvoiceFieldsFromOrder;
 import static com.company.crm.app.util.price.PriceCalculator.calculateNetPrice;
 import static com.company.crm.app.util.price.PriceCalculator.calculateTotal;
+import static com.company.crm.app.util.price.PriceCalculator.calculateVat;
 
 /**
  * Loads demo data on first application startup.
@@ -73,17 +76,19 @@ public class DemoDataGenerator implements Ordered {
     private final UnconstrainedDataManager dataManager;
     private final SystemAuthenticator systemAuthenticator;
     private final RoleAssignmentRepository roleAssignmentRepository;
+    private final CrmSettingsService crmSettingsService;
 
     public DemoDataGenerator(RoleAssignmentRepository roleAssignmentRepository,
                              UnconstrainedDataManager dataManager,
                              PasswordEncoder passwordEncoder, Environment environment,
-                             CatalogService catalogService, SystemAuthenticator systemAuthenticator) {
+                             CatalogService catalogService, SystemAuthenticator systemAuthenticator, CrmSettingsService crmSettingsService) {
         this.environment = environment;
         this.dataManager = dataManager;
         this.catalogService = catalogService;
         this.passwordEncoder = passwordEncoder;
         this.systemAuthenticator = systemAuthenticator;
         this.roleAssignmentRepository = roleAssignmentRepository;
+        this.crmSettingsService = crmSettingsService;
     }
 
     @EventListener(ApplicationReadyEvent.class)
@@ -399,6 +404,10 @@ public class DemoDataGenerator implements Ordered {
         ThreadLocalRandom random = ThreadLocalRandom.current();
         var categoryItems = catalog.values().stream().flatMap(Collection::stream).toList();
         int categoryItemsSize = categoryItems.size();
+        if (categoryItemsSize == 0) {
+            log.warn("No catalog items found, skipping order generation.");
+            return List.of();
+        }
 
         List<Order> result = new ArrayList<>();
         SaveContext saveContext = new SaveContext().setDiscardSaved(true);
@@ -409,16 +418,19 @@ public class DemoDataGenerator implements Ordered {
                 order.setClient(client);
                 LocalDate date = randomDateWithinYears(2, random);
                 order.setDate(date);
-                order.setPurchaseOrder("PO-" + date.getYear() + "-" + (1000 + random.nextInt(9000)));
                 if (random.nextBoolean()) order.setComment(orderComment(random));
                 order.setStatus(OrderStatus.values()[random.nextInt(OrderStatus.values().length)]);
-                List<OrderItem> orderItems = generateOrderItems(order, categoryItems.subList(0, random.nextInt(1, categoryItemsSize / 3)));
+                int maxItems = Math.max(1, categoryItemsSize / 3);
+                int itemsCount = random.nextInt(1, maxItems + 1);
+                List<OrderItem> orderItems = generateOrderItems(order, categoryItems.subList(0, itemsCount));
                 BigDecimal itemsTotal = order.getItemsTotal();
-                if (random.nextInt(4) == 0) {
+                if (itemsTotal.compareTo(BigDecimal.ZERO) > 0 && random.nextInt(4) == 0) {
                     // discount either value or percent
                     if (random.nextBoolean()) {
-                        order.setDiscountValue(
-                                BigDecimal.valueOf(random.nextInt(0, itemsTotal.divide(BigDecimal.valueOf(2), RoundingMode.HALF_UP).intValue())));
+                        int maxDiscount = itemsTotal.divide(BigDecimal.valueOf(2), RoundingMode.HALF_UP).intValue();
+                        if (maxDiscount > 0) {
+                            order.setDiscountValue(BigDecimal.valueOf(random.nextInt(0, maxDiscount)));
+                        }
                     } else {
                         order.setDiscountPercent(
                                 BigDecimal.valueOf(random.nextInt(1, 30)));
@@ -440,19 +452,14 @@ public class DemoDataGenerator implements Ordered {
 
         var generatedItems = new ArrayList<OrderItem>();
         for (CategoryItem categoryItem : categoryItems) {
-            OrderItem orderItem = dataManager.create(OrderItem.class);
-            orderItem.setCategoryItem(categoryItem);
-            orderItem.setOrder(order);
-            orderItem.setVatIncluded(random.nextBoolean());
-
-            if (orderItem.getVatIncluded()) {
-                orderItem.setVatAmount(BigDecimal.valueOf(random.nextInt(15, 35)));
-            }
-
-            orderItem.setQuantity(BigDecimal.valueOf(random.nextInt(2, 10)));
-            orderItem.setNetPrice(calculateNetPrice(orderItem));
-            orderItem.setGrossPrice(calculateGrossPrice(orderItem));
-            generatedItems.add(orderItem);
+            OrderItem item = dataManager.create(OrderItem.class);
+            item.setCategoryItem(categoryItem);
+            item.setOrder(order);
+            item.setQuantity(BigDecimal.valueOf(random.nextInt(2, 10)));
+            item.setNetPrice(calculateNetPrice(item));
+            item.setVat(calculateVat(item, getDefaultVatPercent()));
+            item.setGrossPrice(calculateGrossPrice(item));
+            generatedItems.add(item);
         }
 
         List<OrderItem> orderItems = order.getOrderItems();
@@ -460,6 +467,10 @@ public class DemoDataGenerator implements Ordered {
         orderItems.addAll(generatedItems);
         order.setOrderItems(orderItems);
         return generatedItems;
+    }
+
+    private BigDecimal getDefaultVatPercent() {
+        return crmSettingsService.getDefaultVatPercent();
     }
 
     private List<Invoice> generateInvoices(List<Order> orders) {
@@ -473,13 +484,8 @@ public class DemoDataGenerator implements Ordered {
                 LocalDate date = order.getDate() != null ? order.getDate().plusDays(random.nextInt(1, 15)) : randomDateWithinYears(2, random);
                 invoice.setDate(date);
                 invoice.setDueDate(date.plusDays(random.nextInt(7, 45)));
-                BigDecimal subtotal = order.getTotal();
-                invoice.setSubtotal(subtotal);
-                BigDecimal vat = subtotal.multiply(BigDecimal.valueOf(0.2))
-                        .setScale(2, RoundingMode.HALF_UP);
-                invoice.setVat(vat);
-                invoice.setTotal(subtotal.add(vat));
-                invoice.setStatus(InvoiceStatus.values()[random.nextInt(InvoiceStatus.values().length)]);
+                applyOrderTotalsToInvoice(invoice, order);
+                invoice.setStatus(InvoiceStatus.NEW);
                 result.add(dataManager.save(invoice));
             }
         }
@@ -489,20 +495,101 @@ public class DemoDataGenerator implements Ordered {
     private void generatePayments(List<Invoice> invoices) {
         ThreadLocalRandom random = ThreadLocalRandom.current();
         for (Invoice invoice : invoices) {
-            int n = random.nextInt(0, 9); // 0..8
-            BigDecimal remaining = invoice.getTotal();
-            for (int i = 0; i < n && remaining.compareTo(BigDecimal.ZERO) > 0; i++) {
-                Payment payment = dataManager.create(Payment.class);
-                payment.setInvoice(invoice);
-                LocalDate date = (invoice.getDate() != null ? invoice.getDate() : randomDateWithinYears(2, random)).plusDays(random.nextInt(1, 60));
-                payment.setDate(date);
-                BigDecimal part = remaining.multiply(BigDecimal.valueOf(0.25 + random.nextDouble(0.5))).setScale(2, RoundingMode.HALF_UP);
-                if (part.compareTo(remaining) > 0) part = remaining;
-                payment.setAmount(part);
-                remaining = remaining.subtract(part);
-                dataManager.saveWithoutReload(payment);
-            }
+            BigDecimal paidTotal = generatePaymentsForInvoice(invoice, random);
+            updateInvoiceStatus(invoice, paidTotal);
+            dataManager.save(invoice);
         }
+    }
+
+    private void applyOrderTotalsToInvoice(Invoice invoice, Order order) {
+        calculateInvoiceFieldsFromOrder(order, invoice, getDefaultVatPercent());
+    }
+
+    private BigDecimal generatePaymentsForInvoice(Invoice invoice, ThreadLocalRandom random) {
+        BigDecimal total = scaleAmount(invoice.getTotal());
+        if (total.compareTo(BigDecimal.ZERO) <= 0) {
+            return BigDecimal.ZERO;
+        }
+
+        BigDecimal targetPaid = pickTargetPaid(total, random);
+        if (targetPaid.compareTo(BigDecimal.ZERO) <= 0) {
+            return BigDecimal.ZERO;
+        }
+
+        int paymentsCount = random.nextInt(1, 4); // 1..3
+        BigDecimal remaining = targetPaid;
+        BigDecimal paid = BigDecimal.ZERO;
+
+        for (int i = 0; i < paymentsCount && remaining.compareTo(BigDecimal.ZERO) > 0; i++) {
+            BigDecimal part = (i == paymentsCount - 1)
+                    ? remaining
+                    : randomPaymentPart(remaining, random);
+            part = part.min(remaining);
+            if (part.compareTo(BigDecimal.ZERO) <= 0) {
+                break;
+            }
+
+            Payment payment = dataManager.create(Payment.class);
+            payment.setInvoice(invoice);
+            LocalDate date = (invoice.getDate() != null ? invoice.getDate() : randomDateWithinYears(2, random))
+                    .plusDays(random.nextInt(1, 60));
+            payment.setDate(date);
+            payment.setAmount(part);
+            remaining = remaining.subtract(part);
+            paid = paid.add(part);
+            dataManager.saveWithoutReload(payment);
+        }
+
+        return scaleAmount(paid);
+    }
+
+    private BigDecimal pickTargetPaid(BigDecimal total, ThreadLocalRandom random) {
+        int roll = random.nextInt(100);
+        if (roll < 35) {
+            return total;
+        }
+        if (roll < 75) {
+            BigDecimal ratio = BigDecimal.valueOf(0.2 + random.nextDouble(0.7));
+            BigDecimal target = total.multiply(ratio).setScale(2, RoundingMode.HALF_UP);
+            if (target.compareTo(total) >= 0) {
+                target = total.subtract(BigDecimal.valueOf(0.01));
+            }
+            return target.max(BigDecimal.ZERO);
+        }
+        return BigDecimal.ZERO;
+    }
+
+    private BigDecimal randomPaymentPart(BigDecimal remaining, ThreadLocalRandom random) {
+        BigDecimal ratio = BigDecimal.valueOf(0.3 + random.nextDouble(0.5));
+        BigDecimal part = remaining.multiply(ratio).setScale(2, RoundingMode.HALF_UP);
+        if (part.compareTo(BigDecimal.ZERO) <= 0) {
+            part = remaining.min(BigDecimal.valueOf(0.01));
+        }
+        return part;
+    }
+
+    private void updateInvoiceStatus(Invoice invoice, BigDecimal paidTotal) {
+        BigDecimal total = scaleAmount(invoice.getTotal());
+        BigDecimal remaining = total.subtract(scaleAmount(paidTotal));
+
+        if (total.compareTo(BigDecimal.ZERO) == 0 || remaining.compareTo(BigDecimal.ZERO) <= 0) {
+            invoice.setStatus(InvoiceStatus.PAID);
+            return;
+        }
+
+        boolean overdue = invoice.getDueDate() != null && invoice.getDueDate().isBefore(LocalDate.now());
+        if (paidTotal.compareTo(BigDecimal.ZERO) == 0) {
+            invoice.setStatus(overdue ? InvoiceStatus.OVERDUE : InvoiceStatus.NEW);
+        } else {
+            invoice.setStatus(overdue ? InvoiceStatus.OVERDUE : InvoiceStatus.PENDING);
+        }
+    }
+
+    private BigDecimal scaleAmount(BigDecimal value) {
+        if (value == null) {
+            return BigDecimal.ZERO;
+        }
+        return value.setScale(2, RoundingMode.HALF_UP);
     }
 
     private String randomVatLike(ThreadLocalRandom r) {

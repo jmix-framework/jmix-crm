@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <view xmlns="http://jmix.io/schema/flowui/view"
-      title="msg://categoryItemListView.title">
+      title="msg://categoryItemListView.title" focusMode="NO_FOCUS">
     <data>
         <collection id="categoryItemsDc"
                     class="com.company.crm.model.catalog.item.CategoryItem">
@@ -59,10 +59,11 @@
             </endSlot>
         </hbox>
         <dataGrid id="categoryItemsDataGrid"
+                  dataContainer="categoryItemsDc"
                   width="100%"
                   minHeight="20em"
-                  dataContainer="categoryItemsDc"
                   multiSort="true"
+                  selectionMode="MULTI"
                   columnReorderingAllowed="true">
             <actions>
                 <action id="createAction" type="list_create">

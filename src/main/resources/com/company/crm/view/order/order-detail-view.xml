@@ -7,6 +7,7 @@
             <fetchPlan extends="_base">
                 <property name="orderItems" fetchPlan="_base"/>
                 <property name="client" fetchPlan="_base"/>
+                <property name="invoices"/>
             </fetchPlan>
             <loader id="orderDl"/>
             <collection id="orderItemsDc" property="orderItems"/>
@@ -50,14 +51,7 @@
                     <select id="statusSelect" property="status"/>
                     <datePicker id="dateField" property="date"/>
                     <textField id="purchaseOrderField" property="purchaseOrder"/>
-                    <bigDecimalField id="discountValueField" property="discountValue" clearButtonVisible="true">
-                        <prefix>
-                            <span text="$"/>
-                        </prefix>
-                        <validators>
-                            <decimalMin value="0"/>
-                        </validators>
-                    </bigDecimalField>
+                    <textField id="discountValueField" property="discountValue" clearButtonVisible="true"/>
                     <bigDecimalField id="discountPercentField" property="discountPercent" clearButtonVisible="true">
                         <prefix>
                             <span text="%"/>
@@ -70,6 +64,7 @@
                     <textField id="subtotalField" property="subTotal" readOnly="true"/>
                     <textField id="vatField" property="vat" readOnly="true"/>
                     <textField id="totalField" property="total" readOnly="true" colspan="2"/>
+                    <textField id="invoiced" property="invoiced" readOnly="true" colspan="2"/>
                     <textArea id="commentField" height="8em" colspan="2" property="comment"/>
                 </formLayout>
 
@@ -81,7 +76,13 @@
                         <button id="removeButton" action="orderItemsGrid.removeAction"/>
                     </startSlot>
                 </hbox>
-                <dataGrid id="orderItemsGrid" dataContainer="orderItemsDc" width="100%" minHeight="15em" multiSort="true">
+                <dataGrid id="orderItemsGrid"
+                          dataContainer="orderItemsDc"
+                          width="100%" minHeight="15em"
+                          multiSort="true"
+                          columnReorderingAllowed="true"
+                          aggregatable="true"
+                          aggregationPosition="BOTTOM">
                     <actions>
                         <action id="createAction" type="list_create">
                             <properties>
@@ -98,13 +99,49 @@
                     <columns resizable="true" sortable="true">
                         <column property="categoryItem.name" autoWidth="true" flexGrow="0"/>
                         <column property="categoryItem.code" autoWidth="true" flexGrow="0"/>
-                        <column property="quantity" autoWidth="true" flexGrow="0"/>
-                        <column property="netPrice" autoWidth="true" flexGrow="0"/>
-                        <column property="grossPrice" autoWidth="true" flexGrow="0"/>
-                        <column property="vatAmount" autoWidth="true" flexGrow="0"/>
-                        <column property="vatIncluded" autoWidth="true" flexGrow="0"/>
-                        <column property="discount" autoWidth="true" flexGrow="0"/>
-                        <column property="total"/>
+                        <column property="quantity" autoWidth="true" flexGrow="0">
+                            <aggregation type="SUM">
+                                <formatter>
+                                    <number/>
+                                </formatter>
+                            </aggregation>
+                        </column>
+                        <column property="netPrice" autoWidth="true" flexGrow="0">
+                            <aggregation type="SUM">
+                                <formatter>
+                                    <number/>
+                                </formatter>
+                            </aggregation>
+                        </column>
+                        <column property="vat" autoWidth="true" flexGrow="0">
+                            <aggregation type="SUM">
+                                <formatter>
+                                    <number/>
+                                </formatter>
+                            </aggregation>
+                        </column>
+                        <column property="grossPrice" autoWidth="true" flexGrow="0">
+                            <aggregation type="SUM">
+                                <formatter>
+                                    <number/>
+                                </formatter>
+                            </aggregation>
+                        </column>
+                        <column property="discount" autoWidth="true" flexGrow="0">
+                            <aggregation type="SUM">
+                                <formatter>
+                                    <number/>
+                                </formatter>
+                            </aggregation>
+                        </column>
+                        <column property="total" autoWidth="true" flexGrow="0">
+                            <aggregation type="SUM">
+                                <formatter>
+                                    <number/>
+                                </formatter>
+                            </aggregation>
+                        </column>
+                        <column property="vatIncluded"/>
                     </columns>
                 </dataGrid>
             </div>

@@ -1,7 +1,6 @@
 package com.company.crm.app.util.ui.renderer;
 
 import com.company.crm.app.service.datetime.DateTimeService;
-import com.company.crm.app.service.order.OrderService;
 import com.company.crm.app.util.common.ThreadUtils;
 import com.company.crm.app.util.ui.CrmUiUtils;
 import com.company.crm.model.base.UuidEntity;
@@ -53,6 +52,7 @@ import java.util.function.Function;
 import static com.company.crm.app.util.ui.CrmUiUtils.CONTRAST_BADGE;
 import static com.company.crm.app.util.ui.CrmUiUtils.SUCCESS_BADGE;
 import static com.company.crm.app.util.ui.color.EnumClassColors.getBadgeVariant;
+import static com.company.crm.model.datatype.PriceDataType.defaultFormat;
 import static io.jmix.flowui.component.UiComponentUtils.copyToClipboard;
 import static io.jmix.flowui.component.UiComponentUtils.getCurrentView;
 
@@ -60,7 +60,6 @@ import static io.jmix.flowui.component.UiComponentUtils.getCurrentView;
 public class CrmRenderers {
 
     private final Messages messages;
-    private final OrderService orderService;
     private final UiAsyncTasks uiAsyncTasks;
     private final UiComponents uiComponents;
     private final MetadataTools metadataTools;
@@ -70,7 +69,7 @@ public class CrmRenderers {
 
     public CrmRenderers(UiComponents uiComponents, DialogWindows dialogWindows, Messages messages,
                         DatatypeFormatter datatypeFormatter, DateTimeService dateTimeService,
-                        UiAsyncTasks uiAsyncTasks, MetadataTools metadataTools, OrderService orderService) {
+                        UiAsyncTasks uiAsyncTasks, MetadataTools metadataTools) {
         this.messages = messages;
         this.uiComponents = uiComponents;
         this.dialogWindows = dialogWindows;
@@ -78,7 +77,6 @@ public class CrmRenderers {
         this.dateTimeService = dateTimeService;
         this.uiAsyncTasks = uiAsyncTasks;
         this.metadataTools = metadataTools;
-        this.orderService = orderService;
     }
 
     public ComponentRenderer<Component, Invoice> invoiceDetails() {
@@ -95,9 +93,10 @@ public class CrmRenderers {
                     .setHeader(messages.getMessage(Payment.class, "Payment.number"));
             paymentsGrid.addColumn(Payment::getDate)
                     .setHeader(messages.getMessage(Payment.class, "Payment.date"));
-            paymentsGrid.addColumn(Payment::getAmount)
+            paymentsGrid.addColumn(payment -> defaultFormat(payment.getAmount()))
                     .setHeader(messages.getMessage(Payment.class, "Payment.amount"));
             paymentsGrid.setItems(invoice.getPayments());
+            paymentsGrid.setEmptyStateText(messages.getMessage("defaultGridEmptyStateText"));
             container.add(paymentsGrid);
 
             return container;
@@ -118,9 +117,10 @@ public class CrmRenderers {
                     .setHeader(messages.getMessage(Invoice.class, "Invoice.number"));
             paymentsGrid.addColumn(Invoice::getDate)
                     .setHeader(messages.getMessage(Invoice.class, "Invoice.date"));
-            paymentsGrid.addColumn(Invoice::getTotal)
+            paymentsGrid.addColumn(invoice -> defaultFormat(invoice.getTotal()))
                     .setHeader(messages.getMessage(Invoice.class, "Invoice.total"));
             paymentsGrid.setItems(order.getInvoices());
+            paymentsGrid.setEmptyStateText(messages.getMessage("defaultGridEmptyStateText"));
             container.add(paymentsGrid);
 
             return container;
@@ -287,9 +287,9 @@ public class CrmRenderers {
         });
     }
 
-    public Renderer<Order> orderLeftOverRenderer() {
+    public Renderer<Order> orderLeftOverSumRenderer() {
         return new ComponentRenderer<>(order -> {
-            BigDecimal leftOverSum = orderService.getOrderLeftOverSum(order);
+            BigDecimal leftOverSum = order.getLeftOverSum();
             Span span = new Span(PriceDataType.formatWithoutCurrency(leftOverSum));
 
             if (leftOverSum.compareTo(BigDecimal.valueOf(10_000)) > 0) {
