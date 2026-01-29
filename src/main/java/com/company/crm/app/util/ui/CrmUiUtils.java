@@ -1,5 +1,6 @@
 package com.company.crm.app.util.ui;
 
+import com.company.crm.app.util.context.AppContext;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasStyle;
 import com.vaadin.flow.component.HasValue;
@@ -7,28 +8,42 @@ import com.vaadin.flow.component.Html;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.page.BrowserWindowResizeEvent;
 import com.vaadin.flow.component.page.Page;
 import com.vaadin.flow.component.page.PendingJavaScriptResult;
 import com.vaadin.flow.component.popover.Popover;
 import com.vaadin.flow.data.selection.MultiSelect;
 import com.vaadin.flow.data.selection.SingleSelect;
+import com.vaadin.flow.data.validator.EmailValidator;
 import com.vaadin.flow.dom.Style;
 import com.vaadin.flow.router.QueryParameters;
 import com.vaadin.flow.shared.Registration;
 import io.jmix.chartsflowui.component.Chart;
 import io.jmix.chartsflowui.kit.component.model.shared.Color;
+import io.jmix.core.Messages;
+import io.jmix.flowui.Dialogs;
+import io.jmix.flowui.Notifications;
+import io.jmix.flowui.UiComponents;
+import io.jmix.flowui.action.inputdialog.InputDialogAction;
+import io.jmix.flowui.app.inputdialog.InputParameter;
 import io.jmix.flowui.component.grid.DataGrid;
 import io.jmix.flowui.component.grid.DataGridColumn;
+import io.jmix.flowui.component.multiselectcombobox.JmixMultiSelectComboBox;
 import io.jmix.flowui.fragment.FragmentUtils;
+import io.jmix.flowui.kit.action.ActionPerformedEvent;
+import io.jmix.flowui.kit.action.ActionVariant;
+import io.jmix.flowui.view.StandardOutcome;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 import static com.company.crm.model.datatype.PriceDataType.getCurrencySymbol;
+import static io.jmix.flowui.component.UiComponentUtils.getCurrentView;
 
 public final class CrmUiUtils {
 
@@ -40,6 +55,44 @@ public final class CrmUiUtils {
 
     private static final String GET_CLIENT_WIDTH_FUNC = "return window.innerWidth";
     private static final String GET_CLIENT_HEIGHT_FUNC = "return window.innerHeight";
+
+    public static void showEmailSendingDialog(Collection<String> emails) {
+        Dialogs dialogs = AppContext.getBean(Dialogs.class);
+        Messages messages = AppContext.getBean(Messages.class);
+        UiComponents uiComponents = AppContext.getBean(UiComponents.class);
+
+        dialogs.createInputDialog(getCurrentView())
+                .withHeader(messages.getMessage("sendEmailDialog.header"))
+                .withLabelsPosition(Dialogs.InputDialogBuilder.LabelsPosition.TOP)
+                .withParameters(
+                        InputParameter.parameter("emails")
+                                .withRequired(true)
+                                .withLabel(messages.getMessage("email"))
+                                .withField(() -> {
+                                    var field = uiComponents.create(JmixMultiSelectComboBox.class);
+                                    field.setPlaceholder("receiver@mail.com");
+                                    field.setAllowCustomValue(true);
+                                    field.setRequired(true);
+                                    field.setAllowedCharPattern(EmailValidator.PATTERN);
+                                    field.setWidthFull();
+                                    //noinspection unchecked
+                                    field.setItems(emails);
+                                    return field;
+                                }))
+                .withActions(
+                        InputDialogAction.action("sendEmail")
+                                .withText(messages.getMessage("send"))
+                                .withIcon(VaadinIcon.MAILBOX)
+                                .withVariant(ActionVariant.SUCCESS)
+                                .withHandler(CrmUiUtils::onSendEmail),
+
+                        InputDialogAction.action("close")
+                                .withText(messages.getMessage("actions.Close"))
+                                .withIcon(VaadinIcon.CLOSE)
+                                .withHandler(CrmUiUtils::closeEmailDialog))
+                .build()
+                .open();
+    }
 
     public static Popover searchHintPopover() {
         return new Popover(new Html("<p>Press <b>Enter</b> to apply filter</p>"));
@@ -69,7 +122,7 @@ public final class CrmUiUtils {
             });
         }
 
-        if (target instanceof HasValue<?,?> hasValue) {
+        if (target instanceof HasValue<?, ?> hasValue) {
             hasValue.addValueChangeListener(e -> popover.close());
         }
 
@@ -221,6 +274,22 @@ public final class CrmUiUtils {
 
     private static Optional<PendingJavaScriptResult> executeGetClientHeightJs() {
         return executeJs(GET_CLIENT_HEIGHT_FUNC);
+    }
+
+    private static void onSendEmail(ActionPerformedEvent e) {
+        Messages messages = AppContext.getBean(Messages.class);
+        Notifications notifications = AppContext.getBean(Notifications.class);
+
+        Collection<String> emails = ((InputDialogAction) e.getSource()).getInputDialog().getValue("emails");
+        String msg = messages.formatMessage("emailSentNotification", String.join(", ", emails));
+
+        notifications.create(msg).withType(Notifications.Type.SYSTEM).show();
+        closeEmailDialog(e);
+    }
+
+    @SuppressWarnings("DataFlowIssue")
+    private static void closeEmailDialog(ActionPerformedEvent e) {
+        ((InputDialogAction) e.getSource()).getInputDialog().close(StandardOutcome.CLOSE);
     }
 
     private CrmUiUtils() {

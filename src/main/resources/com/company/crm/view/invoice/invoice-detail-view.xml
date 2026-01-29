@@ -25,6 +25,7 @@
     <actions>
         <action id="saveCloseAction" type="detail_saveClose"/>
         <action id="closeAction" type="detail_close"/>
+        <action id="downloadAction" text="msg:///download" icon="DOWNLOAD_ALT"/>
     </actions>
     <layout>
         <formLayout id="form" dataContainer="invoiceDc">
@@ -32,6 +33,7 @@
                 <responsiveStep minWidth="0" columns="1"/>
                 <responsiveStep minWidth="40em" columns="2"/>
             </responsiveSteps>
+            <textField id="numberField" property="number" readOnly="true" colspan="2"/>
             <entityComboBox id="clientsComboBox" property="client" colspan="2">
                 <actions>
                     <action id="entityLookupAction" type="entity_lookup"/>
@@ -61,6 +63,8 @@
         <hbox id="detailActions">
             <button id="saveAndCloseButton" action="saveCloseAction"/>
             <button id="closeButton" action="closeAction"/>
+            <button id="downloadButton" action="downloadAction"/>
+
         </hbox>
     </layout>
 </view>

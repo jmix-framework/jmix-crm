@@ -2,10 +2,8 @@ package com.company.crm.view.order;
 
 import com.company.crm.app.feature.queryparameters.SimpleUrlQueryParametersBinder;
 import com.company.crm.app.feature.queryparameters.filters.FieldValueQueryParameterBinder;
-import com.company.crm.app.service.order.OrderService;
 import com.company.crm.app.ui.component.OrderStatusPipeline;
 import com.company.crm.app.ui.component.OrderStatusPipeline.OrderStatusComponent;
-import com.company.crm.app.util.AsyncTasksRegistry;
 import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.app.util.ui.renderer.CrmRenderers;
 import com.company.crm.model.client.Client;
@@ -24,7 +22,6 @@ import io.jmix.core.Messages;
 import io.jmix.core.querycondition.LogicalCondition;
 import io.jmix.core.repository.JmixDataRepositoryContext;
 import io.jmix.flowui.DialogWindows;
-import io.jmix.flowui.asynctask.UiAsyncTasks;
 import io.jmix.flowui.component.combobox.EntityComboBox;
 import io.jmix.flowui.component.datepicker.TypedDatePicker;
 import io.jmix.flowui.component.grid.DataGrid;
@@ -49,6 +46,7 @@ import org.springframework.data.domain.Pageable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -71,10 +69,6 @@ public class OrderListView extends StandardListView<Order> {
 
     @Autowired
     private Messages messages;
-    @Autowired
-    private UiAsyncTasks uiAsyncTasks;
-    @Autowired
-    private OrderService orderService;
     @Autowired
     private CrmRenderers crmRenderers;
     @Autowired
@@ -100,10 +94,11 @@ public class OrderListView extends StandardListView<Order> {
     @ViewComponent
     private OrderStatusPipeline pipeLineFilter;
     @ViewComponent
+    private CollectionContainer<Order> ordersDc;
+    @ViewComponent
     private DataGrid<Order> ordersDataGrid;
 
     private final LogicalCondition filtersCondition = LogicalCondition.and();
-    private final AsyncTasksRegistry asyncTasksRegistry = AsyncTasksRegistry.newInstance();
 
     private Optional<OrderStatus> selectedStatus = Optional.empty();
     private SimpleUrlQueryParametersBinder selectedStatusUrlParameterBinder;
@@ -113,7 +108,6 @@ public class OrderListView extends StandardListView<Order> {
         configureGrid();
         clientsDl.load();
         registerUrlQueryParametersBinders();
-        addDetachListener(e -> asyncTasksRegistry.cancelAll());
     }
 
     private void configureGrid() {
@@ -130,6 +124,11 @@ public class OrderListView extends StandardListView<Order> {
     @Install(to = "ordersDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
     private List<Order> loadDelegate(Pageable pageable, JmixDataRepositoryContext context) {
         return orderRepository.findAll(pageable, wrapCondition(context, filtersCondition)).getContent();
+    }
+
+    @Subscribe(id = "ordersDl", target = Target.DATA_LOADER)
+    private void onOrdersDlPostLoad(final CollectionLoader.PostLoadEvent<Order> event) {
+        updatePipeLineFilter();
     }
 
     @Install(to = "pagination", subject = "totalCountByRepositoryDelegate")
@@ -271,7 +270,6 @@ public class OrderListView extends StandardListView<Order> {
     private void initializePipelineFilter() {
         pipeLineFilter.selectStatus(selectedStatus.orElse(null));
         pipeLineFilter.addStatusClickListener(this::onStatusFilterClick);
-        calculateAmountForEachOrderStatus();
     }
 
     private void onStatusFilterClick(OrderStatusComponent component) {
@@ -291,14 +289,16 @@ public class OrderListView extends StandardListView<Order> {
         applyFilters();
     }
 
-    private void calculateAmountForEachOrderStatus() {
-        asyncTasksRegistry.placeTask("orderByStatusTask", uiAsyncTasks
-                .supplierConfigurer(() -> orderService.getOrdersAmountByStatus())
-                .withResultHandler(this::updateAmountForEachOrderStatus));
-    }
+    private void updatePipeLineFilter() {
+        Map<OrderStatus, BigDecimal> status2Amount = new HashMap<>();
 
-    private void updateAmountForEachOrderStatus(Map<OrderStatus, BigDecimal> result) {
-        result.forEach((status, amount) ->
+        ordersDc.getItems().forEach(item -> {
+            OrderStatus status = item.getStatus();
+            BigDecimal currentAmount = status2Amount.getOrDefault(status, BigDecimal.ZERO);
+            status2Amount.put(status, currentAmount.add(BigDecimal.ONE));
+        });
+
+        status2Amount.forEach((status, amount) ->
                 pipeLineFilter.getStatusComponents().forEach(comp -> {
                     if (comp.getStatus().equals(status)) {
                         comp.setTitle(messages.getMessage(status) + " (" + amount + ")");

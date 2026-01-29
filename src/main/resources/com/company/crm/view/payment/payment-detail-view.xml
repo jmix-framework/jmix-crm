@@ -27,6 +27,7 @@
                 <responsiveStep minWidth="0" columns="1"/>
                 <responsiveStep minWidth="40em" columns="2"/>
             </responsiveSteps>
+            <textField id="numberField" property="number" readOnly="true" colspan="2"/>
             <entityComboBox id="invoiceField" property="invoice" itemsContainer="invoicesDc">
                 <actions>
                     <action id="entityLookupAction" icon="PLUS"/>

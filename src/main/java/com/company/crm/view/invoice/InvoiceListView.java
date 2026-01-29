@@ -4,8 +4,11 @@ import com.company.crm.app.feature.queryparameters.filters.FieldValueQueryParame
 import com.company.crm.app.service.finance.InvoiceService;
 import com.company.crm.app.ui.component.card.CrmCard;
 import com.company.crm.app.util.constant.CrmConstants;
+import com.company.crm.app.util.report.CrmReportUtils;
+import com.company.crm.app.util.ui.CrmUiUtils;
 import com.company.crm.app.util.ui.renderer.CrmRenderers;
 import com.company.crm.model.client.Client;
+import com.company.crm.model.contact.Contact;
 import com.company.crm.model.invoice.Invoice;
 import com.company.crm.model.invoice.InvoiceRepository;
 import com.company.crm.model.invoice.InvoiceStatus;
@@ -14,16 +17,23 @@ import com.company.crm.view.main.MainView;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasValue;
+import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.Span;
-import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
+import com.vaadin.flow.component.orderedlayout.FlexComponent.JustifyContentMode;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.theme.lumo.LumoUtility.Background;
+import com.vaadin.flow.theme.lumo.LumoUtility.BorderRadius;
+import com.vaadin.flow.theme.lumo.LumoUtility.Margin;
+import com.vaadin.flow.theme.lumo.LumoUtility.Padding;
 import io.jmix.core.Messages;
 import io.jmix.core.querycondition.LogicalCondition;
 import io.jmix.core.repository.JmixDataRepositoryContext;
+import io.jmix.flowui.Notifications;
 import io.jmix.flowui.component.combobox.EntityComboBox;
 import io.jmix.flowui.component.datepicker.TypedDatePicker;
 import io.jmix.flowui.component.grid.DataGrid;
@@ -48,11 +58,10 @@ import org.springframework.data.domain.Pageable;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
-import static com.company.crm.app.util.ui.CrmUiUtils.ERROR_BADGE;
-import static com.company.crm.app.util.ui.CrmUiUtils.SUCCESS_BADGE;
-import static com.company.crm.app.util.ui.CrmUiUtils.WARNING_BADGE;
 import static com.company.crm.app.util.ui.CrmUiUtils.setBadge;
+import static com.company.crm.app.util.ui.color.EnumClassColors.getBadgeVariant;
 import static com.company.crm.app.util.ui.datacontext.DataContextUtils.wrapCondition;
 import static io.jmix.core.querycondition.PropertyCondition.equal;
 import static io.jmix.core.querycondition.PropertyCondition.greaterOrEqual;
@@ -71,6 +80,12 @@ public class InvoiceListView extends StandardListView<Invoice> {
     private Messages messages;
     @Autowired
     private CrmRenderers crmRenderers;
+    @Autowired
+    private CrmReportUtils crmReportUtils;
+    @Autowired
+    private Notifications notifications;
+    @Autowired
+    private InvoiceService invoiceService;
     @Autowired
     private InvoiceRepository invoiceRepository;
 
@@ -101,8 +116,6 @@ public class InvoiceListView extends StandardListView<Invoice> {
     private DataGrid<Invoice> invoicesDataGrid;
 
     private final LogicalCondition filtersCondition = LogicalCondition.and();
-    @Autowired
-    private InvoiceService invoiceService;
 
     @Override
     protected void onAttach(AttachEvent attachEvent) {
@@ -145,14 +158,38 @@ public class InvoiceListView extends StandardListView<Invoice> {
         return crmRenderers.invoiceClientLink();
     }
 
+    @Install(to = "invoicesDataGrid.emailAction", subject = "enabledRule")
+    private boolean invoicesDataGridEmailActionEnabledRule() {
+        return invoicesDataGrid.getSelectedItems().size() == 1;
+    }
+
+    @Install(to = "invoicesDataGrid.downloadAction", subject = "enabledRule")
+    private boolean invoicesDataGridDownloadActionEnabledRule() {
+        return invoicesDataGrid.getSelectedItems().size() == 1;
+    }
+
     @Subscribe("invoicesDataGrid.downloadAction")
     private void onInvoicesDataGridDownloadAction(final ActionPerformedEvent event) {
-        // TODO:
+        Invoice invoice = invoicesDataGrid.getSingleSelectedItem();
+        if (invoice != null) {
+            crmReportUtils.runAndDownloadReport(invoice);
+        }
     }
 
     @Subscribe("invoicesDataGrid.emailAction")
     private void onInvoicesDataGridEmailAction(final ActionPerformedEvent event) {
-        // TODO:
+        Invoice invoice = invoicesDataGrid.getSingleSelectedItem();
+        if (invoice == null) {
+            return;
+        }
+
+        List<Contact> contacts = invoice.getClient().getContacts();
+        if (contacts.isEmpty()) {
+            notifications.create("Client has no contacts to send email").withType(Notifications.Type.ERROR).show();
+        }
+
+        List<String> emails = contacts.stream().map(Contact::getEmail).toList();
+        CrmUiUtils.showEmailSendingDialog(emails);
     }
 
     private void initialize() {
@@ -230,17 +267,11 @@ public class InvoiceListView extends StandardListView<Invoice> {
     }
 
     private void updateInvoiceStatusCard() {
-        long paidCount = invoiceService.getInvoicesCount(InvoiceStatus.PAID);
-        long pendingCount = invoiceService.getInvoicesCount(InvoiceStatus.PENDING);
-        long overdueCount = invoiceService.getInvoicesCount(InvoiceStatus.OVERDUE);
-
         var layout = createStatusCountsLayout();
-
-        Component paidBlock = createStatusCountBlock(messages.getMessage(InvoiceStatus.PAID), paidCount, SUCCESS_BADGE);
-        Component pendingBlock = createStatusCountBlock(messages.getMessage(InvoiceStatus.PENDING), pendingCount, WARNING_BADGE);
-        Component overdueBlock = createStatusCountBlock(messages.getMessage(InvoiceStatus.OVERDUE), overdueCount, ERROR_BADGE);
-        layout.add(pendingBlock, paidBlock, overdueBlock);
-
+        List.of(InvoiceStatus.PAID, InvoiceStatus.PENDING, InvoiceStatus.OVERDUE).forEach(status -> {
+            long paidCount = invoiceService.getInvoicesCount(status);
+            layout.add(createStatusCountBlock(status, paidCount));
+        });
         invoiceStatusCard.fillAsStaticCard(messages.getMessage("com.company.crm.view.invoice/statusCounts"), layout);
     }
 
@@ -249,21 +280,36 @@ public class InvoiceListView extends StandardListView<Invoice> {
         layout.setWidthFull();
         layout.setPadding(false);
         layout.setSpacing(true);
-        layout.setAlignItems(FlexComponent.Alignment.CENTER);
-        layout.setJustifyContentMode(FlexComponent.JustifyContentMode.CENTER);
+        layout.setAlignItems(Alignment.CENTER);
+        layout.setJustifyContentMode(JustifyContentMode.CENTER);
         return layout;
     }
 
-    private Component createStatusCountBlock(String label, long count, String badgeVariant) {
-        Span statusLabel = new Span(label);
-        setBadge(statusLabel, badgeVariant);
+    private Component createStatusCountBlock(InvoiceStatus status, long count) {
+        Span statusLabel = new Span(messages.getMessage(status));
+        setBadge(statusLabel, getBadgeVariant(status));
 
-        H1 countValue = new H1(String.valueOf(count));
+        String countValue;
+        if (count > 1000) {
+            countValue = "1000+";
+        } else {
+            countValue = String.valueOf(count);
+        }
 
-        VerticalLayout block = new VerticalLayout(countValue, statusLabel);
-        block.setPadding(false);
+        VerticalLayout block = new VerticalLayout(statusLabel, new H1(countValue));
         block.setSpacing(false);
-        block.setAlignItems(FlexComponent.Alignment.CENTER);
+        block.setPadding(false);
+        block.setMaxWidth(8, Unit.EM);
+        CrmUiUtils.setCursorPointer(block);
+        block.setAlignItems(Alignment.CENTER);
+        block.setJustifyContentMode(JustifyContentMode.CENTER);
+        block.addClassName(Objects.equals(status, invoices_StatusSelect.getValue())
+                ? Background.CONTRAST_10 : Background.CONTRAST_5);
+        block.addClassNames(BorderRadius.FULL, Margin.AUTO, Padding.Bottom.MEDIUM);
+        block.addClickListener(e -> {
+            boolean unselectStatus = Objects.equals(status, invoices_StatusSelect.getValue());
+            invoices_StatusSelect.setValue(unselectStatus ? null : status);
+        });
 
         return block;
     }

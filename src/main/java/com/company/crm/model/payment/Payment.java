@@ -102,7 +102,7 @@ public class Payment extends FullAuditEntity implements HasUniqueNumber {
     }
 
     public String getNumber() {
-        return number;
+        return number == null ? getNumberWillBeGeneratedMessage() : number;
     }
 
     public void setNumber(String number) {

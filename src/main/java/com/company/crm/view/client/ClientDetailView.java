@@ -345,8 +345,7 @@ public class ClientDetailView extends StandardDetailView<Client> implements Widt
 
     private BigDecimal calculateOutstandingBalance(Client client) {
         defaultSleepForStatisticsLoading();
-        return clientService.getInvoicesTotalSum(client)
-                .subtract(clientService.getPaymentsTotalSum(client));
+        return clientService.getOutstandingBalance(client);
     }
 
     private void fillSummaryCard(String title, CrmCard card, BigDecimal value) {

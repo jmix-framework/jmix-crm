@@ -3,6 +3,7 @@ package com.company.crm.view.invoice;
 import com.company.crm.app.service.datetime.DateTimeService;
 import com.company.crm.app.service.settings.CrmSettingsService;
 import com.company.crm.app.util.constant.CrmConstants;
+import com.company.crm.app.util.report.CrmReportUtils;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.invoice.Invoice;
 import com.company.crm.model.invoice.InvoiceRepository;
@@ -11,12 +12,14 @@ import com.company.crm.model.order.Order;
 import com.company.crm.view.main.MainView;
 import com.vaadin.flow.component.AbstractField.ComponentValueChangeEvent;
 import com.vaadin.flow.router.Route;
+import io.jmix.core.EntityStates;
 import io.jmix.core.FetchPlan;
 import io.jmix.core.SaveContext;
 import io.jmix.flowui.DialogWindows;
 import io.jmix.flowui.component.combobox.EntityComboBox;
 import io.jmix.flowui.component.datepicker.TypedDatePicker;
 import io.jmix.flowui.kit.action.ActionPerformedEvent;
+import io.jmix.flowui.kit.component.button.JmixButton;
 import io.jmix.flowui.model.CollectionLoader;
 import io.jmix.flowui.view.EditedEntityContainer;
 import io.jmix.flowui.view.Install;
@@ -44,7 +47,11 @@ import static com.company.crm.app.util.price.PriceCalculator.calculateInvoiceFie
 public class InvoiceDetailView extends StandardDetailView<Invoice> {
 
     @Autowired
+    private EntityStates entityStates;
+    @Autowired
     private DialogWindows dialogWindows;
+    @Autowired
+    private CrmReportUtils crmReportUtils;
     @Autowired
     private DateTimeService dateTimeService;
     @Autowired
@@ -53,6 +60,10 @@ public class InvoiceDetailView extends StandardDetailView<Invoice> {
     private CrmSettingsService crmSettingsService;
 
     @ViewComponent
+    private JmixButton downloadButton;
+    @ViewComponent
+    private TypedDatePicker<LocalDate> dueDateField;
+    @ViewComponent
     private EntityComboBox<Client> clientsComboBox;
     @ViewComponent
     private EntityComboBox<Order> ordersComboBox;
@@ -60,8 +71,6 @@ public class InvoiceDetailView extends StandardDetailView<Invoice> {
     private CollectionLoader<Order> ordersDl;
 
     private boolean orderChangeForbidden = false;
-    @ViewComponent
-    private TypedDatePicker<LocalDate> dueDateField;
 
     public void forbidChangeOrder() {
         orderChangeForbidden = true;
@@ -97,6 +106,8 @@ public class InvoiceDetailView extends StandardDetailView<Invoice> {
             loadOrders(invoice.getClient());
             ordersComboBox.focus();
         }
+
+        downloadButton.setEnabled(!entityStates.isNew(getEditedEntity()));
     }
 
     private void loadOrders(@Nullable Client client) {
@@ -118,6 +129,11 @@ public class InvoiceDetailView extends StandardDetailView<Invoice> {
     @Install(target = Target.DATA_CONTEXT)
     private Set<Object> saveDelegate(SaveContext saveContext) {
         return Set.of(invoiceRepository.save(getEditedEntity()));
+    }
+
+    @Subscribe("downloadAction")
+    private void onDownloadAction(final ActionPerformedEvent event) {
+        crmReportUtils.runAndDownloadReport(getEditedEntity());
     }
 
     @Subscribe("ordersComboBox.entityLookupAction")

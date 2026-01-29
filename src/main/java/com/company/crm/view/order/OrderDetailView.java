@@ -12,6 +12,7 @@ import com.company.crm.view.main.MainView;
 import com.vaadin.flow.component.AbstractField.ComponentValueChangeEvent;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -19,6 +20,7 @@ import com.vaadin.flow.component.textfield.TextFieldBase;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.router.Route;
+import io.jmix.core.EntityStates;
 import io.jmix.core.FetchPlan;
 import io.jmix.core.Messages;
 import io.jmix.core.SaveContext;
@@ -110,6 +112,10 @@ public class OrderDetailView extends StandardDetailView<Order> {
     private DataGrid<OrderItem> orderItemsGrid;
     @ViewComponent
     private DetailSaveCloseAction<Order> saveCloseAction;
+    @ViewComponent
+    private H2 orderNumberTitle;
+    @Autowired
+    private EntityStates entityStates;
 
     @Override
     public void setReadOnly(boolean readOnly) {
@@ -129,6 +135,7 @@ public class OrderDetailView extends StandardDetailView<Order> {
         initFieldsValidation();
         selectStatusInPipeline();
         addStatusPipelineClickListener();
+        updateHeader();
         updateFooter();
     }
 
@@ -274,6 +281,12 @@ public class OrderDetailView extends StandardDetailView<Order> {
         if (event.isFromClient() && !event.getSource().isInvalid()) {
             recalculateTotal(event.getSource());
         }
+    }
+
+    private void updateHeader() {
+        Order order = getEditedEntity();
+        String title = entityStates.isNew(order) ? messages.getMessage("newOrder") : order.getNumber();
+        orderNumberTitle.setText(title);
     }
 
     private void updateFooter() {

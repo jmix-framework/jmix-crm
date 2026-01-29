@@ -20,16 +20,15 @@
     </facets>
     <actions>
         <action id="saveCloseAction" type="detail_saveClose" text="msg:///actions.Save"/>
-        <action id="closeAction" type="detail_close" text="msg:///actions.Close" icon="vaadin:close"/>
-        <action id="cloneAction" text="msg:///clone" icon="vaadin:copy"/>
-        <action id="emailAction" text="msg:///email" icon="vaadin:envelope-o"/>
-        <action id="downloadAction" text="msg:///download" icon="vaadin:download-alt"/>
+        <action id="closeAction" type="detail_close" text="msg:///actions.Close" icon="CLOSE"/>
+        <action id="cloneAction" text="msg:///clone" icon="COPY"/>
+        <action id="emailAction" text="msg:///email" icon="ENVELOPE_O"/>
+        <action id="downloadAction" text="msg:///download" icon="DOWNLOAD_ALT"/>
     </actions>
     <layout>
-        <hbox width="100%" padding="true" justifyContent="BETWEEN" alignItems="CENTER">
+        <hbox width="100%" justifyContent="BETWEEN" alignItems="CENTER">
             <hbox>
-                <h2 text="msg://com.company.crm.model.order/Order"/>
-                <h2 dataContainer="orderDc" property="number"/>
+                <h2 id="orderNumberTitle"/>
             </hbox>
             <hbox>
                 <button id="saveAndCloseButton" action="saveCloseAction"/>

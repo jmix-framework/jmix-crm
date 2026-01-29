@@ -12,6 +12,7 @@ import io.jmix.core.entity.annotation.OnDelete;
 import io.jmix.core.metamodel.annotation.DependsOnProperties;
 import io.jmix.core.metamodel.annotation.InstanceName;
 import io.jmix.core.metamodel.annotation.JmixEntity;
+import io.jmix.core.metamodel.annotation.JmixProperty;
 import io.jmix.core.metamodel.annotation.PropertyDatatype;
 import io.jmix.core.metamodel.datatype.DatatypeFormatter;
 import jakarta.persistence.Column;
@@ -89,6 +90,18 @@ public class Invoice extends FullAuditEntity implements HasUniqueNumber {
         }
     }
 
+    @JmixProperty
+    @DependsOnProperties({"payments"})
+    public BigDecimal getPaymentsSum() {
+        if (payments == null || payments.isEmpty()) {
+            return BigDecimal.ZERO;
+        }
+
+        return payments.stream()
+                .map(Payment::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
     public List<Payment> getPayments() {
         return payments;
     }
@@ -162,7 +175,7 @@ public class Invoice extends FullAuditEntity implements HasUniqueNumber {
     }
 
     public String getNumber() {
-        return number;
+        return number == null ? getNumberWillBeGeneratedMessage() : number;
     }
 
     public void setNumber(String number) {

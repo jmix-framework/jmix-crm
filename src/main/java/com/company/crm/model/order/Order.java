@@ -193,7 +193,12 @@ public class Order extends FullAuditEntity implements HasUniqueNumber {
     @DependsOnProperties({"invoices"})
     @PropertyDatatype(PriceDataType.NAME)
     public BigDecimal getInvoiced() {
-        return getInvoices().stream()
+        List<Invoice> invoices = getInvoices();
+        if (invoices == null || invoices.isEmpty()) {
+            return BigDecimal.ZERO;
+        }
+
+        return invoices.stream()
                 .map(Invoice::getSubtotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
@@ -241,7 +246,7 @@ public class Order extends FullAuditEntity implements HasUniqueNumber {
     }
 
     public String getNumber() {
-        return number;
+        return number == null ? getNumberWillBeGeneratedMessage() : number;
     }
 
     public void setNumber(String number) {

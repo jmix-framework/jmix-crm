@@ -35,6 +35,10 @@ public class ClientService {
         this.clientRepository = clientRepository;
     }
 
+    public BigDecimal getOutstandingBalance(Client client) {
+        return getInvoicesTotalSum(client).subtract(getPaymentsTotalSum(client));
+    }
+
     public List<CompletedOrdersByDateRangeInfo> getCompletedOrdersInfo(@Nullable LocalDateRange dateRange, Client... clients) {
         boolean clientsSpecified = clients.length > 0;
 
