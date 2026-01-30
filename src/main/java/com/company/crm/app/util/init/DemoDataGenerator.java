@@ -1,6 +1,6 @@
 package com.company.crm.app.util.init;
 
-import com.company.crm.app.annotation.LocalProfile;
+import com.company.crm.app.config.SpringProfiles;
 import com.company.crm.app.service.catalog.CatalogImportSettings;
 import com.company.crm.app.service.catalog.CatalogService;
 import com.company.crm.app.service.settings.CrmSettingsService;
@@ -80,11 +80,12 @@ public class DemoDataGenerator implements Ordered {
     private final RoleAssignmentRepository roleAssignmentRepository;
     private final CrmSettingsService crmSettingsService;
     private final CurrentAuthentication currentAuthentication;
+    private final SpringProfiles springProfiles;
 
     public DemoDataGenerator(RoleAssignmentRepository roleAssignmentRepository,
                              UnconstrainedDataManager dataManager,
                              PasswordEncoder passwordEncoder, Environment environment,
-                             CatalogService catalogService, SystemAuthenticator systemAuthenticator, CrmSettingsService crmSettingsService, CurrentAuthentication currentAuthentication) {
+                             CatalogService catalogService, SystemAuthenticator systemAuthenticator, CrmSettingsService crmSettingsService, CurrentAuthentication currentAuthentication, SpringProfiles springProfiles) {
         this.environment = environment;
         this.dataManager = dataManager;
         this.catalogService = catalogService;
@@ -93,12 +94,14 @@ public class DemoDataGenerator implements Ordered {
         this.roleAssignmentRepository = roleAssignmentRepository;
         this.crmSettingsService = crmSettingsService;
         this.currentAuthentication = currentAuthentication;
+        this.springProfiles = springProfiles;
     }
 
-    @LocalProfile
     @EventListener(ApplicationReadyEvent.class)
     public void onApplicationReadyEvent(ApplicationReadyEvent event) {
-        initDemoDataIfNeeded();
+        if (springProfiles.isLocalProfile()) {
+            initDemoDataIfNeeded();
+        }
     }
 
     public void resetDemoData() {
