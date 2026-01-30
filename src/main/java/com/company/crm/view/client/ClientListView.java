@@ -36,6 +36,11 @@ import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.data.selection.SelectionEvent;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility;
+import com.vaadin.flow.theme.lumo.LumoUtility.FontSize;
+import com.vaadin.flow.theme.lumo.LumoUtility.FontWeight;
+import com.vaadin.flow.theme.lumo.LumoUtility.Overflow;
+import com.vaadin.flow.theme.lumo.LumoUtility.TextOverflow;
+import com.vaadin.flow.theme.lumo.LumoUtility.Whitespace;
 import io.jmix.core.Messages;
 import io.jmix.core.querycondition.LogicalCondition;
 import io.jmix.core.repository.JmixDataRepositoryContext;
@@ -74,7 +79,7 @@ import static com.company.crm.app.util.demo.DemoUtils.defaultSleepForStatisticsL
 import static com.company.crm.app.util.ui.CrmUiUtils.addRowSelectionInMultiSelectMode;
 import static com.company.crm.app.util.ui.CrmUiUtils.openLink;
 import static com.company.crm.app.util.ui.CrmUiUtils.setSearchHintPopover;
-import static com.company.crm.app.util.ui.datacontext.DataContextUtils.wrapCondition;
+import static com.company.crm.app.util.ui.datacontext.DataContextUtils.addCondition;
 import static com.company.crm.app.util.ui.listener.resize.WidthResizeListener.isWidthChanged;
 import static io.jmix.core.querycondition.PropertyCondition.contains;
 import static io.jmix.core.querycondition.PropertyCondition.equal;
@@ -158,7 +163,7 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
 
     @Install(to = "clientsDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
     private List<Client> loadDelegate(Pageable pageable, JmixDataRepositoryContext context) {
-        return clientRepository.findAll(pageable, wrapCondition(context, filtersCondition)).getContent();
+        return clientRepository.findAll(pageable, addCondition(context, filtersCondition)).getContent();
     }
 
     @Install(to = "clientsDataGrid.removeAction", subject = "delegate")
@@ -168,7 +173,7 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
 
     @Install(to = "pagination", subject = "totalCountByRepositoryDelegate")
     private Long paginationTotalCountByRepositoryDelegate(final JmixDataRepositoryContext context) {
-        return clientRepository.count(wrapCondition(context, filtersCondition));
+        return clientRepository.count(addCondition(context, filtersCondition));
     }
 
     @Subscribe("showOnlyMyClientsCheckBox")
@@ -232,7 +237,7 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
             Span span = new Span(website);
             CrmUiUtils.setCursorPointer(span);
             span.setTitle(c.getWebsite());
-            span.addClassNames(LumoUtility.TextColor.PRIMARY, LumoUtility.TextColor.SECONDARY, LumoUtility.TextOverflow.ELLIPSIS);
+            span.addClassNames(LumoUtility.TextColor.PRIMARY, LumoUtility.TextColor.SECONDARY, TextOverflow.ELLIPSIS);
             span.addClickListener(e -> openLink(c.getWebsite()));
             return span;
         });
@@ -254,7 +259,7 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
     private void configureCardsSize() {
         statsBlock.getChildren().forEach(card -> {
             if (card instanceof HasSize hasSize) {
-                hasSize.setMaxHeight(10, Unit.EM);
+                hasSize.setMaxHeight(12, Unit.EM);
             }
         });
     }
@@ -376,9 +381,17 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
     }
 
     private void fillStatCard(String title, CrmCard card, BigDecimal content) {
-        VerticalLayout component = new VerticalLayout(new H1(PriceDataType.defaultFormat(content)));
+        var contentComponent = new H1(PriceDataType.defaultFormat(content));
+        contentComponent.setWidthFull();
+        contentComponent.setMaxWidth(12, Unit.EM);
+        contentComponent.addClassNames(Overflow.HIDDEN, TextOverflow.ELLIPSIS, Whitespace.NOWRAP);
+
+        VerticalLayout component = new VerticalLayout(contentComponent);
+        component.setWidthFull();
         component.setPadding(false);
+        component.addClassNames(Overflow.HIDDEN);
         component.add(createStatCardFooter());
+
         card.fillAsStaticCard(title, component);
         SkeletonStyler.remove(card);
     }
@@ -399,7 +412,7 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
         Client[] selectedClients = getSelectedClients();
 
         if (selectedClients.length == 1) {
-            mainText = new Span(messageBundle.getMessage("for") + " " +  selectedClients[0].getName());
+            mainText = new Span(messageBundle.getMessage("for") + " " + selectedClients[0].getName());
             badge = CrmUiUtils.WARNING_BADGE;
         } else if (selectedClients.length == 0 && isFilterConditionEmpty()) {
             mainText = new Span(messageBundle.getMessage("forAllClients"));
@@ -413,10 +426,12 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
         }
 
         CrmUiUtils.setBadge(mainText, badge);
-        mainText.addClassNames(LumoUtility.FontSize.LARGE, LumoUtility.FontWeight.MEDIUM);
+        mainText.addClassNames(FontSize.LARGE, FontWeight.MEDIUM);
+        mainText.addClassNames(Overflow.HIDDEN, TextOverflow.ELLIPSIS, Whitespace.NOWRAP);
+        mainText.setWidthFull();
 
-        Span hintText = new Span("Select clients in the table to show their statistics");
-        hintText.addClassNames(LumoUtility.FontSize.XSMALL, LumoUtility.FontWeight.THIN);
+        Span hintText = new Span(messageBundle.getMessage("cardHintText"));
+        hintText.addClassNames(FontSize.XSMALL, FontWeight.THIN);
 
         VerticalLayout layout = new VerticalLayout(mainText, hintText);
         layout.setWidthFull();

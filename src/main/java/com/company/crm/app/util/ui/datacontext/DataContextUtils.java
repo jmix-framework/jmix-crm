@@ -6,7 +6,7 @@ import io.jmix.core.repository.JmixDataRepositoryContext;
 
 public final class DataContextUtils {
 
-    public static JmixDataRepositoryContext wrapCondition(JmixDataRepositoryContext context, Condition condition) {
+    public static JmixDataRepositoryContext addCondition(JmixDataRepositoryContext context, Condition condition) {
         Condition resultCondition;
         if (context.condition() != null) {
             resultCondition = LogicalCondition.and(context.condition(), condition);

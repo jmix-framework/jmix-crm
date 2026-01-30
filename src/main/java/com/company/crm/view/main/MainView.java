@@ -102,7 +102,7 @@ public class MainView extends StandardMainView {
     private void onReady(final ReadyEvent event) {
         selectSuitableMenuItem();
         if (onlineDemoDataCreator != null) {
-            onlineDemoDataCreator.createDemoData();
+            onlineDemoDataCreator.createDemoDataIfNeeded();
         }
     }
 

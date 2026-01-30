@@ -7,6 +7,7 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.dom.ThemeList;
 import com.vaadin.flow.shared.Registration;
+import com.vaadin.flow.theme.lumo.LumoUtility;
 import com.vaadin.flow.theme.lumo.LumoUtility.Background;
 import com.vaadin.flow.theme.lumo.LumoUtility.FontSize;
 import com.vaadin.flow.theme.lumo.LumoUtility.FontWeight;
@@ -34,6 +35,8 @@ public class OrderStatusPipeline extends FormLayout implements ApplicationContex
 
     private Messages messages;
 
+    private DisplayMode displayMode = DisplayMode.AUTO;
+
     public enum DisplayMode {
         AUTO,
         ONE_ROW,
@@ -42,6 +45,7 @@ public class OrderStatusPipeline extends FormLayout implements ApplicationContex
     }
 
     public void setDisplayMode(DisplayMode displayMode) {
+        this.displayMode = displayMode;
         int statusCount = OrderStatus.values().length;
         switch (displayMode) {
             case ONE_ROW -> setResponsiveSteps(new ResponsiveStep("0", statusCount));
@@ -140,6 +144,7 @@ public class OrderStatusPipeline extends FormLayout implements ApplicationContex
             this.status = status;
             this.titleComponent = titleComponent;
 
+            addClassNames(LumoUtility.Margin.Bottom.XSMALL);
             add(titleComponent);
             installSize();
             installItemPositioning();

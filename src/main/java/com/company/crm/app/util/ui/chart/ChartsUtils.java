@@ -7,7 +7,6 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.spring.annotation.SpringComponent;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import io.jmix.chartsflowui.component.Chart;
-import io.jmix.chartsflowui.kit.component.model.DataSet;
 import io.jmix.chartsflowui.kit.component.model.Grid;
 import io.jmix.chartsflowui.kit.component.model.Title;
 import io.jmix.chartsflowui.kit.component.model.Tooltip;
@@ -25,31 +24,20 @@ import io.jmix.chartsflowui.kit.component.model.shared.Orientation;
 import io.jmix.chartsflowui.kit.component.model.toolbox.SaveAsImageFeature;
 import io.jmix.chartsflowui.kit.component.model.toolbox.Toolbox;
 import io.jmix.flowui.UiComponents;
-import io.jmix.flowui.asynctask.UiAsyncTasks;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
 
 import static com.company.crm.app.util.ui.CrmUiUtils.setBackgroundTransparent;
 
 @SpringComponent
 public class ChartsUtils {
-    private static final Logger log = LoggerFactory.getLogger(ChartsUtils.class);
-    private final UiAsyncTasks uiAsyncTasks;
+
     private final UiComponents uiComponents;
 
-    public ChartsUtils(UiAsyncTasks uiAsyncTasks, UiComponents uiComponents) {
-        this.uiAsyncTasks = uiAsyncTasks;
+    public ChartsUtils(UiComponents uiComponents) {
         this.uiComponents = uiComponents;
     }
 
     public CrmCard createViewStatChartWrapper(Chart chart) {
-        return createViewStatChartWrapper(chart, true);
+        return createViewStatChartWrapper(chart, chart.getDataSet() == null);
     }
 
     public CrmCard createViewStatChartWrapper(Chart chart, boolean applySkeleton) {
@@ -66,31 +54,6 @@ public class ChartsUtils {
         }
 
         return card;
-    }
-
-    public CompletableFuture<?> initializeChartsAsync(Map<Chart, Supplier<DataSet>> chartsLoaders) {
-        return uiAsyncTasks.supplierConfigurer(() -> {
-                    var chartDataSetters = new ArrayList<Runnable>();
-                    chartsLoaders.forEach((chart, dataSetLoader) -> {
-                        DataSet dataSet = dataSetLoader.get();
-                        chartDataSetters.add(() -> {
-                            chart.withDataSet(dataSet);
-                            SkeletonStyler.remove(chart);
-                        });
-                    });
-                    return chartDataSetters;
-                })
-                .withTimeout(5, TimeUnit.SECONDS)
-                .withResultHandler(r -> r.forEach(Runnable::run))
-                .withExceptionHandler(e -> {
-                    log.error(e.getMessage(), e);
-                    SkeletonStyler.remove(chartsLoaders.keySet());
-                })
-                .supplyAsync();
-    }
-
-    public Chart createViewStatPieChart(String title) {
-        return createViewStatChart(title, SeriesType.PIE);
     }
 
     public Chart createViewStatChart(String title, SeriesType seriesType) {

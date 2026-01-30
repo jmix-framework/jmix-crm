@@ -7,6 +7,10 @@ import com.vaadin.flow.theme.lumo.LumoUtility;
 
 public class CrmLoader extends VerticalLayout {
 
+    private static final String DEFAULT_MESSAGE = "Loading...";
+
+    private final Span loadingMessage = new Span();
+
     public CrmLoader() {
         initComponent();
     }
@@ -21,6 +25,11 @@ public class CrmLoader extends VerticalLayout {
     public void stopLoading() {
         removeAll();
         setVisible(false);
+    }
+
+    public void setLoadingMessage(String message) {
+        String messageToSet = message == null || message.isBlank() ? DEFAULT_MESSAGE : message;
+        loadingMessage.setText(messageToSet);
     }
 
     public void setLogoSize(String size) {
@@ -45,8 +54,9 @@ public class CrmLoader extends VerticalLayout {
     }
 
     private void addLoadingMessage() {
-        Span loadingMessage = new Span("Loading...");
+        setLoadingMessage(loadingMessage.getText());
         loadingMessage.addClassNames(LumoUtility.FontWeight.THIN, LumoUtility.FontSize.SMALL);
+        loadingMessage.addClassName("crm-loader-message");
         add(loadingMessage);
     }
 }

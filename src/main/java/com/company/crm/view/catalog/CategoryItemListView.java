@@ -41,7 +41,7 @@ import java.util.List;
 import java.util.function.Function;
 
 import static com.company.crm.app.util.ui.CrmUiUtils.setSearchHintPopover;
-import static com.company.crm.app.util.ui.datacontext.DataContextUtils.wrapCondition;
+import static com.company.crm.app.util.ui.datacontext.DataContextUtils.addCondition;
 import static io.jmix.core.querycondition.PropertyCondition.contains;
 import static io.jmix.core.querycondition.PropertyCondition.equal;
 
@@ -80,12 +80,12 @@ public class CategoryItemListView extends StandardListView<CategoryItem> {
 
     @Install(to = "categoryItemsDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
     private List<CategoryItem> loadDelegate(Pageable pageable, JmixDataRepositoryContext context) {
-        return itemRepository.findAll(pageable, wrapCondition(context, filtersCondition)).getContent();
+        return itemRepository.findAll(pageable, addCondition(context, filtersCondition)).getContent();
     }
 
     @Install(to = "items_pagination", subject = "totalCountByRepositoryDelegate")
     private Long paginationTotalCountByRepositoryDelegate(final JmixDataRepositoryContext context) {
-        return itemRepository.count(wrapCondition(context, filtersCondition));
+        return itemRepository.count(addCondition(context, filtersCondition));
     }
 
     @Install(to = "categoryItemsDataGrid.removeAction", subject = "delegate")

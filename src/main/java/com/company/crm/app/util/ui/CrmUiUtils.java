@@ -137,7 +137,7 @@ public final class CrmUiUtils {
         chart.setBackgroundColor(new Color("rgba(255, 255, 255, 0)"));
     }
 
-    public static void setBackgroundTransparent(Component component) {
+    public static void setBackgroundTransparent(HasStyle component) {
         component.getStyle().setBackground("transparent");
     }
 

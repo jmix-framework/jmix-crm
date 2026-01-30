@@ -39,7 +39,7 @@ import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 
-import static com.company.crm.app.util.ui.datacontext.DataContextUtils.wrapCondition;
+import static com.company.crm.app.util.ui.datacontext.DataContextUtils.addCondition;
 import static io.jmix.core.querycondition.PropertyCondition.equal;
 import static io.jmix.core.querycondition.PropertyCondition.greaterOrEqual;
 import static io.jmix.core.querycondition.PropertyCondition.lessOrEqual;
@@ -99,12 +99,12 @@ public class PaymentListView extends StandardListView<Payment> {
 
     @Install(to = "paymentsDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
     private List<Payment> loadDelegate(Pageable pageable, JmixDataRepositoryContext context) {
-        return paymentRepository.findAll(pageable, wrapCondition(context, filtersCondition)).getContent();
+        return paymentRepository.findAll(pageable, addCondition(context, filtersCondition)).getContent();
     }
 
     @Install(to = "payments_pagination", subject = "totalCountByRepositoryDelegate")
     private Long paginationTotalCountByRepositoryDelegate(final JmixDataRepositoryContext context) {
-        return paymentRepository.count(wrapCondition(context, filtersCondition));
+        return paymentRepository.count(addCondition(context, filtersCondition));
     }
 
     @Install(to = "paymentsDataGrid.removeAction", subject = "delegate")

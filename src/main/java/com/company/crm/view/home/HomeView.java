@@ -223,10 +223,10 @@ public class HomeView extends StandardView implements WidthResizeListener {
         container.setAlignItems(FlexComponent.Alignment.CENTER);
         container.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
 
-        var title = new H4("My Tasks");
+        var title = new H4(messageBundle.getMessage("myTasks"));
         container.add(title);
 
-        var newTaskButton = new Button("New Task");
+        var newTaskButton = new Button(messageBundle.getMessage("newTask"));
         newTaskButton.setIcon(VaadinIcon.PLUS.create());
         newTaskButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         newTaskButton.addClickListener(clickEvent ->
@@ -349,7 +349,6 @@ public class HomeView extends StandardView implements WidthResizeListener {
 
     private Component createMyTasksComponent(Period period) {
         UserTaskListView userTasksView = views.create(UserTaskListView.class).gridOnly();
-        userTasksView.loadData(period);
         userTasksView.setPadding(false);
         userTasksView.setMaxHeight(15, Unit.EM);
         return userTasksView;

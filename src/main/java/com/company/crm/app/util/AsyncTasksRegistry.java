@@ -1,5 +1,6 @@
 package com.company.crm.app.util;
 
+import io.jmix.flowui.asynctask.UiAsyncTasks.RunnableConfigurer;
 import io.jmix.flowui.asynctask.UiAsyncTasks.SupplierConfigurer;
 
 import java.util.Map;
@@ -23,13 +24,15 @@ public final class AsyncTasksRegistry {
      * Additionally, the new task is registered for
      * automatic removal from the registry upon its completion.
      * <p>
-     * @param id the unique identifier for the task to be placed in the registry
+     *
+     * @param id   the unique identifier for the task to be placed in the registry
      * @param task the CompletableFuture instance representing the task to add
      */
-    public void placeTask(String id, CompletableFuture<?> task) {
+    public CompletableFuture<?> placeTask(String id, CompletableFuture<?> task) {
         cancelAndRemoveTask(id);
         registry.put(id, task);
         registerTaskRemoving(id, task);
+        return task;
     }
 
     /**
@@ -40,6 +43,23 @@ public final class AsyncTasksRegistry {
         CompletableFuture<Void> task = supplierConfigurer.supplyAsync();
         registerTaskRemoving(id, task);
         return task;
+    }
+
+    /**
+     * @see AsyncTasksRegistry#placeTask(String, CompletableFuture)
+     */
+    public CompletableFuture<Void> placeTask(String id, RunnableConfigurer runnableConfigurer) {
+        cancelAndRemoveTask(id);
+        CompletableFuture<Void> task = runnableConfigurer.runAsync();
+        registerTaskRemoving(id, task);
+        return task;
+    }
+
+    /**
+     * @see AsyncTasksRegistry#placeTask(String, CompletableFuture)
+     */
+    public CompletableFuture<?> placeTask(String id, Runnable task) {
+        return placeTask(id, CompletableFuture.runAsync(task));
     }
 
     public void cancelAll() {

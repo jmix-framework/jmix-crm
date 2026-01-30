@@ -123,8 +123,8 @@ public class CrmCard extends JmixCard implements ApplicationContextAware {
 
         public Function<RangeStatCardInfo, Component> defaultContentProvider() {
             return info -> {
-                String currentValue = info.currentRangeValue();
-                var contentComponent = new Div(new H1(currentValue));
+                String currentRange = info.currentRangeValue();
+                var contentComponent = new Div(new H1(currentRange));
                 contentComponent.setWidthFull();
 
                 var horizontalLayout = new HorizontalLayout();

@@ -29,15 +29,19 @@
     <layout>
         <scroller width="100%" height="100%">
             <vbox padding="false" width="100%" height="100%">
-                <formLayout id="statsBlock" width="100%"
-                            autoResponsive="true" autoRows="true"
-                            expandFields="true" expandColumns="true" rowSpacing="1em">
-                    <component id="ordersTotalSumCard" class="com.company.crm.app.ui.component.card.CrmCard"/>
-                    <component id="paymentsTotalSumCard" class="com.company.crm.app.ui.component.card.CrmCard"/>
-                    <component id="averageBillCard" class="com.company.crm.app.ui.component.card.CrmCard"/>
-                </formLayout>
+                <vbox width="100%" justifyContent="CENTER" alignItems="CENTER" minHeight="12em">
+                    <formLayout id="statsBlock" width="100%">
+                        <responsiveSteps>
+                            <responsiveStep minWidth="0" columns="1"/>
+                            <responsiveStep minWidth="40em" columns="3"/>
+                        </responsiveSteps>
+                        <component id="ordersTotalSumCard" class="com.company.crm.app.ui.component.card.CrmCard"/>
+                        <component id="paymentsTotalSumCard" class="com.company.crm.app.ui.component.card.CrmCard"/>
+                        <component id="averageBillCard" class="com.company.crm.app.ui.component.card.CrmCard"/>
+                    </formLayout>
+                </vbox>
 
-                <div width="100%" maxWidth="40em" css="margin-top: 1em">
+                <div width="100%" maxWidth="40em">
                     <formLayout width="100%">
                         <responsiveSteps>
                             <responsiveStep minWidth="0" columns="1"/>
@@ -86,7 +90,7 @@
                 </hbox>
                 <dataGrid id="clientsDataGrid" dataContainer="clientsDc"
                           width="100%"
-                          minHeight="30em"
+                          minHeight="28em"
                           multiSort="true"
                           themeNames="column-borders"
                           columnReorderingAllowed="true"

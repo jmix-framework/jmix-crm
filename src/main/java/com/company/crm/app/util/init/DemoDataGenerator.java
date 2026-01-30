@@ -24,6 +24,7 @@ import com.company.crm.security.AdministratorRole;
 import com.company.crm.security.ManagerRole;
 import com.company.crm.security.SupervisorRole;
 import com.company.crm.security.UiMinimalRole;
+import io.jmix.core.Messages;
 import io.jmix.core.SaveContext;
 import io.jmix.core.UnconstrainedDataManager;
 import io.jmix.core.security.CurrentAuthentication;
@@ -62,9 +63,10 @@ import static com.company.crm.app.util.price.PriceCalculator.calculateInvoiceFie
 import static com.company.crm.app.util.price.PriceCalculator.calculateNetPrice;
 import static com.company.crm.app.util.price.PriceCalculator.calculateTotal;
 import static com.company.crm.app.util.price.PriceCalculator.calculateVat;
+import static org.apache.commons.collections4.CollectionUtils.union;
 
 /**
- * Loads demo data on first application startup.
+ * Generates demo data.
  * If clients table is not empty, does nothing.
  */
 @Component
@@ -72,7 +74,34 @@ public class DemoDataGenerator implements Ordered {
 
     private static final Logger log = LoggerFactory.getLogger(DemoDataGenerator.class);
 
+    private static final DemoDataProgressListener NO_OP_PROGRESS = message -> {};
+
+    public static final Map<String, String> USER_TASKS = Map.ofEntries(
+            Map.entry("Make report", "Send year finance report to CEO"),
+            Map.entry("Client meeting", "Schedule meeting with new client"),
+            Map.entry("Update documentation", "Review and update project documentation"),
+            Map.entry("Team training", "Organize training session for new team members"),
+            Map.entry("Budget review", "Review quarterly budget and expenses"),
+            Map.entry("System backup", "Perform system backup and verification"),
+            Map.entry("Client presentation", "Prepare presentation for client demo"),
+            Map.entry("Code review", "Review pull requests from development team"),
+            Map.entry("Risk assessment", "Conduct project risk assessment"),
+            Map.entry("Status update", "Send weekly status update to stakeholders"),
+            Map.entry("Contract renewal", "Draft contract renewal terms for top clients"),
+            Map.entry("Pipeline cleanup", "Archive stale opportunities and update stages"),
+            Map.entry("Vendor review", "Evaluate vendor performance metrics for Q2"),
+            Map.entry("Security audit", "Coordinate quarterly security audit checks"),
+            Map.entry("Inventory check", "Verify stock levels for key items"),
+            Map.entry("NPS follow-up", "Call detractors and log feedback"),
+            Map.entry("KPI dashboard", "Refresh sales KPI dashboard data"),
+            Map.entry("Account health", "Review account health scores and flags"),
+            Map.entry("Partner outreach", "Contact partners about co-marketing ideas"),
+            Map.entry("Expense approvals", "Process pending expense approval requests")
+    );
+
+    private final Messages messages;
     private final Environment environment;
+    private final SpringProfiles springProfiles;
     private final CatalogService catalogService;
     private final PasswordEncoder passwordEncoder;
     private final UnconstrainedDataManager dataManager;
@@ -80,12 +109,12 @@ public class DemoDataGenerator implements Ordered {
     private final RoleAssignmentRepository roleAssignmentRepository;
     private final CrmSettingsService crmSettingsService;
     private final CurrentAuthentication currentAuthentication;
-    private final SpringProfiles springProfiles;
 
     public DemoDataGenerator(RoleAssignmentRepository roleAssignmentRepository,
                              UnconstrainedDataManager dataManager,
                              PasswordEncoder passwordEncoder, Environment environment,
-                             CatalogService catalogService, SystemAuthenticator systemAuthenticator, CrmSettingsService crmSettingsService, CurrentAuthentication currentAuthentication, SpringProfiles springProfiles) {
+                             CatalogService catalogService, SystemAuthenticator systemAuthenticator, CrmSettingsService crmSettingsService,
+                             CurrentAuthentication currentAuthentication, SpringProfiles springProfiles, Messages messages) {
         this.environment = environment;
         this.dataManager = dataManager;
         this.catalogService = catalogService;
@@ -95,6 +124,7 @@ public class DemoDataGenerator implements Ordered {
         this.crmSettingsService = crmSettingsService;
         this.currentAuthentication = currentAuthentication;
         this.springProfiles = springProfiles;
+        this.messages = messages;
     }
 
     @EventListener(ApplicationReadyEvent.class)
@@ -107,35 +137,51 @@ public class DemoDataGenerator implements Ordered {
     public void resetDemoData() {
         log.info("Resetting demo data...");
         clearData();
-        initData();
+        initData(NO_OP_PROGRESS);
     }
 
     public void initDemoDataIfNeeded() {
+        initDemoDataIfNeeded(NO_OP_PROGRESS);
+    }
+
+    public void initDemoDataIfNeeded(DemoDataProgressListener progressListener) {
         if (!shouldInitializeDemoData()) return;
+        DemoDataProgressListener listener = progressListener == null ? NO_OP_PROGRESS : progressListener;
         if (currentAuthentication.isSet()) {
-            initData();
+            initData(listener);
         } else {
-            systemAuthenticator.runWithSystem(this::initData);
+            systemAuthenticator.runWithSystem(() -> initData(listener));
         }
     }
 
-    private void initData() {
+    private void initData(DemoDataProgressListener progressListener) {
         log.info("Initializing demo data...");
 
+        publishProgress(progressListener, messages.getMessage("demoData.progress.configuring"));
         List<User> users = generateUsers();
+        publishProgress(progressListener, messages.getMessage("demoData.progress.assigningRoles"));
         assignRoles(users);
+        publishProgress(progressListener, messages.getMessage("demoData.progress.creatingTasks"));
         generateUserTasks(users);
 
+        publishProgress(progressListener, messages.getMessage("demoData.progress.creatingClients"));
         List<Client> clients = generateClients(60, users);
+        publishProgress(progressListener, messages.getMessage("demoData.progress.creatingContacts"));
         generateContacts(clients);
 
+        publishProgress(progressListener, messages.getMessage("demoData.progress.importingCatalog"));
         Map<Category, List<CategoryItem>> catalog = generateCatalog();
+        publishProgress(progressListener, messages.getMessage("demoData.progress.generatingOrders"));
         List<Order> orders = generateOrders(clients, catalog);
 
+        publishProgress(progressListener, messages.getMessage("demoData.progress.generatingInvoices"));
         List<Invoice> invoices = generateInvoices(orders);
+        publishProgress(progressListener, messages.getMessage("demoData.progress.generatingPayments"));
         generatePayments(invoices);
 
+        publishProgress(progressListener, messages.getMessage("demoData.progress.creatingActivities"));
         generateUserActivities(users, clients, orders);
+        publishProgress(progressListener, messages.getMessage("demoData.progress.finalizing"));
 
         log.info("Demo data initialization finished: " +
                         "categories={}, categoriesItems={}, " +
@@ -149,6 +195,14 @@ public class DemoDataGenerator implements Ordered {
                 dataManager.loadValue("select count(i) from Invoice i", Long.class).one(),
                 dataManager.loadValue("select count(p) from Payment p", Long.class).one()
         );
+    }
+
+    private void publishProgress(DemoDataProgressListener progressListener, String message) {
+        try {
+            progressListener.onProgress(message);
+        } catch (Exception e) {
+            log.debug("Ignoring demo data progress update failure", e);
+        }
     }
 
     private void clearData() {
@@ -257,29 +311,23 @@ public class DemoDataGenerator implements Ordered {
 
     private void generateUserTasks(List<User> users) {
         log.info("Generating user tasks...");
+        for (User user : union(users, List.of(adminUser()))) {
+            generateUserTasks(user);
+        }
+    }
+
+    private void generateUserTasks(User user) {
+        log.info("Generating user tasks for {}...", user.getUsername());
         ThreadLocalRandom random = ThreadLocalRandom.current();
-
-        var tasks = Map.of(
-                "Make report", "Send year finance report to CEO",
-                "Client meeting", "Schedule meeting with new client",
-                "Update documentation", "Review and update project documentation",
-                "Team training", "Organize training session for new team members",
-                "Budget review", "Review quarterly budget and expenses",
-                "System backup", "Perform system backup and verification",
-                "Client presentation", "Prepare presentation for client demo",
-                "Code review", "Review pull requests from development team",
-                "Risk assessment", "Conduct project risk assessment",
-                "Status update", "Send weekly status update to stakeholders"
-        );
-
-        users.forEach(user ->
-                tasks.forEach((title, description) -> {
-                    if (random.nextBoolean()) {
-                        LocalDate dueDate = randomDateWithinDays(30, random).toLocalDate();
-                        boolean completed = random.nextBoolean();
-                        saveUserTask(title, description, dueDate, user, completed);
-                    }
-                }));
+        for (Map.Entry<String, String> entry : USER_TASKS.entrySet()) {
+            String title = entry.getKey();
+            String description = entry.getValue();
+            if (random.nextInt(100) < 40) {
+                LocalDate dueDate = randomDateInDays(20, random).toLocalDate();
+                boolean completed = random.nextBoolean();
+                saveUserTask(title, description, dueDate, user, completed);
+            }
+        }
     }
 
     private void saveUserTask(String title, String description, LocalDate dueDate, User user, boolean completed) {
@@ -676,6 +724,14 @@ public class DemoDataGenerator implements Ordered {
                 .withSecond(r.nextInt(60));
     }
 
+    private OffsetDateTime randomDateInDays(int days, ThreadLocalRandom r) {
+        return OffsetDateTime.now()
+                .minusDays(r.nextLong(days + 1))
+                .withHour(r.nextInt(12))
+                .withMinute(r.nextInt(60))
+                .withSecond(r.nextInt(60));
+    }
+
     private String slug(String s) {
         if (s == null) return "user";
         return s.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]+", "-").replaceAll("(^-|-$)", "");
@@ -688,8 +744,17 @@ public class DemoDataGenerator implements Ordered {
         return idx > 0 ? d.substring(0, idx) : d;
     }
 
+    private User adminUser() {
+        return dataManager.load(User.class).query("e.username='admin'").one();
+    }
+
     @Override
     public int getOrder() {
         return Ordered.LOWEST_PRECEDENCE;
+    }
+
+    @FunctionalInterface
+    public interface DemoDataProgressListener {
+        void onProgress(String message);
     }
 }

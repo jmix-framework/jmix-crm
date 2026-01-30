@@ -62,7 +62,7 @@ import java.util.Objects;
 
 import static com.company.crm.app.util.ui.CrmUiUtils.setBadge;
 import static com.company.crm.app.util.ui.color.EnumClassColors.getBadgeVariant;
-import static com.company.crm.app.util.ui.datacontext.DataContextUtils.wrapCondition;
+import static com.company.crm.app.util.ui.datacontext.DataContextUtils.addCondition;
 import static io.jmix.core.querycondition.PropertyCondition.equal;
 import static io.jmix.core.querycondition.PropertyCondition.greaterOrEqual;
 import static io.jmix.core.querycondition.PropertyCondition.lessOrEqual;
@@ -125,12 +125,12 @@ public class InvoiceListView extends StandardListView<Invoice> {
 
     @Install(to = "invoicesDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
     private List<Invoice> loadDelegate(Pageable pageable, JmixDataRepositoryContext context) {
-        return invoiceRepository.findAll(pageable, wrapCondition(context, filtersCondition)).getContent();
+        return invoiceRepository.findAll(pageable, addCondition(context, filtersCondition)).getContent();
     }
 
     @Install(to = "invoices_pagination", subject = "totalCountByRepositoryDelegate")
     private Long paginationTotalCountByRepositoryDelegate(final JmixDataRepositoryContext context) {
-        return invoiceRepository.count(wrapCondition(context, filtersCondition));
+        return invoiceRepository.count(addCondition(context, filtersCondition));
     }
 
     @Install(to = "invoicesDataGrid.removeAction", subject = "delegate")
@@ -268,7 +268,7 @@ public class InvoiceListView extends StandardListView<Invoice> {
 
     private void updateInvoiceStatusCard() {
         var layout = createStatusCountsLayout();
-        List.of(InvoiceStatus.PAID, InvoiceStatus.PENDING, InvoiceStatus.OVERDUE).forEach(status -> {
+        List.of(InvoiceStatus.PENDING, InvoiceStatus.PAID, InvoiceStatus.OVERDUE).forEach(status -> {
             long paidCount = invoiceService.getInvoicesCount(status);
             layout.add(createStatusCountBlock(status, paidCount));
         });

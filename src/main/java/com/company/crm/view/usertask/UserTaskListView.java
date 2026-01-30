@@ -1,9 +1,6 @@
 package com.company.crm.view.usertask;
 
-import com.company.crm.app.service.datetime.DateTimeService;
 import com.company.crm.app.util.constant.CrmConstants;
-import com.company.crm.app.util.date.Period;
-import com.company.crm.app.util.date.range.LocalDateRange;
 import com.company.crm.app.util.ui.renderer.CrmRenderers;
 import com.company.crm.model.user.User;
 import com.company.crm.model.user.task.UserTask;
@@ -29,8 +26,8 @@ import io.jmix.core.LoadContext;
 import io.jmix.core.SaveContext;
 import io.jmix.core.Sort;
 import io.jmix.core.entity.EntityValues;
-import io.jmix.core.querycondition.LogicalCondition;
 import io.jmix.core.querycondition.PropertyCondition;
+import io.jmix.core.repository.JmixDataRepositoryContext;
 import io.jmix.core.security.CurrentAuthentication;
 import io.jmix.core.validation.group.UiCrossFieldChecks;
 import io.jmix.flowui.UiComponentProperties;
@@ -81,6 +78,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
+import static com.company.crm.app.util.ui.datacontext.DataContextUtils.addCondition;
 import static io.jmix.core.repository.JmixDataRepositoryUtils.buildPageRequest;
 import static io.jmix.core.repository.JmixDataRepositoryUtils.buildRepositoryContext;
 import static io.jmix.core.repository.JmixDataRepositoryUtils.extractEntityId;
@@ -108,8 +106,6 @@ public class UserTaskListView extends StandardListView<UserTask> {
     @Autowired
     private ViewValidation viewValidation;
     @Autowired
-    private DateTimeService dateTimeService;
-    @Autowired
     private UiViewProperties uiViewProperties;
     @Autowired
     private UiComponentProperties uiComponentProperties;
@@ -134,6 +130,8 @@ public class UserTaskListView extends StandardListView<UserTask> {
     @ViewComponent
     private VerticalLayout detailsLayout;
     @ViewComponent
+    private TypedTextField<String> titleField;
+    @ViewComponent
     private DataGrid<UserTask> userTasksDataGrid;
     @ViewComponent
     private HorizontalLayout detailActions;
@@ -148,20 +146,6 @@ public class UserTaskListView extends StandardListView<UserTask> {
 
     @Nullable
     private Boolean gridOnly = null;
-
-    @Nullable
-    private Period period = null;
-    @ViewComponent
-    private TypedTextField<String> titleField;
-
-    public void loadData(@Nullable Period period) {
-        this.period = period;
-        userTasksDl.load();
-    }
-
-    public void loadData() {
-        loadData(null);
-    }
 
     public void reloadData() {
         userTasksDl.load();
@@ -330,20 +314,8 @@ public class UserTaskListView extends StandardListView<UserTask> {
 
     @Install(to = "userTasksDl", target = Target.DATA_LOADER)
     private List<UserTask> listLoadDelegate(LoadContext<UserTask> context) {
-        LoadContext.Query query = new LoadContext.Query("select u from UserTask u");
-
-        LogicalCondition condition = LogicalCondition.and(PropertyCondition.equal("author", getCurrentUser()));
-        if (period != null) {
-            LocalDateRange dateRange = period.getDateRange(dateTimeService);
-            condition.add(PropertyCondition.greaterOrEqual("dueDate", dateRange.startDate()));
-            condition.add(PropertyCondition.lessOrEqual("dueDate", dateRange.endDate()));
-        }
-
-        query.setCondition(condition);
-        query.setSort(Sort.by(Sort.Direction.ASC, "dueDate"));
-        context.setQuery(query);
-
-        return userTaskRepository.findAll(buildPageRequest(context), buildRepositoryContext(context)).getContent();
+        var repositoryContext = prepareTasksLoaderRepositoryContext(context);
+        return userTaskRepository.findAll(buildPageRequest(context), repositoryContext).getContent();
     }
 
     @Install(to = "userTasksDataGrid.removeAction", subject = "delegate")
@@ -359,7 +331,7 @@ public class UserTaskListView extends StandardListView<UserTask> {
             editor.addValueChangeListener(e -> {
                 userTask.setIsCompleted(e.getValue());
                 dataManager.save(userTask);
-                loadData();
+                reloadData();
             });
 
             var layout = new HorizontalLayout();
@@ -383,6 +355,13 @@ public class UserTaskListView extends StandardListView<UserTask> {
     @Supply(to = "userTasksDataGrid.dueDate", subject = "renderer")
     private Renderer<UserTask> userTasksDataGridDueDateRenderer() {
         return crmRenderers.taskDueDateRenderer();
+    }
+
+    private JmixDataRepositoryContext prepareTasksLoaderRepositoryContext(LoadContext<UserTask> context) {
+        context.getQuery().setSort(Sort.by(Sort.Direction.DESC, "dueDate"));
+        JmixDataRepositoryContext repositoryContext = buildRepositoryContext(context);
+        repositoryContext = addCondition(repositoryContext, PropertyCondition.equal("author", getCurrentUser()));
+        return repositoryContext;
     }
 
     private User getCurrentUser() {

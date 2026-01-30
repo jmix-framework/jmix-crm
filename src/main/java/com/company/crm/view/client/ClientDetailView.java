@@ -36,6 +36,9 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.splitlayout.SplitLayout.Orientation;
 import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.theme.lumo.LumoUtility.Overflow;
+import com.vaadin.flow.theme.lumo.LumoUtility.TextOverflow;
+import com.vaadin.flow.theme.lumo.LumoUtility.Whitespace;
 import io.jmix.chartsflowui.component.Chart;
 import io.jmix.chartsflowui.data.item.SimpleDataItem;
 import io.jmix.chartsflowui.kit.component.model.DataSet;
@@ -47,7 +50,6 @@ import io.jmix.core.FetchPlan;
 import io.jmix.core.Messages;
 import io.jmix.core.MetadataTools;
 import io.jmix.core.SaveContext;
-import io.jmix.core.common.datastruct.Pair;
 import io.jmix.flowui.Fragments;
 import io.jmix.flowui.Notifications;
 import io.jmix.flowui.UiComponents;
@@ -83,7 +85,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.Supplier;
 
 import static com.company.crm.app.feature.sortable.SortableFeature.makeSortable;
 import static com.company.crm.app.util.demo.DemoUtils.defaultSleepForStatisticsLoading;
@@ -98,6 +99,10 @@ public class ClientDetailView extends StandardDetailView<Client> implements Widt
     @Autowired
     private ChartsUtils chartsUtils;
     @Autowired
+    private CrmRenderers crmRenderers;
+    @Autowired
+    private UiAsyncTasks uiAsyncTasks;
+    @Autowired
     private UiComponents uiComponents;
     @Autowired
     private MetadataTools metadataTools;
@@ -107,11 +112,11 @@ public class ClientDetailView extends StandardDetailView<Client> implements Widt
     private DateTimeService dateTimeService;
     @Autowired
     private ClientRepository clientRepository;
-    @Autowired
-    private UiAsyncTasks uiAsyncTasks;
 
     @ViewComponent
     private JmixTabSheet tabSheet;
+    @ViewComponent
+    private JmixFormLayout summaryBlock;
     @ViewComponent
     private RecentActivitiesBlock recentActivities;
     @ViewComponent
@@ -141,12 +146,9 @@ public class ClientDetailView extends StandardDetailView<Client> implements Widt
     private JmixTextArea addressField;
     @ViewComponent
     private DetailSaveCloseAction<Object> saveCloseAction;
-    @Autowired
-    private CrmRenderers crmRenderers;
 
     private final AsyncTasksRegistry asyncTasksRegistry = AsyncTasksRegistry.newInstance();
-    @ViewComponent
-    private JmixFormLayout summaryBlock;
+    private final Map<Integer, List<CompletedOrdersByDateRangeInfo>> ordersInfoForLastYears = new HashMap<>();
 
     @Override
     public void configureUiForWidth(int width) {
@@ -289,11 +291,9 @@ public class ClientDetailView extends StandardDetailView<Client> implements Widt
     }
 
     private void initializeAnalyticsBlock() {
-        analyticChartsBlock.addAttachListener(e -> {
-            if (e.isInitialAttach()) {
-                chartsUtils.initializeChartsAsync(getChartsLoaders());
-            }
-        });
+        asyncTasksRegistry.placeTask("loadOrdersInfoForLastYears",
+                uiAsyncTasks.runnableConfigurer(this::loadOrdersInfoForLastYears)
+                        .withResultHandler(this::initializeCharts));
     }
 
     private void installCardLoader(CrmCard card) {
@@ -349,54 +349,57 @@ public class ClientDetailView extends StandardDetailView<Client> implements Widt
     }
 
     private void fillSummaryCard(String title, CrmCard card, BigDecimal value) {
-        VerticalLayout content = new VerticalLayout(new H1(PriceDataType.defaultFormat(value)));
+        var valueContent = new H1(PriceDataType.defaultFormat(value));
+        valueContent.addClassNames(Overflow.HIDDEN, TextOverflow.ELLIPSIS, Whitespace.NOWRAP);
+
+        var content = new VerticalLayout(valueContent);
         content.setPadding(false);
         content.setSpacing(false);
+
+        content.addClassNames(Overflow.HIDDEN, TextOverflow.ELLIPSIS, Whitespace.NOWRAP);
         card.fillAsStaticCard(title, content);
         SkeletonStyler.remove(card);
     }
 
-    private Map<Chart, Supplier<DataSet>> getChartsLoaders() {
-        var chart2DataSetLoader = new HashMap<Chart, Supplier<DataSet>>();
-
-        new ArrayList<Pair<Chart, Supplier<DataSet>>>() {{
-            add(createOrdersByLastYearsChart());
-            add(createAverageOrderValueChart());
-            add(createSalesCycleLengthChart());
-        }}.forEach(chart2Initializer -> {
-            Chart chart = chart2Initializer.getFirst();
-            Supplier<DataSet> dataSetSupplier = chart2Initializer.getSecond();
-            chart.withLegend(new Legend().withShow(false))
-                    .getYAxes().getFirst()
-                    .withInterval(0)
-                    .withSplitLine(new SplitLine().withShow(false));
-
-            analyticChartsBlock.add(chartsUtils.createViewStatChartWrapper(chart));
-            chart2DataSetLoader.put(chart, dataSetSupplier);
-        });
-        return chart2DataSetLoader;
+    private void initializeCharts() {
+        createOrdersByLastYearsChart();
+        createAverageOrderValueChart();
+        createSalesCycleLengthChart();
     }
 
-    private Pair<Chart, Supplier<DataSet>> createOrdersByLastYearsChart() {
-        Chart chart = chartsUtils.createViewStatChart("Purchase Frequency", SeriesType.BAR);
-        return new Pair<>(chart, this::createOrdersByLastYearsChartDataSet);
+    private void createOrdersByLastYearsChart() {
+        Chart chart = chartsUtils.createViewStatChart("Purchase Frequency", SeriesType.BAR)
+                .withDataSet(createOrdersByLastYearsChartDataSet())
+                .withLegend(new Legend().withShow(false));
+        configureAxes(chart);
+        analyticChartsBlock.add(chartsUtils.createViewStatChartWrapper(chart));
     }
 
-    private Pair<Chart, Supplier<DataSet>> createAverageOrderValueChart() {
-        Chart chart = chartsUtils.createViewStatChart("Average Order Value", SeriesType.BAR);
-        return new Pair<>(chart, this::createAverageOrderValueChartDataSet);
+    private void createAverageOrderValueChart() {
+        Chart chart = chartsUtils.createViewStatChart("Average Order Value", SeriesType.BAR)
+                .withDataSet(createAverageOrderValueChartDataSet())
+                .withLegend(new Legend().withShow(false));
+        configureAxes(chart);
+        analyticChartsBlock.add(chartsUtils.createViewStatChartWrapper(chart));
     }
 
-    private Pair<Chart, Supplier<DataSet>> createSalesCycleLengthChart() {
-        Chart chart = chartsUtils.createViewStatChart("Sales Cycle Length", SeriesType.BAR);
-        return new Pair<>(chart, this::createSalesCycleLengthChartDataSet);
+    private void createSalesCycleLengthChart() {
+        Chart chart = chartsUtils.createViewStatChart("Sales Cycle Length", SeriesType.BAR)
+                .withDataSet(createSalesCycleLengthChartDataSet())
+                .withLegend(new Legend().withShow(false));
+        configureAxes(chart);
+        analyticChartsBlock.add(chartsUtils.createViewStatChartWrapper(chart));
+    }
+
+    private static void configureAxes(Chart chart) {
+        chart.getYAxes().getFirst()
+                .withInterval(0)
+                .withSplitLine(new SplitLine().withShow(false));
     }
 
     private DataSet createOrdersByLastYearsChartDataSet() {
-        var ordersByFiveLastYears = loadOrdersInfoForLastYears();
-
         var dataItems = new ArrayList<SimpleDataItem>();
-        for (var entry : ordersByFiveLastYears.entrySet()) {
+        for (var entry : ordersInfoForLastYears.entrySet()) {
             var stat = entry.getValue().stream().findFirst()
                     .map(CompletedOrdersByDateRangeInfo::getRangeOrders).orElse(0L);
             dataItems.add(new SimpleDataItem(new YearNumberStatisticItemValue(entry.getKey(), stat)));
@@ -411,8 +414,6 @@ public class ClientDetailView extends StandardDetailView<Client> implements Widt
     }
 
     private DataSet createAverageOrderValueChartDataSet() {
-        var ordersInfoForLastYears = loadOrdersInfoForLastYears();
-
         var dataItems = new ArrayList<SimpleDataItem>();
         for (var entry : ordersInfoForLastYears.entrySet()) {
             var stat = entry.getValue().stream().findFirst()
@@ -429,8 +430,6 @@ public class ClientDetailView extends StandardDetailView<Client> implements Widt
     }
 
     private DataSet createSalesCycleLengthChartDataSet() {
-        var ordersInfoForLastYears = loadOrdersInfoForLastYears();
-
         var dataItems = new ArrayList<SimpleDataItem>();
         for (var entry : ordersInfoForLastYears.entrySet()) {
             var stat = entry.getValue().stream().findFirst()
@@ -446,17 +445,17 @@ public class ClientDetailView extends StandardDetailView<Client> implements Widt
         );
     }
 
-    // FIXME: need to load orders info for years async
-    //  for example on init event and cache it
-    private Map<Integer, List<CompletedOrdersByDateRangeInfo>> loadOrdersInfoForLastYears() {
-        var result = new HashMap<Integer, List<CompletedOrdersByDateRangeInfo>>();
+    private void loadOrdersInfoForLastYears() {
+        ordersInfoForLastYears.clear();
+        Client client = getEditedEntity();
         LocalDate currentYearStart = dateTimeService.getCurrentYearStart().toLocalDate();
         for (int i = 0; i < loadStatsForLastYearsAmount; i++) {
             currentYearStart = currentYearStart.minusYears(i > 0 ? 1 : 0);
-            var currentYearEnd = dateTimeService.getEndOfYear(dateTimeService.toOffsetDateTime(currentYearStart)).toLocalDate();
+            var currentYearStartOffset = dateTimeService.toOffsetDateTime(currentYearStart);
+            var currentYearEnd = dateTimeService.getEndOfYear(currentYearStartOffset).toLocalDate();
             var dateRange = LocalDateRange.from(currentYearStart, currentYearEnd);
-            result.put(currentYearStart.getYear(), clientService.getCompletedOrdersInfo(dateRange, getEditedEntity()));
+            var completedOrdersInfo = clientService.getCompletedOrdersInfo(dateRange, client);
+            ordersInfoForLastYears.put(currentYearStart.getYear(), completedOrdersInfo);
         }
-        return result;
     }
 }

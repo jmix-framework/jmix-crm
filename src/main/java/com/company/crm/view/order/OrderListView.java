@@ -53,7 +53,7 @@ import java.util.Optional;
 
 import static com.company.crm.app.util.ui.CrmUiUtils.addColumnHeaderCurrencySuffix;
 import static com.company.crm.app.util.ui.CrmUiUtils.setSearchHintPopover;
-import static com.company.crm.app.util.ui.datacontext.DataContextUtils.wrapCondition;
+import static com.company.crm.app.util.ui.datacontext.DataContextUtils.addCondition;
 import static com.company.crm.model.datatype.PriceDataType.formatWithoutCurrency;
 import static io.jmix.core.querycondition.PropertyCondition.equal;
 import static io.jmix.core.querycondition.PropertyCondition.greaterOrEqual;
@@ -123,7 +123,7 @@ public class OrderListView extends StandardListView<Order> {
 
     @Install(to = "ordersDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
     private List<Order> loadDelegate(Pageable pageable, JmixDataRepositoryContext context) {
-        return orderRepository.findAll(pageable, wrapCondition(context, filtersCondition)).getContent();
+        return orderRepository.findAll(pageable, addCondition(context, filtersCondition)).getContent();
     }
 
     @Subscribe(id = "ordersDl", target = Target.DATA_LOADER)
@@ -133,7 +133,7 @@ public class OrderListView extends StandardListView<Order> {
 
     @Install(to = "pagination", subject = "totalCountByRepositoryDelegate")
     private Long paginationTotalCountByRepositoryDelegate(final JmixDataRepositoryContext context) {
-        return orderRepository.count(wrapCondition(context, filtersCondition));
+        return orderRepository.count(addCondition(context, filtersCondition));
     }
 
     @Install(to = "ordersDataGrid.removeAction", subject = "delegate")
