@@ -31,7 +31,7 @@ public class OnlineModeConfiguration {
         return new RoutingDataSource();
     }
 
-    @Bean("petclinic_SessionDataSource")
+    @Bean("crm_SessionDataSource")
     @Scope(BeanDefinition.SCOPE_PROTOTYPE)
     @ConfigurationProperties(prefix = "session.datasource")
     public DataSource sessionDataSource() {

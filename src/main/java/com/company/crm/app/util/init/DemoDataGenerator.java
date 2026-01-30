@@ -1,5 +1,6 @@
 package com.company.crm.app.util.init;
 
+import com.company.crm.app.annotation.LocalProfile;
 import com.company.crm.app.service.catalog.CatalogImportSettings;
 import com.company.crm.app.service.catalog.CatalogService;
 import com.company.crm.app.service.settings.CrmSettingsService;
@@ -25,6 +26,7 @@ import com.company.crm.security.SupervisorRole;
 import com.company.crm.security.UiMinimalRole;
 import io.jmix.core.SaveContext;
 import io.jmix.core.UnconstrainedDataManager;
+import io.jmix.core.security.CurrentAuthentication;
 import io.jmix.core.security.SystemAuthenticator;
 import io.jmix.data.PersistenceHints;
 import io.jmix.security.role.assignment.RoleAssignment;
@@ -77,11 +79,12 @@ public class DemoDataGenerator implements Ordered {
     private final SystemAuthenticator systemAuthenticator;
     private final RoleAssignmentRepository roleAssignmentRepository;
     private final CrmSettingsService crmSettingsService;
+    private final CurrentAuthentication currentAuthentication;
 
     public DemoDataGenerator(RoleAssignmentRepository roleAssignmentRepository,
                              UnconstrainedDataManager dataManager,
                              PasswordEncoder passwordEncoder, Environment environment,
-                             CatalogService catalogService, SystemAuthenticator systemAuthenticator, CrmSettingsService crmSettingsService) {
+                             CatalogService catalogService, SystemAuthenticator systemAuthenticator, CrmSettingsService crmSettingsService, CurrentAuthentication currentAuthentication) {
         this.environment = environment;
         this.dataManager = dataManager;
         this.catalogService = catalogService;
@@ -89,11 +92,13 @@ public class DemoDataGenerator implements Ordered {
         this.systemAuthenticator = systemAuthenticator;
         this.roleAssignmentRepository = roleAssignmentRepository;
         this.crmSettingsService = crmSettingsService;
+        this.currentAuthentication = currentAuthentication;
     }
 
+    @LocalProfile
     @EventListener(ApplicationReadyEvent.class)
     public void onApplicationReadyEvent(ApplicationReadyEvent event) {
-        systemAuthenticator.runWithSystem(this::initDataIfNeeded);
+        initDemoDataIfNeeded();
     }
 
     public void resetDemoData() {
@@ -102,9 +107,13 @@ public class DemoDataGenerator implements Ordered {
         initData();
     }
 
-    private void initDataIfNeeded() {
+    public void initDemoDataIfNeeded() {
         if (!shouldInitializeDemoData()) return;
-        initData();
+        if (currentAuthentication.isSet()) {
+            initData();
+        } else {
+            systemAuthenticator.runWithSystem(this::initData);
+        }
     }
 
     private void initData() {
@@ -214,7 +223,7 @@ public class DemoDataGenerator implements Ordered {
     }
 
     private boolean shouldInitializeDemoData() {
-        if (!Boolean.parseBoolean(environment.getProperty("crm.generateDemoData", "false"))) {
+        if (!Boolean.parseBoolean(environment.getProperty("crm.generateDemoData", "true"))) {
             log.info("Demo data generation is disabled, skipping...");
             return false;
         }

@@ -6,9 +6,6 @@ build/
 !**/src/main/**
 !**/src/test/**
 
-# Remove this line if you want to follow recommendations in src/main/bundles/README.md
-src/main/bundles/
-
 ### IntelliJ IDEA ###
 .idea/*
 !.idea/encodings.xml

@@ -291,6 +291,9 @@ public class OrderListView extends StandardListView<Order> {
 
     private void updatePipeLineFilter() {
         Map<OrderStatus, BigDecimal> status2Amount = new HashMap<>();
+        for (OrderStatus status : OrderStatus.values()) {
+            status2Amount.put(status, BigDecimal.ZERO);
+        }
 
         ordersDc.getItems().forEach(item -> {
             OrderStatus status = item.getStatus();

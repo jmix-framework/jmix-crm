@@ -130,8 +130,7 @@ idea {
     module {
         excludeDirs.addAll(files '.jmix',
                 'node_modules',
-                'src/main/frontend/generated/',
-                'src/main/bundles')
+                'src/main/frontend/generated/')
     }
 }
 

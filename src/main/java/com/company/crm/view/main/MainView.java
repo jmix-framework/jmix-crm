@@ -1,5 +1,6 @@
 package com.company.crm.view.main;
 
+import com.company.crm.app.online.OnlineDemoDataCreator;
 import com.company.crm.app.ui.component.CrmLoader;
 import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.model.client.Client;
@@ -84,6 +85,9 @@ public class MainView extends StandardMainView {
     @Autowired
     private CurrentUserSubstitution currentUserSubstitution;
 
+    @Autowired(required = false)
+    private OnlineDemoDataCreator onlineDemoDataCreator;
+
     @ViewComponent
     private JmixListMenu menu;
     @ViewComponent
@@ -97,6 +101,9 @@ public class MainView extends StandardMainView {
     @Subscribe
     private void onReady(final ReadyEvent event) {
         selectSuitableMenuItem();
+        if (onlineDemoDataCreator != null) {
+            onlineDemoDataCreator.createDemoData();
+        }
     }
 
     @Subscribe("userMenu.profileItem.profileAction")
