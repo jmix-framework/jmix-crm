@@ -8,6 +8,7 @@ FROM eclipse-temurin:21.0.3_9-jdk
 
 RUN mkdir -p /heapdumps
 ENV JAVA_TOOL_OPTIONS="-Xmx2g -Xms1g -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/heapdumps/heapdump.hprof"
+ENV CRM_ACTIVE_PROFILE="online"
 
 COPY --from=builder /application/build/libs/crm.jar crm.jar
 VOLUME /application
