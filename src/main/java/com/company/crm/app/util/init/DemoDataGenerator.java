@@ -109,12 +109,13 @@ public class DemoDataGenerator implements Ordered {
     private final RoleAssignmentRepository roleAssignmentRepository;
     private final CrmSettingsService crmSettingsService;
     private final CurrentAuthentication currentAuthentication;
+    private final DynamicAttributesInitializer dynamicAttributesInitializer;
 
     public DemoDataGenerator(RoleAssignmentRepository roleAssignmentRepository,
                              UnconstrainedDataManager dataManager,
                              PasswordEncoder passwordEncoder, Environment environment,
                              CatalogService catalogService, SystemAuthenticator systemAuthenticator, CrmSettingsService crmSettingsService,
-                             CurrentAuthentication currentAuthentication, SpringProfiles springProfiles, Messages messages) {
+                             CurrentAuthentication currentAuthentication, SpringProfiles springProfiles, Messages messages, DynamicAttributesInitializer dynamicAttributesInitializer) {
         this.environment = environment;
         this.dataManager = dataManager;
         this.catalogService = catalogService;
@@ -125,6 +126,7 @@ public class DemoDataGenerator implements Ordered {
         this.currentAuthentication = currentAuthentication;
         this.springProfiles = springProfiles;
         this.messages = messages;
+        this.dynamicAttributesInitializer = dynamicAttributesInitializer;
     }
 
     @EventListener(ApplicationReadyEvent.class)
@@ -181,6 +183,10 @@ public class DemoDataGenerator implements Ordered {
 
         publishProgress(progressListener, messages.getMessage("demoData.progress.creatingActivities"));
         generateUserActivities(users, clients, orders);
+
+        publishProgress(progressListener, messages.getMessage("demoData.progress.createDynamicAttributes"));
+        dynamicAttributesInitializer.createDynamicAttributesIfNeeded();
+
         publishProgress(progressListener, messages.getMessage("demoData.progress.finalizing"));
 
         log.info("Demo data initialization finished: " +

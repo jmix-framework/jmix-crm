@@ -1,5 +1,6 @@
 package com.company.crm.app.util.init;
 
+import com.company.crm.app.config.SpringProfiles;
 import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.model.catalog.item.CategoryItem;
 import com.company.crm.model.client.Client;
@@ -44,16 +45,20 @@ public class DynamicAttributesInitializer {
 
     private final Metadata metadata;
     private final UnconstrainedDataManager dataManager;
+    private final SpringProfiles springProfiles;
 
-    public DynamicAttributesInitializer(Metadata metadata, UnconstrainedDataManager dataManager) {
+    public DynamicAttributesInitializer(Metadata metadata, UnconstrainedDataManager dataManager, SpringProfiles springProfiles) {
         this.metadata = metadata;
         this.dataManager = dataManager;
+        this.springProfiles = springProfiles;
     }
 
     @PostConstruct
     public void createDynamicAttributesIfNeeded() {
-        createSoftwareProductsCategoryIfNeeded();
-        createSalesTerritoryCategoryIfNeeded();
+        if (springProfiles.isLocalProfile()) {
+            createSoftwareProductsCategoryIfNeeded();
+            createSalesTerritoryCategoryIfNeeded();
+        }
     }
 
     private void createSoftwareProductsCategoryIfNeeded() {

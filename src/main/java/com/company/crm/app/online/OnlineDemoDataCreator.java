@@ -52,9 +52,9 @@ public class OnlineDemoDataCreator {
     }
 
     private void createDemoData() {
+        sessionData.setAttribute(DEMO_DATA_CREATED_FLAG, true);
         openDemoDataLoader();
         startDemoDataGeneratorInBackground();
-        sessionData.setAttribute(DEMO_DATA_CREATED_FLAG, true);
     }
 
     private void openDemoDataLoader() {
