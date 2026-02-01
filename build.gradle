@@ -106,6 +106,18 @@ configurations.implementation {
     exclude group: 'commons-logging', module: 'commons-logging'
 }
 
+def prodBootJar = "prodBootJar"
+def prodBootJarRequested = gradle.startParameter.taskNames.any { it == prodBootJar }
+if (prodBootJarRequested) {
+    ext.'vaadin.productionMode' = true
+}
+
+tasks.register(prodBootJar) {
+    group = "build"
+    description = "Builds bootJar in production mode."
+    dependsOn bootJar
+}
+
 tasks.register("testPreparing", Delete) {
     dependsOn(cleanConf)
     doLast {
