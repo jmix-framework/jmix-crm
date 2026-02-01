@@ -54,11 +54,15 @@ public class DynamicAttributesInitializer {
     }
 
     @PostConstruct
-    public void createDynamicAttributesIfNeeded() {
+    public void postConstruct() {
         if (springProfiles.isLocalProfile()) {
-            createSoftwareProductsCategoryIfNeeded();
-            createSalesTerritoryCategoryIfNeeded();
+            createDynamicAttributesIfNeeded();
         }
+    }
+
+    public void createDynamicAttributesIfNeeded() {
+        createSoftwareProductsCategoryIfNeeded();
+        createSalesTerritoryCategoryIfNeeded();
     }
 
     private void createSoftwareProductsCategoryIfNeeded() {
