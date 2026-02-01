@@ -157,36 +157,90 @@ public class DemoDataGenerator implements Ordered {
     }
 
     private void initData(DemoDataProgressListener progressListener) {
+        onInitStart(progressListener);
+        initDynamicAttributes(progressListener);
+
+        var users = initUsers(progressListener);
+        var clients = initClients(progressListener, users);
+        var catalog = initCatalog(progressListener);
+        var orders = initOrders(progressListener, clients, catalog);
+        var invoices = initInvoices(progressListener, orders);
+
+        initPayments(progressListener, invoices);
+        initUserActivities(progressListener, users, clients, orders);
+        onInitFinish(progressListener, catalog, clients);
+    }
+
+    private void onInitStart(DemoDataProgressListener progressListener) {
         log.info("Initializing demo data...");
+        publishProgress(progressListener, "Starting demo data generation");
+    }
 
-        publishProgress(progressListener, messages.getMessage("demoData.progress.configuring"));
-        List<User> users = generateUsers();
-        publishProgress(progressListener, messages.getMessage("demoData.progress.assigningRoles"));
-        assignRoles(users);
-        publishProgress(progressListener, messages.getMessage("demoData.progress.creatingTasks"));
-        generateUserTasks(users);
-
-        publishProgress(progressListener, messages.getMessage("demoData.progress.creatingClients"));
-        List<Client> clients = generateClients(60, users);
-        publishProgress(progressListener, messages.getMessage("demoData.progress.creatingContacts"));
-        generateContacts(clients);
-
-        publishProgress(progressListener, messages.getMessage("demoData.progress.importingCatalog"));
-        Map<Category, List<CategoryItem>> catalog = generateCatalog();
-        publishProgress(progressListener, messages.getMessage("demoData.progress.generatingOrders"));
-        List<Order> orders = generateOrders(clients, catalog);
-
-        publishProgress(progressListener, messages.getMessage("demoData.progress.generatingInvoices"));
-        List<Invoice> invoices = generateInvoices(orders);
-        publishProgress(progressListener, messages.getMessage("demoData.progress.generatingPayments"));
-        generatePayments(invoices);
-
-        publishProgress(progressListener, messages.getMessage("demoData.progress.creatingActivities"));
-        generateUserActivities(users, clients, orders);
-
+    private void initDynamicAttributes(DemoDataProgressListener progressListener) {
         publishProgress(progressListener, messages.getMessage("demoData.progress.createDynamicAttributes"));
         dynamicAttributesInitializer.createDynamicAttributesIfNeeded();
+    }
 
+    private List<User> initUsers(DemoDataProgressListener progressListener) {
+        publishProgress(progressListener, messages.getMessage("demoData.progress.configuring"));
+
+        var users = generateUsers();
+        initUsersRoles(progressListener, users);
+        initUsersTasks(progressListener, users);
+
+        return users;
+    }
+
+    private void initUsersRoles(DemoDataProgressListener progressListener, List<User> users) {
+        publishProgress(progressListener, messages.getMessage("demoData.progress.assigningRoles"));
+        assignRoles(users);
+    }
+
+    private void initUsersTasks(DemoDataProgressListener progressListener, List<User> users) {
+        publishProgress(progressListener, messages.getMessage("demoData.progress.creatingTasks"));
+        generateUserTasks(users);
+    }
+
+    private void initUserActivities(DemoDataProgressListener progressListener, List<User> users, List<Client> clients, List<Order> orders) {
+        publishProgress(progressListener, messages.getMessage("demoData.progress.creatingActivities"));
+        generateUserActivities(users, clients, orders);
+    }
+
+    private Map<Category, List<CategoryItem>> initCatalog(DemoDataProgressListener progressListener) {
+        publishProgress(progressListener, messages.getMessage("demoData.progress.importingCatalog"));
+        return generateCatalog();
+    }
+
+    private List<Client> initClients(DemoDataProgressListener progressListener, List<User> users) {
+        publishProgress(progressListener, messages.getMessage("demoData.progress.creatingClients"));
+
+        var clients = generateClients(30, users);
+        initClientContacts(progressListener, clients);
+
+        return clients;
+    }
+
+    private void initClientContacts(DemoDataProgressListener progressListener, List<Client> clients) {
+        publishProgress(progressListener, messages.getMessage("demoData.progress.creatingContacts"));
+        generateContacts(clients);
+    }
+
+    private List<Order> initOrders(DemoDataProgressListener progressListener, List<Client> clients, Map<Category, List<CategoryItem>> catalog) {
+        publishProgress(progressListener, messages.getMessage("demoData.progress.generatingOrders"));
+        return generateOrders(clients, catalog);
+    }
+
+    private List<Invoice> initInvoices(DemoDataProgressListener progressListener, List<Order> orders) {
+        publishProgress(progressListener, messages.getMessage("demoData.progress.generatingInvoices"));
+        return generateInvoices(orders);
+    }
+
+    private void initPayments(DemoDataProgressListener progressListener, List<Invoice> invoices) {
+        publishProgress(progressListener, messages.getMessage("demoData.progress.generatingPayments"));
+        generatePayments(invoices);
+    }
+
+    private void onInitFinish(DemoDataProgressListener progressListener, Map<Category, List<CategoryItem>> catalog, List<Client> clients) {
         publishProgress(progressListener, messages.getMessage("demoData.progress.finalizing"));
 
         log.info("Demo data initialization finished: " +
