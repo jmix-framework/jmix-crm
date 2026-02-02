@@ -1,8 +1,6 @@
-![B2B CRM](src/main/resources/META-INF/resources/images/logo.svg)
+# ![B2B CRM](src/main/resources/META-INF/resources/images/logo.svg) B2B CRM
 
-# B2B CRM
-
-**B2B CRM** is a Jmix-based demo application for managing client relationships.
+### Is a Jmix application for managing client relationships.
 
 ## Table of Contents
 
@@ -62,7 +60,7 @@ Prerequisites: Java 21+
 ### Build JAR:
 
 ```bash
-./gradlew clean bootJar
+./gradlew bootJar -Pvaadin.productionMode
 ```
 
 ```bash
