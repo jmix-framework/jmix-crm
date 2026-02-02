@@ -1,6 +1,6 @@
 package com.company.crm.test.client;
 
-import com.company.crm.AbstractTest;
+import com.company.crm.AbstractServiceTest;
 import com.company.crm.app.service.client.ClientService;
 import com.company.crm.app.util.date.range.LocalDateRange;
 import com.company.crm.model.client.Client;
@@ -9,17 +9,13 @@ import com.company.crm.model.order.Order;
 import com.company.crm.model.order.OrderStatus;
 import com.company.crm.model.payment.Payment;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class ClientServiceTest extends AbstractTest {
-
-    @Autowired
-    private ClientService clientService;
+class ClientServiceTest extends AbstractServiceTest<ClientService> {
 
     @Test
     void ordersTotalSum_filtersBySingleStatus() {
@@ -33,7 +29,7 @@ class ClientServiceTest extends AbstractTest {
         order2.setTotal(new BigDecimal(100));
         saveWithoutReload(order2);
 
-        BigDecimal total = clientService.getOrdersTotalSum(new OrderStatus[]{OrderStatus.DONE}, client);
+        BigDecimal total = service.getOrdersTotalSum(new OrderStatus[]{OrderStatus.DONE}, client);
         assertThat(total).isEqualByComparingTo("10");
     }
 
@@ -53,7 +49,7 @@ class ClientServiceTest extends AbstractTest {
         order3.setTotal(new BigDecimal(100));
         saveWithoutReload(order3);
 
-        BigDecimal total = clientService.getOrdersTotalSum(new OrderStatus[]{OrderStatus.DONE, OrderStatus.ACCEPTED}, client);
+        BigDecimal total = service.getOrdersTotalSum(new OrderStatus[]{OrderStatus.DONE, OrderStatus.ACCEPTED}, client);
         assertThat(total).isEqualByComparingTo("30");
     }
 
@@ -69,7 +65,7 @@ class ClientServiceTest extends AbstractTest {
         order2.setTotal(new BigDecimal(100));
         saveWithoutReload(order2);
 
-        BigDecimal total = clientService.getOrdersTotalSum(null, client);
+        BigDecimal total = service.getOrdersTotalSum(null, client);
         assertThat(total).isEqualByComparingTo("110");
     }
 
@@ -107,10 +103,10 @@ class ClientServiceTest extends AbstractTest {
         Invoice invOther = entities.invoice(otherClient, otherClientOrder);
         entities.payment(invOther, LocalDate.of(2026, 1, 2));
 
-        var avg = clientService.getSalesCycleLength(null, client);
+        var avg = service.getSalesCycleLength(null, client);
         assertThat(avg).isEqualByComparingTo(5);
 
-        var avgFiltered = clientService.getSalesCycleLength(
+        var avgFiltered = service.getSalesCycleLength(
                 LocalDateRange.from(LocalDate.of(2026, 1, 3), LocalDate.of(2026, 1, 3)),
                 client
         );
@@ -130,7 +126,7 @@ class ClientServiceTest extends AbstractTest {
         entities.order(otherClient, LocalDate.of(2026, 1, 5), OrderStatus.DONE); // other client
 
         var dateRange = LocalDateRange.from(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 10));
-        assertThat(clientService.getCompletedOrdersAmount(dateRange, client)).isEqualTo(2L);
+        assertThat(service.getCompletedOrdersAmount(dateRange, client)).isEqualTo(2L);
     }
 
     @Test
@@ -143,8 +139,9 @@ class ClientServiceTest extends AbstractTest {
         entities.order(client, null, OrderStatus.DONE);
 
         // with dateRange = null, all DONE orders are counted (including orders with null date)
-        assertThat(clientService.getCompletedOrdersAmount(null, client)).isEqualTo(4L);
+        assertThat(service.getCompletedOrdersAmount(null, client)).isEqualTo(4L);
     }
+
     @Test
     void getInvoicesTotalSum_calculatesCorrectSum() {
         Client client = entities.client("Sum Client");
@@ -157,7 +154,7 @@ class ClientServiceTest extends AbstractTest {
             i.setTotal(new BigDecimal("50"));
         });
 
-        assertThat(clientService.getInvoicesTotalSum(client)).isEqualByComparingTo("150");
+        assertThat(service.getInvoicesTotalSum(client)).isEqualByComparingTo("150");
     }
 
     @Test
@@ -173,7 +170,7 @@ class ClientServiceTest extends AbstractTest {
         });
 
         // Outstanding balance = 100 (first invoice) + 0 (second invoice total is null/0 by default) - 40 (payment)
-        assertThat(clientService.getOutstandingBalance(client)).isEqualByComparingTo("60");
+        assertThat(service.getOutstandingBalance(client)).isEqualByComparingTo("60");
     }
 
     @Test
@@ -181,10 +178,16 @@ class ClientServiceTest extends AbstractTest {
         Client c1 = entities.client("Client 1");
         Client c2 = entities.client("Client 2");
 
-        entities.createAndSaveEntity(Order.class, o -> { o.setClient(c1); o.setTotal(new BigDecimal("100")); });
-        entities.createAndSaveEntity(Order.class, o -> { o.setClient(c2); o.setTotal(new BigDecimal("200")); });
+        entities.createAndSaveEntity(Order.class, o -> {
+            o.setClient(c1);
+            o.setTotal(new BigDecimal("100"));
+        });
+        entities.createAndSaveEntity(Order.class, o -> {
+            o.setClient(c2);
+            o.setTotal(new BigDecimal("200"));
+        });
 
-        var bestBuyers = clientService.getBestBuyers(10);
+        var bestBuyers = service.getBestBuyers(10);
         assertThat(bestBuyers.keySet()).containsExactly(c2, c1);
     }
 }

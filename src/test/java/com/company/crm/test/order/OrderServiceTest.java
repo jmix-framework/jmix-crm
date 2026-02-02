@@ -1,6 +1,6 @@
 package com.company.crm.test.order;
 
-import com.company.crm.AbstractTest;
+import com.company.crm.AbstractServiceTest;
 import com.company.crm.app.service.order.OrderService;
 import com.company.crm.app.util.date.range.LocalDateRange;
 import com.company.crm.model.client.Client;
@@ -9,17 +9,13 @@ import com.company.crm.model.order.Order;
 import com.company.crm.model.order.OrderStatus;
 import com.company.crm.model.payment.Payment;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class OrderServiceTest extends AbstractTest {
-
-    @Autowired
-    private OrderService orderService;
+class OrderServiceTest extends AbstractServiceTest<OrderService> {
 
     @Test
     void paidAndLeftOverSum_usePaymentsTotal() {
@@ -42,8 +38,8 @@ class OrderServiceTest extends AbstractTest {
         payment2.setAmount(new BigDecimal("30"));
         saveWithoutReload(payment2);
 
-        assertThat(orderService.getPaid(order)).isEqualByComparingTo("60");
-        assertThat(orderService.getLeftOverSum(order)).isEqualByComparingTo("40");
+        assertThat(service.getPaid(order)).isEqualByComparingTo("60");
+        assertThat(service.getLeftOverSum(order)).isEqualByComparingTo("40");
 
         Payment payment3 = dataManager.create(Payment.class);
         payment3.setInvoice(invoice);
@@ -51,8 +47,8 @@ class OrderServiceTest extends AbstractTest {
         payment3.setAmount(new BigDecimal("50"));
         saveWithoutReload(payment3);
 
-        assertThat(orderService.getPaid(order)).isEqualByComparingTo("110");
-        assertThat(orderService.getLeftOverSum(order)).isEqualByComparingTo("0");
+        assertThat(service.getPaid(order)).isEqualByComparingTo("110");
+        assertThat(service.getLeftOverSum(order)).isEqualByComparingTo("0");
     }
 
     @Test
@@ -62,7 +58,7 @@ class OrderServiceTest extends AbstractTest {
         saveWithoutReload(entities.order(client, LocalDate.now(), OrderStatus.DONE));
         saveWithoutReload(entities.order(client, LocalDate.now(), OrderStatus.DONE));
 
-        var result = orderService.getOrdersAmountByStatus();
+        var result = service.getOrdersAmountByStatus();
 
         assertThat(result.get(OrderStatus.NEW)).isEqualByComparingTo("1");
         assertThat(result.get(OrderStatus.DONE)).isEqualByComparingTo("2");
@@ -75,7 +71,7 @@ class OrderServiceTest extends AbstractTest {
         Order order2 = entities.order(client, LocalDate.now(), OrderStatus.DONE);
         Order order3 = entities.order(client, LocalDate.now(), OrderStatus.DONE);
 
-        var result = orderService.getOrdersByStatus();
+        var result = service.getOrdersByStatus();
 
         assertThat(result.get(OrderStatus.NEW)).containsExactly(order1);
         assertThat(result.get(OrderStatus.DONE)).containsExactlyInAnyOrder(order2, order3);
@@ -96,8 +92,8 @@ class OrderServiceTest extends AbstractTest {
         order3.setTotal(new BigDecimal("30"));
         saveWithoutReload(order3);
 
-        assertThat(orderService.getOrdersTotalSum()).isEqualByComparingTo("60");
-        assertThat(orderService.getOrdersAverageBill()).isEqualByComparingTo("20");
+        assertThat(service.getOrdersTotalSum()).isEqualByComparingTo("60");
+        assertThat(service.getOrdersAverageBill()).isEqualByComparingTo("20");
     }
 
     @Test
@@ -108,6 +104,6 @@ class OrderServiceTest extends AbstractTest {
         saveWithoutReload(entities.order(client, LocalDate.of(2026, 2, 1), OrderStatus.NEW));
 
         var range = LocalDateRange.from(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 31));
-        assertThat(orderService.getOrders(range)).hasSize(2);
+        assertThat(service.getOrders(range)).hasSize(2);
     }
 }

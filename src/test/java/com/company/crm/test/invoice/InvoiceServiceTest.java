@@ -1,6 +1,6 @@
 package com.company.crm.test.invoice;
 
-import com.company.crm.AbstractTest;
+import com.company.crm.AbstractServiceTest;
 import com.company.crm.app.service.finance.InvoiceService;
 import com.company.crm.app.util.date.range.LocalDateRange;
 import com.company.crm.model.client.Client;
@@ -9,16 +9,12 @@ import com.company.crm.model.invoice.InvoiceStatus;
 import com.company.crm.model.order.Order;
 import com.company.crm.model.order.OrderStatus;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class InvoiceServiceTest extends AbstractTest {
-
-    @Autowired
-    private InvoiceService invoiceService;
+class InvoiceServiceTest extends AbstractServiceTest<InvoiceService> {
 
     @Test
     void invoicesCount_filtersByStatusAndDateRange() {
@@ -31,9 +27,9 @@ class InvoiceServiceTest extends AbstractTest {
 
         var range = LocalDateRange.from(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 31));
 
-        assertThat(invoiceService.getInvoicesCount(range, InvoiceStatus.NEW)).isEqualTo(1);
-        assertThat(invoiceService.getInvoicesCount(range, InvoiceStatus.OVERDUE)).isEqualTo(1);
-        assertThat(invoiceService.getAllInvoicesCount(range)).isEqualTo(2);
+        assertThat(service.getInvoicesCount(range, InvoiceStatus.NEW)).isEqualTo(1);
+        assertThat(service.getInvoicesCount(range, InvoiceStatus.OVERDUE)).isEqualTo(1);
+        assertThat(service.getAllInvoicesCount(range)).isEqualTo(2);
     }
 
     @Test
@@ -48,7 +44,7 @@ class InvoiceServiceTest extends AbstractTest {
 
         var range = LocalDateRange.from(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 31));
 
-        var overdue = invoiceService.getOverdueInvoices(range, 2);
+        var overdue = service.getOverdueInvoices(range, 2);
         assertThat(overdue).hasSize(2);
         assertThat(overdue).allMatch(invoice -> invoice.getStatus() == InvoiceStatus.OVERDUE);
     }
@@ -62,7 +58,7 @@ class InvoiceServiceTest extends AbstractTest {
         createInvoice(order, client, LocalDate.of(2026, 1, 6), InvoiceStatus.NEW);
         createInvoice(order, client, LocalDate.of(2026, 1, 7), InvoiceStatus.PAID);
 
-        var result = invoiceService.getInvoicesCountByStatus();
+        var result = service.getInvoicesCountByStatus();
 
         assertThat(result.get(InvoiceStatus.NEW)).isEqualTo(2);
         assertThat(result.get(InvoiceStatus.PAID)).isEqualTo(1);

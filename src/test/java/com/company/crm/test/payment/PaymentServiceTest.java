@@ -1,6 +1,6 @@
 package com.company.crm.test.payment;
 
-import com.company.crm.AbstractTest;
+import com.company.crm.AbstractServiceTest;
 import com.company.crm.app.service.finance.PaymentService;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.invoice.Invoice;
@@ -8,17 +8,13 @@ import com.company.crm.model.order.Order;
 import com.company.crm.model.order.OrderStatus;
 import com.company.crm.model.payment.Payment;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class PaymentServiceTest extends AbstractTest {
-
-    @Autowired
-    private PaymentService paymentService;
+class PaymentServiceTest extends AbstractServiceTest<PaymentService> {
 
     @Test
     void paymentsTotalSum_filtersByOrder() {
@@ -33,8 +29,8 @@ class PaymentServiceTest extends AbstractTest {
         savePayment(invoice1, new BigDecimal("10"));
         savePayment(invoice2, new BigDecimal("20"));
 
-        assertThat(paymentService.getPaymentsTotalSum(order1)).isEqualByComparingTo("60");
-        assertThat(paymentService.getPaymentsTotalSum()).isEqualByComparingTo("80");
+        assertThat(service.getPaymentsTotalSum(order1)).isEqualByComparingTo("60");
+        assertThat(service.getPaymentsTotalSum()).isEqualByComparingTo("80");
     }
 
     @Test
@@ -51,7 +47,7 @@ class PaymentServiceTest extends AbstractTest {
         savePayment(invoice1, new BigDecimal("100"));
         savePayment(invoice2, new BigDecimal("50"));
 
-        var totals = paymentService.getPaymentsTotalsByClients(1);
+        var totals = service.getPaymentsTotalsByClients(1);
 
         assertThat(totals).hasSize(1);
         assertThat(totals.values().iterator().next()).isEqualByComparingTo("100");
@@ -67,10 +63,10 @@ class PaymentServiceTest extends AbstractTest {
         savePayment(invoice, new BigDecimal("30"));
         savePayment(invoice, new BigDecimal("20"));
 
-        var payments = paymentService.getBiggestPayments(2);
+        var payments = service.getBiggestPayments(2);
 
         assertThat(payments).hasSize(2);
-        assertThat(payments.get(0).getAmount()).isEqualByComparingTo("30");
+        assertThat(payments.getFirst().getAmount()).isEqualByComparingTo("30");
         assertThat(payments.get(1).getAmount()).isEqualByComparingTo("20");
     }
 

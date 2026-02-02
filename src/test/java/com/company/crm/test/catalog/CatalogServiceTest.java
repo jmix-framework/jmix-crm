@@ -1,6 +1,6 @@
 package com.company.crm.test.catalog;
 
-import com.company.crm.AbstractTest;
+import com.company.crm.AbstractServiceTest;
 import com.company.crm.app.service.catalog.CatalogImportSettings;
 import com.company.crm.app.service.catalog.CatalogService;
 import com.company.crm.model.catalog.category.Category;
@@ -25,10 +25,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class CatalogServiceTest extends AbstractTest {
-
-    @Autowired
-    private CatalogService catalogService;
+class CatalogServiceTest extends AbstractServiceTest<CatalogService> {
 
     @Autowired
     private CategoryRepository categoryRepository;
@@ -37,7 +34,7 @@ class CatalogServiceTest extends AbstractTest {
     void updateCatalog_importsCategoriesWithHierarchy() throws IOException {
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Categories");
-        
+
         // Header
         Row header = sheet.createRow(0);
         header.createCell(0).setCellValue("Name");
@@ -72,7 +69,7 @@ class CatalogServiceTest extends AbstractTest {
         workbook.close();
 
         CatalogImportSettings settings = new CatalogImportSettings(new ByteArrayInputStream(out.toByteArray()));
-        catalogService.updateCatalog(settings);
+        service.updateCatalog(settings);
 
         Optional<Category> rootOpt = categoryRepository.findByCode("ROOT");
         assertThat(rootOpt).isPresent();
@@ -98,7 +95,7 @@ class CatalogServiceTest extends AbstractTest {
     @Test
     void updateCatalog_importsItemsWithNewCategory() throws IOException {
         Workbook workbook = new XSSFWorkbook();
-        
+
         // Categories sheet (empty)
         workbook.createSheet("Categories").createRow(0);
 
@@ -123,13 +120,10 @@ class CatalogServiceTest extends AbstractTest {
         workbook.close();
 
         CatalogImportSettings settings = new CatalogImportSettings(new ByteArrayInputStream(out.toByteArray()));
-        catalogService.updateCatalog(settings);
+        service.updateCatalog(settings);
 
         Optional<Category> catOpt = categoryRepository.findByCode("NEWCAT");
         assertThat(catOpt).isPresent();
-
-        // Check item
-        // I need to add CategoryItemRepository to the test if I want to check it easily
     }
 
     @Test
@@ -149,7 +143,7 @@ class CatalogServiceTest extends AbstractTest {
         item.setUom(UomType.PIECES);
         dataManager.save(item);
 
-        byte[] content = catalogService.generateCatalogXls();
+        byte[] content = service.generateCatalogXls();
         assertThat(content).isNotEmpty();
 
         try (Workbook workbook = new XSSFWorkbook(new ByteArrayInputStream(content))) {
@@ -180,7 +174,7 @@ class CatalogServiceTest extends AbstractTest {
         entities.orderItem(order, item1, new BigDecimal("5"));
         entities.orderItem(order, item2, new BigDecimal("10"));
 
-        var bestItems = catalogService.getBestOrderedItems(10, null);
+        var bestItems = service.getBestOrderedItems(10, null);
         assertThat(bestItems.keySet()).containsExactly(item2, item1);
         assertThat(bestItems.get(item2)).isEqualByComparingTo("10");
         assertThat(bestItems.get(item1)).isEqualByComparingTo("5");

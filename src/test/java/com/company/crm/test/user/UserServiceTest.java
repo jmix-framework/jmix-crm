@@ -1,18 +1,14 @@
 package com.company.crm.test.user;
 
-import com.company.crm.AbstractTest;
+import com.company.crm.AbstractServiceTest;
 import com.company.crm.app.service.user.UserService;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.user.User;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class UserServiceTest extends AbstractTest {
-
-    @Autowired
-    private UserService userService;
+class UserServiceTest extends AbstractServiceTest<UserService> {
 
     @Test
     void loadAccountManagers_returnsDistinctUsers() {
@@ -31,7 +27,7 @@ class UserServiceTest extends AbstractTest {
         client3.setAccountManager(manager2);
         saveWithoutReload(client3);
 
-        var managers = userService.loadAccountManagers();
+        var managers = service.loadAccountManagers();
 
         assertThat(managers).containsExactlyInAnyOrder(manager1, manager2);
     }

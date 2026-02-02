@@ -1,6 +1,6 @@
 package com.company.crm.test.settings;
 
-import com.company.crm.AbstractTest;
+import com.company.crm.AbstractServiceTest;
 import com.company.crm.app.service.settings.CrmSettingsService;
 import com.company.crm.model.settings.CrmSettings;
 import io.jmix.appsettings.AppSettings;
@@ -11,25 +11,22 @@ import java.math.BigDecimal;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class CrmSettingsServiceTest extends AbstractTest {
-
-    @Autowired
-    private CrmSettingsService crmSettingsService;
+class CrmSettingsServiceTest extends AbstractServiceTest<CrmSettingsService> {
 
     @Autowired
     private AppSettings appSettings;
 
     @Test
     void defaultVatPercent_hasDefaultValue() {
-        assertThat(crmSettingsService.getDefaultVatPercent()).isEqualByComparingTo("20");
+        assertThat(service.getDefaultVatPercent()).isEqualByComparingTo("20");
     }
 
     @Test
     void defaultVatPercent_reflectsSavedSettings() {
-        CrmSettings settings = crmSettingsService.loadSettings();
+        CrmSettings settings = service.loadSettings();
         settings.setDefaultVatPercent(new BigDecimal("15"));
         appSettings.save(settings);
 
-        assertThat(crmSettingsService.getDefaultVatPercent()).isEqualByComparingTo("15");
+        assertThat(service.getDefaultVatPercent()).isEqualByComparingTo("15");
     }
 }

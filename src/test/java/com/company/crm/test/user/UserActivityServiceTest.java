@@ -1,23 +1,20 @@
 package com.company.crm.test.user;
 
-import com.company.crm.AbstractTest;
+import com.company.crm.AbstractServiceTest;
 import com.company.crm.app.service.user.UserActivityService;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.user.User;
+import com.company.crm.model.user.activity.UserActivity;
 import com.company.crm.model.user.activity.client.ClientUserActivity;
 import com.company.crm.model.user.activity.userprofile.UserProfileUserActivity;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class UserActivityServiceTest extends AbstractTest {
-
-    @Autowired
-    private UserActivityService userActivityService;
+class UserActivityServiceTest extends AbstractServiceTest<UserActivityService> {
 
     @Test
     void loadActivities_returnsEntriesFromAllRepositories() {
@@ -37,10 +34,10 @@ class UserActivityServiceTest extends AbstractTest {
         profileActivity.setCreatedDate(OffsetDateTime.now());
         saveWithoutReload(profileActivity);
 
-        var activities = userActivityService.loadActivities(LocalDate.now(), 10);
+        var activities = service.loadActivities(LocalDate.now(), 10);
 
         assertThat(activities)
-                .extracting(activity -> activity.getActionDescription())
+                .extracting(UserActivity::getActionDescription)
                 .containsExactly("Profile activity", "Client activity");
     }
 
@@ -64,7 +61,7 @@ class UserActivityServiceTest extends AbstractTest {
         activity2.setCreatedDate(OffsetDateTime.now());
         saveWithoutReload(activity2);
 
-        var activities = userActivityService.loadClientActivities(user, client, LocalDate.now(), 10);
+        var activities = service.loadClientActivities(user, client, LocalDate.now(), 10);
 
         assertThat(activities)
                 .extracting(ClientUserActivity::getActionDescription)

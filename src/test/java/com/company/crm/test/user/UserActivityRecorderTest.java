@@ -17,10 +17,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 class UserActivityRecorderTest extends AbstractTest {
 
     @Autowired
-    private SystemAuthenticator systemAuthenticator;
+    private TestUsers testUsers;
 
     @Autowired
-    private TestUsers testUsers;
+    private SystemAuthenticator systemAuthenticator;
 
     @Test
     void creatingClientByUser_createsActivity() {
@@ -38,7 +38,7 @@ class UserActivityRecorderTest extends AbstractTest {
                 .list();
 
         assertThat(activities).hasSize(1);
-        assertThat(activities.get(0).getUser()).isEqualTo(user);
-        assertThat(activities.get(0).getActionDescription()).contains("client added");
+        assertThat(activities.getFirst().getUser()).isEqualTo(user);
+        assertThat(activities.getFirst().getActionDescription()).contains("client added");
     }
 }
