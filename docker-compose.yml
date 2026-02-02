@@ -1,0 +1,13 @@
+version: "3"
+services:
+  b2b-crm:
+    image: b2b-crm
+    build:
+      context: .
+    user: root
+    volumes:
+      - jmix:/workspace/.jmix
+    ports:
+      - "8080:8080"
+volumes:
+  jmix: 
