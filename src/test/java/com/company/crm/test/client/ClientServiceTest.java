@@ -77,40 +77,40 @@ class ClientServiceTest extends AbstractTest {
         Client client = entities.client();
         Client otherClient = entities.client();
 
-        Order order1 = entities.order(client, LocalDate.of(2025, 1, 1), OrderStatus.DONE);
-        Order order2 = entities.order(client, LocalDate.of(2025, 1, 3), OrderStatus.DONE);
+        Order order1 = entities.order(client, LocalDate.of(2026, 1, 1), OrderStatus.DONE);
+        Order order2 = entities.order(client, LocalDate.of(2026, 1, 3), OrderStatus.DONE);
 
         // order without payments must not affect the result
-        entities.order(client, LocalDate.of(2025, 1, 20), OrderStatus.DONE);
+        entities.order(client, LocalDate.of(2026, 1, 20), OrderStatus.DONE);
 
         // order with null date should be ignored
         Order nullDateOrder = entities.order(client, null, OrderStatus.DONE);
 
         // other client must not affect client-filtered result
-        Order otherClientOrder = entities.order(otherClient, LocalDate.of(2025, 1, 1), OrderStatus.DONE);
+        Order otherClientOrder = entities.order(otherClient, LocalDate.of(2026, 1, 1), OrderStatus.DONE);
 
-        // order1: last payment on 2025-01-10 => 9 days
+        // order1: last payment on 2026-01-10 => 9 days
         Invoice inv1 = entities.invoice(client, order1);
-        entities.payment(inv1, LocalDate.of(2025, 1, 5));
-        entities.payment(inv1, LocalDate.of(2025, 1, 10));
+        entities.payment(inv1, LocalDate.of(2026, 1, 5));
+        entities.payment(inv1, LocalDate.of(2026, 1, 10));
 
-        // order2: last payment on 2025-01-04 => 1 day
+        // order2: last payment on 2026-01-04 => 1 day
         Invoice inv2 = entities.invoice(client, order2);
-        entities.payment(inv2, LocalDate.of(2025, 1, 4));
+        entities.payment(inv2, LocalDate.of(2026, 1, 4));
 
         // null-date order has payments, but should still be ignored due to null order date
         Invoice invNull = entities.invoice(client, nullDateOrder);
-        entities.payment(invNull, LocalDate.of(2025, 1, 7));
+        entities.payment(invNull, LocalDate.of(2026, 1, 7));
 
         // other client order with payments
         Invoice invOther = entities.invoice(otherClient, otherClientOrder);
-        entities.payment(invOther, LocalDate.of(2025, 1, 2));
+        entities.payment(invOther, LocalDate.of(2026, 1, 2));
 
         var avg = clientService.getSalesCycleLength(null, client);
         assertThat(avg).isEqualByComparingTo(5);
 
         var avgFiltered = clientService.getSalesCycleLength(
-                LocalDateRange.from(LocalDate.of(2025, 1, 3), LocalDate.of(2025, 1, 3)),
+                LocalDateRange.from(LocalDate.of(2026, 1, 3), LocalDate.of(2026, 1, 3)),
                 client
         );
         assertThat(avgFiltered).isEqualByComparingTo(1);
@@ -121,14 +121,14 @@ class ClientServiceTest extends AbstractTest {
         Client client = entities.client();
         Client otherClient = entities.client();
 
-        entities.order(client, LocalDate.of(2025, 1, 1), OrderStatus.DONE);   // in (lower bound)
-        entities.order(client, LocalDate.of(2025, 1, 10), OrderStatus.DONE);  // in (upper bound)
+        entities.order(client, LocalDate.of(2026, 1, 1), OrderStatus.DONE);   // in (lower bound)
+        entities.order(client, LocalDate.of(2026, 1, 10), OrderStatus.DONE);  // in (upper bound)
         entities.order(client, LocalDate.of(2024, 12, 31), OrderStatus.DONE); // out
         entities.order(client, null, OrderStatus.DONE);                       // null date must be excluded when period is set
 
-        entities.order(otherClient, LocalDate.of(2025, 1, 5), OrderStatus.DONE); // other client
+        entities.order(otherClient, LocalDate.of(2026, 1, 5), OrderStatus.DONE); // other client
 
-        var dateRange = LocalDateRange.from(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 10));
+        var dateRange = LocalDateRange.from(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 10));
         assertThat(clientService.getCompletedOrdersAmount(dateRange, client)).isEqualByComparingTo("2");
     }
 
@@ -136,9 +136,9 @@ class ClientServiceTest extends AbstractTest {
     void purchaseFrequency_countsOrdersAllTime_whenDateRangeIsNull() {
         Client client = entities.client();
 
-        entities.order(client, LocalDate.of(2025, 1, 1), OrderStatus.DONE);
-        entities.order(client, LocalDate.of(2025, 1, 10), OrderStatus.DONE);
-        entities.order(client, LocalDate.of(2025, 2, 1), OrderStatus.DONE);
+        entities.order(client, LocalDate.of(2026, 1, 1), OrderStatus.DONE);
+        entities.order(client, LocalDate.of(2026, 1, 10), OrderStatus.DONE);
+        entities.order(client, LocalDate.of(2026, 2, 1), OrderStatus.DONE);
         entities.order(client, null, OrderStatus.DONE);
 
         // with dateRange = null, all DONE orders are counted (including orders with null date)

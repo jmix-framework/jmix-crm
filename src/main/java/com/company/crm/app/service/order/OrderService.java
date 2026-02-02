@@ -57,7 +57,7 @@ public class OrderService {
     public Map<OrderStatus, List<Order>> getOrdersByStatus() {
         Map<OrderStatus, List<Order>> ordersByStatus = new HashMap<>();
         orderRepository.findAll().forEach(order ->
-                ordersByStatus.getOrDefault(order.getStatus(), new ArrayList<>()).add(order));
+                ordersByStatus.computeIfAbsent(order.getStatus(), status -> new ArrayList<>()).add(order));
         return ordersByStatus;
     }
 

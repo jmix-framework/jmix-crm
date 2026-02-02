@@ -27,8 +27,8 @@
                         <responsiveStep minWidth="0" columns="1"/>
                         <responsiveStep minWidth="40em" columns="2"/>
                     </responsiveSteps>
-                    <textField property="code"/>
-                    <textField property="name"/>
+                    <textField id="codeField" property="code"/>
+                    <textField id="nameField" property="name"/>
                     <entityComboBox id="categoriesComboBox" property="category"
                                     dataContainer="categoryItemDc">
                         <actions>
@@ -44,7 +44,7 @@
                         </itemsQuery>
                     </entityComboBox>
                     <select property="uom"/>
-                    <textField id="priceField" property="price"/>
+                    <textField id="priceField" property="price" required="true"/>
                     <formLayout id="dynamicAttributes" dataContainer="categoryItemDc" colspan="2">
                         <responsiveSteps>
                             <responsiveStep minWidth="0" columns="1"/>

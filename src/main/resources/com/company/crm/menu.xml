@@ -51,8 +51,5 @@
               title="msg://io.jmix.dynattrflowui.panel/category"/>
         <item view="appSettings.view" id="app_settings"
               title="msg://io.jmix.appsettingsflowui.view.appsettings/appSettingsEntityView.menu" icon="vaadin:wrench"/>
-        <item view="jmxcon_JmxConsoleView"
-              icon="vaadin:list-select"
-              title="msg://io.jmix.jmxconsole/jmxConsoleView.menu"/>
     </menu>
 </menu-config>

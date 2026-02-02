@@ -1,10 +1,13 @@
 package com.company.crm;
 
 import com.company.crm.app.util.constant.CrmConstants;
+import com.company.crm.model.user.User;
 import com.company.crm.util.Entities;
-import com.company.crm.util.extenstion.AuthenticatedAsAdmin;
+import com.company.crm.util.TestUsers;
+import com.company.crm.util.extenstion.AuthenticatedAsExtension;
 import com.company.crm.util.extenstion.DataCleaner;
 import io.jmix.core.DataManager;
+import io.jmix.core.security.SystemAuthenticator;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -18,10 +21,10 @@ import org.springframework.test.context.ActiveProfiles;
 
 import java.util.function.Consumer;
 
-@ExtendWith({AuthenticatedAsAdmin.class, DataCleaner.class})
+@ExtendWith({AuthenticatedAsExtension.class, DataCleaner.class})
 @ActiveProfiles(CrmConstants.SpringProfiles.TEST)
 @SpringBootTest(
-        classes = {CRMApplication.class, Entities.class},
+        classes = {CRMApplication.class, Entities.class, TestUsers.class},
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class AbstractTest {
 
@@ -29,13 +32,15 @@ public class AbstractTest {
     protected int port = 0;
 
     @Autowired
-    protected ApplicationContext applicationContext;
-
+    protected Entities entities;
+    @Autowired
+    protected TestUsers testUsers;
     @Autowired
     protected DataManager dataManager;
-
     @Autowired
-    protected Entities entities;
+    protected SystemAuthenticator systemAuthenticator;
+    @Autowired
+    protected ApplicationContext applicationContext;
 
     @BeforeAll
     public static void beforeAll() {
@@ -61,6 +66,22 @@ public class AbstractTest {
     }
 
     protected void afterEach() {
+    }
+
+    protected void runWithManager(Runnable runnable) {
+        runWithUser(testUsers.manager(), runnable);
+    }
+
+    protected void runWithSupervisor(Runnable runnable) {
+        runWithUser(testUsers.supervisor(), runnable);
+    }
+
+    protected void runWithUser(User user, Runnable runnable) {
+        runWithUser(user.getUsername(), runnable);
+    }
+
+    protected void runWithUser(String username, Runnable runnable) {
+        systemAuthenticator.runWithUser(username, runnable);
     }
 
     protected boolean cleanDataAfterEach() {

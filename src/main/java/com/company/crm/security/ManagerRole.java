@@ -17,6 +17,7 @@ import io.jmix.security.model.SecurityScope;
 import io.jmix.security.role.annotation.EntityAttributePolicy;
 import io.jmix.security.role.annotation.EntityPolicy;
 import io.jmix.security.role.annotation.ResourceRole;
+import io.jmix.security.role.annotation.SpecificPolicy;
 import io.jmix.securityflowui.role.annotation.MenuPolicy;
 import io.jmix.securityflowui.role.annotation.ViewPolicy;
 
@@ -78,4 +79,7 @@ public interface ManagerRole extends UiMinimalRole {
 
     @EntityPolicy(entityClass = UserTask.class, actions = EntityPolicyAction.ALL)
     void userTask();
+
+    @SpecificPolicy(resources = {"ui.genericfilter.modifyConfiguration", "ui.genericfilter.modifyJpqlCondition", "ui.genericfilter.modifyGlobalConfiguration", "datatools.importExportEntity", "datatools.showEntityInfo"})
+    void specific();
 }

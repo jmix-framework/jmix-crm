@@ -355,8 +355,12 @@ public class CrmRenderers {
                                                                Function<E, String> textProvider,
                                                                Function<E, String> tooltipProvider) {
         JmixButton button = uiComponents.create(JmixButton.class);
-        button.setText(textProvider.apply(entity));
-        button.setTooltipText(tooltipProvider.apply(entity));
+        if (entity != null) {
+            button.setText(textProvider.apply(entity));
+            button.setTooltipText(tooltipProvider.apply(entity));
+        } else {
+            button.setText("");
+        }
         button.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
         return button;
     }

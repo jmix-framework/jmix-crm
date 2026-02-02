@@ -34,13 +34,12 @@ This project models a typical B2B sales workflow:
 
 -   Audit
 -   Application settings
+-   Charts
 -   Data tools
 -   Dynamic attributes
--   Reports (includes an invoice template)
--   Charts
 -   Grid export
 -   Local file storage
--   JMX console
+-   Reports (includes an invoice template)
 
 ## Build and Run
 
@@ -57,7 +56,7 @@ Prerequisites: Java 21+
 2.  [Open application URL](http://localhost:8080/crm)
     
 
-### Build JAR:
+### Run via JAR:
 
 ```bash
 ./gradlew bootJar -Pvaadin.productionMode

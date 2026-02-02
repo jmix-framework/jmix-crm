@@ -11,17 +11,22 @@ import org.springframework.stereotype.Service;
 @Service
 public class UniqueNumbersService {
 
+    public static final String PURCHASE_ORDER_NUMBER_PREFIX = "PO-";
+    public static final String ORDER_NUMBER_PREFIX = "ORD-";
+    public static final String INVOICE_NUMBER_PREFIX = "INV-";
+    public static final String PAYMENT_NUMBER_PREFIX = "PAY-";
+
     private static final Sequence PAYMENT_NUMBER_SEQUENCE =
-            Sequence.withName("CRM_PAYMENT_NUMBER").setStartValue(1000);
+            defaultNumberSequence("CRM_PAYMENT_NUMBER");
 
     private static final Sequence INVOICE_NUMBER_SEQUENCE =
-            Sequence.withName("CRM_INVOICE_NUMBER").setStartValue(1000);
+            defaultNumberSequence("CRM_INVOICE_NUMBER");
 
     private static final Sequence ORDER_NUMBER_SEQUENCE =
-            Sequence.withName("CRM_ORDER_NUMBER").setStartValue(1000);
+            defaultNumberSequence("CRM_ORDER_NUMBER");
 
     private static final Sequence PURCHASE_ORDER_NUMBER_SEQUENCE =
-            Sequence.withName("CRM_PURCHASE_ORDER_NUMBER").setStartValue(1000);
+            defaultNumberSequence("CRM_PURCHASE_ORDER_NUMBER");
 
     private final Sequences sequences;
 
@@ -41,18 +46,22 @@ public class UniqueNumbersService {
     }
 
     public String getNextOrderNumber() {
-        return "ORD-" + sequences.createNextValue(ORDER_NUMBER_SEQUENCE);
+        return ORDER_NUMBER_PREFIX + sequences.createNextValue(ORDER_NUMBER_SEQUENCE);
     }
 
     private String getNextPaymentNumber() {
-        return "PAY-" + sequences.createNextValue(PAYMENT_NUMBER_SEQUENCE);
+        return PAYMENT_NUMBER_PREFIX + sequences.createNextValue(PAYMENT_NUMBER_SEQUENCE);
     }
 
     public String getNextInvoiceNumber() {
-        return "INV-" + sequences.createNextValue(INVOICE_NUMBER_SEQUENCE);
+        return INVOICE_NUMBER_PREFIX + sequences.createNextValue(INVOICE_NUMBER_SEQUENCE);
     }
 
     public String getNextPurchaseOrderNumber() {
-        return "POR-" + sequences.createNextValue(PURCHASE_ORDER_NUMBER_SEQUENCE);
+        return PURCHASE_ORDER_NUMBER_PREFIX + sequences.createNextValue(PURCHASE_ORDER_NUMBER_SEQUENCE);
+    }
+
+    private static Sequence defaultNumberSequence(String sequenceName) {
+        return Sequence.withName(sequenceName).setStartValue(1000);
     }
 }
