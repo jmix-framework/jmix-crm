@@ -29,4 +29,34 @@ class DateTimeServiceTest extends AbstractTest {
 
         assertThat(offsetDateTime.toLocalDate()).isEqualTo(date);
     }
+
+    @Test
+    void getStartOfDay_returnsTruncatedTime() {
+        var now = dateTimeService.now();
+        var startOfDay = dateTimeService.getStartOfDay(now);
+
+        assertThat(startOfDay.getHour()).isZero();
+        assertThat(startOfDay.getMinute()).isZero();
+        assertThat(startOfDay.getSecond()).isZero();
+    }
+
+    @Test
+    void getEndOfDay_returnsEndOfDayTime() {
+        var now = dateTimeService.now();
+        var startOfDay = dateTimeService.getStartOfDay(now);
+        var endOfDay = dateTimeService.getEndOfDay(startOfDay);
+
+        assertThat(endOfDay.getHour()).isEqualTo(23);
+        assertThat(endOfDay.getMinute()).isEqualTo(59);
+        assertThat(endOfDay.getSecond()).isEqualTo(59);
+    }
+
+    @Test
+    void getCurrentMonthRange_hasValidBounds() {
+        var range = dateTimeService.getCurrentMonthRange();
+        LocalDate now = LocalDate.now(dateTimeService.getTimeZoneForCurrentUser().toZoneId());
+
+        assertThat(range.startDate()).isEqualTo(now.withDayOfMonth(1));
+        assertThat(range.endDate()).isEqualTo(now.withDayOfMonth(now.getMonth().length(now.isLeapYear())));
+    }
 }

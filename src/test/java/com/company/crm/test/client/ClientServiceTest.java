@@ -7,6 +7,7 @@ import com.company.crm.model.client.Client;
 import com.company.crm.model.invoice.Invoice;
 import com.company.crm.model.order.Order;
 import com.company.crm.model.order.OrderStatus;
+import com.company.crm.model.payment.Payment;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -129,7 +130,7 @@ class ClientServiceTest extends AbstractTest {
         entities.order(otherClient, LocalDate.of(2026, 1, 5), OrderStatus.DONE); // other client
 
         var dateRange = LocalDateRange.from(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 10));
-        assertThat(clientService.getCompletedOrdersAmount(dateRange, client)).isEqualByComparingTo("2");
+        assertThat(clientService.getCompletedOrdersAmount(dateRange, client)).isEqualTo(2L);
     }
 
     @Test
@@ -142,6 +143,48 @@ class ClientServiceTest extends AbstractTest {
         entities.order(client, null, OrderStatus.DONE);
 
         // with dateRange = null, all DONE orders are counted (including orders with null date)
-        assertThat(clientService.getCompletedOrdersAmount(null, client)).isEqualByComparingTo("4");
+        assertThat(clientService.getCompletedOrdersAmount(null, client)).isEqualTo(4L);
+    }
+    @Test
+    void getInvoicesTotalSum_calculatesCorrectSum() {
+        Client client = entities.client("Sum Client");
+        entities.createAndSaveEntity(Invoice.class, i -> {
+            i.setClient(client);
+            i.setTotal(new BigDecimal("100"));
+        });
+        entities.createAndSaveEntity(Invoice.class, i -> {
+            i.setClient(client);
+            i.setTotal(new BigDecimal("50"));
+        });
+
+        assertThat(clientService.getInvoicesTotalSum(client)).isEqualByComparingTo("150");
+    }
+
+    @Test
+    void getOutstandingBalance_calculatesDifference() {
+        Client client = entities.client("Balance Client");
+        entities.createAndSaveEntity(Invoice.class, i -> {
+            i.setClient(client);
+            i.setTotal(new BigDecimal("100"));
+        });
+        entities.createAndSaveEntity(Payment.class, (Payment p) -> {
+            p.setInvoice(entities.createAndSaveEntity(Invoice.class, (Invoice i) -> i.setClient(client)));
+            p.setAmount(new BigDecimal("40"));
+        });
+
+        // Outstanding balance = 100 (first invoice) + 0 (second invoice total is null/0 by default) - 40 (payment)
+        assertThat(clientService.getOutstandingBalance(client)).isEqualByComparingTo("60");
+    }
+
+    @Test
+    void getBestBuyers_returnsSortedMap() {
+        Client c1 = entities.client("Client 1");
+        Client c2 = entities.client("Client 2");
+
+        entities.createAndSaveEntity(Order.class, o -> { o.setClient(c1); o.setTotal(new BigDecimal("100")); });
+        entities.createAndSaveEntity(Order.class, o -> { o.setClient(c2); o.setTotal(new BigDecimal("200")); });
+
+        var bestBuyers = clientService.getBestBuyers(10);
+        assertThat(bestBuyers.keySet()).containsExactly(c2, c1);
     }
 }

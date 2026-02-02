@@ -194,8 +194,10 @@ public class CatalogService {
 
         return loader.list().stream().collect(Collectors.toMap(
                 keyValue -> keyValue.getValue("categoryItem"),
-                keyValue -> keyValue.getValue("quantity")
-        ));
+                keyValue -> keyValue.getValue("quantity"),
+                (v1, v2) -> v1,
+                java.util.LinkedHashMap::new)
+        );
     }
 
     private Map<String, Category> importCategories(Workbook workbook, CategoryMappingInfo mappingInfo) {

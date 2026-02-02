@@ -39,6 +39,12 @@ class UniqueNumbersServiceTest extends AbstractTest {
         assertThat(payment).startsWith(PAYMENT_NUMBER_PREFIX);
     }
 
+    @Test
+    void getNextPurchaseOrderNumber_usesPrefix() {
+        String poNumber = uniqueNumbersService.getNextPurchaseOrderNumber();
+        assertThat(poNumber).startsWith(UniqueNumbersService.PURCHASE_ORDER_NUMBER_PREFIX);
+    }
+
     private long extractNumber(String value) {
         return Long.parseLong(value.substring(value.indexOf('-') + 1));
     }

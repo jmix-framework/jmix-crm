@@ -1,60 +1,60 @@
 # ![B2B CRM](src/main/resources/META-INF/resources/images/logo.svg) B2B CRM
 
-### Is a Jmix application for managing client relationships.
+### Is a [Jmix](https://jmix.io) application for managing client relationships
 
-## Table of Contents
+## 📑 Table of Contents
 
--   [Overview](#overview)
--   [Domain Model](#domain-model)
--   [Technical stack](#technical-stack)
--   [Add-ons in use](#add-ons-in-use)
--   [Build and run](#build-and-run)
--   [Demo data](#demo-data)
--   [Accounts](#application-accounts)
+- [Overview](#overview)
+- [Technical stack](#technical-stack)
+- [Add-ons in use](#add-ons-in-use)
+- [Build and run](#build-and-run)
+- [Demo data](#demo-data)
+- [Accounts](#application-accounts)
+- [Domain Model](#domain-model)
+- [Role Model](#role-model)
 
-## Overview
+## 📖 Overview
 
 This project models a typical B2B sales workflow:
 
--   Manage catalog of your products and categories
--   Maintain clients and contacts
--   Track orders and order items
--   Issue invoices and record payments
--   Monitor tasks and recent activities
--   See sales analytics
+- Manage catalog of your products and categories
+- Maintain clients and contacts
+- Track orders and order items
+- Issue invoices and record payments
+- Monitor tasks and recent activities
+- See sales analytics
 
-## Technical Stack
+## 🛠️ Technical Stack
 
--   Java 21
--   Jmix 2.7
--   Spring Boot 3
--   HSQLDB
+- Java 21
+- Jmix 2.7
+- Spring Boot 3
+- HSQLDB
 
-## Add-ons
+## 🧩 Add-ons
 
--   Audit
--   Application settings
--   Charts
--   Data tools
--   Dynamic attributes
--   Grid export
--   Local file storage
--   Reports (includes an invoice template)
+- Audit
+- Application settings
+- Charts
+- Data tools
+- Dynamic attributes
+- Grid export
+- Local file storage
+- Reports (includes an invoice template)
 
-## Build and Run
+## 🚀 Build and Run
 
 Prerequisites: Java 21+
 
 ### Run Project
 
-1.  Run [B2B CRM](.run/b2b-app.run.xml) Jmix run configuration or execute
-    
-    ```bash
-    ./gradlew bootRun
-    ```
-    
-2.  [Open application URL](http://localhost:8080/crm)
-    
+1. Run [B2B CRM](.run/b2b-app.run.xml) Jmix run configuration or execute
+
+   ```bash
+   ./gradlew bootRun
+   ```
+
+2. [Open application URL](http://localhost:8080/crm)
 
 ### Run via JAR:
 
@@ -82,23 +82,24 @@ docker run --rm -p 8080:8080 b2b-crm
 docker-compose up
 ```
 
-## Demo Data
+## 🎲 Demo Data
 
 The local profile generates demo data on the application start:
 
--   You can disable demo data generation with `crm.generateDemoData` property in [application.properties](src/main/resources/application.properties)
--   Catalog imported from [catalog.xlsx](src/main/resources/demo-data/catalog.xlsx)
+- You can disable demo data generation with `crm.generateDemoData` property
+  in [application.properties](src/main/resources/application.properties)
+- Catalog imported from [catalog.xlsx](src/main/resources/demo-data/catalog.xlsx)
 
-## Application Accounts
+## 👥 Application Accounts
 
-| Position      | Username   | Password   |
-|---------------|------------|------------|
-| Administrator | admin      | admin      |
-| Supervisor    | supervisor | supervisor |
-| Manager       | manager    | manager    |
-| User          | alice      | alice      |
+| Position      | Username         | Password   |
+|---------------|------------------|------------|
+| Administrator | ```admin```      | admin      |
+| Supervisor    | ```supervisor``` | supervisor |
+| Manager       | ```manager```    | manager    |
+| User          | ```alice```      | alice      |
 
-## Domain Model
+## ⚙️ Domain Model
 
 ```mermaid
 classDiagram
@@ -114,3 +115,17 @@ classDiagram
 
     Invoice o-- Payment
 ```
+
+## 🔐 Role Model
+
+The application uses a hierarchical role model:
+
+- `Administrator`: Full access to all application features, entities, and settings.
+- `Supervisor`: Extends the Manager role with additional administrative capabilities:
+    - Manage product catalog (Categories and Category Items).
+    - Assign Account Managers to Clients.
+- `Manager`: Primary role for sales operations.
+    - Full access to Clients, Contacts, Orders, Invoices, and Payments.
+    - Read-only access to the product catalog.
+    - Manage own Tasks.
+- `UI Minimal`: Minimal access, allowing login and basic navigation.

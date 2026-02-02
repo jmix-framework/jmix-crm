@@ -73,9 +73,8 @@ public class OrderService {
      */
     public BigDecimal getOrdersTotalSum() {
         return orderRepository.fluentValueLoader(
-                        "select sum(e.total) as total " +
-                                "from Order_ e " +
-                                "order by total desc", BigDecimal.class)
+                        "select sum(e.total) " +
+                                "from Order_ e", BigDecimal.class)
                 .optional().orElse(BigDecimal.ZERO);
     }
 

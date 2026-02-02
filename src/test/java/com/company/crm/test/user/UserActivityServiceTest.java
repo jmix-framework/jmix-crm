@@ -28,7 +28,7 @@ class UserActivityServiceTest extends AbstractTest {
         clientActivity.setClient(client);
         clientActivity.setUser(user);
         clientActivity.setActionDescription("Client activity");
-        clientActivity.setCreatedDate(OffsetDateTime.now());
+        clientActivity.setCreatedDate(OffsetDateTime.now().minusHours(1));
         saveWithoutReload(clientActivity);
 
         UserProfileUserActivity profileActivity = dataManager.create(UserProfileUserActivity.class);
@@ -41,7 +41,7 @@ class UserActivityServiceTest extends AbstractTest {
 
         assertThat(activities)
                 .extracting(activity -> activity.getActionDescription())
-                .contains("Client activity", "Profile activity");
+                .containsExactly("Profile activity", "Client activity");
     }
 
     @Test

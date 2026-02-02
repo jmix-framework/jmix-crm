@@ -1,9 +1,12 @@
 package com.company.crm.util;
 
 import com.company.crm.model.address.Address;
+import com.company.crm.model.catalog.category.Category;
+import com.company.crm.model.catalog.item.CategoryItem;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.invoice.Invoice;
 import com.company.crm.model.order.Order;
+import com.company.crm.model.order.OrderItem;
 import com.company.crm.model.order.OrderStatus;
 import com.company.crm.model.payment.Payment;
 import com.company.crm.model.user.User;
@@ -74,6 +77,32 @@ public class Entities {
             payment.setInvoice(invoice);
             payment.setDate(date);
             payment.setAmount(BigDecimal.TEN);
+        });
+    }
+
+    public Category category(String name, String code) {
+        return createAndSaveEntity(Category.class, c -> {
+            c.setName(name);
+            c.setCode(code);
+        });
+    }
+
+    public CategoryItem categoryItem(String name, String code, Category category, BigDecimal price) {
+        return createAndSaveEntity(CategoryItem.class, i -> {
+            i.setName(name);
+            i.setCode(code);
+            i.setCategory(category);
+            i.setPrice(price);
+        });
+    }
+
+    public OrderItem orderItem(Order order, CategoryItem item, BigDecimal quantity) {
+        return createAndSaveEntity(OrderItem.class, oi -> {
+            oi.setOrder(order);
+            oi.setCategoryItem(item);
+            oi.setQuantity(quantity);
+            oi.setNetPrice(item.getPrice());
+            oi.setGrossPrice(item.getPrice());
         });
     }
 

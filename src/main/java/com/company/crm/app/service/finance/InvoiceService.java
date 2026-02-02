@@ -7,7 +7,6 @@ import com.company.crm.model.invoice.InvoiceStatus;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -128,7 +127,7 @@ public class InvoiceService {
             query.append(" where ").append(String.join(" and ", conditions));
         }
 
-        var loader = invoiceRepository.fluentValueLoader(query.toString(), BigDecimal.class);
+        var loader = invoiceRepository.fluentValueLoader(query.toString(), Long.class);
 
         if (status != null) {
             loader.parameter("status", asList(status));
@@ -139,7 +138,7 @@ public class InvoiceService {
             loader.parameter("endDate", dateRange.endDate());
         }
 
-        return loader.optional().orElse(BigDecimal.ZERO).longValue();
+        return loader.optional().orElse(0L);
     }
 
     /**

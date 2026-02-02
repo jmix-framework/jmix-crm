@@ -75,7 +75,7 @@ public class ClientService {
                     .parameter("endDate", dateRange.endDate());
         }
 
-        Long rangeTotalAmount = getCompletedOrdersAmount(dateRange, clients).longValue();
+        Long rangeTotalAmount = getCompletedOrdersAmount(dateRange, clients);
         var rangeTotalSum = ordersTotalSumLoader(new OrderStatus[]{OrderStatus.DONE}, clients)
                 .optional().orElse(BigDecimal.ZERO);
         var salesCycleLength = getSalesCycleLength(dateRange, clients);
@@ -96,7 +96,7 @@ public class ClientService {
      * @param clients   optional list of clients to filter the orders; if no clients are provided, all clients are considered
      * @return the total number of orders that match the specified criteria, or {@code BigDecimal.ZERO} if no orders are matched
      */
-    public BigDecimal getCompletedOrdersAmount(@Nullable LocalDateRange dateRange,
+    public Long getCompletedOrdersAmount(@Nullable LocalDateRange dateRange,
                                                Client... clients) {
         boolean clientsSpecified = clients.length > 0;
 
@@ -117,7 +117,7 @@ public class ClientService {
         query.append(" where ").append(String.join(" and ", conditions));
 
         var loader = clientRepository
-                .fluentValueLoader(query.toString(), BigDecimal.class)
+                .fluentValueLoader(query.toString(), Long.class)
                 .parameter("status", OrderStatus.DONE);
 
         if (clientsSpecified) {
@@ -129,7 +129,7 @@ public class ClientService {
             loader.parameter("to", dateRange.endDate());
         }
 
-        return loader.optional().orElse(BigDecimal.ZERO);
+        return loader.optional().orElse(0L);
     }
 
     /**
@@ -270,7 +270,9 @@ public class ClientService {
                 .list().stream()
                 .collect(Collectors.toMap(
                         keyValue -> keyValue.getValue("client"),
-                        keyValue -> keyValue.getValue("total")));
+                        keyValue -> keyValue.getValue("total"),
+                        (v1, v2) -> v1,
+                        java.util.LinkedHashMap::new));
     }
 
     /**

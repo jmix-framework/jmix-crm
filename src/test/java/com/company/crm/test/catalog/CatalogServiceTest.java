@@ -7,6 +7,8 @@ import com.company.crm.model.catalog.category.Category;
 import com.company.crm.model.catalog.category.CategoryRepository;
 import com.company.crm.model.catalog.item.CategoryItem;
 import com.company.crm.model.catalog.item.UomType;
+import com.company.crm.model.order.Order;
+import com.company.crm.model.order.OrderStatus;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -18,6 +20,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -165,5 +168,21 @@ class CatalogServiceTest extends AbstractTest {
             assertThat(itemRow.getCell(3).getStringCellValue()).isEqualTo("PIECES");
             assertThat(itemRow.getCell(4).getNumericCellValue()).isEqualTo(123.45);
         }
+    }
+
+    @Test
+    void getBestOrderedItems_returnsItemsSortedByQuantity() {
+        Category cat = entities.category("Cat", "CAT");
+        CategoryItem item1 = entities.categoryItem("Item 1", "ITEM1", cat, BigDecimal.TEN);
+        CategoryItem item2 = entities.categoryItem("Item 2", "ITEM2", cat, BigDecimal.TEN);
+
+        Order order = entities.order(entities.client(), LocalDate.now(), OrderStatus.DONE);
+        entities.orderItem(order, item1, new BigDecimal("5"));
+        entities.orderItem(order, item2, new BigDecimal("10"));
+
+        var bestItems = catalogService.getBestOrderedItems(10, null);
+        assertThat(bestItems.keySet()).containsExactly(item2, item1);
+        assertThat(bestItems.get(item2)).isEqualByComparingTo("10");
+        assertThat(bestItems.get(item1)).isEqualByComparingTo("5");
     }
 }

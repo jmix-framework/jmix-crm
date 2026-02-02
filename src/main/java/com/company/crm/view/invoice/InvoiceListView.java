@@ -189,7 +189,7 @@ public class InvoiceListView extends StandardListView<Invoice> {
         }
 
         List<String> emails = contacts.stream().map(Contact::getEmail).toList();
-        CrmUiUtils.showEmailSendingDialog(emails);
+        CrmUiUtils.showEmailSendingDialog(emails, false);
     }
 
     private void initialize() {

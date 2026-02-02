@@ -3,6 +3,7 @@ package com.company.crm.view.order;
 import com.company.crm.app.service.datetime.DateTimeService;
 import com.company.crm.app.ui.component.OrderStatusPipeline;
 import com.company.crm.app.util.constant.CrmConstants;
+import com.company.crm.app.util.ui.CrmUiUtils;
 import com.company.crm.app.util.ui.renderer.CrmRenderers;
 import com.company.crm.model.order.Order;
 import com.company.crm.model.order.OrderItem;
@@ -15,7 +16,6 @@ import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Span;
-import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.textfield.TextFieldBase;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.Renderer;
@@ -25,17 +25,13 @@ import io.jmix.core.FetchPlan;
 import io.jmix.core.Messages;
 import io.jmix.core.SaveContext;
 import io.jmix.flowui.Dialogs;
-import io.jmix.flowui.Dialogs.InputDialogBuilder.LabelsPosition;
 import io.jmix.flowui.Notifications;
 import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.action.DialogAction;
-import io.jmix.flowui.action.inputdialog.InputDialogAction;
 import io.jmix.flowui.action.view.DetailSaveCloseAction;
-import io.jmix.flowui.app.inputdialog.InputParameter;
 import io.jmix.flowui.component.grid.DataGrid;
 import io.jmix.flowui.component.select.JmixSelect;
 import io.jmix.flowui.component.textfield.JmixBigDecimalField;
-import io.jmix.flowui.component.textfield.JmixEmailField;
 import io.jmix.flowui.component.textfield.TypedTextField;
 import io.jmix.flowui.download.Downloader;
 import io.jmix.flowui.exception.ValidationException;
@@ -47,7 +43,6 @@ import io.jmix.flowui.view.Install;
 import io.jmix.flowui.view.MessageBundle;
 import io.jmix.flowui.view.PrimaryDetailView;
 import io.jmix.flowui.view.StandardDetailView;
-import io.jmix.flowui.view.StandardOutcome;
 import io.jmix.flowui.view.Subscribe;
 import io.jmix.flowui.view.Supply;
 import io.jmix.flowui.view.Target;
@@ -233,44 +228,7 @@ public class OrderDetailView extends StandardDetailView<Order> {
 
     @Subscribe("emailAction")
     private void onEmailAction(final ActionPerformedEvent event) {
-        dialogs.createInputDialog(this)
-                .withHeader(messageBundle.getMessage("sendEmailDialog.header"))
-                .withLabelsPosition(LabelsPosition.TOP)
-                .withParameters(
-                        InputParameter.parameter("email")
-                                .withRequired(true)
-                                .withLabel(messages.getMessage("email"))
-                                .withField(() -> {
-                                    var field = uiComponents.create(JmixEmailField.class);
-                                    field.setPlaceholder("receiver@mail.com");
-                                    field.setWidthFull();
-                                    return field;
-                                }))
-                .withActions(
-                        InputDialogAction.action("sendEmail")
-                                .withText(messages.getMessage("send"))
-                                .withIcon(VaadinIcon.MAILBOX)
-                                .withVariant(ActionVariant.SUCCESS)
-                                .withHandler(this::onSendEmail),
-
-                        InputDialogAction.action("close")
-                                .withText(messages.getMessage("actions.Close"))
-                                .withIcon(VaadinIcon.CLOSE)
-                                .withHandler(this::closeEmailDialog))
-                .build()
-                .open();
-    }
-
-    private void onSendEmail(ActionPerformedEvent e) {
-        notifications.create(messageBundle.formatMessage("emailSentNotification"))
-                .withType(Notifications.Type.SYSTEM)
-                .show();
-        closeEmailDialog(e);
-    }
-
-    @SuppressWarnings("DataFlowIssue")
-    private void closeEmailDialog(ActionPerformedEvent e) {
-        ((InputDialogAction) e.getSource()).getInputDialog().close(StandardOutcome.CLOSE);
+        CrmUiUtils.showEmailSendingDialog(List.of(), true);
     }
 
     private void selectStatusInPipeline() {

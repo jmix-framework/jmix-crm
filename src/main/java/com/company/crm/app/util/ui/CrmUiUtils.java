@@ -37,6 +37,7 @@ import io.jmix.flowui.view.StandardOutcome;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
@@ -56,10 +57,12 @@ public final class CrmUiUtils {
     private static final String GET_CLIENT_WIDTH_FUNC = "return window.innerWidth";
     private static final String GET_CLIENT_HEIGHT_FUNC = "return window.innerHeight";
 
-    public static void showEmailSendingDialog(Collection<String> emails) {
+    public static void showEmailSendingDialog(Collection<String> emails, boolean allowCustomValues) {
         Dialogs dialogs = AppContext.getBean(Dialogs.class);
         Messages messages = AppContext.getBean(Messages.class);
         UiComponents uiComponents = AppContext.getBean(UiComponents.class);
+
+        EmailValidator emailValidator = new EmailValidator(messages.getMessage("invalidEmail"));
 
         dialogs.createInputDialog(getCurrentView())
                 .withHeader(messages.getMessage("sendEmailDialog.header"))
@@ -69,13 +72,23 @@ public final class CrmUiUtils {
                                 .withRequired(true)
                                 .withLabel(messages.getMessage("email"))
                                 .withField(() -> {
-                                    var field = uiComponents.create(JmixMultiSelectComboBox.class);
+                                    @SuppressWarnings("unchecked")
+                                    JmixMultiSelectComboBox<String> field = uiComponents.create(JmixMultiSelectComboBox.class);
                                     field.setPlaceholder("receiver@mail.com");
-                                    field.setAllowCustomValue(true);
+                                    if (allowCustomValues) {
+                                        field.setAllowCustomValue(true);
+                                        field.addCustomValueSetListener(e -> {
+                                            String newValue = e.getDetail();
+                                            if (emailValidator.apply(newValue, null).isError()) {
+                                                return;
+                                            }
+                                            var currentValues = field.getOptionalValue().orElse(new HashSet<>());
+                                            currentValues.add(newValue);
+                                            field.setValue(currentValues);
+                                        });
+                                    }
                                     field.setRequired(true);
-                                    field.setAllowedCharPattern(EmailValidator.PATTERN);
                                     field.setWidthFull();
-                                    //noinspection unchecked
                                     field.setItems(emails);
                                     return field;
                                 }))
@@ -243,7 +256,12 @@ public final class CrmUiUtils {
     public static <T> void addRowSelectionInMultiSelectMode(DataGrid<T> grid, String... ignoredColumn) {
         if (grid.isMultiSelect()) {
             grid.addItemClickListener(e -> {
-                String columnKey = e.getColumn().getKey();
+                Grid.Column<T> column = e.getColumn();
+                if (column == null) {
+                    return;
+                }
+
+                String columnKey = column.getKey();
                 if (Arrays.asList(ignoredColumn).contains(columnKey)) {
                     return;
                 }

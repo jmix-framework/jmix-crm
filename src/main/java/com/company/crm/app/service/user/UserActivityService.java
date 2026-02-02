@@ -12,7 +12,10 @@ import com.company.crm.model.user.activity.client.ClientUserActivityRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
+
+import static org.springframework.data.domain.Pageable.unpaged;
 
 @Service
 public class UserActivityService {
@@ -25,12 +28,13 @@ public class UserActivityService {
         this.clientUserActivityRepository = clientUserActivityRepository;
     }
 
-    @SuppressWarnings("unchecked")
     public List<? extends UserActivity> loadActivities(OffsetDateTimeRange dateTimeRange, int offset, int limit) {
         return userActivityRepositories.stream()
-                .flatMap(repository -> repository.findAllByCreatedDateGreaterThanEqualAndCreatedDateLessThanEqual(
-                        dateTimeRange.startDate(), dateTimeRange.endDate(),
-                        OffsetLimitPageRequest.of(offset, limit)).stream())
+                .flatMap(repository -> repository.findAllByCreatedDateGreaterThanEqualAndCreatedDateLessThanEqualOrderByCreatedDateDesc(
+                        dateTimeRange.startDate(), dateTimeRange.endDate(), unpaged()).stream())
+                .sorted(Comparator.comparing(UserActivity::getCreatedDate, Comparator.nullsLast(Comparator.reverseOrder())))
+                .skip(offset)
+                .limit(limit)
                 .toList();
     }
 
@@ -45,9 +49,12 @@ public class UserActivityService {
 
     public List<? extends UserActivity> loadActivities(User user, OffsetDateTimeRange dateRange, int offset, int limit) {
         return userActivityRepositories.stream()
-                .flatMap(repository -> repository.findAllByUserAndCreatedDateGreaterThanEqualAndCreatedDateLessThanEqual(
+                .flatMap(repository -> repository.findAllByUserAndCreatedDateGreaterThanEqualAndCreatedDateLessThanEqualOrderByCreatedDateDesc(
                         user, dateRange.startDate(), dateRange.endDate(),
-                        OffsetLimitPageRequest.of(offset, limit)).stream())
+                        unpaged()).stream())
+                .sorted(Comparator.comparing(UserActivity::getCreatedDate, Comparator.nullsLast(Comparator.reverseOrder())))
+                .skip(offset)
+                .limit(limit)
                 .toList();
     }
 
