@@ -114,6 +114,7 @@
                 <action id="excelExport" type="grdexp_excelExport"/>
             </actions>
             <columns resizable="true" sortable="true">
+                <column key="itemDetails" frozen="true" flexGrow="0" autoWidth="true" sortable="false"/>
                 <column property="number" autoWidth="true" flexGrow="0"/>
                 <column property="status" autoWidth="true" flexGrow="0"/>
                 <column property="order.number" autoWidth="true" flexGrow="0"

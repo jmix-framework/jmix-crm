@@ -201,6 +201,11 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
         calculateCardsValues(event.getAllSelectedItems().toArray(new Client[0]));
     }
 
+    @Supply(to = "clientsDataGrid.itemDetails", subject = "renderer")
+    private Renderer<Client> clientsDataGridItemDetailsRenderer() {
+        return crmRenderers.itemDetailsColumnRenderer(clientsDataGrid);
+    }
+
     @Supply(to = "clientsDataGrid.accountManager", subject = "renderer")
     private Renderer<Client> clientsDataGridAccountManagerRenderer() {
         return crmRenderers.accountManagerLink();
@@ -247,13 +252,18 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
         initializeStatsBlock();
         initializeFilterFields();
         addDetachListener(e -> asyncTasksRegistry.cancelAll());
-        addRowSelectionInMultiSelectMode(clientsDataGrid, "vatNumber", "regNumber");
+        configureGrid();
     }
 
     private void initializeStatsBlock() {
         makeSortable(statsBlock);
         configureCardsSize();
         calculateCardsValues();
+    }
+
+    private void configureGrid() {
+        addRowSelectionInMultiSelectMode(clientsDataGrid, "itemDetails", "vatNumber", "regNumber");
+        clientsDataGrid.setItemDetailsRenderer(crmRenderers.clientDetails());
     }
 
     private void configureCardsSize() {

@@ -138,6 +138,11 @@ public class InvoiceListView extends StandardListView<Invoice> {
         invoiceRepository.deleteAll(collection);
     }
 
+    @Supply(to = "invoicesDataGrid.itemDetails", subject = "renderer")
+    private Renderer<Invoice> invoicesDataGridItemDetailsRenderer() {
+        return crmRenderers.itemDetailsColumnRenderer(invoicesDataGrid);
+    }
+
     @Supply(to = "invoicesDataGrid.status", subject = "renderer")
     private Renderer<Invoice> invoicesDataGridStatusRenderer() {
         return crmRenderers.invoiceStatus();

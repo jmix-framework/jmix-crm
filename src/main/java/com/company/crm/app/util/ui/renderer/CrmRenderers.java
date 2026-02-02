@@ -28,6 +28,8 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.popover.Popover;
 import com.vaadin.flow.component.shared.Tooltip;
@@ -77,6 +79,40 @@ public class CrmRenderers {
         this.dateTimeService = dateTimeService;
         this.uiAsyncTasks = uiAsyncTasks;
         this.metadataTools = metadataTools;
+    }
+
+    public <T> Renderer<T> itemDetailsColumnRenderer(DataGrid<T> grid) {
+        return new ComponentRenderer<>(item -> {
+            Icon icon = grid.isDetailsVisible(item)
+                    ? VaadinIcon.CHEVRON_DOWN_SMALL.create()
+                    : VaadinIcon.CHEVRON_RIGHT_SMALL.create();
+            CrmUiUtils.setCursorPointer(icon);
+            return icon;
+        });
+    }
+
+    public ComponentRenderer<Component, Client> clientDetails() {
+        return new ComponentRenderer<>(client -> {
+            var container = new VerticalLayout();
+            container.add(new H3(messages.getMessage(getClass(), "orders")));
+
+            //noinspection unchecked
+            DataGrid<Order> ordersGrid = uiComponents.create(DataGrid.class);
+            ordersGrid.addThemeVariants(GridVariant.LUMO_NO_BORDER, GridVariant.LUMO_COMPACT, GridVariant.LUMO_ROW_STRIPES);
+            ordersGrid.setMaxHeight(15, Unit.EM);
+            ordersGrid.addColumn(Order::getNumber)
+                    .setRenderer(uniqueNumber(Order::getNumber))
+                    .setHeader(messages.getMessage(Order.class, "Order.number"));
+            ordersGrid.addColumn(Order::getDate)
+                    .setHeader(messages.getMessage(Order.class, "Order.date"));
+            ordersGrid.addColumn(order -> defaultFormat(order.getTotal()))
+                    .setHeader(messages.getMessage(Order.class, "Order.total"));
+            ordersGrid.setItems(client.getOrders());
+            ordersGrid.setEmptyStateText(messages.getMessage("defaultGridEmptyStateText"));
+            container.add(ordersGrid);
+
+            return container;
+        });
     }
 
     public ComponentRenderer<Component, Invoice> invoiceDetails() {

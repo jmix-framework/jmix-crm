@@ -156,6 +156,11 @@ public class OrderListView extends StandardListView<Order> {
                 .open();
     }
 
+    @Supply(to = "ordersDataGrid.itemDetails", subject = "renderer")
+    private Renderer<Order> ordersDataGridItemDetailsRenderer() {
+        return crmRenderers.itemDetailsColumnRenderer(ordersDataGrid);
+    }
+
     @Supply(to = "ordersDataGrid.client", subject = "renderer")
     private Renderer<Order> ordersDataGridClientRenderer() {
         return crmRenderers.orderClientLink();
