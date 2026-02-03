@@ -65,10 +65,6 @@
     max-width: var(--jmix-login-form-locales-select-width, 8em);
 }
 
-.login-form-remember-me {
-
-}
-
 .login-form-submit {
     color: var(--vaadin-input-field-background);
     background-color: var(--vaadin-input-field-value-color);
@@ -124,6 +120,9 @@
     background-position: center;
     background-size: contain;
     pointer-events: none;
+    position: relative;
+    z-index: 2;
+    margin-left: clamp(-60px, -6vw, -120px);
 }
 
 @media (max-width: 900px) {
