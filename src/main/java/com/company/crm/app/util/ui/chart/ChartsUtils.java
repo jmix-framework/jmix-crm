@@ -1,6 +1,6 @@
 package com.company.crm.app.util.ui.chart;
 
-import com.company.crm.app.ui.component.card.CrmCard;
+import com.company.crm.app.ui.component.CrmCard;
 import com.company.crm.view.util.SkeletonStyler;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;

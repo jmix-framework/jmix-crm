@@ -1,5 +1,6 @@
 package com.company.crm.app.util.ui;
 
+import com.company.crm.app.ui.component.GridEmptyStateComponent;
 import com.company.crm.app.util.context.AppContext;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasStyle;
@@ -8,6 +9,7 @@ import com.vaadin.flow.component.Html;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.icon.SvgIcon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.page.BrowserWindowResizeEvent;
 import com.vaadin.flow.component.page.Page;
@@ -56,6 +58,16 @@ public final class CrmUiUtils {
 
     private static final String GET_CLIENT_WIDTH_FUNC = "return window.innerWidth";
     private static final String GET_CLIENT_HEIGHT_FUNC = "return window.innerHeight";
+
+    public static SvgIcon appLogo() {
+        return new SvgIcon("images/logo.svg");
+    }
+
+    public static void setDefaultEmptyStateComponent(Grid<?> grid) {
+        var text = AppContext.getBean(Messages.class).getMessage("defaultGridEmptyStateText");
+        var emptyState = new GridEmptyStateComponent(text);
+        grid.setEmptyStateComponent(emptyState);
+    }
 
     public static void showEmailSendingDialog(Collection<String> emails, boolean allowCustomValues) {
         Dialogs dialogs = AppContext.getBean(Dialogs.class);

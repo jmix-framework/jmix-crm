@@ -67,11 +67,6 @@
                         <column property="dueDate" filterable="true"/>
                         <column property="isCompleted" filterable="true"/>
                     </columns>
-                    <emptyStateComponent>
-                        <hbox width="100%" height="100%" justifyContent="CENTER" alignItems="CENTER">
-                            <h3 text="msg:///defaultGridEmptyStateText"/>
-                        </hbox>
-                    </emptyStateComponent>
                 </dataGrid>
                 <hbox id="lookupActions" visible="false">
                     <button id="selectButton" action="selectAction"/>

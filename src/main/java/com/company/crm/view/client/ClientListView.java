@@ -5,8 +5,8 @@ import com.company.crm.app.service.client.ClientService;
 import com.company.crm.app.service.finance.PaymentService;
 import com.company.crm.app.service.order.OrderService;
 import com.company.crm.app.service.user.UserService;
+import com.company.crm.app.ui.component.CrmCard;
 import com.company.crm.app.ui.component.CrmLoader;
-import com.company.crm.app.ui.component.card.CrmCard;
 import com.company.crm.app.util.AsyncTasksRegistry;
 import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.app.util.ui.CrmUiUtils;
@@ -264,6 +264,7 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
     private void configureGrid() {
         addRowSelectionInMultiSelectMode(clientsDataGrid, "itemDetails", "vatNumber", "regNumber");
         clientsDataGrid.setItemDetailsRenderer(crmRenderers.clientDetails());
+        clientsDataGrid.setDetailsVisibleOnClick(false);
     }
 
     private void configureCardsSize() {

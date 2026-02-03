@@ -41,10 +41,13 @@
         </hbox>
         <treeDataGrid id="categoriesDataGrid"
                       hierarchyProperty="parent"
-                      editorBuffered="false"
+                      selectionMode="SINGLE"
+                      editorBuffered="true"
                       width="100%"
                       minHeight="20em"
                       dataContainer="categoriesDc"
+                      dropMode="ON_TOP_OR_BETWEEN"
+                      rowsDraggable="true"
                       columnReorderingAllowed="true">
             <actions>
                 <action id="createAction" type="list_create">

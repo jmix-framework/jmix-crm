@@ -52,6 +52,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static com.company.crm.app.util.ui.CrmUiUtils.addColumnHeaderCurrencySuffix;
+import static com.company.crm.app.util.ui.CrmUiUtils.addRowSelectionInMultiSelectMode;
 import static com.company.crm.app.util.ui.CrmUiUtils.setSearchHintPopover;
 import static com.company.crm.app.util.ui.datacontext.DataContextUtils.addCondition;
 import static com.company.crm.model.datatype.PriceDataType.formatWithoutCurrency;
@@ -112,7 +113,9 @@ public class OrderListView extends StandardListView<Order> {
 
     private void configureGrid() {
         addColumnHeaderCurrencySuffix(ordersDataGrid, "total", "invoiced", "paid", "leftOver");
+        addRowSelectionInMultiSelectMode(ordersDataGrid, "number");
         ordersDataGrid.setItemDetailsRenderer(crmRenderers.orderDetails());
+        ordersDataGrid.setDetailsVisibleOnClick(false);
     }
 
     @Subscribe

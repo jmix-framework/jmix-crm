@@ -1,5 +1,6 @@
 package com.company.crm.app.ui.component;
 
+import com.company.crm.app.util.ui.CrmUiUtils;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.SvgIcon;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -47,7 +48,7 @@ public class CrmLoader extends VerticalLayout {
     }
 
     private void addLogo() {
-        var logo = new SvgIcon("images/logo.svg");
+        var logo = CrmUiUtils.appLogo();
         logo.addClassName("loader-animation");
         logo.setSize("6em");
         add(logo);

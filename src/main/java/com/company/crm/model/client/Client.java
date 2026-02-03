@@ -8,6 +8,7 @@ import com.company.crm.model.order.Order;
 import com.company.crm.model.payment.Payment;
 import com.company.crm.model.user.User;
 import io.jmix.core.DeletePolicy;
+import io.jmix.core.Messages;
 import io.jmix.core.entity.annotation.EmbeddedParameters;
 import io.jmix.core.entity.annotation.OnDelete;
 import io.jmix.core.metamodel.annotation.Composition;
@@ -36,7 +37,6 @@ import java.util.List;
 })
 public class Client extends FullAuditEntity {
 
-    @InstanceName
     @Column(name = "NAME", nullable = false)
     private String name;
 
@@ -90,6 +90,12 @@ public class Client extends FullAuditEntity {
         }
 
         return payments;
+    }
+
+    @InstanceName
+    @DependsOnProperties("name")
+    public String getInstanceName(Messages messages) {
+        return name == null ? messages.getMessage("newClient") : name;
     }
 
     public List<Invoice> getInvoices() {

@@ -329,7 +329,9 @@
             </column>
             <column name="IMAGE" type="VARCHAR(1024)"/>
             <column name="DESCRIPTION" type="CLOB"/>
-            <column name="UOM" type="VARCHAR(255)"/>
+            <column name="UOM" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
         </createTable>
 
         <createTable tableName="CATEGORY_ITEM_COMMENT">

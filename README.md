@@ -97,7 +97,6 @@ The local profile generates demo data on the application start:
 | Administrator | ```admin```      | admin      |
 | Supervisor    | ```supervisor``` | supervisor |
 | Manager       | ```manager```    | manager    |
-| User          | ```alice```      | alice      |
 
 ## ⚙️ Domain Model
 

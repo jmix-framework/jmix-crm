@@ -35,5 +35,5 @@ public interface SupervisorRole extends ManagerRole {
 
     @MenuPolicy(menuIds = {"categories", "products"})
     @ViewPolicy(viewIds = {"Category.list", "CategoryItem.list"})
-    void screens();
+    void views();
 }

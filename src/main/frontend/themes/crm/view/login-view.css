@@ -1,5 +1,142 @@
 /* Predefined styles for the LoginView */
 
-.jmix-login-main-layout {
-  background-color: var(--lumo-shade-5pct);
+.login-form-wrapper {
+    max-width: calc(var(--lumo-size-m) * 12);
+    background: transparent;
+    padding: var(--lumo-space-l);
+    border-radius: var(--lumo-border-radius-m);
+    align-items: stretch;
+}
+
+.login-form-wrapper > * {
+    --vaadin-checkbox-label-color: white;
+    --vaadin-checkbox-background: white;
+    --vaadin-selection-color: black;
+
+    --vaadin-input-field-value-color: black;
+    --vaadin-input-field-background: white;
+    --vaadin-input-field-label-color: #D1CFCFFF;
+    --vaadin-input-field-focused-label-color: white;
+    --vaadin-input-field-hovered-label-color: white;
+}
+
+.login-form-error-message {
+    background-color: var(--lumo-error-color-10pct);
+    padding: var(--lumo-space-m);
+    padding-left: var(--lumo-size-m);
+    border-radius: var(--lumo-border-radius-m);
+    margin-top: var(--lumo-space-m);
+    margin-bottom: var(--lumo-space-s);
+    color: var(--lumo-error-text-color);
+}
+
+.login-form-error-message:before {
+    content: var(--lumo-icons-error);
+    font-family: lumo-icons;
+    font-size: var(--lumo-icon-size-m);
+    position: absolute;
+    width: var(--lumo-size-m);
+    height: 1em;
+    line-height: 1;
+    text-align: center;
+    margin-left: calc(var(--lumo-size-m) * -0.95);
+}
+
+.login-form-error-message-title {
+    margin: 0 0 0.25em;
+    color: inherit;
+}
+
+.login-form-error-message-description {
+    font-size: var(--lumo-font-size-s);
+    line-height: var(--lumo-line-height-s);
+    margin: 0;
+    opacity: 0.9;
+}
+
+.login-form-settings-wrapper {
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+}
+
+.login-form-locale-select {
+    width: 100%;
+    max-width: var(--jmix-login-form-locales-select-width, 8em);
+}
+
+.login-form-remember-me {
+
+}
+
+.login-form-submit {
+    color: var(--vaadin-input-field-background);
+    background-color: var(--vaadin-input-field-value-color);
+}
+
+.login-view-layout {
+    padding: 0;
+    background: white;
+    min-height: 100vh;
+    height: 100%;
+    width: 100%;
+}
+
+.login-shell {
+    display: flex;
+    min-height: 100vh;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+.login-panel {
+    flex: 0 0 clamp(360px, 36vw, 520px);
+    background: var(--lumo-primary-color);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+}
+
+.login-brand-icon {
+    width: 48px;
+    height: 48px;
+    background-image: url("../images/logo.svg");
+    background-repeat: no-repeat;
+    filter: brightness(0) invert(1);
+}
+
+.login-brand-text {
+    font-size: 20px;
+    font-weight: 800;
+    color: white;
+}
+
+.login-image {
+    flex: 1 1 clamp(520px, 64vw, 1200px);
+    height: 100%;
+    padding: clamp(1.5rem, 4vw, 4rem) clamp(1rem, 3vw, 3rem);
+    background-image: url("../images/welcome.svg");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    pointer-events: none;
+}
+
+@media (max-width: 900px) {
+    .login-shell {
+        flex-direction: column;
+    }
+
+    .login-panel {
+        flex: 1;
+        min-width: 100%;
+    }
+
+    .login-image {
+        display: none;
+    }
 }

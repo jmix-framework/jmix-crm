@@ -35,9 +35,9 @@
                             <responsiveStep minWidth="0" columns="1"/>
                             <responsiveStep minWidth="40em" columns="3"/>
                         </responsiveSteps>
-                        <component id="ordersTotalSumCard" class="com.company.crm.app.ui.component.card.CrmCard"/>
-                        <component id="paymentsTotalSumCard" class="com.company.crm.app.ui.component.card.CrmCard"/>
-                        <component id="averageBillCard" class="com.company.crm.app.ui.component.card.CrmCard"/>
+                        <component id="ordersTotalSumCard" class="com.company.crm.app.ui.component.CrmCard"/>
+                        <component id="paymentsTotalSumCard" class="com.company.crm.app.ui.component.CrmCard"/>
+                        <component id="averageBillCard" class="com.company.crm.app.ui.component.CrmCard"/>
                     </formLayout>
                 </vbox>
 

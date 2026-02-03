@@ -39,6 +39,7 @@ import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 
+import static com.company.crm.app.util.ui.CrmUiUtils.addRowSelectionInMultiSelectMode;
 import static com.company.crm.app.util.ui.datacontext.DataContextUtils.addCondition;
 import static io.jmix.core.querycondition.PropertyCondition.equal;
 import static io.jmix.core.querycondition.PropertyCondition.greaterOrEqual;
@@ -142,6 +143,7 @@ public class PaymentListView extends StandardListView<Payment> {
         loadData();
         registerUrlQueryParametersBinders();
         applyFilters();
+        configureGrid();
     }
 
     private void loadData() {
@@ -149,6 +151,10 @@ public class PaymentListView extends StandardListView<Payment> {
         clientsDl.load();
         ordersDl.load();
         invoicesDl.load();
+    }
+
+    private void configureGrid() {
+        addRowSelectionInMultiSelectMode(paymentsDataGrid, "number");
     }
 
     private void registerUrlQueryParametersBinders() {

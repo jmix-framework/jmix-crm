@@ -2,7 +2,7 @@ package com.company.crm.view.invoice;
 
 import com.company.crm.app.feature.queryparameters.filters.FieldValueQueryParameterBinder;
 import com.company.crm.app.service.finance.InvoiceService;
-import com.company.crm.app.ui.component.card.CrmCard;
+import com.company.crm.app.ui.component.CrmCard;
 import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.app.util.report.CrmReportUtils;
 import com.company.crm.app.util.ui.CrmUiUtils;
@@ -60,6 +60,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
+import static com.company.crm.app.util.ui.CrmUiUtils.addRowSelectionInMultiSelectMode;
 import static com.company.crm.app.util.ui.CrmUiUtils.setBadge;
 import static com.company.crm.app.util.ui.color.EnumClassColors.getBadgeVariant;
 import static com.company.crm.app.util.ui.datacontext.DataContextUtils.addCondition;
@@ -201,12 +202,18 @@ public class InvoiceListView extends StandardListView<Invoice> {
         loadData();
         registerUrlQueryParametersBinders();
         applyFilters();
-        invoicesDataGrid.setItemDetailsRenderer(crmRenderers.invoiceDetails());
+        configureGrid();
     }
 
     private void loadData() {
         clientsDl.load();
         ordersDl.load();
+    }
+
+    private void configureGrid() {
+        addRowSelectionInMultiSelectMode(invoicesDataGrid, "number");
+        invoicesDataGrid.setItemDetailsRenderer(crmRenderers.invoiceDetails());
+        invoicesDataGrid.setDetailsVisibleOnClick(false);
     }
 
     private void applyFilters() {

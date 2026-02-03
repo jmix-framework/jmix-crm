@@ -10,6 +10,10 @@ import com.company.crm.model.invoice.Invoice;
 import com.company.crm.model.order.Order;
 import com.company.crm.model.order.OrderItem;
 import com.company.crm.model.payment.Payment;
+import com.company.crm.model.settings.CrmSettings;
+import com.company.crm.model.user.User;
+import com.company.crm.model.user.activity.UserActivity;
+import com.company.crm.model.user.activity.userprofile.UserProfileUserActivity;
 import com.company.crm.model.user.task.UserTask;
 import io.jmix.security.model.EntityAttributePolicyAction;
 import io.jmix.security.model.EntityPolicyAction;
@@ -28,8 +32,8 @@ public interface ManagerRole extends UiMinimalRole {
     String NAME = "Manager";
 
     @MenuPolicy(menuIds = {"home", "tasks", "clients", "orders"})
-    @ViewPolicy(viewIds = {"HomeView", "UserTask.list", "Client.list", "Order.list", "CategoryItem.detail", "Category.detail", "Client.detail", "Invoice.detail", "Invoice.list", "OrderItem.detail", "Order.detail", "Payment.detail", "Payment.list", "AddressFragment", "Contact.detail"})
-    void screens();
+    @ViewPolicy(viewIds = {"HomeView", "UserTask.list", "Client.list", "Order.list", "CategoryItem.detail", "Category.detail", "Client.detail", "Invoice.detail", "Invoice.list", "OrderItem.detail", "Order.detail", "Payment.detail", "Payment.list", "AddressFragment", "Contact.detail", "flowui_AddConditionView", "flowui_GroupFilterCondition.detail", "flowui_JpqlFilterCondition.detail", "flowui_PropertyFilterCondition.detail", "flowui_DateIntervalDialog", "FragmentRenderer"})
+    void views();
 
     @EntityAttributePolicy(entityClass = Address.class, attributes = "*", action = EntityAttributePolicyAction.MODIFY)
     @EntityPolicy(entityClass = Address.class, actions = EntityPolicyAction.ALL)
@@ -82,4 +86,16 @@ public interface ManagerRole extends UiMinimalRole {
 
     @SpecificPolicy(resources = {"ui.genericfilter.modifyConfiguration", "ui.genericfilter.modifyJpqlCondition", "ui.genericfilter.modifyGlobalConfiguration", "datatools.importExportEntity", "datatools.showEntityInfo"})
     void specific();
+
+    @EntityPolicy(entityClass = UserProfileUserActivity.class, actions = EntityPolicyAction.READ)
+    void userProfileUserActivity();
+
+    @EntityPolicy(entityClass = UserActivity.class, actions = EntityPolicyAction.READ)
+    void userActivity();
+
+    @EntityPolicy(entityClass = User.class, actions = EntityPolicyAction.READ)
+    void user();
+
+    @EntityPolicy(entityClass = CrmSettings.class, actions = EntityPolicyAction.READ)
+    void crmSettings();
 }

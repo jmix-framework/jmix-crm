@@ -52,7 +52,7 @@ public class CategoryItem extends FullAuditEntity {
     @Column(name = "CODE", nullable = false, unique = true)
     private String code;
 
-    @Column(name = "UOM")
+    @Column(name = "UOM", nullable = false)
     private String uom;
 
     @PositiveOrZero

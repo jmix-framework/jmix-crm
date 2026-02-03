@@ -29,13 +29,13 @@ import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
-import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.popover.Popover;
 import com.vaadin.flow.component.shared.Tooltip;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.spring.annotation.SpringComponent;
+import com.vaadin.flow.theme.lumo.LumoUtility.IconSize;
 import io.jmix.core.Messages;
 import io.jmix.core.MetadataTools;
 import io.jmix.core.metamodel.datatype.DatatypeFormatter;
@@ -53,8 +53,11 @@ import java.util.function.Function;
 
 import static com.company.crm.app.util.ui.CrmUiUtils.CONTRAST_BADGE;
 import static com.company.crm.app.util.ui.CrmUiUtils.SUCCESS_BADGE;
+import static com.company.crm.app.util.ui.CrmUiUtils.setDefaultEmptyStateComponent;
 import static com.company.crm.app.util.ui.color.EnumClassColors.getBadgeVariant;
 import static com.company.crm.model.datatype.PriceDataType.defaultFormat;
+import static com.vaadin.flow.component.icon.VaadinIcon.CHEVRON_DOWN_SMALL;
+import static com.vaadin.flow.component.icon.VaadinIcon.CHEVRON_RIGHT_SMALL;
 import static io.jmix.flowui.component.UiComponentUtils.copyToClipboard;
 import static io.jmix.flowui.component.UiComponentUtils.getCurrentView;
 
@@ -83,10 +86,15 @@ public class CrmRenderers {
 
     public <T> Renderer<T> itemDetailsColumnRenderer(DataGrid<T> grid) {
         return new ComponentRenderer<>(item -> {
-            Icon icon = grid.isDetailsVisible(item)
-                    ? VaadinIcon.CHEVRON_DOWN_SMALL.create()
-                    : VaadinIcon.CHEVRON_RIGHT_SMALL.create();
+            boolean isDetailsVisible = grid.isDetailsVisible(item);
+            Icon icon = isDetailsVisible ? CHEVRON_DOWN_SMALL.create() : CHEVRON_RIGHT_SMALL.create();
             CrmUiUtils.setCursorPointer(icon);
+            icon.addClassNames(IconSize.SMALL);
+            icon.addClickListener(e -> {
+                if (!grid.isDetailsVisibleOnClick()) {
+                    grid.setDetailsVisible(item, !isDetailsVisible);
+                }
+            });
             return icon;
         });
     }
@@ -108,7 +116,7 @@ public class CrmRenderers {
             ordersGrid.addColumn(order -> defaultFormat(order.getTotal()))
                     .setHeader(messages.getMessage(Order.class, "Order.total"));
             ordersGrid.setItems(client.getOrders());
-            ordersGrid.setEmptyStateText(messages.getMessage("defaultGridEmptyStateText"));
+            setDefaultEmptyStateComponent(ordersGrid);
             container.add(ordersGrid);
 
             return container;
@@ -132,7 +140,7 @@ public class CrmRenderers {
             paymentsGrid.addColumn(payment -> defaultFormat(payment.getAmount()))
                     .setHeader(messages.getMessage(Payment.class, "Payment.amount"));
             paymentsGrid.setItems(invoice.getPayments());
-            paymentsGrid.setEmptyStateText(messages.getMessage("defaultGridEmptyStateText"));
+            setDefaultEmptyStateComponent(paymentsGrid);
             container.add(paymentsGrid);
 
             return container;
@@ -145,19 +153,19 @@ public class CrmRenderers {
             container.add(new H3(messages.getMessage(getClass(), "invoices")));
 
             //noinspection unchecked
-            DataGrid<Invoice> paymentsGrid = uiComponents.create(DataGrid.class);
-            paymentsGrid.addThemeVariants(GridVariant.LUMO_NO_BORDER, GridVariant.LUMO_COMPACT, GridVariant.LUMO_ROW_STRIPES);
-            paymentsGrid.setMaxHeight(15, Unit.EM);
-            paymentsGrid.addColumn(Invoice::getNumber)
+            DataGrid<Invoice> invoicesGrid = uiComponents.create(DataGrid.class);
+            invoicesGrid.addThemeVariants(GridVariant.LUMO_NO_BORDER, GridVariant.LUMO_COMPACT, GridVariant.LUMO_ROW_STRIPES);
+            invoicesGrid.setMaxHeight(15, Unit.EM);
+            invoicesGrid.addColumn(Invoice::getNumber)
                     .setRenderer(uniqueNumber(Invoice::getNumber))
                     .setHeader(messages.getMessage(Invoice.class, "Invoice.number"));
-            paymentsGrid.addColumn(Invoice::getDate)
+            invoicesGrid.addColumn(Invoice::getDate)
                     .setHeader(messages.getMessage(Invoice.class, "Invoice.date"));
-            paymentsGrid.addColumn(invoice -> defaultFormat(invoice.getTotal()))
+            invoicesGrid.addColumn(invoice -> defaultFormat(invoice.getTotal()))
                     .setHeader(messages.getMessage(Invoice.class, "Invoice.total"));
-            paymentsGrid.setItems(order.getInvoices());
-            paymentsGrid.setEmptyStateText(messages.getMessage("defaultGridEmptyStateText"));
-            container.add(paymentsGrid);
+            invoicesGrid.setItems(order.getInvoices());
+            setDefaultEmptyStateComponent(invoicesGrid);
+            container.add(invoicesGrid);
 
             return container;
         });

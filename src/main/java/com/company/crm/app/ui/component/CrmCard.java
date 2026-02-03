@@ -1,4 +1,4 @@
-package com.company.crm.app.ui.component.card;
+package com.company.crm.app.ui.component;
 
 import com.company.crm.app.util.context.AppContext;
 import com.company.crm.app.util.date.Period;

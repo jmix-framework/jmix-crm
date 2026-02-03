@@ -55,8 +55,8 @@
                 </formLayout>
             </vbox>
             <vbox alignItems="CENTER" maxWidth="40em" minWidth="30em" classNames="pt-xl">
-                <image id="image" classNames="border rounded-l" resource="images/no_image.svg" width="20em"
-                       height="20em"/>
+                <image id="image" resource="images/no_image.svg"
+                       classNames="border rounded-l" width="20em" height="20em"/>
                 <fileStorageUploadField id="imageUpload" dataContainer="categoryItemDc" property="image"
                                         dropAllowed="true" clearButtonVisible="true" fileNameVisible="true"/>
             </vbox>

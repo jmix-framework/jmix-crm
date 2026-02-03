@@ -16,6 +16,7 @@ import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.router.Route;
 import io.jmix.core.querycondition.LogicalCondition;
 import io.jmix.core.repository.JmixDataRepositoryContext;
+import io.jmix.flowui.component.grid.DataGrid;
 import io.jmix.flowui.component.select.JmixSelect;
 import io.jmix.flowui.component.textfield.TypedTextField;
 import io.jmix.flowui.component.upload.FileUploadField;
@@ -40,6 +41,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
 
+import static com.company.crm.app.util.ui.CrmUiUtils.addRowSelectionInMultiSelectMode;
 import static com.company.crm.app.util.ui.CrmUiUtils.setSearchHintPopover;
 import static com.company.crm.app.util.ui.datacontext.DataContextUtils.addCondition;
 import static io.jmix.core.querycondition.PropertyCondition.contains;
@@ -71,6 +73,8 @@ public class CategoryItemListView extends StandardListView<CategoryItem> {
     private FileUploadField updateCatalogField;
 
     private final LogicalCondition filtersCondition = LogicalCondition.and();
+    @ViewComponent
+    private DataGrid<CategoryItem> categoryItemsDataGrid;
 
     @Override
     protected void onAttach(AttachEvent attachEvent) {
@@ -128,6 +132,7 @@ public class CategoryItemListView extends StandardListView<CategoryItem> {
     private void initialize() {
         loadData();
         initializeFilterFields();
+        addRowSelectionInMultiSelectMode(categoryItemsDataGrid, "code");
     }
 
     private void loadData() {

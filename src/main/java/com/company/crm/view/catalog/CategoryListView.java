@@ -8,6 +8,10 @@ import com.company.crm.view.main.MainView;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Key;
+import com.vaadin.flow.component.grid.dnd.GridDragEndEvent;
+import com.vaadin.flow.component.grid.dnd.GridDragStartEvent;
+import com.vaadin.flow.component.grid.dnd.GridDropEvent;
+import com.vaadin.flow.component.grid.dnd.GridDropLocation;
 import com.vaadin.flow.component.grid.editor.EditorCloseEvent;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.data.renderer.Renderer;
@@ -39,6 +43,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 @Route(value = "categories", layout = MainView.class)
 @ViewController(id = CrmConstants.ViewIds.CATEGORY_LIST)
@@ -66,6 +71,8 @@ public class CategoryListView extends StandardListView<Category> {
     private EditAction<Category> editAction;
     @ViewComponent
     private CollectionLoader<Category> categoriesDl;
+
+    private Category draggedCategory;
 
     @Override
     protected void onAttach(AttachEvent attachEvent) {
@@ -131,6 +138,7 @@ public class CategoryListView extends StandardListView<Category> {
         addGridDoubleClickListener();
         installDefaultStringEditorComponent("code", "name", "description");
         addEditorListeners();
+        addDragAndDropSupport();
     }
 
     private void addGridDoubleClickListener() {
@@ -149,6 +157,80 @@ public class CategoryListView extends StandardListView<Category> {
         });
     }
 
+    private void addDragAndDropSupport() {
+        categoriesDataGrid.addDragStartListener(this::onDragStart);
+        categoriesDataGrid.addDropListener(this::onDrop);
+        categoriesDataGrid.addDragEndListener(this::onDragEnd);
+    }
+
+    private void onDragStart(GridDragStartEvent<Category> event) {
+        draggedCategory = event.getDraggedItems().stream().findFirst().orElse(null);
+    }
+
+    private void onDrop(GridDropEvent<Category> event) {
+        if (draggedCategory == null) {
+            return;
+        }
+
+        if (categoriesDataGrid.getEditor().isOpen()) {
+            cancelEditSelectedItem();
+        }
+
+        Category target = event.getDropTargetItem().orElse(null);
+        GridDropLocation location = event.getDropLocation();
+
+        if (target != null && Objects.equals(target, draggedCategory)) {
+            return;
+        }
+
+        Category newParent = resolveDropParent(target, location);
+        if (isInvalidParent(draggedCategory, newParent)) {
+            return;
+        }
+
+        if (Objects.equals(draggedCategory.getParent(), newParent)) {
+            return;
+        }
+
+        draggedCategory.setParent(newParent);
+        Category saved = dataManager.save(draggedCategory);
+
+        if (newParent != null) {
+            categoriesDataGrid.expand(newParent);
+        }
+        categoriesDataGrid.select(saved);
+
+        categoriesDl.load();
+    }
+
+    private void onDragEnd(GridDragEndEvent<Category> event) {
+        draggedCategory = null;
+    }
+
+    private Category resolveDropParent(Category target, GridDropLocation location) {
+        if (target == null) {
+            return null;
+        }
+        return location == GridDropLocation.ON_TOP ? target : target.getParent();
+    }
+
+    private boolean isInvalidParent(Category category, Category newParent) {
+        if (newParent == null) {
+            return false;
+        }
+        if (Objects.equals(category, newParent)) {
+            return true;
+        }
+        Category cursor = newParent.getParent();
+        while (cursor != null) {
+            if (Objects.equals(cursor, category)) {
+                return true;
+            }
+            cursor = cursor.getParent();
+        }
+        return false;
+    }
+
     private void installDefaultStringEditorComponent(String... columns) {
         for (String column : columns) {
             categoriesDataGrid.getEditor()
@@ -157,16 +239,25 @@ public class CategoryListView extends StandardListView<Category> {
     }
 
     private void startOrStopEditSelectedItem() {
+        Category selectedItem = categoriesDataGrid.getSingleSelectedItem();
         DataGridEditor<Category> editor = categoriesDataGrid.getEditor();
+
         if (editor.isOpen()) {
             editor.save();
             editor.closeEditor();
             categoriesDataGrid.deselectAll();
         } else {
-            Category selectedItem = categoriesDataGrid.getSingleSelectedItem();
             if (selectedItem != null) {
                 editItem(selectedItem);
             }
+        }
+    }
+
+    private void cancelEditSelectedItem() {
+        DataGridEditor<Category> editor = categoriesDataGrid.getEditor();
+        if (editor.isOpen()) {
+            editor.cancel();
+            editor.closeEditor();
         }
     }
 
@@ -177,10 +268,12 @@ public class CategoryListView extends StandardListView<Category> {
 
     private Component getDefaultStringEditor(
             String column, EditComponentGenerationContext<Category> ctx) {
+        @SuppressWarnings("unchecked")
         TypedTextField<String> component = uiComponents.create(TypedTextField.class);
         component.setWidthFull();
         component.setValueSource(ctx.getValueSourceProvider().getValueSource(column));
         component.addKeyDownListener(Key.ENTER, e -> startOrStopEditSelectedItem());
+        component.addKeyDownListener(Key.ESCAPE, e -> cancelEditSelectedItem());
         if ("name".equals(column)) {
             component.focus();
         }

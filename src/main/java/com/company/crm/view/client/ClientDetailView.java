@@ -4,9 +4,9 @@ import com.company.crm.app.feature.queryparameters.tab.TabIndexUrlQueryParameter
 import com.company.crm.app.service.client.ClientService;
 import com.company.crm.app.service.client.CompletedOrdersByDateRangeInfo;
 import com.company.crm.app.service.datetime.DateTimeService;
+import com.company.crm.app.ui.component.CrmCard;
 import com.company.crm.app.ui.component.CrmLoader;
 import com.company.crm.app.ui.component.RecentActivitiesBlock;
-import com.company.crm.app.ui.component.card.CrmCard;
 import com.company.crm.app.util.AsyncTasksRegistry;
 import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.app.util.date.range.LocalDateRange;
@@ -30,6 +30,7 @@ import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.H1;
+import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -149,6 +150,8 @@ public class ClientDetailView extends StandardDetailView<Client> implements Widt
 
     private final AsyncTasksRegistry asyncTasksRegistry = AsyncTasksRegistry.newInstance();
     private final Map<Integer, List<CompletedOrdersByDateRangeInfo>> ordersInfoForLastYears = new HashMap<>();
+    @ViewComponent
+    private H2 clientName;
 
     @Override
     public void configureUiForWidth(int width) {
@@ -169,8 +172,8 @@ public class ClientDetailView extends StandardDetailView<Client> implements Widt
 
     @Subscribe
     private void onBeforeShow(final BeforeShowEvent event) {
-        recentActivities.setMaxWidth(27.5f, Unit.EM);
-        recentActivities.setClient(getEditedEntity());
+        clientName.setText(getEditedEntity().getInstanceName(messages));
+        initializeRecentActivities();
         initializeSummaryBlock();
         initializeOutstandingBalance();
         initializeAnalyticsBlock();
@@ -264,6 +267,11 @@ public class ClientDetailView extends StandardDetailView<Client> implements Widt
         addressDialog.getFooter().add(saveButton, cancelButton);
 
         addressDialog.open();
+    }
+
+    private void initializeRecentActivities() {
+        recentActivities.setMaxWidth(27.5f, Unit.EM);
+        recentActivities.setClient(getEditedEntity());
     }
 
     private void initializeSummaryBlock() {

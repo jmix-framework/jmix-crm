@@ -50,6 +50,8 @@
 
     <changeSet id="3" author="crm" context="!cuba">
         <validCheckSum>ANY</validCheckSum>
+
+        <!-- ADMIN -->
         <insert tableName="USER_" dbms="postgresql, mssql, hsqldb, h2">
             <column name="ID" value="60885987-1b61-4247-94c7-dff348347f93"/>
             <column name="VERSION" value="1"/>
@@ -57,7 +59,6 @@
             <column name="PASSWORD" value="{noop}admin"/>
             <column name="ACTIVE" valueBoolean="true"/>
         </insert>
-
         <insert tableName="USER_" dbms="oracle, mysql, mariadb">
             <column name="ID" value="608859871b61424794c7dff348347f93"/>
             <column name="VERSION" value="1"/>
@@ -66,10 +67,47 @@
             <column name="ACTIVE" valueBoolean="true"/>
         </insert>
 
+        <!-- SUPERVISOR -->
+        <insert tableName="USER_" dbms="postgresql, mssql, hsqldb, h2">
+            <column name="ID" value="60885987-1b61-4247-94c7-dff348347f95"/>
+            <column name="VERSION" value="1"/>
+            <column name="USERNAME" value="supervisor"/>
+            <column name="PASSWORD" value="{noop}supervisor"/>
+            <column name="FIRST_NAME" value="James"/>
+            <column name="LAST_NAME" value="Sullivan"/>
+            <column name="ACTIVE" valueBoolean="true"/>
+        </insert>
+        <insert tableName="USER_" dbms="oracle, mysql, mariadb">
+            <column name="ID" value="608859871b61424794c7dff348347f95"/>
+            <column name="VERSION" value="1"/>
+            <column name="USERNAME" value="supervisor"/>
+            <column name="PASSWORD" value="{noop}supervisor"/>
+            <column name="ACTIVE" valueBoolean="true"/>
+        </insert>
+
+        <!-- MANAGER -->
+        <insert tableName="USER_" dbms="postgresql, mssql, hsqldb, h2">
+            <column name="ID" value="60885987-1b61-4247-94c7-dff348347f94"/>
+            <column name="VERSION" value="1"/>
+            <column name="USERNAME" value="manager"/>
+            <column name="PASSWORD" value="{noop}manager"/>
+            <column name="FIRST_NAME" value="Celia"/>
+            <column name="LAST_NAME" value="Mae"/>
+            <column name="ACTIVE" valueBoolean="true"/>
+        </insert>
+        <insert tableName="USER_" dbms="oracle, mysql, mariadb">
+            <column name="ID" value="608859871b61424794c7dff348347f94"/>
+            <column name="VERSION" value="1"/>
+            <column name="USERNAME" value="manager"/>
+            <column name="PASSWORD" value="{noop}manager"/>
+            <column name="ACTIVE" valueBoolean="true"/>
+        </insert>
     </changeSet>
 
     <changeSet id="4" author="crm" context="!cuba">
         <validCheckSum>ANY</validCheckSum>
+
+        <!-- ADMIN -->
         <insert tableName="SEC_ROLE_ASSIGNMENT" dbms="postgresql, mssql, hsqldb, h2">
             <column name="ID" value="6c9e420a-2b7a-4c42-8654-a9027ee14083"/>
             <column name="VERSION" value="1"/>
@@ -77,7 +115,6 @@
             <column name="ROLE_CODE" value="administrator"/>
             <column name="ROLE_TYPE" value="resource"/>
         </insert>
-
         <insert tableName="SEC_ROLE_ASSIGNMENT" dbms="oracle, mysql, mariadb">
             <column name="ID" value="6c9e420a2b7a4c428654a9027ee14083"/>
             <column name="VERSION" value="1"/>
@@ -86,6 +123,37 @@
             <column name="ROLE_TYPE" value="resource"/>
         </insert>
 
+        <!-- SUPERVISOR -->
+        <insert tableName="SEC_ROLE_ASSIGNMENT" dbms="postgresql, mssql, hsqldb, h2">
+            <column name="ID" value="6c9e420a-2b7a-4c42-8654-a9027ee14085"/>
+            <column name="VERSION" value="1"/>
+            <column name="USERNAME" value="supervisor"/>
+            <column name="ROLE_CODE" value="supervisor"/>
+            <column name="ROLE_TYPE" value="resource"/>
+        </insert>
+        <insert tableName="SEC_ROLE_ASSIGNMENT" dbms="oracle, mysql, mariadb">
+            <column name="ID" value="6c9e420a2b7a4c428654a9027ee14085"/>
+            <column name="VERSION" value="1"/>
+            <column name="USERNAME" value="supervisor"/>
+            <column name="ROLE_CODE" value="supervisor"/>
+            <column name="ROLE_TYPE" value="resource"/>
+        </insert>
+
+        <!-- MANAGER -->
+        <insert tableName="SEC_ROLE_ASSIGNMENT" dbms="postgresql, mssql, hsqldb, h2">
+            <column name="ID" value="6c9e420a-2b7a-4c42-8654-a9027ee14084"/>
+            <column name="VERSION" value="1"/>
+            <column name="USERNAME" value="manager"/>
+            <column name="ROLE_CODE" value="manager"/>
+            <column name="ROLE_TYPE" value="resource"/>
+        </insert>
+        <insert tableName="SEC_ROLE_ASSIGNMENT" dbms="oracle, mysql, mariadb">
+            <column name="ID" value="6c9e420a2b7a4c428654a9027ee14084"/>
+            <column name="VERSION" value="1"/>
+            <column name="USERNAME" value="manager"/>
+            <column name="ROLE_CODE" value="manager"/>
+            <column name="ROLE_TYPE" value="resource"/>
+        </insert>
     </changeSet>
 
 </databaseChangeLog>

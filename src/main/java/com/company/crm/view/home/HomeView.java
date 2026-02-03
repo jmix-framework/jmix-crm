@@ -4,9 +4,9 @@ import com.company.crm.app.service.datetime.DateTimeService;
 import com.company.crm.app.service.finance.InvoiceService;
 import com.company.crm.app.service.finance.PaymentService;
 import com.company.crm.app.service.order.OrderService;
+import com.company.crm.app.ui.component.CrmCard;
+import com.company.crm.app.ui.component.CrmCard.RangeStatCardInfo;
 import com.company.crm.app.ui.component.RecentActivitiesBlock;
-import com.company.crm.app.ui.component.card.CrmCard;
-import com.company.crm.app.ui.component.card.CrmCard.RangeStatCardInfo;
 import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.app.util.date.Period;
 import com.company.crm.app.util.ui.chart.ChartsUtils;
@@ -80,6 +80,7 @@ import java.util.Map;
 
 import static com.company.crm.app.feature.sortable.SortableFeature.makeSortable;
 import static com.company.crm.app.util.ui.CrmUiUtils.setBackgroundTransparent;
+import static com.company.crm.app.util.ui.CrmUiUtils.setDefaultEmptyStateComponent;
 import static com.company.crm.app.util.ui.listener.resize.WidthResizeListener.isWidthChanged;
 import static io.jmix.flowui.component.UiComponentUtils.traverseComponents;
 
@@ -320,12 +321,13 @@ public class HomeView extends StandardView implements WidthResizeListener {
 
         ContainerDataGridItems<Invoice> gridItems = new ContainerDataGridItems<>(invoicesDc);
 
+        @SuppressWarnings("unchecked")
         DataGrid<Invoice> grid = uiComponents.create(DataGrid.class);
         grid.setDataProvider(gridItems);
         grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         grid.setMinHeight(10, Unit.EM);
         grid.setMaxHeight(15, Unit.EM);
-        grid.setEmptyStateText(messageBundle.getMessage("noOverdueInvoices"));
+        setDefaultEmptyStateComponent(grid);
         grid.addItemClickListener(e ->
                 dialogWindows.detail(this, Invoice.class).editEntity(e.getItem()).open());
 

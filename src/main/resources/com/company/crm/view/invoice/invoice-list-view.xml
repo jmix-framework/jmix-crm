@@ -33,7 +33,7 @@
         </urlQueryParameters>
     </facets>
     <layout>
-        <component id="invoiceStatusCard" class="com.company.crm.app.ui.component.card.CrmCard">
+        <component id="invoiceStatusCard" class="com.company.crm.app.ui.component.CrmCard">
             <properties>
                 <property name="width" value="100%"/>
                 <property name="maxWidth" value="60em"/>

@@ -21,8 +21,6 @@ import com.company.crm.model.user.User;
 import com.company.crm.model.user.activity.client.ClientUserActivity;
 import com.company.crm.model.user.task.UserTask;
 import com.company.crm.security.AdministratorRole;
-import com.company.crm.security.ManagerRole;
-import com.company.crm.security.SupervisorRole;
 import com.company.crm.security.UiMinimalRole;
 import io.jmix.core.Messages;
 import io.jmix.core.SaveContext;
@@ -50,8 +48,11 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.time.YearMonth;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -63,7 +64,7 @@ import static com.company.crm.app.util.price.PriceCalculator.calculateInvoiceFie
 import static com.company.crm.app.util.price.PriceCalculator.calculateNetPrice;
 import static com.company.crm.app.util.price.PriceCalculator.calculateTotal;
 import static com.company.crm.app.util.price.PriceCalculator.calculateVat;
-import static org.apache.commons.collections4.CollectionUtils.union;
+import static java.util.Map.entry;
 
 /**
  * Generates demo data.
@@ -74,29 +75,33 @@ public class DemoDataGenerator implements Ordered {
 
     private static final Logger log = LoggerFactory.getLogger(DemoDataGenerator.class);
 
-    private static final DemoDataProgressListener NO_OP_PROGRESS = message -> {};
+    private static final DemoDataProgressListener NO_OP_PROGRESS = message -> {
+    };
+
+    private static final int TREND_HISTORY_MONTHS = 24;
+    private static final int POSITIVE_TREND_MONTHS = 6;
 
     public static final Map<String, String> USER_TASKS = Map.ofEntries(
-            Map.entry("Make report", "Send year finance report to CEO"),
-            Map.entry("Client meeting", "Schedule meeting with new client"),
-            Map.entry("Update documentation", "Review and update project documentation"),
-            Map.entry("Team training", "Organize training session for new team members"),
-            Map.entry("Budget review", "Review quarterly budget and expenses"),
-            Map.entry("System backup", "Perform system backup and verification"),
-            Map.entry("Client presentation", "Prepare presentation for client demo"),
-            Map.entry("Code review", "Review pull requests from development team"),
-            Map.entry("Risk assessment", "Conduct project risk assessment"),
-            Map.entry("Status update", "Send weekly status update to stakeholders"),
-            Map.entry("Contract renewal", "Draft contract renewal terms for top clients"),
-            Map.entry("Pipeline cleanup", "Archive stale opportunities and update stages"),
-            Map.entry("Vendor review", "Evaluate vendor performance metrics for Q2"),
-            Map.entry("Security audit", "Coordinate quarterly security audit checks"),
-            Map.entry("Inventory check", "Verify stock levels for key items"),
-            Map.entry("NPS follow-up", "Call detractors and log feedback"),
-            Map.entry("KPI dashboard", "Refresh sales KPI dashboard data"),
-            Map.entry("Account health", "Review account health scores and flags"),
-            Map.entry("Partner outreach", "Contact partners about co-marketing ideas"),
-            Map.entry("Expense approvals", "Process pending expense approval requests")
+            entry("Make report", "Send year finance report to CEO"),
+            entry("Client meeting", "Schedule meeting with new client"),
+            entry("Update documentation", "Review and update project documentation"),
+            entry("Team training", "Organize training session for new team members"),
+            entry("Budget review", "Review quarterly budget and expenses"),
+            entry("System backup", "Perform system backup and verification"),
+            entry("Client presentation", "Prepare presentation for client demo"),
+            entry("Code review", "Review pull requests from development team"),
+            entry("Risk assessment", "Conduct project risk assessment"),
+            entry("Status update", "Send weekly status update to stakeholders"),
+            entry("Contract renewal", "Draft contract renewal terms for top clients"),
+            entry("Pipeline cleanup", "Archive stale opportunities and update stages"),
+            entry("Vendor review", "Evaluate vendor performance metrics for Q2"),
+            entry("Security audit", "Coordinate quarterly security audit checks"),
+            entry("Inventory check", "Verify stock levels for key items"),
+            entry("NPS follow-up", "Call detractors and log feedback"),
+            entry("KPI dashboard", "Refresh sales KPI dashboard data"),
+            entry("Account health", "Review account health scores and flags"),
+            entry("Partner outreach", "Contact partners about co-marketing ideas"),
+            entry("Expense approvals", "Process pending expense approval requests")
     );
 
     private final Messages messages;
@@ -186,7 +191,7 @@ public class DemoDataGenerator implements Ordered {
 
         var users = generateUsers();
         initUsersRoles(progressListener, users);
-        initUsersTasks(progressListener, users);
+        initUsersTasks(progressListener);
 
         return users;
     }
@@ -196,9 +201,9 @@ public class DemoDataGenerator implements Ordered {
         assignRoles(users);
     }
 
-    private void initUsersTasks(DemoDataProgressListener progressListener, List<User> users) {
+    private void initUsersTasks(DemoDataProgressListener progressListener) {
         publishProgress(progressListener, messages.getMessage("demoData.progress.creatingTasks"));
-        generateUserTasks(users);
+        generateUserTasks();
     }
 
     private void initUserActivities(DemoDataProgressListener progressListener, List<User> users, List<Client> clients, List<Order> orders) {
@@ -357,21 +362,15 @@ public class DemoDataGenerator implements Ordered {
     private List<User> generateUsers() {
         log.info("Generating users...");
         return List.of(
-                saveUser(ManagerRole.CODE.toLowerCase(), "Mike", "Wazowski"),
-                saveUser(SupervisorRole.CODE.toLowerCase(), "James", "Sullivan"),
                 saveUser("alice", "Alice", "Brown"),
-                saveUser("james", "James", "Wilson"),
-                saveUser("mary", "Mary", "Jones"),
-                saveUser("linda", "Linda", "Evans"),
-                saveUser("susan", "Susan", "Baker"),
-                saveUser("bob", "Robert", "Taylor"),
-                saveUser("jared", "Jared", "Glover")
+                saveUser("bob", "Robert", "Taylor")
         );
     }
 
-    private void generateUserTasks(List<User> users) {
+    private void generateUserTasks() {
         log.info("Generating user tasks...");
-        for (User user : union(users, List.of(adminUser()))) {
+        List<User> users = dataManager.load(User.class).all().list();
+        for (User user : users) {
             generateUserTasks(user);
         }
     }
@@ -412,11 +411,7 @@ public class DemoDataGenerator implements Ordered {
     private void assignRoles(List<User> users) {
         log.info("Assigning roles to users...");
         for (User user : users) {
-            boolean isSupervisor = Objects.equals(SupervisorRole.CODE.toLowerCase(), user.getUsername());
-            boolean isManager = Objects.equals(ManagerRole.CODE.toLowerCase(), user.getUsername());
-            String roleCode = isSupervisor ? SupervisorRole.CODE
-                    : isManager ? ManagerRole.CODE
-                    : UiMinimalRole.CODE;
+            String roleCode = UiMinimalRole.CODE;
 
             RoleAssignmentEntity roleAssignment = dataManager.create(RoleAssignmentEntity.class);
             roleAssignment.setUsername(user.getUsername());
@@ -532,19 +527,25 @@ public class DemoDataGenerator implements Ordered {
         List<Order> result = new ArrayList<>();
         SaveContext saveContext = new SaveContext().setDiscardSaved(true);
         for (Client client : clients) {
-            int n = random.nextInt(0, 9); // 0..8
+            int n = random.nextInt(2, 10); // 2..9
             for (int i = 0; i < n; i++) {
                 Order order = dataManager.create(Order.class);
                 order.setClient(client);
-                LocalDate date = randomDateWithinYears(2, random);
+                LocalDate date = randomOrderDate(random);
                 order.setDate(date);
                 if (random.nextBoolean()) order.setComment(orderComment(random));
-                order.setStatus(OrderStatus.values()[random.nextInt(OrderStatus.values().length)]);
+                double trend = trendScore(date);
+                order.setStatus(pickOrderStatus(trend, random));
                 int maxItems = Math.max(1, categoryItemsSize / 3);
                 int itemsCount = random.nextInt(1, maxItems + 1);
-                List<OrderItem> orderItems = generateOrderItems(order, categoryItems.subList(0, itemsCount));
+                if (maxItems > 1) {
+                    int boost = (int) Math.round(trend * Math.min(2, maxItems - itemsCount));
+                    itemsCount = Math.min(maxItems, itemsCount + boost);
+                }
+                List<OrderItem> orderItems = generateOrderItems(order, categoryItems.subList(0, itemsCount), trend);
                 BigDecimal itemsTotal = order.getItemsTotal();
-                if (itemsTotal.compareTo(BigDecimal.ZERO) > 0 && random.nextInt(4) == 0) {
+                int discountChance = (int) Math.round(30 - trend * 20); // 30% -> 10%
+                if (itemsTotal.compareTo(BigDecimal.ZERO) > 0 && random.nextInt(100) < discountChance) {
                     // discount either value or percent
                     if (random.nextBoolean()) {
                         int maxDiscount = itemsTotal.divide(BigDecimal.valueOf(2), RoundingMode.HALF_UP).intValue();
@@ -561,11 +562,12 @@ public class DemoDataGenerator implements Ordered {
                 result.add(order);
             }
         }
+        ensurePositiveMonthlyOrderTrend(result, random);
         dataManager.save(saveContext);
         return result;
     }
 
-    private List<OrderItem> generateOrderItems(Order order, Collection<CategoryItem> categoryItems) {
+    private List<OrderItem> generateOrderItems(Order order, Collection<CategoryItem> categoryItems, double trend) {
         log.info("Generating {} order items for order {}", categoryItems.size(), order.getId());
 
         ThreadLocalRandom random = ThreadLocalRandom.current();
@@ -575,7 +577,9 @@ public class DemoDataGenerator implements Ordered {
             OrderItem item = dataManager.create(OrderItem.class);
             item.setCategoryItem(categoryItem);
             item.setOrder(order);
-            item.setQuantity(BigDecimal.valueOf(random.nextInt(2, 10)));
+            int baseQty = random.nextInt(2, 10);
+            int boost = (int) Math.round(trend * random.nextInt(0, 4));
+            item.setQuantity(BigDecimal.valueOf(baseQty + boost));
             item.setNetPrice(calculateNetPrice(item));
             item.setVat(calculateVat(item, getDefaultVatPercent()));
             item.setGrossPrice(calculateGrossPrice(item));
@@ -597,13 +601,27 @@ public class DemoDataGenerator implements Ordered {
         ThreadLocalRandom random = ThreadLocalRandom.current();
         List<Invoice> result = new ArrayList<>();
         for (Order order : orders) {
-            if (random.nextInt(100) < 70) { // 70% orders have an invoice
+            double trend = trendScore(order.getDate());
+            int invoiceChance = (int) Math.round(55 + trend * 30); // 55% -> 85%
+            if (random.nextInt(100) < invoiceChance) {
                 Invoice invoice = dataManager.create(Invoice.class);
                 invoice.setClient(order.getClient());
                 invoice.setOrder(order);
-                LocalDate date = order.getDate() != null ? order.getDate().plusDays(random.nextInt(1, 15)) : randomDateWithinYears(2, random);
+                LocalDate orderDate = order.getDate() != null ? order.getDate() : randomOrderDate(random);
+                int lagDays = (int) Math.round(5 + (1 - trend) * 10); // 5..15
+                LocalDate date = orderDate.plusDays(random.nextInt(1, lagDays + 1));
+                if (isSameMonth(orderDate, YearMonth.now()) && YearMonth.from(date).isAfter(YearMonth.from(orderDate))) {
+                    date = orderDate.withDayOfMonth(orderDate.lengthOfMonth());
+                }
                 invoice.setDate(date);
-                invoice.setDueDate(date.plusDays(random.nextInt(7, 45)));
+                int minDue = trend > 0.7 ? 10 : 7;
+                int maxDue = trend > 0.7 ? 30 : 45;
+                LocalDate dueDate = date.plusDays(random.nextInt(minDue, maxDue + 1));
+                if (isSameMonth(date, YearMonth.now()) && dueDate.isBefore(LocalDate.now())) {
+                    LocalDate base = date.isAfter(LocalDate.now()) ? date : LocalDate.now();
+                    dueDate = base.plusDays(random.nextInt(5, 25));
+                }
+                invoice.setDueDate(dueDate);
                 applyOrderTotalsToInvoice(invoice, order);
                 invoice.setStatus(InvoiceStatus.NEW);
                 result.add(dataManager.save(invoice));
@@ -614,29 +632,32 @@ public class DemoDataGenerator implements Ordered {
 
     private void generatePayments(List<Invoice> invoices) {
         ThreadLocalRandom random = ThreadLocalRandom.current();
+        List<Payment> payments = new ArrayList<>();
         for (Invoice invoice : invoices) {
-            BigDecimal paidTotal = generatePaymentsForInvoice(invoice, random);
+            BigDecimal paidTotal = generatePaymentsForInvoice(invoice, random, payments);
             updateInvoiceStatus(invoice, paidTotal);
             dataManager.save(invoice);
         }
+        ensurePositiveMonthlyPaymentTrend(payments, random);
     }
 
     private void applyOrderTotalsToInvoice(Invoice invoice, Order order) {
         calculateInvoiceFieldsFromOrder(order, invoice, getDefaultVatPercent());
     }
 
-    private BigDecimal generatePaymentsForInvoice(Invoice invoice, ThreadLocalRandom random) {
+    private BigDecimal generatePaymentsForInvoice(Invoice invoice, ThreadLocalRandom random, List<Payment> payments) {
         BigDecimal total = scaleAmount(invoice.getTotal());
         if (total.compareTo(BigDecimal.ZERO) <= 0) {
             return BigDecimal.ZERO;
         }
 
-        BigDecimal targetPaid = pickTargetPaid(total, random);
+        double trend = trendScore(invoice.getDate());
+        BigDecimal targetPaid = pickTargetPaid(total, random, trend);
         if (targetPaid.compareTo(BigDecimal.ZERO) <= 0) {
             return BigDecimal.ZERO;
         }
 
-        int paymentsCount = random.nextInt(1, 4); // 1..3
+        int paymentsCount = trend > 0.7 ? random.nextInt(1, 3) : random.nextInt(1, 4); // 1..2 or 1..3
         BigDecimal remaining = targetPaid;
         BigDecimal paid = BigDecimal.ZERO;
 
@@ -651,25 +672,30 @@ public class DemoDataGenerator implements Ordered {
 
             Payment payment = dataManager.create(Payment.class);
             payment.setInvoice(invoice);
-            LocalDate date = (invoice.getDate() != null ? invoice.getDate() : randomDateWithinYears(2, random))
-                    .plusDays(random.nextInt(1, 60));
+            LocalDate date = pickPaymentDate(invoice, random, trend);
             payment.setDate(date);
             payment.setAmount(part);
             remaining = remaining.subtract(part);
             paid = paid.add(part);
             dataManager.saveWithoutReload(payment);
+            payments.add(payment);
         }
 
         return scaleAmount(paid);
     }
 
-    private BigDecimal pickTargetPaid(BigDecimal total, ThreadLocalRandom random) {
-        int roll = random.nextInt(100);
-        if (roll < 35) {
+    private BigDecimal pickTargetPaid(BigDecimal total, ThreadLocalRandom random, double trend) {
+        double roll = random.nextDouble();
+        double fullChance = 0.20 + trend * 0.35;
+        double partialChance = 0.45 - trend * 0.10;
+
+        if (roll < fullChance) {
             return total;
         }
-        if (roll < 75) {
-            BigDecimal ratio = BigDecimal.valueOf(0.2 + random.nextDouble(0.7));
+        if (roll < fullChance + partialChance) {
+            double minRatio = 0.2 + trend * 0.2;
+            double maxRatio = 0.6 + trend * 0.3;
+            BigDecimal ratio = BigDecimal.valueOf(minRatio + random.nextDouble() * (maxRatio - minRatio));
             BigDecimal target = total.multiply(ratio).setScale(2, RoundingMode.HALF_UP);
             if (target.compareTo(total) >= 0) {
                 target = total.subtract(BigDecimal.valueOf(0.01));
@@ -686,6 +712,19 @@ public class DemoDataGenerator implements Ordered {
             part = remaining.min(BigDecimal.valueOf(0.01));
         }
         return part;
+    }
+
+    private LocalDate pickPaymentDate(Invoice invoice, ThreadLocalRandom random, double trend) {
+        LocalDate baseDate = invoice.getDate() != null ? invoice.getDate() : randomOrderDate(random);
+        int minDays = trend > 0.7 ? 1 : 7;
+        int maxDays = trend > 0.7 ? 25 : 60;
+        LocalDate date = baseDate.plusDays(random.nextInt(minDays, maxDays + 1));
+        YearMonth baseMonth = YearMonth.from(baseDate);
+        if (baseMonth.equals(YearMonth.now()) && YearMonth.from(date).isAfter(baseMonth)) {
+            LocalDate endOfMonth = baseMonth.atEndOfMonth();
+            date = endOfMonth.isBefore(baseDate) ? baseDate : endOfMonth;
+        }
+        return date;
     }
 
     private void updateInvoiceStatus(Invoice invoice, BigDecimal paidTotal) {
@@ -790,6 +829,183 @@ public class DemoDataGenerator implements Ordered {
                 .withHour(r.nextInt(12))
                 .withMinute(r.nextInt(60))
                 .withSecond(r.nextInt(60));
+    }
+
+    private LocalDate randomOrderDate(ThreadLocalRandom random) {
+        int monthOffset = pickMonthOffsetWithTrend(random);
+        YearMonth targetMonth = YearMonth.now().minusMonths(monthOffset);
+        return randomDateInMonth(targetMonth, random);
+    }
+
+    private int pickMonthOffsetWithTrend(ThreadLocalRandom random) {
+        int[] weights = new int[TREND_HISTORY_MONTHS];
+        for (int i = 0; i < TREND_HISTORY_MONTHS; i++) {
+            if (i < POSITIVE_TREND_MONTHS) {
+                weights[i] = (POSITIVE_TREND_MONTHS - i) * 6;
+            } else {
+                weights[i] = 1;
+            }
+        }
+        return weightedRandomIndex(weights, random);
+    }
+
+    private int weightedRandomIndex(int[] weights, ThreadLocalRandom random) {
+        int total = 0;
+        for (int weight : weights) {
+            total += Math.max(0, weight);
+        }
+        if (total <= 0) {
+            return random.nextInt(weights.length);
+        }
+        int roll = random.nextInt(total);
+        int sum = 0;
+        for (int i = 0; i < weights.length; i++) {
+            sum += Math.max(0, weights[i]);
+            if (roll < sum) {
+                return i;
+            }
+        }
+        return weights.length - 1;
+    }
+
+    private LocalDate randomDateInMonth(YearMonth month, ThreadLocalRandom random) {
+        int day = random.nextInt(1, month.lengthOfMonth() + 1);
+        return month.atDay(day);
+    }
+
+    private boolean isSameMonth(LocalDate date, YearMonth month) {
+        return date != null && YearMonth.from(date).equals(month);
+    }
+
+    private double trendScore(LocalDate date) {
+        if (date == null) {
+            return 0.5;
+        }
+        YearMonth now = YearMonth.now();
+        long monthsBack = ChronoUnit.MONTHS.between(YearMonth.from(date), now);
+        if (monthsBack < 0) {
+            monthsBack = 0;
+        }
+        long clamped = Math.min(monthsBack, TREND_HISTORY_MONTHS - 1);
+        return 1.0 - (double) clamped / (double) (TREND_HISTORY_MONTHS - 1);
+    }
+
+    private OrderStatus pickOrderStatus(double trend, ThreadLocalRandom random) {
+        double roll = random.nextDouble();
+        double doneChance = 0.15 + trend * 0.35;
+        double acceptedChance = 0.20 + trend * 0.05;
+        double inProgressChance = 0.30 - trend * 0.15;
+        if (roll < doneChance) {
+            return OrderStatus.DONE;
+        }
+        if (roll < doneChance + acceptedChance) {
+            return OrderStatus.ACCEPTED;
+        }
+        if (roll < doneChance + acceptedChance + inProgressChance) {
+            return OrderStatus.IN_PROGRESS;
+        }
+        return OrderStatus.NEW;
+    }
+
+    private void ensurePositiveMonthlyOrderTrend(List<Order> orders, ThreadLocalRandom random) {
+        if (orders.isEmpty()) {
+            return;
+        }
+        YearMonth current = YearMonth.now();
+        YearMonth previous = current.minusMonths(1);
+        long currentCount = orders.stream()
+                .filter(order -> isSameMonth(order.getDate(), current))
+                .count();
+        long previousCount = orders.stream()
+                .filter(order -> isSameMonth(order.getDate(), previous))
+                .count();
+        if (currentCount > previousCount) {
+            return;
+        }
+        int needed = (int) (previousCount - currentCount + 1);
+        for (Order order : orders) {
+            if (needed <= 0) {
+                break;
+            }
+            if (isSameMonth(order.getDate(), previous)) {
+                order.setDate(randomDateInMonth(current, random));
+                order.setStatus(pickOrderStatus(trendScore(order.getDate()), random));
+                needed--;
+            }
+        }
+        if (needed > 0) {
+            for (Order order : orders) {
+                if (needed <= 0) {
+                    break;
+                }
+                LocalDate date = order.getDate();
+                if (date != null && YearMonth.from(date).isBefore(previous)) {
+                    order.setDate(randomDateInMonth(current, random));
+                    order.setStatus(pickOrderStatus(trendScore(order.getDate()), random));
+                    needed--;
+                }
+            }
+        }
+    }
+
+    private void ensurePositiveMonthlyPaymentTrend(List<Payment> payments, ThreadLocalRandom random) {
+        if (payments.isEmpty()) {
+            return;
+        }
+        YearMonth current = YearMonth.now();
+        YearMonth previous = current.minusMonths(1);
+        BigDecimal currentSum = sumPaymentsForMonth(payments, current);
+        BigDecimal previousSum = sumPaymentsForMonth(payments, previous);
+        if (currentSum.compareTo(previousSum) > 0) {
+            return;
+        }
+
+        BigDecimal needed = previousSum.subtract(currentSum).add(BigDecimal.valueOf(0.01));
+        List<Payment> toUpdate = new ArrayList<>();
+
+        List<Payment> candidates = payments.stream()
+                .filter(payment -> isSameMonth(payment.getDate(), previous))
+                .sorted(Comparator.comparing(Payment::getAmount).reversed())
+                .toList();
+
+        for (Payment payment : candidates) {
+            if (needed.compareTo(BigDecimal.ZERO) <= 0) {
+                break;
+            }
+            payment.setDate(randomDateInMonth(current, random));
+            toUpdate.add(payment);
+            needed = needed.subtract(scaleAmount(payment.getAmount()));
+        }
+
+        if (needed.compareTo(BigDecimal.ZERO) > 0) {
+            List<Payment> fallback = payments.stream()
+                    .filter(payment -> payment.getDate() != null
+                            && YearMonth.from(payment.getDate()).isBefore(previous))
+                    .sorted(Comparator.comparing(Payment::getAmount).reversed())
+                    .toList();
+            for (Payment payment : fallback) {
+                if (needed.compareTo(BigDecimal.ZERO) <= 0) {
+                    break;
+                }
+                payment.setDate(randomDateInMonth(current, random));
+                toUpdate.add(payment);
+                needed = needed.subtract(scaleAmount(payment.getAmount()));
+            }
+        }
+
+        if (!toUpdate.isEmpty()) {
+            SaveContext saveContext = new SaveContext().setDiscardSaved(true);
+            saveContext.saving(toUpdate.toArray());
+            dataManager.save(saveContext);
+        }
+    }
+
+    private BigDecimal sumPaymentsForMonth(List<Payment> payments, YearMonth month) {
+        return payments.stream()
+                .filter(payment -> isSameMonth(payment.getDate(), month))
+                .map(Payment::getAmount)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     private String slug(String s) {
