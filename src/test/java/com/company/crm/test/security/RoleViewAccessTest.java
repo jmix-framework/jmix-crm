@@ -2,9 +2,9 @@ package com.company.crm.test.security;
 
 import com.company.crm.AbstractTest;
 import com.company.crm.app.util.constant.CrmConstants;
-import com.company.crm.security.ManagerRole;
-import com.company.crm.security.SupervisorRole;
-import com.company.crm.security.UiMinimalRole;
+import com.company.crm.security.role.ManagerRole;
+import com.company.crm.security.role.SupervisorRole;
+import com.company.crm.security.role.UiMinimalRole;
 import com.company.crm.util.TestUsers;
 import io.jmix.core.AccessManager;
 import io.jmix.core.security.SystemAuthenticator;

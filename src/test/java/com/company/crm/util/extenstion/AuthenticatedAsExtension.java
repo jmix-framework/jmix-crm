@@ -1,7 +1,7 @@
 package com.company.crm.util.extenstion;
 
-import com.company.crm.security.ManagerRole;
-import com.company.crm.security.SupervisorRole;
+import com.company.crm.security.role.ManagerRole;
+import com.company.crm.security.role.SupervisorRole;
 import com.company.crm.util.TestUsers;
 import io.jmix.core.security.SystemAuthenticator;
 import org.junit.jupiter.api.extension.AfterTestExecutionCallback;

@@ -1,8 +1,8 @@
 package com.company.crm.util;
 
 import com.company.crm.model.user.User;
-import com.company.crm.security.ManagerRole;
-import com.company.crm.security.SupervisorRole;
+import com.company.crm.security.role.ManagerRole;
+import com.company.crm.security.role.SupervisorRole;
 import io.jmix.core.UnconstrainedDataManager;
 import io.jmix.security.role.assignment.RoleAssignmentRoleType;
 import io.jmix.securitydata.entity.RoleAssignmentEntity;

@@ -4,7 +4,7 @@ import com.company.crm.AbstractTest;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.user.User;
 import com.company.crm.model.user.activity.client.ClientUserActivity;
-import com.company.crm.security.ManagerRole;
+import com.company.crm.security.role.ManagerRole;
 import com.company.crm.util.TestUsers;
 import io.jmix.core.security.SystemAuthenticator;
 import org.junit.jupiter.api.Test;

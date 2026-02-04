@@ -1,4 +1,4 @@
-package com.company.crm.security;
+package com.company.crm.security.role;
 
 import io.jmix.security.model.EntityAttributePolicyAction;
 import io.jmix.security.model.EntityPolicyAction;

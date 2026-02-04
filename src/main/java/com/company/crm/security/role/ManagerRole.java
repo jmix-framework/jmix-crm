@@ -1,4 +1,4 @@
-package com.company.crm.security;
+package com.company.crm.security.role;
 
 import com.company.crm.model.address.Address;
 import com.company.crm.model.catalog.category.Category;
