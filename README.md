@@ -1,4 +1,4 @@
-# ![B2B CRM](src/main/resources/META-INF/resources/images/logo.svg) B2B CRM
+# ![CRM](src/main/resources/META-INF/resources/images/logo.svg) B2B CRM
 
 ### Is a [Jmix](https://jmix.io) application for managing client relationships
 
@@ -69,11 +69,11 @@ java -jar build/libs/crm.jar
 ### Run via Docker
 
 ```bash
-docker build -t b2b-crm .
+docker build -t jmix-crm .
 ```
 
 ```bash
-docker run --rm -p 8080:8080 b2b-crm
+docker run --rm -p 8080:8080 jmix-crm
 ```
 
 ### Run via Docker Compose

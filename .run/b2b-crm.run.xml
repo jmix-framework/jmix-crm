@@ -1,7 +1,7 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="B2B CRM" type="JmixRunApplication">
     <option name="MAIN_CLASS_NAME" value="com.company.crm.CRMApplication" />
-    <module name="b2b-crm.main" />
+    <module name="jmix-crm.main" />
     <shortenClasspath name="ARGS_FILE" />
     <method v="2">
       <option name="JmixCleanConf" enabled="false" />

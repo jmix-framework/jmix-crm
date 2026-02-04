@@ -1,7 +1,7 @@
 version: "3"
 services:
-  b2b-crm:
-    image: b2b-crm
+  jmix-crm:
+    image: jmix-crm
     build:
       context: .
     user: root

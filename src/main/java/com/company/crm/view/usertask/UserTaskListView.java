@@ -312,7 +312,7 @@ public class UserTaskListView extends StandardListView<UserTask> {
         updateControls(false);
     }
 
-    @Install(to = "userTasksDl", target = Target.DATA_LOADER)
+    @Install(to = "userTasksDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
     private List<UserTask> listLoadDelegate(LoadContext<UserTask> context) {
         var repositoryContext = prepareTasksLoaderRepositoryContext(context);
         return userTaskRepository.findAll(buildPageRequest(context), repositoryContext).getContent();
@@ -358,6 +358,7 @@ public class UserTaskListView extends StandardListView<UserTask> {
     }
 
     private JmixDataRepositoryContext prepareTasksLoaderRepositoryContext(LoadContext<UserTask> context) {
+        assert context.getQuery() != null : "Query from cotext cannot be null";
         context.getQuery().setSort(Sort.by(Sort.Direction.DESC, "dueDate"));
         JmixDataRepositoryContext repositoryContext = buildRepositoryContext(context);
         repositoryContext = addCondition(repositoryContext, PropertyCondition.equal("author", getCurrentUser()));
