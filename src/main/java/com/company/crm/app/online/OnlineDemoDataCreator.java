@@ -16,6 +16,9 @@ import org.springframework.web.context.WebApplicationContext;
 
 import java.util.List;
 
+import static com.company.crm.app.util.ui.CrmUiUtils.CONTRAST_BADGE;
+import static com.company.crm.app.util.ui.CrmUiUtils.DEFAULT_BADGE;
+import static com.company.crm.app.util.ui.CrmUiUtils.SUCCESS_BADGE;
 import static com.company.crm.app.util.ui.CrmUiUtils.reloadCurrentPage;
 
 /**
@@ -70,7 +73,7 @@ public class OnlineDemoDataCreator {
             demoDataDialog.addClassName("demo-data-loader-dialog");
         }
 
-        demoDataLoader.setLoadingMessage(messages.getMessage("demoData.progress.configuring"));
+        demoDataLoader.setLoadingMessage(messages.getMessage("demoData.progress.configuring"), CONTRAST_BADGE);
 
         if (!demoDataDialog.isOpened()) {
             demoDataDialog.open();
@@ -99,13 +102,14 @@ public class OnlineDemoDataCreator {
             if (changes.isEmpty() || demoDataLoader == null) {
                 return;
             }
-            demoDataLoader.setLoadingMessage(changes.getLast());
+            demoDataLoader.setLoadingMessage(changes.getLast(), DEFAULT_BADGE);
         }
 
         @Override
         public void done(Void result) {
             if (demoDataLoader != null) {
-                demoDataLoader.setLoadingMessage("Demo data is ready \uD83D\uDC4D");
+                String message = messages.getMessage("demoData.progress.done");
+                demoDataLoader.setLoadingMessage(message, SUCCESS_BADGE);
             }
             closeDemoDataLoader();
             reloadCurrentPage();

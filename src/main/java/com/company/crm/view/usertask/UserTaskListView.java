@@ -312,7 +312,7 @@ public class UserTaskListView extends StandardListView<UserTask> {
         updateControls(false);
     }
 
-    @Install(to = "userTasksDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
+    @Install(to = "userTasksDl", target = Target.DATA_LOADER)
     private List<UserTask> listLoadDelegate(LoadContext<UserTask> context) {
         var repositoryContext = prepareTasksLoaderRepositoryContext(context);
         return userTaskRepository.findAll(buildPageRequest(context), repositoryContext).getContent();

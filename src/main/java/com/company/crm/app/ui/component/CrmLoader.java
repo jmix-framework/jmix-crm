@@ -5,6 +5,7 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.SvgIcon;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.theme.lumo.LumoUtility;
+import org.jspecify.annotations.Nullable;
 
 public class CrmLoader extends VerticalLayout {
 
@@ -29,8 +30,13 @@ public class CrmLoader extends VerticalLayout {
     }
 
     public void setLoadingMessage(String message) {
+        setLoadingMessage(message, null);
+    }
+
+    public void setLoadingMessage(String message, @Nullable String badge) {
         String messageToSet = message == null || message.isBlank() ? DEFAULT_MESSAGE : message;
         loadingMessage.setText(messageToSet);
+        CrmUiUtils.setBadge(loadingMessage, badge);
     }
 
     public void setLogoSize(String size) {
@@ -55,7 +61,7 @@ public class CrmLoader extends VerticalLayout {
     }
 
     private void addLoadingMessage() {
-        setLoadingMessage(loadingMessage.getText());
+        setLoadingMessage(loadingMessage.getText(), CrmUiUtils.DEFAULT_BADGE);
         loadingMessage.addClassNames(LumoUtility.FontWeight.THIN, LumoUtility.FontSize.SMALL);
         loadingMessage.addClassName("crm-loader-message");
         add(loadingMessage);

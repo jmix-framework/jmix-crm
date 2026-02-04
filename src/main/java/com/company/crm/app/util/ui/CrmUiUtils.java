@@ -19,6 +19,7 @@ import com.vaadin.flow.data.selection.MultiSelect;
 import com.vaadin.flow.data.selection.SingleSelect;
 import com.vaadin.flow.data.validator.EmailValidator;
 import com.vaadin.flow.dom.Style;
+import com.vaadin.flow.dom.ThemeList;
 import com.vaadin.flow.router.QueryParameters;
 import com.vaadin.flow.shared.Registration;
 import io.jmix.chartsflowui.component.Chart;
@@ -36,10 +37,14 @@ import io.jmix.flowui.fragment.FragmentUtils;
 import io.jmix.flowui.kit.action.ActionPerformedEvent;
 import io.jmix.flowui.kit.action.ActionVariant;
 import io.jmix.flowui.view.StandardOutcome;
+import org.apache.commons.lang3.StringUtils;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
@@ -55,6 +60,7 @@ public final class CrmUiUtils {
     public static final String SUCCESS_BADGE = "success";
     public static final String WARNING_BADGE = "warning";
     public static final String ERROR_BADGE = "error";
+    public static final List<String> BADGE_VARIANTS = Arrays.asList(CONTRAST_BADGE, DEFAULT_BADGE, SUCCESS_BADGE, WARNING_BADGE, ERROR_BADGE);
 
     private static final String GET_CLIENT_WIDTH_FUNC = "return window.innerWidth";
     private static final String GET_CLIENT_HEIGHT_FUNC = "return window.innerHeight";
@@ -195,8 +201,15 @@ public final class CrmUiUtils {
         VERTICAL, HORIZONTAL, BOTH
     }
 
-    public static void setBadge(Span span, String badgeVariant) {
-        span.getElement().getThemeList().add("badge " + badgeVariant);
+    public static void setBadge(Span span, @Nullable String badgeVariant) {
+        var badgeThemeName = "badge";
+        ThemeList themeList = span.getElement().getThemeList();
+        themeList.removeIf(theme -> Objects.equals(badgeThemeName, theme) || BADGE_VARIANTS.contains(badgeVariant));
+
+        if (StringUtils.isNotBlank(badgeVariant)) {
+            themeList.add(badgeThemeName);
+            themeList.add(badgeVariant);
+        }
     }
 
     public static void setCursorPointer(HasStyle hasStyle) {
