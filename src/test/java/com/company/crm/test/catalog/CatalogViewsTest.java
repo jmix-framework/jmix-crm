@@ -3,6 +3,7 @@ package com.company.crm.test.catalog;
 import com.company.crm.AbstractUiTest;
 import com.company.crm.model.catalog.category.Category;
 import com.company.crm.model.catalog.item.CategoryItem;
+import com.company.crm.model.catalog.item.UomType;
 import com.company.crm.security.ManagerRole;
 import com.company.crm.security.SupervisorRole;
 import com.company.crm.util.UniqueValues;
@@ -86,6 +87,7 @@ class CatalogViewsTest extends AbstractUiTest {
         viewTestSupport.setComponentValue("nameField", UniqueValues.string());
         viewTestSupport.setComponentValue("codeField", UniqueValues.string());
         viewTestSupport.setComponentValue("priceField", "10");
+        viewTestSupport.setComponentValue("uomField", UomType.PIECES);
         saveDetailView(view, assertSaveThrowsException);
     }
 

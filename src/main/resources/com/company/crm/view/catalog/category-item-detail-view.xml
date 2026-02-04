@@ -43,7 +43,7 @@
                             </query>
                         </itemsQuery>
                     </entityComboBox>
-                    <select property="uom"/>
+                    <select id="uomField" property="uom"/>
                     <textField id="priceField" property="price" required="true"/>
                     <formLayout id="dynamicAttributes" dataContainer="categoryItemDc" colspan="2">
                         <responsiveSteps>

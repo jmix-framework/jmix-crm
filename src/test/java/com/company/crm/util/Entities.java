@@ -3,6 +3,7 @@ package com.company.crm.util;
 import com.company.crm.model.address.Address;
 import com.company.crm.model.catalog.category.Category;
 import com.company.crm.model.catalog.item.CategoryItem;
+import com.company.crm.model.catalog.item.UomType;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.invoice.Invoice;
 import com.company.crm.model.order.Order;
@@ -87,12 +88,13 @@ public class Entities {
         });
     }
 
-    public CategoryItem categoryItem(String name, String code, Category category, BigDecimal price) {
+    public CategoryItem categoryItem(String name, String code, Category category, BigDecimal price, UomType uom) {
         return createAndSaveEntity(CategoryItem.class, i -> {
             i.setName(name);
             i.setCode(code);
             i.setCategory(category);
             i.setPrice(price);
+            i.setUom(uom);
         });
     }
 

@@ -167,8 +167,8 @@ class CatalogServiceTest extends AbstractServiceTest<CatalogService> {
     @Test
     void getBestOrderedItems_returnsItemsSortedByQuantity() {
         Category cat = entities.category("Cat", "CAT");
-        CategoryItem item1 = entities.categoryItem("Item 1", "ITEM1", cat, BigDecimal.TEN);
-        CategoryItem item2 = entities.categoryItem("Item 2", "ITEM2", cat, BigDecimal.TEN);
+        CategoryItem item1 = entities.categoryItem("Item 1", "ITEM1", cat, BigDecimal.TEN, UomType.PIECES);
+        CategoryItem item2 = entities.categoryItem("Item 2", "ITEM2", cat, BigDecimal.TEN, UomType.PIECES);
 
         Order order = entities.order(entities.client(), LocalDate.now(), OrderStatus.DONE);
         entities.orderItem(order, item1, new BigDecimal("5"));
