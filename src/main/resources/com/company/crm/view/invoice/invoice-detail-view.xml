@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      title="msg://invoiceDetailView.title" focusMode="NO_FOCUS">
+    <data>
+        <instance id="invoiceDc"
+                  class="com.company.crm.model.invoice.Invoice">
+            <fetchPlan extends="_base">
+                <property name="client" fetchPlan="_base"/>
+                <property name="order" fetchPlan="_base"/>
+            </fetchPlan>
+            <loader id="invoiceDl"/>
+            <instance id="clientDc" property="client"/>
+        </instance>
+        <collection id="ordersDc" class="com.company.crm.model.order.Order">
+            <fetchPlan extends="_base">
+                <property name="client" fetchPlan="_base"/>
+            </fetchPlan>
+            <loader id="ordersDl" readOnly="true"/>
+        </collection>
+    </data>
+    <facets>
+        <settings auto="true"/>
+        <dataLoadCoordinator auto="true"/>
+    </facets>
+    <actions>
+        <action id="saveCloseAction" type="detail_saveClose"/>
+        <action id="closeAction" type="detail_close"/>
+        <action id="downloadAction" text="msg:///download" icon="DOWNLOAD_ALT"/>
+    </actions>
+    <layout>
+        <formLayout id="form" dataContainer="invoiceDc">
+            <responsiveSteps>
+                <responsiveStep minWidth="0" columns="1"/>
+                <responsiveStep minWidth="40em" columns="2"/>
+            </responsiveSteps>
+            <textField id="numberField" property="number" readOnly="true" colspan="2"/>
+            <entityComboBox id="clientsComboBox" property="client" colspan="2">
+                <actions>
+                    <action id="entityLookupAction" type="entity_lookup"/>
+                    <action id="entityClearAction" type="entity_clear"/>
+                </actions>
+                <itemsQuery class="com.company.crm.model.client.Client" escapeValueForLike="true"
+                            searchStringFormat="(?i)%${inputString}%">
+                    <fetchPlan extends="_base"/>
+                    <query>
+                        <![CDATA[select e from Client e where e.name like :searchString escape '\' order by e.name]]>
+                    </query>
+                </itemsQuery>
+            </entityComboBox>
+            <entityComboBox id="ordersComboBox" property="order" itemsContainer="ordersDc" colspan="2">
+                <actions>
+                    <action id="entityLookupAction" icon="PLUS"/>
+                    <action id="entityClearAction" type="entity_clear"/>
+                </actions>
+            </entityComboBox>
+            <datePicker id="dateField" property="date"/>
+            <datePicker id="dueDateField" property="dueDate"/>
+            <textField id="subtotalField" property="subtotal"/>
+            <textField id="vatField" property="vat"/>
+            <textField id="totalField" property="total"/>
+            <select id="statusField" property="status"/>
+        </formLayout>
+        <hbox id="detailActions">
+            <button id="saveAndCloseButton" action="saveCloseAction"/>
+            <button id="closeButton" action="closeAction"/>
+            <button id="downloadButton" action="downloadAction"/>
+
+        </hbox>
+    </layout>
+</view>

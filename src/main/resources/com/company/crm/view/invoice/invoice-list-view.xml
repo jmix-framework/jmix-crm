@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      title="msg://InvoiceListView.title" focusMode="NO_FOCUS">
+    <data>
+        <collection id="invoicesDc"
+                    class="com.company.crm.model.invoice.Invoice">
+            <fetchPlan extends="_base">
+                <property name="client" fetchPlan="_base"/>
+                <property name="order" fetchPlan="_base"/>
+            </fetchPlan>
+            <loader id="invoicesDl" readOnly="true"/>
+        </collection>
+        <collection id="clientsDc" class="com.company.crm.model.client.Client">
+            <fetchPlan extends="_base"/>
+            <loader id="clientsDl" readOnly="true"/>
+        </collection>
+        <collection id="ordersDc" class="com.company.crm.model.order.Order">
+            <fetchPlan extends="_base"/>
+            <loader id="ordersDl" readOnly="true"/>
+        </collection>
+    </data>
+    <actions>
+        <action id="selectAction" type="lookup_select"/>
+        <action id="discardAction" type="lookup_discard"/>
+    </actions>
+    <facets>
+        <settings auto="true"/>
+        <dataLoadCoordinator auto="false"/>
+        <urlQueryParameters>
+            <pagination component="invoices_pagination"/>
+            <genericFilter component="invoices_AdvancedFilter"/>
+            <dataGridFilter component="invoicesDataGrid"/>
+        </urlQueryParameters>
+    </facets>
+    <layout>
+        <component id="invoiceStatusCard" class="com.company.crm.app.ui.component.CrmCard">
+            <properties>
+                <property name="width" value="100%"/>
+                <property name="maxWidth" value="60em"/>
+                <property name="minWidth" value="15em"/>
+            </properties>
+        </component>
+        <div width="100%" maxWidth="60em" css="margin-top: 1em">
+            <formLayout width="100%">
+                <responsiveSteps>
+                    <responsiveStep minWidth="0" columns="1"/>
+                    <responsiveStep minWidth="20em" columns="3"/>
+                </responsiveSteps>
+                <datePicker id="invoices_FromDatePicker"
+                            placeholder="msg:///fromDatePicker.label" clearButtonVisible="true"/>
+                <datePicker id="invoices_ToDatePicker"
+                            placeholder="msg:///toDatePicker.label" clearButtonVisible="true"/>
+                <div/>
+                <entityComboBox id="invoices_ClientComboBox"
+                                placeholder="msg:///clientComboBox.placeholder"
+                                metaClass="Client" itemsContainer="clientsDc">
+                    <actions>
+                        <action id="clear" type="value_clear"/>
+                    </actions>
+                </entityComboBox>
+                <entityComboBox id="invoices_OrderComboBox"
+                                placeholder="msg:///orderComboBox.placeholder"
+                                metaClass="Order_" itemsContainer="ordersDc">
+                    <actions>
+                        <action id="clear" type="value_clear"/>
+                    </actions>
+                </entityComboBox>
+                <select id="invoices_StatusSelect" itemsEnum="com.company.crm.model.invoice.InvoiceStatus"
+                        placeholder="msg://com.company.crm.view.invoice/statusSelect.placeholder"
+                        emptySelectionAllowed="true" emptySelectionCaption="msg://allInvoices"/>
+            </formLayout>
+            <genericFilter id="invoices_AdvancedFilter" dataLoader="invoicesDl" maxWidth="60em"
+                           opened="false" summaryText="msg:///advanced" themeNames="filled">
+                <properties include=".*"/>
+            </genericFilter>
+        </div>
+
+        <hbox id="buttonsPanel" classNames="buttons-panel">
+            <startSlot>
+                <button id="createButton" action="invoicesDataGrid.createAction"/>
+                <button id="editButton" action="invoicesDataGrid.editAction"/>
+                <button id="removeButton" action="invoicesDataGrid.removeAction"/>
+                <button id="downloadButton" action="invoicesDataGrid.downloadAction"/>
+                <button id="emailButton" action="invoicesDataGrid.emailAction"/>
+                <button id="excelExport" action="invoicesDataGrid.excelExport"/>
+            </startSlot>
+            <endSlot>
+                <simplePagination id="invoices_pagination" dataLoader="invoicesDl" itemsPerPageVisible="true"/>
+                <gridColumnVisibility dataGrid="invoicesDataGrid" icon="COG_O"
+                                      themeNames="tertiary-inline" hideAllEnabled="false"/>
+            </endSlot>
+        </hbox>
+        <dataGrid id="invoicesDataGrid" dataContainer="invoicesDc"
+                  width="100%"
+                  minHeight="20em"
+                  multiSort="true"
+                  selectionMode="MULTI"
+                  themeNames="column-borders"
+                  columnReorderingAllowed="true">
+            <actions>
+                <action id="createAction" type="list_create">
+                    <properties>
+                        <property name="openMode" value="DIALOG"/>
+                    </properties>
+                </action>
+                <action id="editAction" type="list_edit">
+                    <properties>
+                        <property name="openMode" value="DIALOG"/>
+                    </properties>
+                </action>
+                <action id="removeAction" type="list_remove"/>
+                <action id="downloadAction" text="msg:///download" icon="DOWNLOAD_ALT" type="list_itemTracking"/>
+                <action id="emailAction" text="msg:///email" icon="MAILBOX" type="list_itemTracking"/>
+                <action id="excelExport" type="grdexp_excelExport"/>
+            </actions>
+            <columns resizable="true" sortable="true">
+                <column key="itemDetails" frozen="true" flexGrow="0" autoWidth="true" sortable="false"/>
+                <column property="number" autoWidth="true" flexGrow="0"/>
+                <column property="status" autoWidth="true" flexGrow="0"/>
+                <column property="order.number" autoWidth="true" flexGrow="0"
+                        header="msg://com.company.crm.model.invoice/Invoice.order"/>
+                <column property="client"/>
+                <column property="date" autoWidth="true" flexGrow="0"/>
+                <column property="dueDate"/>
+                <column property="vat" autoWidth="true" flexGrow="0"/>
+                <column property="subtotal" autoWidth="true" flexGrow="0"/>
+                <column property="total"/>
+            </columns>
+        </dataGrid>
+        <hbox id="lookupActions" visible="false">
+            <button id="selectButton" action="selectAction"/>
+            <button id="discardButton" action="discardAction"/>
+        </hbox>
+    </layout>
+</view>

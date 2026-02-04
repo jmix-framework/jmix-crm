@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      focusComponent="usernameField"
+      title="msg://LoginView.title">
+    <layout classNames="login-view-layout">
+        <div classNames="login-shell" width="100%" height="100%">
+            <div classNames="login-panel">
+                <vbox id="loginFormWrapper" classNames="login-form-wrapper" padding="false">
+                    <hbox spacing="false" justifyContent="CENTER" alignItems="STRETCH">
+                        <div id="loginLogo" classNames="login-brand-icon"/>
+                        <span text="B2B CRM" classNames="login-brand-text"/>
+                    </hbox>
+                    <div id="errorMessage" classNames="login-form-error-message" visible="false">
+                        <h5 id="errorMessageTitle"
+                            classNames="login-form-error-message-title"/>
+                        <p id="errorMessageDescription"
+                           classNames="login-form-error-message-description"/>
+                    </div>
+                    <textField id="usernameField"
+                               label="msg://loginForm.username"
+                               classNames="login-form-username">
+                        <validators>
+                            <notEmpty message="msg://loginForm.errorUsername"/>
+                        </validators>
+                    </textField>
+                    <passwordField id="passwordField"
+                                   label="msg://loginForm.password"
+                                   classNames="login-form-password">
+                        <validators>
+                            <notEmpty message="msg://loginForm.errorPassword"/>
+                        </validators>
+                    </passwordField>
+                    <hbox id="loginFormSettingsWrapper"
+                          classNames="login-form-settings-wrapper">
+                        <checkbox id="rememberMe"
+                                  label="msg://loginForm.rememberMe"
+                                  classNames="login-form-remember-me"/>
+                        <select id="localeSelect"
+                                classNames="login-form-locale-select"/>
+                    </hbox>
+                    <button id="submitBtn"
+                            classNames="login-form-submit"
+                            text="msg://loginForm.submit" themeNames="primary contrast"
+                            shortcutCombination="ENTER"/>
+                </vbox>
+            </div>
+            <div classNames="login-image"/>
+        </div>
+    </layout>
+</view>

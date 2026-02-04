@@ -1,0 +1,37 @@
+.order-status-arrow {
+    --arrow-head-width: 0.7em;
+    position: relative;
+    clip-path: polygon(
+            0% 0%,
+            calc(100% - var(--arrow-head-width)) 0%,
+            100% 50%,
+            calc(100% - var(--arrow-head-width)) 100%,
+            0% 100%,
+            var(--arrow-head-width) 50%
+    );
+    padding-inline: 1.5em;
+    transition: background-color 0.2s, filter 0.2s;
+}
+
+.order-status-arrow:first-child {
+    clip-path: polygon(
+            0% 0%,
+            calc(100% - var(--arrow-head-width)) 0%,
+            100% 50%,
+            calc(100% - var(--arrow-head-width)) 100%,
+            0% 100%
+    );
+    padding-left: 1em;
+}
+
+[theme~="deselected"].order-status-arrow {
+    background-color: var(--lumo-contrast-10pct);
+}
+
+[theme~="deselected"].order-status-arrow:hover {
+    filter: brightness(0.3) contrast(2);
+}
+
+[theme~="dark"] [theme~="deselected"].order-status-arrow:hover {
+    filter: brightness(1.2) contrast(2);
+}

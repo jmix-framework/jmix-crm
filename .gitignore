@@ -1,21 +1,28 @@
+.jmix
+
 .gradle
-**/build/
-!**/src/**/build/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**
+!**/src/test/**
 
-# Ignore Gradle GUI config
-gradle-app.setting
+### IntelliJ IDEA ###
+.idea/*
+!.idea/encodings.xml
+*.iws
+*.iml
+*.ipr
+out/
+/target/
 
-# Avoid ignoring Gradle wrapper jar file (.jar files are usually ignored)
-!gradle-wrapper.jar
+### VS Code ###
+.vscode/
 
-# Avoid ignore Gradle wrappper properties
-!gradle-wrapper.properties
+# The following files are generated/updated by vaadin-gradle-plugin
+node_modules/
+src/main/frontend/generated/
+pnpmfile.js
+vite.generated.ts
+webpack.generated.js
 
-# Cache of project
-.gradletasknamecache
-
-# Eclipse Gradle plugin generated files
-# Eclipse Core
-.project
-# JDT-specific (Eclipse Java Development Tools)
-.classpath
+.DS_Store

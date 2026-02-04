@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view" xmlns:dynattr="http://jmix.io/schema/dynattr/flowui"
+      title="msg://categoryItemDetailView.title" focusMode="NO_FOCUS">
+    <data>
+        <instance id="categoryItemDc"
+                  class="com.company.crm.model.catalog.item.CategoryItem">
+            <fetchPlan extends="_base">
+                <property name="category" fetchPlan="_base"/>
+            </fetchPlan>
+            <loader id="categoryItemDl"/>
+        </instance>
+    </data>
+    <facets>
+        <settings auto="true"/>
+        <dataLoadCoordinator auto="true"/>
+        <dynattr:dynamicAttributes/>
+    </facets>
+    <actions>
+        <action id="saveCloseAction" type="detail_saveClose"/>
+        <action id="closeAction" type="detail_close"/>
+    </actions>
+    <layout>
+        <split id="split" width="100%" height="100%">
+            <vbox>
+                <formLayout id="form" dataContainer="categoryItemDc" maxWidth="30em" minWidth="20em">
+                    <responsiveSteps>
+                        <responsiveStep minWidth="0" columns="1"/>
+                        <responsiveStep minWidth="40em" columns="2"/>
+                    </responsiveSteps>
+                    <textField id="codeField" property="code"/>
+                    <textField id="nameField" property="name"/>
+                    <entityComboBox id="categoriesComboBox" property="category"
+                                    dataContainer="categoryItemDc">
+                        <actions>
+                            <action id="lookupAction" type="entity_lookup"/>
+                            <action id="clearAction" type="entity_clear"/>
+                        </actions>
+                        <itemsQuery class="com.company.crm.model.catalog.category.Category" escapeValueForLike="true"
+                                    searchStringFormat="(?i)%${inputString}%">
+                            <fetchPlan extends="_base"/>
+                            <query>
+                                <![CDATA[select e from Category e where e.name like :searchString escape '\' order by e.name]]>
+                            </query>
+                        </itemsQuery>
+                    </entityComboBox>
+                    <select property="uom"/>
+                    <textField id="priceField" property="price" required="true"/>
+                    <formLayout id="dynamicAttributes" dataContainer="categoryItemDc" colspan="2">
+                        <responsiveSteps>
+                            <responsiveStep minWidth="0" columns="1"/>
+                            <responsiveStep minWidth="40em" columns="2"/>
+                        </responsiveSteps>
+                    </formLayout>
+                    <textArea property="description" height="15em"/>
+                </formLayout>
+            </vbox>
+            <vbox alignItems="CENTER" maxWidth="40em" minWidth="30em" classNames="pt-xl">
+                <image id="image" resource="images/no_image.svg"
+                       classNames="border rounded-l" width="20em" height="20em"/>
+                <fileStorageUploadField id="imageUpload" dataContainer="categoryItemDc" property="image"
+                                        dropAllowed="true" clearButtonVisible="true" fileNameVisible="true"/>
+            </vbox>
+        </split>
+        <hbox id="detailActions">
+            <button id="saveAndCloseButton" action="saveCloseAction"/>
+            <button id="closeButton" action="closeAction"/>
+        </hbox>
+    </layout>
+</view>

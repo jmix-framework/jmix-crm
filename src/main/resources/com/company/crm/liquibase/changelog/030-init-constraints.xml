@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+
+    <changeSet author="crm" id="1">
+        <validCheckSum>ANY</validCheckSum>
+
+        <createIndex indexName="IDX_USER_TASK_AUTHOR"
+                     tableName="USER_TASK">
+            <column name="AUTHOR_ID"/>
+        </createIndex>
+
+        <createIndex indexName="IDX_CATEGORY_ITEM_CATEGORY"
+                     tableName="CATEGORY_ITEM">
+            <column name="CATEGORY_ID"/>
+        </createIndex>
+
+        <createIndex indexName="IDX_CLIENT_ACCOUNT_MANAGER" tableName="CLIENT">
+            <column name="ACCOUNT_MANAGER_ID"/>
+        </createIndex>
+
+        <createIndex indexName="IDX_CONTACT_CLIENT" tableName="CONTACT">
+            <column name="CLIENT_ID"/>
+        </createIndex>
+
+        <createIndex indexName="IDX_INVOICE_CLIENT" tableName="INVOICE">
+            <column name="CLIENT_ID"/>
+        </createIndex>
+
+        <createIndex indexName="IDX_INVOICE_ORDER" tableName="INVOICE">
+            <column name="ORDER_ID"/>
+        </createIndex>
+
+        <createIndex indexName="IDX_ORDER__CLIENT" tableName="ORDER_">
+            <column name="CLIENT_ID"/>
+        </createIndex>
+
+        <createIndex indexName="IDX_PAYMENT_INVOICE" tableName="PAYMENT">
+            <column name="INVOICE_ID"/>
+        </createIndex>
+
+        <createIndex indexName="IDX_CATEGORY"
+                     tableName="CATEGORY">
+            <column name="PARENT_ID"/>
+        </createIndex>
+        <createIndex indexName="IDX_CATEGORY_ITEM_COMMENT_CATEGORY_ITEM"
+                     tableName="CATEGORY_ITEM_COMMENT">
+            <column name="CATEGORY_ITEM_ID"/>
+        </createIndex>
+
+        <createIndex indexName="IDX_CATEGORY_ITEM_COMMENT_SENDER"
+                     tableName="CATEGORY_ITEM_COMMENT">
+            <column name="SENDER_ID"/>
+        </createIndex>
+
+        <createIndex indexName="IDX_ORDER_ITEM_CATEGORY_ITEM"
+                     tableName="ORDER_ITEM">
+            <column name="CATEGORY_ITEM_ID"/>
+        </createIndex>
+
+        <createIndex indexName="IDX_ORDER_ITEM_ORDER"
+                     tableName="ORDER_ITEM">
+            <column name="ORDER_ID"/>
+        </createIndex>
+
+        <createIndex indexName="IDX_CLIENT_USER_ACITIVTY_UER"
+                     tableName="CLIENT_USER_ACITIVTY">
+            <column name="USER_ID"/>
+        </createIndex>
+
+        <createIndex indexName="IDX_CLIENT_USER_ACITIVTY_CLIENT"
+                     tableName="CLIENT_USER_ACITIVTY">
+            <column name="CLIENT_ID"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet author="crm" id="2">
+        <validCheckSum>ANY</validCheckSum>
+
+        <addForeignKeyConstraint baseColumnNames="AUTHOR_ID"
+                                 baseTableName="USER_TASK"
+                                 constraintName="FK_USER_TASK_ON_AUTHOR"
+                                 referencedColumnNames="ID"
+                                 referencedTableName="USER_"/>
+
+        <addForeignKeyConstraint baseColumnNames="CATEGORY_ID"
+                                 baseTableName="CATEGORY_ITEM"
+                                 constraintName="FK_CATEGORY_ITEM_ON_CATEGORY"
+                                 referencedColumnNames="ID"
+                                 referencedTableName="CATEGORY"/>
+
+        <addForeignKeyConstraint baseColumnNames="ACCOUNT_MANAGER_ID"
+                                 baseTableName="CLIENT"
+                                 constraintName="FK_CLIENT_ON_ACCOUNT_MANAGER"
+                                 referencedColumnNames="ID"
+                                 referencedTableName="USER_"/>
+
+        <addForeignKeyConstraint baseColumnNames="CLIENT_ID"
+                                 baseTableName="CONTACT"
+                                 constraintName="FK_CONTACT_ON_CLIENT"
+                                 referencedColumnNames="ID"
+                                 referencedTableName="CLIENT"/>
+
+        <addForeignKeyConstraint baseColumnNames="CLIENT_ID"
+                                 baseTableName="INVOICE"
+                                 constraintName="FK_INVOICE_ON_CLIENT"
+                                 referencedColumnNames="ID"
+                                 referencedTableName="CLIENT"/>
+
+        <addForeignKeyConstraint baseColumnNames="ORDER_ID"
+                                 baseTableName="INVOICE"
+                                 constraintName="FK_INVOICE_ON_ORDER"
+                                 referencedColumnNames="ID"
+                                 referencedTableName="ORDER_"/>
+
+        <addForeignKeyConstraint baseColumnNames="CLIENT_ID"
+                                 baseTableName="ORDER_"
+                                 constraintName="FK_ORDER__ON_CLIENT"
+                                 referencedColumnNames="ID"
+                                 referencedTableName="CLIENT"/>
+
+        <addForeignKeyConstraint baseColumnNames="INVOICE_ID"
+                                 baseTableName="PAYMENT"
+                                 constraintName="FK_PAYMENT_ON_INVOICE"
+                                 referencedColumnNames="ID"
+                                 referencedTableName="INVOICE"/>
+
+        <addForeignKeyConstraint baseColumnNames="CATEGORY_ITEM_ID" baseTableName="CATEGORY_ITEM_COMMENT"
+                                 constraintName="FK_CATEGORY_ITEM_COMMENT_ON_CATEGORY_ITEM"
+                                 referencedColumnNames="ID"
+                                 referencedTableName="CATEGORY_ITEM"/>
+
+        <addForeignKeyConstraint baseColumnNames="SENDER_ID"
+                                 baseTableName="CATEGORY_ITEM_COMMENT"
+                                 constraintName="FK_CATEGORY_ITEM_COMMENT_ON_SENDER"
+                                 referencedColumnNames="ID"
+                                 referencedTableName="USER_"/>
+
+        <addForeignKeyConstraint baseColumnNames="CATEGORY_ITEM_ID"
+                                 baseTableName="ORDER_ITEM"
+                                 constraintName="FK_ORDER_ITEM_ON_CATEGORY_ITEM"
+                                 referencedColumnNames="ID"
+                                 referencedTableName="CATEGORY_ITEM"/>
+
+        <addForeignKeyConstraint baseColumnNames="ORDER_ID" baseTableName="ORDER_ITEM"
+                                 constraintName="FK_ORDER_ITEM_ON_ORDER"
+                                 referencedColumnNames="ID"
+                                 referencedTableName="ORDER_"/>
+
+        <addForeignKeyConstraint baseColumnNames="PARENT_ID"
+                                 baseTableName="CATEGORY"
+                                 constraintName="FK_CATEGORY_ON_PARENT"
+                                 referencedColumnNames="ID"
+                                 referencedTableName="CATEGORY"/>
+
+        <addForeignKeyConstraint baseColumnNames="CLIENT_ID"
+                                 baseTableName="CLIENT_USER_ACITIVTY"
+                                 constraintName="FK_CLIENT_USER_ACITIVTY_ON_CLIENT"
+                                 referencedColumnNames="ID"
+                                 referencedTableName="CLIENT"/>
+
+        <addForeignKeyConstraint baseColumnNames="USER_ID"
+                                 baseTableName="CLIENT_USER_ACITIVTY"
+                                 constraintName="FK_CLIENT_USER_ACITIVTY_ON_USER"
+                                 referencedColumnNames="ID"
+                                 referencedTableName="USER_"/>
+
+        <addForeignKeyConstraint baseColumnNames="USER_ID"
+                                 baseTableName="USER_PROFILE_USER_ACITIVTY"
+                                 constraintName="FK_USER_PROFILE_USER_ACITIVTY_ON_USER"
+                                 referencedColumnNames="ID"
+                                 referencedTableName="USER_"/>
+    </changeSet>
+</databaseChangeLog>

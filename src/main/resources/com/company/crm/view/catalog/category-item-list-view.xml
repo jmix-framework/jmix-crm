@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      title="msg://categoryItemListView.title" focusMode="NO_FOCUS">
+    <data>
+        <collection id="categoryItemsDc"
+                    class="com.company.crm.model.catalog.item.CategoryItem">
+            <fetchPlan extends="_base">
+                <property name="category" fetchPlan="_base"/>
+            </fetchPlan>
+            <loader id="categoryItemsDl" readOnly="true"/>
+        </collection>
+    </data>
+    <facets>
+        <settings auto="true"/>
+        <dataLoadCoordinator auto="false"/>
+        <urlQueryParameters>
+            <pagination component="items_pagination"/>
+            <genericFilter component="items_advancedFilter"/>
+            <dataGridFilter component="categoryItemsDataGrid"/>
+        </urlQueryParameters>
+    </facets>
+    <actions>
+        <action id="selectAction" type="lookup_select"/>
+        <action id="discardAction" type="lookup_discard"/>
+    </actions>
+    <layout>
+        <div width="100%" maxWidth="40em">
+            <formLayout width="100%">
+                <responsiveSteps>
+                    <responsiveStep minWidth="0" columns="1"/>
+                    <responsiveStep minWidth="20em" columns="2"/>
+                </responsiveSteps>
+                <textField id="items_searchField" placeholder="msg://searchField.placeholder" clearButtonVisible="true">
+                    <prefix>
+                        <icon icon="SEARCH"/>
+                    </prefix>
+                </textField>
+                <select id="items_categorySelect" placeholder="Category" emptySelectionAllowed="true"
+                        emptySelectionCaption="msg://allCategories"/>
+            </formLayout>
+            <genericFilter id="items_advancedFilter" dataLoader="categoryItemsDl"
+                           opened="false" summaryText="msg:///advanced" themeNames="filled">
+                <properties include=".*"/>
+            </genericFilter>
+        </div>
+
+        <hbox id="buttonsPanel" classNames="buttons-panel">
+            <startSlot>
+                <button id="createButton" action="categoryItemsDataGrid.createAction"/>
+                <button id="editButton" action="categoryItemsDataGrid.editAction"/>
+                <button id="removeButton" action="categoryItemsDataGrid.removeAction"/>
+                <button id="downloadXlsButton" action="categoryItemsDataGrid.downloadXls"/>
+                <fileUploadField id="updateCatalogField" uploadIcon="UPLOAD_ALT" uploadText="msg://updateFromXlsx" acceptedFileTypes=".xlsx"/>
+            </startSlot>
+            <endSlot>
+                <simplePagination id="items_pagination" dataLoader="categoryItemsDl" itemsPerPageVisible="true"/>
+                <gridColumnVisibility dataGrid="categoryItemsDataGrid" icon="COG_O"
+                                      themeNames="tertiary-inline" hideAllEnabled="false"/>
+            </endSlot>
+        </hbox>
+        <dataGrid id="categoryItemsDataGrid"
+                  dataContainer="categoryItemsDc"
+                  width="100%"
+                  minHeight="20em"
+                  multiSort="true"
+                  selectionMode="MULTI"
+                  columnReorderingAllowed="true">
+            <actions>
+                <action id="createAction" type="list_create">
+                    <properties>
+                        <property name="openMode" value="DIALOG"/>
+                    </properties>
+                </action>
+                <action id="editAction" type="list_edit">
+                    <properties>
+                        <property name="openMode" value="DIALOG"/>
+                    </properties>
+                </action>
+                <action id="removeAction" type="list_remove"/>
+                <action id="downloadXls" text="msg://downloadXlsx" icon="DOWNLOAD_ALT"/>
+            </actions>
+            <columns resizable="true" sortable="true">
+                <column property="name"/>
+                <column property="code"/>
+                <column property="category"/>
+                <column property="uom"/>
+                <column property="price" filterable="true"/>
+            </columns>
+        </dataGrid>
+        <hbox id="lookupActions" visible="false">
+            <button id="selectButton" action="selectAction"/>
+            <button id="discardButton" action="discardAction"/>
+        </hbox>
+    </layout>
+</view>

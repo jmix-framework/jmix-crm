@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      title="msg://orderItemDetailView.title"
+      focusMode="NO_FOCUS">
+    <data>
+        <instance id="orderItemDc"
+                  class="com.company.crm.model.order.OrderItem">
+            <fetchPlan extends="_base">
+                <property name="order" fetchPlan="_base">
+                    <property name="client" fetchPlan="_base"/>
+                </property>
+            </fetchPlan>
+            <loader id="orderItemDl"/>
+        </instance>
+    </data>
+    <facets>
+        <settings auto="true"/>
+        <dataLoadCoordinator auto="true"/>
+    </facets>
+    <actions>
+        <action id="saveCloseAction" type="detail_saveClose"/>
+        <action id="closeAction" type="detail_close"/>
+    </actions>
+    <layout>
+        <formLayout id="form" dataContainer="orderItemDc" maxWidth="40em">
+            <responsiveSteps>
+                <responsiveStep minWidth="0" columns="1"/>
+                <responsiveStep minWidth="40em" columns="2"/>
+            </responsiveSteps>
+            <entityPicker id="clientField" property="order.client" readOnly="true" colspan="2"/>
+            <entityPicker id="orderField" property="order" readOnly="true" colspan="2">
+                <actions>
+                    <action id="entityLookupAction" type="entity_lookup"/>
+                    <action id="entityClearAction" type="entity_clear"/>
+                </actions>
+            </entityPicker>
+            <entityComboBox id="categoryItemField" property="categoryItem" colspan="2" dataContainer="orderItemDc"
+                            required="true">
+                <actions>
+                    <action id="entityLookupAction" type="entity_lookup"/>
+                    <action id="entityClearAction" type="entity_clear"/>
+                </actions>
+                <itemsQuery class="com.company.crm.model.catalog.item.CategoryItem" escapeValueForLike="true"
+                            searchStringFormat="(?i)%${inputString}%">
+                    <fetchPlan extends="_base"/>
+                    <query>
+                        <![CDATA[select e from CategoryItem e where e.name like :searchString escape '\' order by e.name]]>
+                    </query>
+                </itemsQuery>
+            </entityComboBox>
+            <textField id="unitPriceField" property="unitPrice" readOnly="true"/>
+            <bigDecimalField id="quantityField" property="quantity" clearButtonVisible="true">
+                <prefix>
+                    <button id="minusQuantityButton" icon="MINUS" themeNames="icon contrast small tertiary-inline"/>
+                </prefix>
+                <suffix>
+                    <button id="plusQuantityButton" icon="PLUS" themeNames="icon contrast small tertiary-inline"/>
+                </suffix>
+            </bigDecimalField>
+            <textField id="netPriceField" property="netPrice" readOnly="true"/>
+            <textField id="vatField" property="vat" clearButtonVisible="true"/>
+            <textField id="grossPriceField" property="grossPrice" readOnly="true"/>
+            <switch id="vatIncludedField" property="vatIncluded"/>
+            <textField id="discountField" property="discount" clearButtonVisible="true"/>
+            <textField id="totalField" property="total" readOnly="true" colspan="2"/>
+        </formLayout>
+        <hbox id="detailActions">
+            <button id="saveAndCloseButton" action="saveCloseAction"/>
+            <button id="closeButton" action="closeAction"/>
+        </hbox>
+    </layout>
+</view>

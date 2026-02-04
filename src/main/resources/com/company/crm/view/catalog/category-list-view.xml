@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      title="msg://categoryListView.title" focusMode="NO_FOCUS">
+    <data>
+        <collection id="categoriesDc"
+                    class="com.company.crm.model.catalog.category.Category">
+            <fetchPlan extends="_base">
+                <property name="parent" fetchPlan="_base"/>
+            </fetchPlan>
+            <loader id="categoriesDl"/>
+        </collection>
+    </data>
+    <facets>
+        <settings auto="true"/>
+        <dataLoadCoordinator auto="false"/>
+        <urlQueryParameters>
+            <pagination component="pagination"/>
+            <genericFilter component="genericFilter"/>
+        </urlQueryParameters>
+    </facets>
+    <actions>
+        <action id="selectAction" type="lookup_select"/>
+        <action id="discardAction" type="lookup_discard"/>
+    </actions>
+    <layout>
+        <genericFilter id="genericFilter" dataLoader="categoriesDl">
+            <properties include=".*"/>
+        </genericFilter>
+        <hbox id="buttonsPanel" classNames="buttons-panel">
+            <startSlot>
+                <button id="createButton" action="categoriesDataGrid.createAction"/>
+                <button id="editButton" action="categoriesDataGrid.editAction"/>
+                <button id="removeButton" action="categoriesDataGrid.removeAction"/>
+                <button id="excelExport" action="categoriesDataGrid.excelExport"/>
+            </startSlot>
+            <endSlot>
+                <simplePagination id="pagination" dataLoader="categoriesDl" itemsPerPageVisible="true"/>
+                <gridColumnVisibility dataGrid="categoriesDataGrid" icon="COG_O"
+                                      themeNames="tertiary-inline" hideAllEnabled="false"/>
+            </endSlot>
+        </hbox>
+        <treeDataGrid id="categoriesDataGrid"
+                      hierarchyProperty="parent"
+                      selectionMode="SINGLE"
+                      editorBuffered="true"
+                      width="100%"
+                      minHeight="20em"
+                      dataContainer="categoriesDc"
+                      dropMode="ON_TOP_OR_BETWEEN"
+                      rowsDraggable="true"
+                      columnReorderingAllowed="true">
+            <actions>
+                <action id="createAction" type="list_create">
+                    <properties>
+                        <property name="openMode" value="DIALOG"/>
+                    </properties>
+                </action>
+                <action id="editAction" type="list_edit">
+                    <properties>
+                        <property name="openMode" value="DIALOG"/>
+                    </properties>
+                </action>
+                <action id="removeAction" type="list_remove"/>
+                <action id="excelExport" type="grdexp_excelExport"/>
+            </actions>
+            <columns resizable="true" sortable="true">
+                <column property="name" filterable="true" editable="true"/>
+                <column property="code" filterable="true" editable="true"/>
+                <column property="description" filterable="true" editable="true"/>
+            </columns>
+        </treeDataGrid>
+        <hbox id="lookupActions" visible="false">
+            <button id="selectButton" action="selectAction"/>
+            <button id="discardButton" action="discardAction"/>
+        </hbox>
+    </layout>
+</view>

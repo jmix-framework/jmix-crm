@@ -1,0 +1,13 @@
+version: "3"
+services:
+  jmix-crm:
+    image: jmix-crm
+    build:
+      context: .
+    user: root
+    volumes:
+      - jmix:/workspace/.jmix
+    ports:
+      - "8080:8080"
+volumes:
+  jmix: 

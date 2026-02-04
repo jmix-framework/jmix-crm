@@ -1,0 +1,31 @@
+/* custom theme colors*/
+html {
+    --lumo-primary-color: rgb(0, 106, 245);
+}
+
+[theme~="dark"] {
+    --lumo-primary-color: rgb(0, 106, 245);
+    --lumo-base-color: hsl(214, 14%, 10%);
+
+    --lumo-shade-5pct: rgba(27, 37, 50, 0.05);
+    --lumo-shade-10pct: rgba(27, 37, 50, 0.1);
+    --lumo-shade-20pct: rgba(27, 37, 50, 0.2);
+    --lumo-shade-30pct: rgba(27, 37, 50, 0.3);
+    --lumo-shade-40pct: rgba(27, 37, 50, 0.4);
+    --lumo-shade-50pct: rgba(27, 37, 50, 0.5);
+    --lumo-shade-60pct: rgba(27, 37, 50, 0.6);
+    --lumo-shade-70pct: rgba(27, 37, 50, 0.7);
+    --lumo-shade-80pct: rgba(27, 37, 50, 0.8);
+    --lumo-shade-90pct: rgba(27, 37, 50, 0.9);
+    --lumo-shade: hsl(214, 30%, 15%);
+
+    --lumo-success-text-color: rgb(49, 221, 121);
+    --lumo-success-color-50pct: rgba(31, 193, 99, 0.5);
+    --lumo-success-color-10pct: rgba(31, 193, 99, 0.1);
+    --lumo-success-color: hsl(145, 72%, 44%);
+
+    --lumo-error-text-color: rgb(248, 97, 89);
+    --lumo-error-color-50pct: rgba(185, 52, 45, 0.5);
+    --lumo-error-color-10pct: rgba(185, 52, 45, 0.1);
+    --lumo-error-color: hsl(3, 61%, 45%);
+}

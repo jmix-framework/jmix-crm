@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<menu-config xmlns="http://jmix.io/schema/flowui/menu">
+
+    <item view="HomeView" id="home"
+          title="msg:///menu_config.home.title"
+          description="msg:///menu_config.home.description"
+          icon="vaadin:home"/>
+
+    <item view="UserTask.list" id="tasks"
+          title="msg:///menu_config.tasks.title"
+          icon="vaadin:check-square"/>
+
+    <menu id="catalog"
+          title="msg:///menu_config.catalog.title"
+          icon="vaadin:open-book"
+          opened="true">
+        <item view="Category.list" id="categories"
+              title="msg:///menu_config.catalog.categories.title"
+              icon="vaadin:list-ul"/>
+        <item view="CategoryItem.list" id="products"
+              title="msg:///menu_config.catalog.categoryItems.title"
+              icon="vaadin:cubes"/>
+    </menu>
+
+    <item view="Client.list" id="clients"
+          title="msg:///menu_config.clients.title"
+          icon="vaadin:users"/>
+
+    <item view="Order.list" id="orders"
+          title="msg:///menu_config.orders.title"
+          icon="vaadin:cart"/>
+
+    <menu id="finance"
+          title="msg:///menu_config.finance.title"
+          icon="vaadin:pie-chart"
+          opened="true">
+        <item view="Invoice.list" id="invoices"
+              title="msg:///menu_config.finance.invoices.title"
+              icon="vaadin:file-text"/>
+        <item view="Payment.list" id="payments"
+              title="msg:///menu_config.finance.payments.title"
+              icon="vaadin:wallet"/>
+    </menu>
+
+    <menu id="administration"
+          description="msg:///menu_config.administration.description"
+          title="msg:///menu_config.administration.title"
+          icon="vaadin:cog">
+        <item view="dynat_CategoryView.list" id="dynamic_attributes"
+              icon="vaadin:table"
+              title="msg://io.jmix.dynattrflowui.panel/category"/>
+        <item view="appSettings.view" id="app_settings"
+              title="msg://io.jmix.appsettingsflowui.view.appsettings/appSettingsEntityView.menu" icon="vaadin:wrench"/>
+    </menu>
+</menu-config>

@@ -1,0 +1,10 @@
+/* Define your styles here */
+html {
+    --lumo-clickable-cursor: pointer;
+
+    --lumo-line-height-m: 1.4;
+    --lumo-line-height-s: 1.2;
+    --lumo-line-height-xs: 1.1;
+
+    --lumo-border-radius: 0.5em;
+}

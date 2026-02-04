@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      title="msg://orderListView.title" focusMode="NO_FOCUS">
+    <data>
+        <collection id="ordersDc"
+                    class="com.company.crm.model.order.Order">
+            <fetchPlan extends="_base">
+                <property name="client" fetchPlan="_base"/>
+                <property name="invoices" fetchPlan="_base"/>
+            </fetchPlan>
+            <loader id="ordersDl" readOnly="true"/>
+        </collection>
+        <collection id="clientsDc"
+                    class="com.company.crm.model.client.Client">
+            <loader id="clientsDl" readOnly="true"/>
+        </collection>
+    </data>
+    <facets>
+        <settings auto="true"/>
+        <dataLoadCoordinator auto="false"/>
+        <urlQueryParameters>
+            <pagination component="pagination"/>
+            <genericFilter component="advancedFilter"/>
+        </urlQueryParameters>
+    </facets>
+    <actions>
+        <action id="selectAction" type="lookup_select"/>
+        <action id="discardAction" type="lookup_discard"/>
+    </actions>
+    <layout>
+        <div width="100%" maxWidth="40em">
+            <formLayout width="100%">
+                <responsiveSteps>
+                    <responsiveStep minWidth="0" columns="1"/>
+                    <responsiveStep minWidth="20em" columns="2"/>
+                </responsiveSteps>
+                <textField id="searchField" placeholder="msg://searchField.placeholder" clearButtonVisible="true">
+                    <prefix>
+                        <icon icon="SEARCH"/>
+                    </prefix>
+                </textField>
+                <entityComboBox id="clientComboBox" placeholder="msg:///clientComboBox.placeholder"
+                                metaClass="Client" itemsContainer="clientsDc">
+                    <actions>
+                        <action id="clear" type="value_clear"/>
+                    </actions>
+                </entityComboBox>
+                <datePicker id="fromDatePicker" placeholder="msg:///fromDatePicker.label" clearButtonVisible="true"/>
+                <datePicker id="toDatePicker" placeholder="msg:///toDatePicker.label" clearButtonVisible="true"/>
+            </formLayout>
+            <genericFilter id="advancedFilter" dataLoader="ordersDl" maxWidth="48em"
+                           opened="false" summaryText="msg:///advanced" themeNames="filled">
+                <properties include=".*"/>
+            </genericFilter>
+        </div>
+
+        <hbox id="buttonsPanel" classNames="buttons-panel">
+            <startSlot>
+                <button id="createButton" action="ordersDataGrid.createAction"/>
+                <button id="editButton" action="ordersDataGrid.editAction"/>
+                <button id="removeButton" action="ordersDataGrid.removeAction"/>
+                <button id="addInvoice" action="ordersDataGrid.addInvoice"/>
+                <button id="excelExport" action="ordersDataGrid.excelExport"/>
+            </startSlot>
+            <endSlot>
+                <simplePagination id="pagination" dataLoader="ordersDl" itemsPerPageVisible="true"/>
+                <gridColumnVisibility dataGrid="ordersDataGrid" icon="COG_O"
+                                      themeNames="tertiary-inline" hideAllEnabled="false"/>
+            </endSlot>
+        </hbox>
+        <component id="pipeLineFilter" class="com.company.crm.app.ui.component.OrderStatusPipeline"/>
+        <dataGrid id="ordersDataGrid" dataContainer="ordersDc"
+                  width="100%"
+                  minHeight="20em"
+                  multiSort="true"
+                  selectionMode="MULTI"
+                  themeNames="column-borders"
+                  columnReorderingAllowed="true"
+                  aggregatable="true"
+                  aggregationPosition="BOTTOM">
+            <actions>
+                <action id="createAction" type="list_create"/>
+                <action id="editAction" type="list_edit"/>
+                <action id="removeAction" type="list_remove"/>
+                <action id="addInvoice" type="list_itemTracking" text="msg://addInvoice" icon="INVOICE"/>
+                <action id="excelExport" type="grdexp_excelExport"/>
+            </actions>
+            <columns resizable="true" sortable="true">
+                <column key="itemDetails" frozen="true" flexGrow="0" autoWidth="true" sortable="false"/>
+                <column property="number" autoWidth="true" flexGrow="0"/>
+                <column property="status" autoWidth="true" flexGrow="0" filterable="true"/>
+                <column property="date" autoWidth="true" flexGrow="0"/>
+                <column property="client"/>
+                <column property="total" autoWidth="true" flexGrow="0">
+                    <aggregation type="SUM">
+                        <formatter>
+                            <number/>
+                        </formatter>
+                    </aggregation>
+                </column>
+                <column property="invoiced" autoWidth="true" flexGrow="0">
+                    <aggregation type="SUM">
+                        <formatter>
+                            <number/>
+                        </formatter>
+                    </aggregation>
+                </column>
+                <column property="paid" autoWidth="true" flexGrow="0">
+                    <aggregation type="SUM">
+                        <formatter>
+                            <number/>
+                        </formatter>
+                    </aggregation>
+                </column>
+                <column property="leftOverSum">
+                    <aggregation type="SUM">
+                        <formatter>
+                            <number/>
+                        </formatter>
+                    </aggregation>
+                </column>
+            </columns>
+        </dataGrid>
+        <hbox id="lookupActions" visible="false">
+            <button id="selectButton" action="selectAction"/>
+            <button id="discardButton" action="discardAction"/>
+        </hbox>
+    </layout>
+</view>

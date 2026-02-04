@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      title="msg://userTaskListView.title">
+    <data>
+        <collection id="userTasksDc"
+                    class="com.company.crm.model.user.task.UserTask">
+            <fetchPlan extends="_base">
+                <property name="author" fetchPlan="_base"/>
+            </fetchPlan>
+            <loader id="userTasksDl"/>
+        </collection>
+        <instance id="userTaskDc"
+                  class="com.company.crm.model.user.task.UserTask">
+            <fetchPlan extends="_base">
+                <property name="author" fetchPlan="_base"/>
+            </fetchPlan>
+            <loader id="userTaskDl"/>
+        </instance>
+    </data>
+    <facets>
+        <settings auto="true"/>
+        <dataLoadCoordinator auto="true"/>
+        <urlQueryParameters>
+            <pagination component="pagination"/>
+            <genericFilter component="genericFilter"/>
+            <dataGridFilter component="userTasksDataGrid"/>
+        </urlQueryParameters>
+    </facets>
+    <actions>
+        <action id="selectAction" type="lookup_select"/>
+        <action id="discardAction" type="lookup_discard"/>
+    </actions>
+    <layout padding="false">
+        <formLayout id="layoutWrapper" classNames="master-detail-layout" width="100%" height="100%">
+            <vbox id="listLayout" height="100%" colspan="1">
+                <genericFilter id="genericFilter" dataLoader="userTasksDl">
+                    <properties include=".*"/>
+                </genericFilter>
+                <hbox id="buttonsPanel" classNames="buttons-panel">
+                    <startSlot>
+                        <button id="createButton" action="userTasksDataGrid.createAction"/>
+                        <button id="editButton" action="userTasksDataGrid.editAction"/>
+                        <button id="removeButton" action="userTasksDataGrid.removeAction"/>
+                        <button id="excelExportBtn" action="userTasksDataGrid.excelExport"/>
+                    </startSlot>
+                    <endSlot>
+                        <simplePagination id="pagination" dataLoader="userTasksDl" itemsPerPageVisible="true"/>
+                        <gridColumnVisibility dataGrid="userTasksDataGrid" icon="COG_O"
+                                              themeNames="tertiary-inline" hideAllEnabled="false"/>
+                    </endSlot>
+                </hbox>
+                <dataGrid id="userTasksDataGrid"
+                          width="100%"
+                          minHeight="10em"
+                          multiSort="true"
+                          themeNames="row-stripes"
+                          dataContainer="userTasksDc"
+                          columnReorderingAllowed="true">
+                    <actions>
+                        <action id="createAction" type="list_create"/>
+                        <action id="editAction" type="list_edit"/>
+                        <action id="removeAction" type="list_remove"/>
+                        <action id="excelExport" type="grdexp_excelExport"/>
+                    </actions>
+                    <columns resizable="true" sortable="true">
+                        <column property="title" filterable="true"/>
+                        <column property="dueDate" filterable="true"/>
+                        <column property="isCompleted" filterable="true"/>
+                    </columns>
+                </dataGrid>
+                <hbox id="lookupActions" visible="false">
+                    <button id="selectButton" action="selectAction"/>
+                    <button id="discardButton" action="discardAction"/>
+                </hbox>
+            </vbox>
+            <vbox id="detailsLayout" height="100%" colspan="1">
+                <formLayout id="form" dataContainer="userTaskDc" autoResponsive="true"
+                            maxColumns="1" expandColumns="true" expandFields="true">
+                    <responsiveSteps>
+                        <responsiveStep minWidth="0" columns="1"/>
+                        <responsiveStep minWidth="40em" columns="2"/>
+                    </responsiveSteps>
+                    <textField id="titleField" property="title"/>
+                    <richTextEditor id="descriptionField" height="9.5em" property="description"/>
+                    <datePicker id="dueDateField" property="dueDate"/>
+                    <checkbox id="isCompletedField" property="isCompleted"/>
+                </formLayout>
+                <hbox id="detailActions">
+                    <button id="saveButton" text="msg:///actions.Save" icon="CHECK" themeNames="primary"/>
+                    <button id="cancelButton" text="msg:///actions.Cancel" icon="BAN"/>
+                </hbox>
+            </vbox>
+        </formLayout>
+    </layout>
+</view>

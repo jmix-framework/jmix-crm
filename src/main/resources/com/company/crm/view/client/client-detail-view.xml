@@ -1,0 +1,306 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view" xmlns:dynattr="http://jmix.io/schema/dynattr/flowui"
+      title="msg://clientDetailView.title" focusMode="NO_FOCUS">
+    <data>
+        <instance id="clientDc"
+                  class="com.company.crm.model.client.Client">
+            <fetchPlan extends="_base">
+                <property name="accountManager" fetchPlan="_base"/>
+                <property name="contacts" fetchPlan="_base"/>
+            </fetchPlan>
+            <loader id="clientDl"/>
+            <instance id="addressDc" property="address"/>
+            <collection id="contactsDc" property="contacts"/>
+        </instance>
+        <collection id="ordersDc" class="com.company.crm.model.order.Order">
+            <fetchPlan extends="_base">
+                <property name="orderItems" fetchPlan="_base"/>
+            </fetchPlan>
+            <loader id="ordersDl">
+                <query>
+                    <![CDATA[select e from Order_ e where e.client = :container_clientDc]]>
+                </query>
+            </loader>
+        </collection>
+        <collection id="invoicesDc" class="com.company.crm.model.invoice.Invoice">
+            <fetchPlan extends="_base">
+                <property name="order" fetchPlan="_base"/>
+            </fetchPlan>
+            <loader id="invoicesDl">
+                <query>
+                    <![CDATA[select e from Invoice e where e.client = :container_clientDc]]>
+                </query>
+            </loader>
+        </collection>
+        <collection id="paymentsDc" class="com.company.crm.model.payment.Payment">
+            <fetchPlan extends="_base">
+                <property name="invoice" fetchPlan="_base"/>
+            </fetchPlan>
+            <loader id="paymentsDl">
+                <query>
+                    <![CDATA[select e from Payment e where e.invoice.client = :container_clientDc]]>
+                </query>
+            </loader>
+        </collection>
+    </data>
+    <facets>
+        <settings auto="true"/>
+        <dataLoadCoordinator auto="true"/>
+        <urlQueryParameters id="urlQueryParameters">
+            <dataGridFilter component="ordersDataGrid"/>
+            <dataGridFilter component="contactsDataGrid"/>
+            <dataGridFilter component="invoicesDataGrid"/>
+            <dataGridFilter component="paymentsDataGrid"/>
+        </urlQueryParameters>
+        <dynattr:dynamicAttributes/>
+    </facets>
+    <actions>
+        <action id="saveCloseAction" type="detail_saveClose" text="msg:///actions.Save"/>
+        <action id="closeAction" type="detail_close" text="msg:///actions.Close" icon="vaadin:close"/>
+        <action id="downloadProfile" text="msg://downloadProfile" icon="vaadin:download-alt"/>
+    </actions>
+    <layout>
+        <hbox padding="true" width="100%" justifyContent="BETWEEN" alignItems="CENTER">
+            <h2 id="clientName" classNames="ml-m"/>
+            <hbox id="detailActions">
+                <button id="saveAndCloseButton" action="saveCloseAction"/>
+                <button id="closeButton" action="closeAction"/>
+                <button id="downloadProfileButton" action="downloadProfile" themeNames="contrast"/>
+            </hbox>
+        </hbox>
+        <scroller width="100%" height="100%">
+            <div width="100%" height="100%">
+                <tabSheet id="tabSheet" width="100%">
+                    <tab id="infoTab" label="msg://infoTabLabel">
+                        <div width="100%">
+                            <formLayout id="summaryBlock" width="100%" classNames="mb-m mt-m"
+                                        autoResponsive="true" autoRows="true"
+                                        expandFields="true" expandColumns="true" rowSpacing="1em">
+                                <component id="ordersTotalSumCard"
+                                           class="com.company.crm.app.ui.component.CrmCard"/>
+                                <component id="paymentsTotalSumCard"
+                                           class="com.company.crm.app.ui.component.CrmCard"/>
+                                <component id="averageBillCard" class="com.company.crm.app.ui.component.CrmCard"/>
+                            </formLayout>
+
+                            <split width="100%" id="formSplit" themeNames="minimal" splitterPosition="70">
+                                <vbox padding="false" classNames="pr-m" maxWidth="55em">
+                                    <formLayout id="form" dataContainer="clientDc">
+                                        <responsiveSteps>
+                                            <responsiveStep minWidth="0" columns="1"/>
+                                            <responsiveStep minWidth="40em" columns="2"/>
+                                        </responsiveSteps>
+                                        <h3 text="msg://general" classNames="pt-l" colspan="2"/>
+                                        <textField id="nameField" property="name"/>
+                                        <select id="typeField" property="type"/>
+                                        <textField id="fullNameField" property="fullName"/>
+                                        <textField id="vatNumberField" property="vatNumber"/>
+                                        <textField id="websiteField" property="website"/>
+                                        <textField id="regNumberField" property="regNumber"/>
+                                        <formLayout id="dynamicAttributes" dataContainer="clientDc">
+                                            <responsiveSteps>
+                                                <responsiveStep minWidth="0" columns="1"/>
+                                            </responsiveSteps>
+                                        </formLayout>
+                                        <textArea id="addressField" colspan="2" readOnly="true"
+                                                  property="address.instanceName">
+                                            <suffix>
+                                                <button id="addressEditBtn" icon="PENCIL"
+                                                        themeNames="icon primary tertiary"/>
+                                            </suffix>
+                                        </textArea>
+                                    </formLayout>
+                                </vbox>
+
+                                <vbox width="100%" padding="false" alignItems="CENTER" classNames="pl-m"
+                                      maxWidth="30em">
+                                    <formLayout dataContainer="clientDc" alignSelf="CENTER">
+                                        <responsiveSteps>
+                                            <responsiveStep minWidth="0" columns="1"/>
+                                        </responsiveSteps>
+                                        <h3 text="msg://managementTitle" classNames="pt-l"/>
+                                        <entityComboBox id="accountManagerField" property="accountManager"
+                                                        readOnly="true" classNames="pb-l" dataContainer="clientDc">
+                                            <itemsQuery class="com.company.crm.model.user.User"
+                                                        escapeValueForLike="true"
+                                                        searchStringFormat="(?i)%${inputString}%">
+                                                <fetchPlan extends="_base"/>
+                                                <query>
+                                                    <![CDATA[select e from User e where e.username like :searchString escape '\' order by e.username]]>
+                                                </query>
+                                            </itemsQuery>
+                                            <actions>
+                                                <action id="entityClear" type="entity_clear"/>
+                                                <action id="entityLookup" type="entity_lookup"/>
+                                                <action id="entityOpen" type="entity_open"/>
+                                            </actions>
+                                        </entityComboBox>
+                                        <component id="recentActivities"
+                                                   class="com.company.crm.app.ui.component.RecentActivitiesBlock">
+                                            <properties>
+                                                <property name="border" value="true"/>
+                                            </properties>
+                                        </component>
+                                    </formLayout>
+                                </vbox>
+                            </split>
+                        </div>
+                    </tab>
+
+                    <tab id="contactsTab" label="msg://contactsTabLabel">
+                        <vbox width="100%" height="100%">
+                            <hbox id="contactsButtonsPanel" classNames="buttons-panel">
+                                <startSlot>
+                                    <button id="createContactButton" action="contactsDataGrid.createAction"/>
+                                    <button id="editContactButton" action="contactsDataGrid.editAction"/>
+                                    <button id="removeContactButton" action="contactsDataGrid.removeAction"/>
+                                </startSlot>
+                            </hbox>
+                            <dataGrid id="contactsDataGrid" dataContainer="contactsDc" multiSort="true" columnReorderingAllowed="true">
+                                <actions>
+                                    <action id="createAction" type="list_create">
+                                        <properties>
+                                            <property name="openMode" value="DIALOG"/>
+                                        </properties>
+                                    </action>
+                                    <action id="editAction" type="list_edit">
+                                        <properties>
+                                            <property name="openMode" value="DIALOG"/>
+                                        </properties>
+                                    </action>
+                                    <action id="removeAction" type="list_remove"/>
+                                </actions>
+                                <columns resizable="true" sortable="true">
+                                    <column property="person"/>
+                                    <column property="position"/>
+                                    <column property="email"/>
+                                    <column property="phone"/>
+                                </columns>
+                            </dataGrid>
+                        </vbox>
+                    </tab>
+
+                    <tab id="ordersTab" label="msg://ordersTabLabel">
+                        <vbox width="100%" height="100%">
+                            <hbox id="ordersButtonsPanel" classNames="buttons-panel">
+                                <startSlot>
+                                    <button id="createOrderButton" action="ordersDataGrid.createAction"/>
+                                    <button id="editOrderButton" action="ordersDataGrid.editAction"/>
+                                    <button id="removeOrderButton" action="ordersDataGrid.removeAction"/>
+                                </startSlot>
+                            </hbox>
+                            <dataGrid id="ordersDataGrid" dataContainer="ordersDc" multiSort="true" columnReorderingAllowed="true">
+                                <actions>
+                                    <action id="createAction" type="list_create">
+                                        <properties>
+                                            <property name="openMode" value="DIALOG"/>
+                                        </properties>
+                                    </action>
+                                    <action id="editAction" type="list_edit">
+                                        <properties>
+                                            <property name="openMode" value="DIALOG"/>
+                                        </properties>
+                                    </action>
+                                    <action id="removeAction" type="list_remove"/>
+                                </actions>
+                                <columns resizable="true" sortable="true">
+                                    <column property="number" filterable="true"/>
+                                    <column property="date" filterable="true"/>
+                                    <column property="status" filterable="true"/>
+                                    <column property="total" filterable="true"/>
+                                </columns>
+                            </dataGrid>
+                        </vbox>
+                    </tab>
+
+                    <tab id="invoicesTab" label="msg://invoicesTabLabel">
+                        <vbox width="100%" height="100%">
+                            <hbox id="invoicesButtonsPanel" classNames="buttons-panel">
+                                <startSlot>
+                                    <button id="createInvoiceButton" action="invoicesDataGrid.createAction"/>
+                                    <button id="editInvoiceButton" action="invoicesDataGrid.editAction"/>
+                                    <button id="removeInvoiceButton" action="invoicesDataGrid.removeAction"/>
+                                </startSlot>
+                            </hbox>
+                            <hbox id="invoicesOutstandingBalance" width="100%" padding="true"
+                                  justifyContent="BETWEEN" alignItems="CENTER"
+                                  classNames="mb-s mt-s bg-contrast-5 border rounded-l">
+                                <span text="msg://outstandingBalance"/>
+                                <h3 id="outstandingBalanceValue" text="-"/>
+                            </hbox>
+                            <dataGrid id="invoicesDataGrid" dataContainer="invoicesDc" multiSort="true" columnReorderingAllowed="true">
+                                <actions>
+                                    <action id="createAction" type="list_create">
+                                        <properties>
+                                            <property name="openMode" value="DIALOG"/>
+                                        </properties>
+                                    </action>
+                                    <action id="editAction" type="list_edit">
+                                        <properties>
+                                            <property name="openMode" value="DIALOG"/>
+                                        </properties>
+                                    </action>
+                                    <action id="removeAction" type="list_remove"/>
+                                </actions>
+                                <columns resizable="true" sortable="true">
+                                    <column property="status" filterable="true"/>
+                                    <column property="order.number" filterable="true"
+                                            header="msg://com.company.crm.model.invoice/Invoice.order"/>
+                                    <column property="date" filterable="true"/>
+                                    <column property="dueDate" filterable="true"/>
+                                    <column property="vat" filterable="true"/>
+                                    <column property="subtotal" filterable="true"/>
+                                    <column property="total" filterable="true"/>
+                                </columns>
+                            </dataGrid>
+                        </vbox>
+                    </tab>
+
+                    <tab id="paymentsTab" label="msg://paymentsTabLabel">
+                        <vbox width="100%" height="100%">
+                            <hbox id="paymentsButtonsPanel" classNames="buttons-panel">
+                                <startSlot>
+                                    <button id="createPaymentButton" action="paymentsDataGrid.createAction"/>
+                                    <button id="editPaymentButton" action="paymentsDataGrid.editAction"/>
+                                    <button id="removePaymentButton" action="paymentsDataGrid.removeAction"/>
+                                </startSlot>
+                            </hbox>
+                            <dataGrid id="paymentsDataGrid" dataContainer="paymentsDc" multiSort="true" columnReorderingAllowed="true">
+                                <actions>
+                                    <action id="createAction" type="list_create">
+                                        <properties>
+                                            <property name="openMode" value="DIALOG"/>
+                                        </properties>
+                                    </action>
+                                    <action id="editAction" type="list_edit">
+                                        <properties>
+                                            <property name="openMode" value="DIALOG"/>
+                                        </properties>
+                                    </action>
+                                    <action id="removeAction" type="list_remove"/>
+                                </actions>
+                                <columns resizable="true" sortable="true">
+                                    <column property="number" filterable="true"/>
+                                    <column property="invoice" filterable="true"/>
+                                    <column property="date" filterable="true"/>
+                                    <column property="amount" filterable="true"/>
+                                </columns>
+                            </dataGrid>
+                        </vbox>
+                    </tab>
+
+                    <tab id="analyticsTab" label="msg://analyticsTabLabel">
+                        <div width="100%">
+                            <formLayout id="analyticChartsBlock" width="100%" classNames="mb-m mt-m">
+                                <responsiveSteps>
+                                    <responsiveStep minWidth="0" columns="1"/>
+                                    <responsiveStep minWidth="60em" columns="3"/>
+                                </responsiveSteps>
+                            </formLayout>
+                        </div>
+                    </tab>
+                </tabSheet>
+            </div>
+        </scroller>
+    </layout>
+</view>
