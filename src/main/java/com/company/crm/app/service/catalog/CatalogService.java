@@ -3,6 +3,7 @@ package com.company.crm.app.service.catalog;
 import com.company.crm.app.service.catalog.CatalogImportSettings.CategoryItemMappingInfo;
 import com.company.crm.app.service.catalog.CatalogImportSettings.CategoryMappingInfo;
 import com.company.crm.app.service.catalog.CatalogImportSettings.MappingInfo;
+import com.company.crm.app.service.storage.CrmFileStorage;
 import com.company.crm.app.util.date.range.LocalDateRange;
 import com.company.crm.model.catalog.category.Category;
 import com.company.crm.model.catalog.category.CategoryRepository;
@@ -10,7 +11,6 @@ import com.company.crm.model.catalog.item.CategoryItem;
 import com.company.crm.model.catalog.item.CategoryItemRepository;
 import com.company.crm.model.catalog.item.UomType;
 import io.jmix.core.FileRef;
-import io.jmix.core.FileStorage;
 import io.jmix.core.FluentValuesLoader;
 import io.jmix.core.UnconstrainedDataManager;
 import io.jmix.flowui.UiComponents;
@@ -44,6 +44,7 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static com.company.crm.app.service.storage.CrmFileStorage.IMAGES_FOLDER_PATH;
 import static org.apache.commons.lang3.StringUtils.isAnyBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
@@ -52,14 +53,14 @@ public class CatalogService {
 
     private static final Logger log = LoggerFactory.getLogger(CatalogService.class);
 
-    private final FileStorage fileStorage;
+    private final CrmFileStorage fileStorage;
     private final UnconstrainedDataManager dataManager;
     private final CategoryRepository categoryRepository;
     private final CategoryItemRepository categoryItemRepository;
     private final ObjectProvider<Downloader> downloaderProvider;
 
     public CatalogService(CategoryItemRepository categoryItemRepository, UnconstrainedDataManager dataManager,
-                          FileStorage fileStorage, CategoryRepository categoryRepository, ObjectProvider<Downloader> downloaderProvider, UiComponents uiComponents) {
+                          CrmFileStorage fileStorage, CategoryRepository categoryRepository, ObjectProvider<Downloader> downloaderProvider, UiComponents uiComponents) {
         this.categoryItemRepository = categoryItemRepository;
         this.dataManager = dataManager;
         this.fileStorage = fileStorage;
@@ -319,11 +320,15 @@ public class CatalogService {
             }
 
             if (imageName != null && imageDataProvider != null) {
-                InputStream imageStream = imageDataProvider.apply(imageName);
-                if (imageStream != null) {
-                    FileRef fileRef = fileStorage.saveStream(imageName, imageStream);
-                    item.setImage(fileRef);
+                String imageFilePath = IMAGES_FOLDER_PATH + "/" + imageName;
+                FileRef imageRef = new FileRef(fileStorage.getStorageName(), imageFilePath, imageName);
+                if (!fileStorage.fileExists(imageRef)) {
+                    InputStream imageStream = imageDataProvider.apply(imageName);
+                    if (imageStream != null) {
+                        fileStorage.save(imageRef, imageStream);
+                    }
                 }
+                item.setImage(imageRef);
             }
 
             itemsByCode.put(code, item);
