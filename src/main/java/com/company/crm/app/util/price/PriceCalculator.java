@@ -120,9 +120,14 @@ public final class PriceCalculator {
     }
 
     public static BigDecimal calculateVatPercent(OrderItem item) {
-        return zeroIfNull(item.getGrossPrice())
+        BigDecimal grossPrice = zeroIfNull(item.getGrossPrice());
+        if (grossPrice == null || grossPrice.compareTo(BigDecimal.ZERO) <= 0) {
+            return BigDecimal.ZERO;
+        }
+
+        return grossPrice
                 .subtract(zeroIfNull(item.getNetPrice()))
-                .divide(zeroIfNull(item.getGrossPrice()), DEFAULT_SCALE, DEFAULT_ROUNDING)
+                .divide(grossPrice, DEFAULT_SCALE, DEFAULT_ROUNDING)
                 .multiply(BigDecimal.valueOf(100))
                 .setScale(DEFAULT_SCALE, DEFAULT_ROUNDING);
     }
