@@ -233,7 +233,7 @@ public class MainView extends StandardMainView {
         aiComponent.setUserName(currentAuthentication.getUser().getUsername());
         aiComponent.setConversationId(savedConversation.getId().toString());
 
-        aiComponent.setMessageProcessor(this::processPopoverMessageDirect);
+        aiComponent.setMessageProcessor(this::processPopoverMessage);
         aiComponent.setHistoryLoader(this::loadPopoverHistory);
 
         aiComponent.setHeaderButtonProvider(() -> {
@@ -458,9 +458,9 @@ public class MainView extends StandardMainView {
     }
 
     /**
-     * Direct messageProcessor for popover AI component - async processing with real CRM analytics service
+     * MessageProcessor for popover AI component - async processing with real CRM analytics service
      */
-    private String processPopoverMessageDirect(String userMessage) {
+    private String processPopoverMessage(String userMessage) {
         String conversationId = getCurrentPopoverConversationId();
 
         if (currentAiComponent != null) {
@@ -472,7 +472,7 @@ public class MainView extends StandardMainView {
     }
 
     /**
-     * Direct historyLoader for popover AI component - loads conversation history
+     * HistoryLoader for popover AI component - loads conversation history
      */
     private List<MessageListItem> loadPopoverHistory(String conversationId) {
         log.info("Loading popover history for conversation: {}", conversationId);
