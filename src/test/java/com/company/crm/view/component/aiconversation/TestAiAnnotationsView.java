@@ -70,15 +70,4 @@ public class TestAiAnnotationsView extends StandardView {
     //         .build();
     // }
 
-    /**
-     * @Subscribe for events - demonstrates event-based @Subscribe pattern.
-     * The framework automatically calls this method when MessageSentEvent is fired.
-     * Currently commented out as it requires additional Jmix framework integration.
-     */
-    // @Subscribe(id = "aiComponent", subject = "messageSentEvent")
-    // private void onMessageSentEvent(AiConversationComponent.MessageSentEvent event) {
-    //     log.info("@Subscribe messageSentEvent called: message={}, conversationId={}",
-    //         event.getMessage(), event.getConversationId());
-    //     // This could trigger additional event-based logic
-    // }
 }
