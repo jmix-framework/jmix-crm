@@ -55,37 +55,18 @@ public class AiConversationComponentAsyncMessageProcessor {
                     }
                 })
                 .withResultHandler(response -> {
-                    log.info("ResultHandler called with response: {}", response != null ? "Response received" : "NULL response");
-
-                    // Check if UI is available
-                    UI currentUI = null;
-                    try {
-                        currentUI = UI.getCurrent();
-                        log.info("UI.getCurrent() returned: {}", currentUI != null ? "Valid UI" : "NULL UI");
-                    } catch (Exception e) {
-                        log.error("Exception getting UI.getCurrent(): {}", e.getMessage(), e);
-                    }
-
+                    UI currentUI = UI.getCurrent();
                     if (currentUI != null) {
-                        log.info("Attempting UI.access() call...");
                         currentUI.access(() -> {
-                            log.info("Inside UI.access() - about to add message to component");
                             try {
                                 aiComponent.addMessage(response, "Assistant", 2);
-                                log.info("addMessage() completed successfully");
-
                                 aiComponent.hideProgress();
-                                log.info("hideProgress() completed");
 
                                 aiComponent.getMessageInput().setEnabled(true);
-                                log.info("messageInput.setEnabled(true) completed");
-
-                                log.info("UI update sequence completed successfully");
                             } catch (Exception e) {
                                 log.error("Exception during UI update inside access(): {}", e.getMessage(), e);
                             }
                         });
-                        log.info("UI.access() call completed");
                     } else {
                         log.error("Cannot update UI - UI.getCurrent() is null");
                     }
@@ -93,7 +74,6 @@ public class AiConversationComponentAsyncMessageProcessor {
                 .withExceptionHandler(e -> {
                     log.error("Async processing failed", e);
                     UI.getCurrent().access(() -> {
-                        log.error("Adding error message to UI");
                         aiComponent.addMessage("I'm sorry, something went wrong while processing your request.", "Assistant", 2);
                         aiComponent.hideProgress();
                         aiComponent.getMessageInput().setEnabled(true);
