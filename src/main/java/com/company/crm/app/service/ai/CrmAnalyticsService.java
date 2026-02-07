@@ -16,8 +16,18 @@ import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 
 /**
- * Service for AI-powered CRM analytics
- * Provider-agnostic implementation using Spring AI
+ * AI-powered analytics service that processes natural language business questions against CRM data.
+ *
+ * <p>This service leverages Spring AI's ChatClient with function calling capabilities to:
+ * <ul>
+ *   <li>Understand natural language business questions</li>
+ *   <li>Generate and execute JPQL queries against the CRM database</li>
+ *   <li>Introspect the CRM domain model for context</li>
+ *   <li>Maintain conversation memory for contextual multi-turn interactions</li>
+ * </ul>
+ *
+ * <p>The service is configured with a system prompt that defines its role and capabilities,
+ * and uses three main tools: JPQL query execution, domain model introspection, and JPA entity discovery.
  */
 @Service("crm_CrmAnalyticsService")
 public class CrmAnalyticsService {
@@ -56,11 +66,15 @@ public class CrmAnalyticsService {
     }
 
     /**
-     * Process natural language business questions with conversation memory
+     * Processes a natural language business question and returns AI-generated insights.
      *
-     * @param userQuestion Natural language question about the business
-     * @param conversationId Unique identifier for the conversation
-     * @return AI-generated insights with data from the CRM system, with memory of previous messages
+     * <p>The question is processed using AI function calling to query the CRM database and
+     * introspect the domain model as needed. Conversation memory is maintained using the
+     * provided conversation ID to enable contextual multi-turn interactions.
+     *
+     * @param userQuestion the natural language business question to process
+     * @param conversationId unique identifier for maintaining conversation context
+     * @return AI-generated response with insights based on CRM data, or error message if processing fails
      */
     public String processBusinessQuestion(String userQuestion, String conversationId) {
         log.info("Processing business question with memory: {} (conversation: {})", userQuestion, conversationId);
