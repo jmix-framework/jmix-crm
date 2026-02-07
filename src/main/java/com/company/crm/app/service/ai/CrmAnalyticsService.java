@@ -53,8 +53,6 @@ public class CrmAnalyticsService {
         this.jpqlQueryTool = jpqlQueryTool;
         this.crmDomainModelIntrospectionTool = crmDomainModelIntrospectionTool;
         this.jmixJpaEntityDiscoveryTool = jmixJpaEntityDiscoveryTool;
-
-        log.info("CRM Analytics Service initialized with custom ChatClient configuration");
     }
 
     /**
