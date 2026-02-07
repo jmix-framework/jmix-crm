@@ -1,7 +1,6 @@
 package com.company.crm.ai.jmix.view.aiconversation;
 
 import com.company.crm.ai.entity.AiConversation;
-import com.company.crm.ai.jmix.memory.JmixChatMemoryRepository;
 import com.company.crm.app.service.ai.CrmAnalyticsAsyncLoader;
 import com.company.crm.view.component.aiconversation.AiConversationComponent;
 import com.company.crm.view.main.MainView;
@@ -13,8 +12,6 @@ import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.view.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.ai.chat.messages.AssistantMessage;
-import org.springframework.ai.chat.messages.Message;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
@@ -33,8 +30,6 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
     @ViewComponent
     AiConversationComponent aiComponent; // package-private for testing
 
-    @Autowired
-    private JmixChatMemoryRepository chatMemoryRepository;
 
     @Autowired
     private UiComponents uiComponents;
@@ -65,8 +60,7 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
         String conversationId = getEditedEntity().getId().toString();
         crmAnalyticsAsyncLoader.processMessageAsync(userMessage, conversationId, aiComponent);
 
-        // Return null - async processing will handle UI updates
-        return null;
+        return null; // Async processing - response will be added by background task
     }
 
     /**
@@ -74,11 +68,7 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
      */
     @Install(to = "aiComponent", subject = "historyLoader")
     private List<MessageListItem> loadChatHistory(String conversationId) {
-        List<Message> messages = chatMemoryRepository.findByConversationId(conversationId);
-
-        return messages.stream()
-                .map(this::createMessageItem)
-                .toList();
+        return crmAnalyticsAsyncLoader.loadConversationHistory(conversationId);
     }
 
     @Subscribe
@@ -93,16 +83,4 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
 
         log.info("AI conversation component setup complete with @Install messageProcessor and @Install historyLoader");
     }
-
-
-    private MessageListItem createMessageItem(Message message) {
-        boolean isAssistant = message instanceof AssistantMessage;
-        MessageListItem item = new MessageListItem(
-                message.getText(),
-                isAssistant ? aiComponent.getAssistantName() : aiComponent.getUserName()
-        );
-        item.setUserColorIndex(isAssistant ? 2 : 1);
-        return item;
-    }
-
 }
