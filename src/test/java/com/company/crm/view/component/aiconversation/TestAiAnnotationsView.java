@@ -14,8 +14,6 @@ import io.jmix.flowui.view.ViewDescriptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-// Duration import removed
-
 /**
  * Test view to demonstrate all Jmix framework annotation patterns (@Install, @Supply, @Subscribe)
  * with the AiConversationComponent.
