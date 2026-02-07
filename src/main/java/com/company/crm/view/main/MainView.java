@@ -223,7 +223,51 @@ public class MainView extends StandardMainView {
 
     @Subscribe(id = "chatButton", subject = "clickListener")
     private void onChatButtonClick(final ClickEvent<JmixButton> event) {
-        onChatButtonClick();
+        Optional.ofNullable(chatPopover[0]).ifPresent(Popover::removeFromParent);
+
+        String welcomeMessage = messages.getMessage("aiConversation.welcomeMessage");
+        final AiConversation savedConversation = aiConversationService.createNewConversation(welcomeMessage);
+
+        AiConversationComponent aiComponent = uiComponents.create(AiConversationComponent.class);
+
+        aiComponent.setUserName(currentAuthentication.getUser().getUsername());
+        aiComponent.setConversationId(savedConversation.getId().toString());
+
+        aiComponent.setMessageProcessor(this::processPopoverMessageDirect);
+        aiComponent.setHistoryLoader(this::loadPopoverHistory);
+
+        aiComponent.setHeaderButtonProvider(() -> {
+            JmixButton openInViewButton = uiComponents.create(JmixButton.class);
+            openInViewButton.setText(messageBundle.getMessage("aiConversation.openInView"));
+            openInViewButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_SMALL);
+            openInViewButton.setIcon(VaadinIcon.EXTERNAL_LINK.create());
+            openInViewButton.addClickListener(click -> {
+                Optional.ofNullable(chatPopover[0]).ifPresent(Popover::close);
+                viewNavigators.detailView(this, AiConversation.class)
+                        .editEntity(savedConversation)
+                        .navigate();
+            });
+            return List.of(openInViewButton);
+        });
+
+        aiComponent.setHeaderVisible(true);
+        aiComponent.setHeaderTitle(messageBundle.getMessage("aiConversation.title"));
+
+        aiComponent.loadHistory();
+
+        currentAiComponent = aiComponent;
+
+        Popover popover = new Popover(aiComponent);
+        popover.setTarget(chatButton);
+        popover.setWidth("40em");
+        popover.setHeight("35em");
+        popover.setCloseOnEsc(true);
+        popover.setCloseOnOutsideClick(false); // Keep chat open when clicking inside
+        popover.open();
+
+        aiComponent.focus();
+
+        chatPopover[0] = popover;
     }
 
     @Subscribe(id = "applicationTitle", subject = "clickListener")
@@ -287,53 +331,6 @@ public class MainView extends StandardMainView {
         notificationsPopover[0] = popover;
     }
 
-    private void onChatButtonClick() {
-        Optional.ofNullable(chatPopover[0]).ifPresent(Popover::removeFromParent);
-
-        String welcomeMessage = messages.getMessage("aiConversation.welcomeMessage");
-        final AiConversation savedConversation = aiConversationService.createNewConversation(welcomeMessage);
-
-        AiConversationComponent aiComponent = uiComponents.create(AiConversationComponent.class);
-
-        aiComponent.setUserName(currentAuthentication.getUser().getUsername());
-        aiComponent.setConversationId(savedConversation.getId().toString());
-
-        aiComponent.setMessageProcessor(this::processPopoverMessageDirect);
-        aiComponent.setHistoryLoader(this::loadPopoverHistory);
-
-        aiComponent.setHeaderButtonProvider(() -> {
-            JmixButton openInViewButton = uiComponents.create(JmixButton.class);
-            openInViewButton.setText(messageBundle.getMessage("aiConversation.openInView"));
-            openInViewButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_SMALL);
-            openInViewButton.setIcon(VaadinIcon.EXTERNAL_LINK.create());
-            openInViewButton.addClickListener(click -> {
-                Optional.ofNullable(chatPopover[0]).ifPresent(Popover::close);
-                viewNavigators.detailView(this, AiConversation.class)
-                        .editEntity(savedConversation)
-                        .navigate();
-            });
-            return List.of(openInViewButton);
-        });
-
-        aiComponent.setHeaderVisible(true);
-        aiComponent.setHeaderTitle(messageBundle.getMessage("aiConversation.title"));
-
-        aiComponent.loadHistory();
-
-        currentAiComponent = aiComponent;
-
-        Popover popover = new Popover(aiComponent);
-        popover.setTarget(chatButton);
-        popover.setWidth("40em");
-        popover.setHeight("35em");
-        popover.setCloseOnEsc(true);
-        popover.setCloseOnOutsideClick(false); // Keep chat open when clicking inside
-        popover.open();
-
-        aiComponent.focus();
-
-        chatPopover[0] = popover;
-    }
 
     private void onSearchFieldValueChange(TypedValueChangeEvent<TypedTextField<String>, String> event) {
         Optional.ofNullable(searchPopover[0]).ifPresent(Popover::removeFromParent);
