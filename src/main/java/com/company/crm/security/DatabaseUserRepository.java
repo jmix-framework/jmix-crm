@@ -1,6 +1,7 @@
 package com.company.crm.security;
 
 import com.company.crm.model.user.User;
+import com.company.crm.security.role.AdministratorRole;
 import io.jmix.securitydata.user.AbstractDatabaseUserRepository;
 import org.springframework.context.annotation.Primary;
 import org.springframework.security.core.GrantedAuthority;

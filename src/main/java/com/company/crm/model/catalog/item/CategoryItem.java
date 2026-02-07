@@ -2,12 +2,14 @@ package com.company.crm.model.catalog.item;
 
 import com.company.crm.model.base.FullAuditEntity;
 import com.company.crm.model.catalog.category.Category;
+import com.company.crm.model.datatype.PriceDataType;
 import io.jmix.core.DeletePolicy;
 import io.jmix.core.FileRef;
 import io.jmix.core.entity.annotation.OnDeleteInverse;
 import io.jmix.core.metamodel.annotation.Composition;
 import io.jmix.core.metamodel.annotation.InstanceName;
 import io.jmix.core.metamodel.annotation.JmixEntity;
+import io.jmix.core.metamodel.annotation.PropertyDatatype;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -17,8 +19,11 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.PositiveOrZero;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Entity
@@ -47,10 +52,16 @@ public class CategoryItem extends FullAuditEntity {
     @Column(name = "CODE", nullable = false, unique = true)
     private String code;
 
-    @Column(name = "UOM")
+    @Column(name = "UOM", nullable = false)
     private String uom;
 
+    @PositiveOrZero
+    @PropertyDatatype(PriceDataType.NAME)
+    @Column(name = "PRICE", nullable = false)
+    private BigDecimal price;
+
     @Composition
+    @OrderBy("createdDate DESC")
     @OneToMany(mappedBy = "categoryItem", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CategoryItemComment> comments;
 
@@ -78,12 +89,12 @@ public class CategoryItem extends FullAuditEntity {
         this.comments = comments;
     }
 
-    public String getUom() {
-        return uom;
+    public UomType getUom() {
+        return UomType.fromId(uom);
     }
 
-    public void setUom(String uom) {
-        this.uom = uom;
+    public void setUom(UomType uom) {
+        this.uom = uom == null ? null : uom.getId();
     }
 
     public String getCode() {
@@ -108,5 +119,13 @@ public class CategoryItem extends FullAuditEntity {
 
     public void setCategory(Category category) {
         this.category = category;
+    }
+
+    public BigDecimal getPrice() {
+        return price == null ? BigDecimal.ZERO : price;
+    }
+
+    public void setPrice(BigDecimal price) {
+        this.price = price;
     }
 }

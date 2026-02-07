@@ -9,7 +9,7 @@ import io.jmix.core.FetchPlan;
 import io.jmix.core.FetchPlanBuilder;
 import io.jmix.core.FetchPlans;
 import io.jmix.core.FluentValueLoader;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -33,6 +33,10 @@ public class ClientService {
     public ClientService(FetchPlans fetchPlans, ClientRepository clientRepository) {
         this.fetchPlans = fetchPlans;
         this.clientRepository = clientRepository;
+    }
+
+    public BigDecimal getOutstandingBalance(Client client) {
+        return getInvoicesTotalSum(client).subtract(getPaymentsTotalSum(client));
     }
 
     public List<CompletedOrdersByDateRangeInfo> getCompletedOrdersInfo(@Nullable LocalDateRange dateRange, Client... clients) {
@@ -71,7 +75,7 @@ public class ClientService {
                     .parameter("endDate", dateRange.endDate());
         }
 
-        Long rangeTotalAmount = getCompletedOrdersAmount(dateRange, clients).longValue();
+        Long rangeTotalAmount = getCompletedOrdersAmount(dateRange, clients);
         var rangeTotalSum = ordersTotalSumLoader(new OrderStatus[]{OrderStatus.DONE}, clients)
                 .optional().orElse(BigDecimal.ZERO);
         var salesCycleLength = getSalesCycleLength(dateRange, clients);
@@ -92,7 +96,7 @@ public class ClientService {
      * @param clients   optional list of clients to filter the orders; if no clients are provided, all clients are considered
      * @return the total number of orders that match the specified criteria, or {@code BigDecimal.ZERO} if no orders are matched
      */
-    public BigDecimal getCompletedOrdersAmount(@Nullable LocalDateRange dateRange,
+    public Long getCompletedOrdersAmount(@Nullable LocalDateRange dateRange,
                                                Client... clients) {
         boolean clientsSpecified = clients.length > 0;
 
@@ -113,7 +117,7 @@ public class ClientService {
         query.append(" where ").append(String.join(" and ", conditions));
 
         var loader = clientRepository
-                .fluentValueLoader(query.toString(), BigDecimal.class)
+                .fluentValueLoader(query.toString(), Long.class)
                 .parameter("status", OrderStatus.DONE);
 
         if (clientsSpecified) {
@@ -125,7 +129,7 @@ public class ClientService {
             loader.parameter("to", dateRange.endDate());
         }
 
-        return loader.optional().orElse(BigDecimal.ZERO);
+        return loader.optional().orElse(0L);
     }
 
     /**
@@ -266,7 +270,9 @@ public class ClientService {
                 .list().stream()
                 .collect(Collectors.toMap(
                         keyValue -> keyValue.getValue("client"),
-                        keyValue -> keyValue.getValue("total")));
+                        keyValue -> keyValue.getValue("total"),
+                        (v1, v2) -> v1,
+                        java.util.LinkedHashMap::new));
     }
 
     /**
@@ -293,6 +299,29 @@ public class ClientService {
                 "select sum(p.amount) as total " +
                         "from Payment p " +
                         (clientSpecified ? "where p.invoice.client in :client" : ""),
+                BigDecimal.class
+        );
+
+        if (clientSpecified) {
+            loader.parameter("client", asList(client));
+        }
+
+        return loader.optional().orElse(BigDecimal.ZERO);
+    }
+
+    /**
+     * Calculates the total value of all invoices associated with the specified client.
+     *
+     * @param client the {@link Client}s whose total invoices value is to be calculated.
+     * @return the total value of all invoices associated with the specified client as a {@link BigDecimal}.
+     */
+    public BigDecimal getInvoicesTotalSum(Client... client) {
+        boolean clientSpecified = client.length > 0;
+
+        var loader = clientRepository.fluentValueLoader(
+                "select sum(i.total) as total " +
+                        "from Invoice i " +
+                        (clientSpecified ? "where i.client in :client" : ""),
                 BigDecimal.class
         );
 

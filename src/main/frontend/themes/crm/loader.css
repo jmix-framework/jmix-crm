@@ -2,6 +2,26 @@
   animation: loader-pulse 1.1s ease-in-out infinite;
 }
 
+.crm-loader-message {
+  color: var(--lumo-secondary-text-color);
+  letter-spacing: 0.02em;
+}
+
+.demo-data-loader {
+  gap: 0.5rem;
+  padding: 2.5rem 3rem;
+  border-radius: 1.25rem;
+  background: linear-gradient(135deg, var(--lumo-base-color), var(--lumo-contrast-5pct));
+  border: 1px solid var(--lumo-contrast-10pct);
+  box-shadow: 0 22px 60px rgba(15, 23, 42, 0.18);
+  min-width: 22rem;
+}
+
+.demo-data-loader-dialog::part(overlay) {
+  background-color: rgba(12, 18, 28, 0.35);
+  backdrop-filter: blur(3px);
+}
+
 @keyframes loader-pulse {
   0%, 100% {
     transform: scale(1);

@@ -8,44 +8,60 @@ import com.company.crm.model.catalog.category.Category;
 import com.company.crm.model.catalog.item.CategoryItem;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.client.ClientType;
+import com.company.crm.model.datatype.PriceDataType;
 import com.company.crm.model.invoice.Invoice;
 import com.company.crm.model.invoice.InvoiceStatus;
 import com.company.crm.model.order.Order;
 import com.company.crm.model.order.OrderItem;
 import com.company.crm.model.order.OrderStatus;
+import com.company.crm.model.payment.Payment;
 import com.company.crm.model.user.User;
 import com.company.crm.model.user.task.UserTask;
 import com.company.crm.view.client.ClientDetailView;
 import com.company.crm.view.order.OrderDetailView;
 import com.company.crm.view.user.UserDetailView;
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
+import com.vaadin.flow.component.Unit;
+import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.grid.GridVariant;
+import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.popover.Popover;
 import com.vaadin.flow.component.shared.Tooltip;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.Renderer;
+import com.vaadin.flow.spring.annotation.SpringComponent;
+import com.vaadin.flow.theme.lumo.LumoUtility.IconSize;
 import io.jmix.core.Messages;
 import io.jmix.core.MetadataTools;
 import io.jmix.core.metamodel.datatype.DatatypeFormatter;
 import io.jmix.flowui.DialogWindows;
 import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.asynctask.UiAsyncTasks;
-import io.jmix.flowui.component.UiComponentUtils;
+import io.jmix.flowui.component.grid.DataGrid;
 import io.jmix.flowui.kit.component.button.JmixButton;
 import io.jmix.flowui.view.StandardDetailView;
-import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.function.Function;
 
 import static com.company.crm.app.util.ui.CrmUiUtils.CONTRAST_BADGE;
 import static com.company.crm.app.util.ui.CrmUiUtils.SUCCESS_BADGE;
+import static com.company.crm.app.util.ui.CrmUiUtils.setDefaultEmptyStateComponent;
 import static com.company.crm.app.util.ui.color.EnumClassColors.getBadgeVariant;
+import static com.company.crm.model.datatype.PriceDataType.defaultFormat;
+import static com.vaadin.flow.component.icon.VaadinIcon.CHEVRON_DOWN_SMALL;
+import static com.vaadin.flow.component.icon.VaadinIcon.CHEVRON_RIGHT_SMALL;
+import static io.jmix.flowui.component.UiComponentUtils.copyToClipboard;
 import static io.jmix.flowui.component.UiComponentUtils.getCurrentView;
 
-@Component
+@SpringComponent
 public class CrmRenderers {
 
     private final Messages messages;
@@ -56,7 +72,9 @@ public class CrmRenderers {
     private final DateTimeService dateTimeService;
     private final DatatypeFormatter datatypeFormatter;
 
-    public CrmRenderers(UiComponents uiComponents, DialogWindows dialogWindows, Messages messages, DatatypeFormatter datatypeFormatter, DateTimeService dateTimeService, UiAsyncTasks uiAsyncTasks, MetadataTools metadataTools) {
+    public CrmRenderers(UiComponents uiComponents, DialogWindows dialogWindows, Messages messages,
+                        DatatypeFormatter datatypeFormatter, DateTimeService dateTimeService,
+                        UiAsyncTasks uiAsyncTasks, MetadataTools metadataTools) {
         this.messages = messages;
         this.uiComponents = uiComponents;
         this.dialogWindows = dialogWindows;
@@ -66,25 +84,129 @@ public class CrmRenderers {
         this.metadataTools = metadataTools;
     }
 
+    public <T> Renderer<T> itemDetailsColumnRenderer(DataGrid<T> grid) {
+        return new ComponentRenderer<>(item -> {
+            boolean isDetailsVisible = grid.isDetailsVisible(item);
+            Icon icon = isDetailsVisible ? CHEVRON_DOWN_SMALL.create() : CHEVRON_RIGHT_SMALL.create();
+            CrmUiUtils.setCursorPointer(icon);
+            icon.addClassNames(IconSize.SMALL);
+            icon.addClickListener(e -> {
+                if (!grid.isDetailsVisibleOnClick()) {
+                    grid.setDetailsVisible(item, !isDetailsVisible);
+                }
+            });
+            return icon;
+        });
+    }
+
+    public ComponentRenderer<Component, Client> clientDetails() {
+        return new ComponentRenderer<>(client -> {
+            var container = new VerticalLayout();
+            container.add(new H3(messages.getMessage(getClass(), "orders")));
+
+            //noinspection unchecked
+            DataGrid<Order> ordersGrid = uiComponents.create(DataGrid.class);
+            ordersGrid.addThemeVariants(GridVariant.LUMO_NO_BORDER, GridVariant.LUMO_COMPACT, GridVariant.LUMO_ROW_STRIPES);
+            ordersGrid.setMaxHeight(15, Unit.EM);
+            ordersGrid.addColumn(Order::getNumber)
+                    .setRenderer(uniqueNumber(Order::getNumber))
+                    .setHeader(messages.getMessage(Order.class, "Order.number"));
+            ordersGrid.addColumn(Order::getDate)
+                    .setHeader(messages.getMessage(Order.class, "Order.date"));
+            ordersGrid.addColumn(order -> defaultFormat(order.getTotal()))
+                    .setHeader(messages.getMessage(Order.class, "Order.total"));
+            ordersGrid.setItems(client.getOrders());
+            setDefaultEmptyStateComponent(ordersGrid);
+            container.add(ordersGrid);
+
+            return container;
+        });
+    }
+
+    public ComponentRenderer<Component, Invoice> invoiceDetails() {
+        return new ComponentRenderer<>(invoice -> {
+            var container = new VerticalLayout();
+            container.add(new H3(messages.getMessage(getClass(), "payments")));
+
+            //noinspection unchecked
+            DataGrid<Payment> paymentsGrid = uiComponents.create(DataGrid.class);
+            paymentsGrid.addThemeVariants(GridVariant.LUMO_NO_BORDER, GridVariant.LUMO_COMPACT, GridVariant.LUMO_ROW_STRIPES);
+            paymentsGrid.setMaxHeight(15, Unit.EM);
+            paymentsGrid.addColumn(Payment::getNumber)
+                    .setRenderer(uniqueNumber(Payment::getNumber))
+                    .setHeader(messages.getMessage(Payment.class, "Payment.number"));
+            paymentsGrid.addColumn(Payment::getDate)
+                    .setHeader(messages.getMessage(Payment.class, "Payment.date"));
+            paymentsGrid.addColumn(payment -> defaultFormat(payment.getAmount()))
+                    .setHeader(messages.getMessage(Payment.class, "Payment.amount"));
+            paymentsGrid.setItems(invoice.getPayments());
+            setDefaultEmptyStateComponent(paymentsGrid);
+            container.add(paymentsGrid);
+
+            return container;
+        });
+    }
+
+    public ComponentRenderer<Component, Order> orderDetails() {
+        return new ComponentRenderer<>(order -> {
+            var container = new VerticalLayout();
+            container.add(new H3(messages.getMessage(getClass(), "invoices")));
+
+            //noinspection unchecked
+            DataGrid<Invoice> invoicesGrid = uiComponents.create(DataGrid.class);
+            invoicesGrid.addThemeVariants(GridVariant.LUMO_NO_BORDER, GridVariant.LUMO_COMPACT, GridVariant.LUMO_ROW_STRIPES);
+            invoicesGrid.setMaxHeight(15, Unit.EM);
+            invoicesGrid.addColumn(Invoice::getNumber)
+                    .setRenderer(uniqueNumber(Invoice::getNumber))
+                    .setHeader(messages.getMessage(Invoice.class, "Invoice.number"));
+            invoicesGrid.addColumn(Invoice::getDate)
+                    .setHeader(messages.getMessage(Invoice.class, "Invoice.date"));
+            invoicesGrid.addColumn(invoice -> defaultFormat(invoice.getTotal()))
+                    .setHeader(messages.getMessage(Invoice.class, "Invoice.total"));
+            invoicesGrid.setItems(order.getInvoices());
+            setDefaultEmptyStateComponent(invoicesGrid);
+            container.add(invoicesGrid);
+
+            return container;
+        });
+    }
+
     public <E extends UuidEntity, LINK extends UuidEntity> Renderer<E> entityLink(Function<E, LINK> linkGetter) {
         return entityLink(linkGetter, metadataTools::getInstanceName);
     }
 
     public <E extends UuidEntity, LINK extends UuidEntity> Renderer<E> entityLink(Function<E, LINK> linkGetter,
                                                                                   Function<LINK, String> textProvider) {
+        return entityLink(linkGetter, textProvider, false);
+    }
+
+    public <E extends UuidEntity, LINK extends UuidEntity> Renderer<E> entityLink(Function<E, LINK> linkGetter,
+                                                                                  Function<LINK, String> textProvider,
+                                                                                  boolean readOnly) {
         return new ComponentRenderer<>(entity -> {
             LINK link = linkGetter.apply(entity);
             JmixButton button = entityLinkButton(link, textProvider, textProvider);
             button.addClickListener(e -> {
                 //noinspection unchecked
-                dialogWindows.detail(UiComponentUtils.getCurrentView(), ((Class<LINK>) link.getClass()))
+                dialogWindows.detail(getCurrentView(), ((Class<LINK>) link.getClass()))
                         .editEntity(link)
                         .withViewConfigurer(v -> {
                             if (v instanceof StandardDetailView<?> detailView) {
-                                detailView.setReadOnly(true);
+                                detailView.setReadOnly(readOnly);
                             }
                         }).open();
             });
+            return button;
+        });
+    }
+
+    public <E extends UuidEntity> Renderer<E> uniqueNumber(Function<E, String> numberProvider) {
+        return new ComponentRenderer<>(entity -> {
+            var button = new Button(numberProvider.apply(entity));
+            button.setTooltipText(messages.getMessage("copy"));
+            button.addThemeVariants(ButtonVariant.LUMO_ICON, ButtonVariant.LUMO_SMALL,
+                    ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_CONTRAST);
+            button.addClickListener(e -> copyToClipboard(numberProvider.apply(entity)));
             return button;
         });
     }
@@ -122,6 +244,10 @@ public class CrmRenderers {
 
     public Renderer<CategoryItem> categoryItemCode() {
         return badgeWithCopyRenderer(CategoryItem::getCode);
+    }
+
+    public Renderer<CategoryItem> categoryItemCategoryCode() {
+        return badgeWithCopyRenderer(item -> item.getCategory().getCode());
     }
 
     public Renderer<OrderItem> orderItemItemCode() {
@@ -164,6 +290,25 @@ public class CrmRenderers {
         return createBadge(messages.getMessage(status), getBadgeVariant(status));
     }
 
+    public Renderer<Invoice> invoiceDueDateRenderer() {
+        return new ComponentRenderer<>(invoice -> {
+            LocalDate dueDate = invoice.getDueDate();
+            String dueDateText = datatypeFormatter.formatLocalDate(dueDate);
+            Span span = new Span(dueDateText);
+
+            LocalDate currentDate = dateTimeService.getTimeForCurrentUser().toLocalDate();
+            Period daysLeft = currentDate.until(dueDate);
+
+            var badgeVariant = CONTRAST_BADGE;
+            if (daysLeft.isNegative()) {
+                badgeVariant = CrmUiUtils.ERROR_BADGE;
+            }
+
+            CrmUiUtils.setBadge(span, badgeVariant);
+            return span;
+        });
+    }
+
     public Renderer<UserTask> taskDueDateRenderer() {
         return new ComponentRenderer<>(task -> {
             LocalDate dueDate = task.getDueDate();
@@ -186,6 +331,24 @@ public class CrmRenderers {
         });
     }
 
+    public Renderer<Order> orderLeftOverSumRenderer() {
+        return new ComponentRenderer<>(order -> {
+            BigDecimal leftOverSum = order.getLeftOverSum();
+            Span span = new Span(PriceDataType.formatWithoutCurrency(leftOverSum));
+
+            if (leftOverSum.compareTo(BigDecimal.valueOf(10_000)) > 0) {
+                CrmUiUtils.setBadge(span, CrmUiUtils.ERROR_BADGE);
+            } else if (leftOverSum.compareTo(BigDecimal.ZERO) > 0) {
+                CrmUiUtils.setBadge(span, CrmUiUtils.WARNING_BADGE);
+            } else {
+                CrmUiUtils.setBadge(span, SUCCESS_BADGE);
+                span.setText(messages.getMessage("paid"));
+            }
+
+            return span;
+        });
+    }
+
     private Span createBadge(String text, String badgeVariant) {
         Span span = new Span(text);
         CrmUiUtils.setBadge(span, badgeVariant);
@@ -197,7 +360,7 @@ public class CrmRenderers {
         Tooltip.forComponent(badge).setText(messages.getMessage("copy"));
         CrmUiUtils.setCursorPointer(badge);
         badge.addClickListener(e -> {
-            UiComponentUtils.copyToClipboard(text);
+            copyToClipboard(text);
             Popover popover = new Popover(new Text(messages.getMessage("copied")));
             popover.setTarget(badge);
             popover.open();
@@ -212,15 +375,15 @@ public class CrmRenderers {
         JmixButton button =
                 entityLinkButton(client, Client::getName, Client::getFullName);
         button.addClickListener(event ->
-                openReadOnlyDetailDialog(client, Client.class, ClientDetailView.class));
+                openDetailDialog(client, Client.class, ClientDetailView.class));
         return button;
     }
 
     private JmixButton orderLinkButton(Order order) {
         JmixButton button =
-                entityLinkButton(order, Order::getNumber, o -> o.getInstanceName(datatypeFormatter));
+                entityLinkButton(order, metadataTools::getInstanceName, metadataTools::getInstanceName);
         button.addClickListener(event ->
-                openReadOnlyDetailDialog(order, Order.class, OrderDetailView.class));
+                openDetailDialog(order, Order.class, OrderDetailView.class));
         return button;
     }
 
@@ -228,7 +391,7 @@ public class CrmRenderers {
         JmixButton button =
                 entityLinkButton(client.getAccountManager(), User::getDisplayName, User::getFullName);
         button.addClickListener(event ->
-                openReadOnlyDetailDialog(client.getAccountManager(), User.class, UserDetailView.class));
+                openDetailDialog(client.getAccountManager(), User.class, UserDetailView.class, true));
         return button;
     }
 
@@ -236,19 +399,30 @@ public class CrmRenderers {
                                                                Function<E, String> textProvider,
                                                                Function<E, String> tooltipProvider) {
         JmixButton button = uiComponents.create(JmixButton.class);
-        button.setText(textProvider.apply(entity));
-        button.setTooltipText(tooltipProvider.apply(entity));
+        if (entity != null) {
+            button.setText(textProvider.apply(entity));
+            button.setTooltipText(tooltipProvider.apply(entity));
+        } else {
+            button.setText("");
+        }
         button.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
         return button;
     }
 
-    private <E extends UuidEntity, V extends StandardDetailView<E>> void openReadOnlyDetailDialog(E entity,
-                                                                                                  Class<E> entityClass,
-                                                                                                  Class<V> detailClass) {
+    private <E extends UuidEntity, V extends StandardDetailView<E>> void openDetailDialog(E entity,
+                                                                                          Class<E> entityClass,
+                                                                                          Class<V> detailClass) {
+        openDetailDialog(entity, entityClass, detailClass, false);
+    }
+
+    private <E extends UuidEntity, V extends StandardDetailView<E>> void openDetailDialog(E entity,
+                                                                                          Class<E> entityClass,
+                                                                                          Class<V> detailClass,
+                                                                                          boolean readOnly) {
         dialogWindows.detail(getCurrentView(), entityClass)
                 .withViewClass(detailClass)
                 .editEntity(entity)
-                .withViewConfigurer(v -> v.setReadOnly(true))
+                .withViewConfigurer(v -> v.setReadOnly(readOnly))
                 .open();
     }
 }

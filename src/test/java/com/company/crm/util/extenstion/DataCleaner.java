@@ -1,12 +1,18 @@
 package com.company.crm.util.extenstion;
 
+import ch.qos.logback.classic.Level;
+import com.company.crm.app.util.log.LoggerUtils;
 import com.company.crm.model.base.UuidEntity;
 import com.company.crm.model.catalog.category.Category;
+import com.company.crm.model.catalog.item.CategoryItem;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.invoice.Invoice;
 import com.company.crm.model.order.Order;
+import com.company.crm.model.order.OrderItem;
 import com.company.crm.model.payment.Payment;
 import com.company.crm.model.user.User;
+import com.company.crm.model.user.activity.client.ClientUserActivity;
+import com.company.crm.model.user.activity.userprofile.UserProfileUserActivity;
 import com.company.crm.model.user.task.UserTask;
 import io.jmix.core.MetadataTools;
 import io.jmix.core.metamodel.model.MetaClass;
@@ -23,13 +29,19 @@ import java.lang.reflect.Method;
 import java.util.List;
 import javax.sql.DataSource;
 
+import static org.springframework.test.jdbc.JdbcTestUtils.deleteFromTables;
+
 public class DataCleaner implements AfterAllCallback, AfterEachCallback {
 
     private static final List<Class<? extends UuidEntity>> ENTITIES_REMOVING_ORDER = List.of(
+            ClientUserActivity.class,
+            UserProfileUserActivity.class,
             Payment.class,
             Invoice.class,
+            OrderItem.class,
             Order.class,
             Client.class,
+            CategoryItem.class,
             Category.class,
             UserTask.class
     );
@@ -65,7 +77,8 @@ public class DataCleaner implements AfterAllCallback, AfterEachCallback {
         log.info("Removing test data...");
         var dataSource = ExtensionUtils.getBean(context, DataSource.class);
         String[] tablesToClean = getTablesToClean(context);
-        JdbcTestUtils.deleteFromTables(new JdbcTemplate(dataSource), tablesToClean);
+        LoggerUtils.runWithLevel(JdbcTestUtils.class, Level.WARN, () ->
+                deleteFromTables(new JdbcTemplate(dataSource), tablesToClean));
         log.info("Test data has been removed");
     }
 

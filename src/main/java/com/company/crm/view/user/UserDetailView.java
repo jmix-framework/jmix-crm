@@ -9,12 +9,15 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.router.Route;
+import io.jmix.core.DataManager;
 import io.jmix.core.EntityStates;
 import io.jmix.core.security.CurrentAuthentication;
 import io.jmix.flowui.DialogWindows;
 import io.jmix.flowui.Notifications;
 import io.jmix.flowui.component.textfield.TypedTextField;
+import io.jmix.flowui.kit.action.ActionPerformedEvent;
 import io.jmix.flowui.kit.component.button.JmixButton;
+import io.jmix.flowui.settings.UserSettingsCache;
 import io.jmix.flowui.view.DialogWindow;
 import io.jmix.flowui.view.EditedEntityContainer;
 import io.jmix.flowui.view.MessageBundle;
@@ -23,6 +26,7 @@ import io.jmix.flowui.view.Subscribe;
 import io.jmix.flowui.view.ViewComponent;
 import io.jmix.flowui.view.ViewController;
 import io.jmix.flowui.view.ViewDescriptor;
+import io.jmix.flowuidata.entity.UserSettingsItem;
 import io.jmix.securityflowui.view.changepassword.ChangePasswordView;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -41,6 +45,8 @@ public class UserDetailView extends StandardDetailView<User> {
     @Autowired
     private RoleUtils roleUtils;
     @Autowired
+    private DataManager dataManager;
+    @Autowired
     private EntityStates entityStates;
     @Autowired
     private Notifications notifications;
@@ -48,6 +54,8 @@ public class UserDetailView extends StandardDetailView<User> {
     private DialogWindows dialogWindows;
     @Autowired
     private PasswordEncoder passwordEncoder;
+    @Autowired
+    private UserSettingsCache userSettingsCache;
     @Autowired
     private CurrentAuthentication currentAuthentication;
 
@@ -113,6 +121,20 @@ public class UserDetailView extends StandardDetailView<User> {
 
             newEntity = false;
         }
+    }
+
+    @Subscribe("resetUiSettingsAction")
+    private void onClearUiSettingsAction(final ActionPerformedEvent event) {
+        dataManager.load(UserSettingsItem.class)
+                .query("e.username = ?1", getEditedEntity().getUsername())
+                .list()
+                .forEach(userSettingsItem -> dataManager.remove(userSettingsItem));
+
+        userSettingsCache.clear();
+
+        notifications.create(messageBundle.getMessage("uiSettingsSuccessfullyReset"))
+                .withType(Notifications.Type.SUCCESS)
+                .show();
     }
 
     private void showChangePasswordButton(User editedEntity) {

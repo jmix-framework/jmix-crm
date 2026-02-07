@@ -3,9 +3,9 @@ package com.company.crm.model.base;
 import io.jmix.core.metamodel.annotation.JmixEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
-import org.springframework.lang.Nullable;
 
 import java.time.OffsetDateTime;
 

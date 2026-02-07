@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <view xmlns="http://jmix.io/schema/flowui/view"
-      title="msg://categoryItemListView.title">
+      title="msg://categoryItemListView.title" focusMode="NO_FOCUS">
     <data>
         <collection id="categoryItemsDc"
                     class="com.company.crm.model.catalog.item.CategoryItem">
@@ -24,13 +24,6 @@
         <action id="discardAction" type="lookup_discard"/>
     </actions>
     <layout>
-        <formLayout id="chartsBlock" width="100%">
-            <responsiveSteps>
-                <responsiveStep minWidth="0" columns="1"/>
-                <responsiveStep minWidth="60em" columns="2"/>
-            </responsiveSteps>
-        </formLayout>
-
         <div width="100%" maxWidth="40em">
             <formLayout width="100%">
                 <responsiveSteps>
@@ -52,16 +45,25 @@
         </div>
 
         <hbox id="buttonsPanel" classNames="buttons-panel">
-            <button id="createButton" action="categoryItemsDataGrid.createAction"/>
-            <button id="editButton" action="categoryItemsDataGrid.editAction"/>
-            <button id="removeButton" action="categoryItemsDataGrid.removeAction"/>
-            <simplePagination id="items_pagination" dataLoader="categoryItemsDl"/>
+            <startSlot>
+                <button id="createButton" action="categoryItemsDataGrid.createAction"/>
+                <button id="editButton" action="categoryItemsDataGrid.editAction"/>
+                <button id="removeButton" action="categoryItemsDataGrid.removeAction"/>
+                <button id="downloadXlsButton" action="categoryItemsDataGrid.downloadXls"/>
+                <fileUploadField id="updateCatalogField" uploadIcon="UPLOAD_ALT" uploadText="msg://updateFromXlsx" acceptedFileTypes=".xlsx"/>
+            </startSlot>
+            <endSlot>
+                <simplePagination id="items_pagination" dataLoader="categoryItemsDl" itemsPerPageVisible="true"/>
+                <gridColumnVisibility dataGrid="categoryItemsDataGrid" icon="COG_O"
+                                      themeNames="tertiary-inline" hideAllEnabled="false"/>
+            </endSlot>
         </hbox>
         <dataGrid id="categoryItemsDataGrid"
+                  dataContainer="categoryItemsDc"
                   width="100%"
                   minHeight="20em"
-                  dataContainer="categoryItemsDc"
                   multiSort="true"
+                  selectionMode="MULTI"
                   columnReorderingAllowed="true">
             <actions>
                 <action id="createAction" type="list_create">
@@ -75,11 +77,14 @@
                     </properties>
                 </action>
                 <action id="removeAction" type="list_remove"/>
+                <action id="downloadXls" text="msg://downloadXlsx" icon="DOWNLOAD_ALT"/>
             </actions>
-            <columns resizable="true">
+            <columns resizable="true" sortable="true">
                 <column property="name"/>
                 <column property="code"/>
                 <column property="category"/>
+                <column property="uom"/>
+                <column property="price" filterable="true"/>
             </columns>
         </dataGrid>
         <hbox id="lookupActions" visible="false">

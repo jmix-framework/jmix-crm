@@ -5,12 +5,15 @@ import io.jmix.core.FluentLoader;
 import io.jmix.core.FluentValueLoader;
 import io.jmix.core.FluentValuesLoader;
 import io.jmix.core.repository.JmixDataRepository;
+import io.jmix.core.repository.JmixDataRepositoryContext;
+import io.jmix.dynattr.DynAttrQueryHints;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.repository.NoRepositoryBean;
-import org.springframework.lang.Nullable;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -47,6 +50,15 @@ public interface UuidEntityRepository<T extends UuidEntity> extends JmixDataRepo
 
     default List<T> findAll(long limit) {
         return findAll(limit, null);
+    }
+
+    Optional<T> findById(UUID id, JmixDataRepositoryContext context);
+
+    default Optional<T> findByIdWithDynamicAttributes(UUID id, @Nullable FetchPlan fetchPlan) {
+        return findById(id, JmixDataRepositoryContext.builder()
+                .plan(fetchPlan)
+                .hints(Map.of(DynAttrQueryHints.LOAD_DYN_ATTR, true))
+                .build());
     }
 
     // ----- utils -----

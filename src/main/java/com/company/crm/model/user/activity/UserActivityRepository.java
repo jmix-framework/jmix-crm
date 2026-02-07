@@ -11,7 +11,7 @@ import java.util.List;
 @NoRepositoryBean
 public interface UserActivityRepository <T extends UserActivity> extends UuidEntityRepository<T> {
 
-    List<T> findAllByUser(User user, Pageable pageable);
-    List<T> findAllByUserAndCreatedDateGreaterThanEqualAndCreatedDateLessThanEqual(User user, OffsetDateTime startDate, OffsetDateTime endDate, Pageable pageable);
-    List<T> findAllByCreatedDateGreaterThanEqualAndCreatedDateLessThanEqual(OffsetDateTime start, OffsetDateTime end, Pageable pageable);
+    List<T> findAllByUserOrderByCreatedDateDesc(User user, Pageable pageable);
+    List<T> findAllByUserAndCreatedDateGreaterThanEqualAndCreatedDateLessThanEqualOrderByCreatedDateDesc(User user, OffsetDateTime startDate, OffsetDateTime endDate, Pageable pageable);
+    List<T> findAllByCreatedDateGreaterThanEqualAndCreatedDateLessThanEqualOrderByCreatedDateDesc(OffsetDateTime start, OffsetDateTime end, Pageable pageable);
 }

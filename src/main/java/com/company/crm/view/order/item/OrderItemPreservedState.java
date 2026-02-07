@@ -3,7 +3,7 @@ package com.company.crm.view.order.item;
 import com.company.crm.model.order.Order;
 import com.company.crm.model.order.OrderItem;
 import com.vaadin.flow.spring.annotation.UIScope;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 @UIScope

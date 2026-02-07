@@ -15,7 +15,7 @@ public final class EnumClassColors {
 
     public static String getBackgroundClass(OrderStatus status) {
         return switch (status) {
-            case NEW -> LumoUtility.Background.CONTRAST_10;
+            case NEW -> LumoUtility.Background.ERROR_10;
             case ACCEPTED -> LumoUtility.Background.PRIMARY;
             case IN_PROGRESS -> LumoUtility.Background.WARNING;
             case DONE -> LumoUtility.Background.SUCCESS;
@@ -33,8 +33,8 @@ public final class EnumClassColors {
 
     public static String getBadgeVariant(InvoiceStatus status) {
         return switch (status) {
-            case NEW -> DEFAULT_BADGE;
-            case PENDING -> WARNING_BADGE;
+            case NEW -> CONTRAST_BADGE;
+            case PENDING -> DEFAULT_BADGE;
             case OVERDUE -> ERROR_BADGE;
             case PAID -> SUCCESS_BADGE;
         };
@@ -43,7 +43,7 @@ public final class EnumClassColors {
     public static String getBadgeVariant(ClientType status) {
         return switch (status) {
             case BUSINESS -> SUCCESS_BADGE;
-            case INDIVIDUAL -> WARNING_BADGE;
+            case INDIVIDUAL -> DEFAULT_BADGE;
         };
     }
 

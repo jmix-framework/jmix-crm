@@ -5,7 +5,7 @@
   color: transparent !important;
   pointer-events: none;
   user-select: none;
-  background-color: var(--lumo-contrast-5pct);
+  background-color: var(--lumo-contrast-10pct);
   border-radius: var(--lumo-border-radius-m);
   overflow: hidden;
 }
@@ -33,11 +33,4 @@
 
 [theme~="skeleton"] {
   min-height: 2.25rem; /* ~36px */
-}
-
-vaadin-chart[theme~="skeleton"],
-cf-chart[theme~="skeleton"],
-[theme~="skeleton"].echarts,
-[theme~="skeleton"].jmix-chart {
-  background-color: var(--lumo-contrast-10pct);
 }

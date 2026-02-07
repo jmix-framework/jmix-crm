@@ -34,14 +34,12 @@ public class PaymentService {
      */
     public BigDecimal getPaymentsTotalSum(Order... order) {
         var queryBuilder = new StringBuilder()
-                .append("select sum(e.amount) as total ")
+                .append("select sum(e.amount) ")
                 .append("from Payment e ");
 
         if (order.length > 0) {
             queryBuilder.append("where e.invoice.order in :orders ");
         }
-
-        queryBuilder.append("order by total desc");
 
         var loader = paymentRepository.fluentValueLoader(queryBuilder.toString(), BigDecimal.class);
 

@@ -1,7 +1,7 @@
 package com.company.crm.app.util.role;
 
 import com.company.crm.model.user.User;
-import com.company.crm.security.AdministratorRole;
+import com.company.crm.security.role.AdministratorRole;
 import io.jmix.core.security.CurrentAuthentication;
 import io.jmix.security.role.assignment.RoleAssignment;
 import io.jmix.security.role.assignment.RoleAssignmentRepository;

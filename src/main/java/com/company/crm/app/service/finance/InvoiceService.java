@@ -4,10 +4,9 @@ import com.company.crm.app.util.date.range.LocalDateRange;
 import com.company.crm.model.invoice.Invoice;
 import com.company.crm.model.invoice.InvoiceRepository;
 import com.company.crm.model.invoice.InvoiceStatus;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -75,18 +74,32 @@ public class InvoiceService {
      */
     public List<Invoice> getOverdueInvoices(@Nullable LocalDateRange dateRange,
                                             @Nullable Integer limit) {
-        if (dateRange == null) {
-            return invoiceRepository.queryLoader("e.dueDate > e.date").list();
+        var query = new StringBuilder("e.status = :status");
+
+        if (dateRange != null) {
+            query.append(" AND e.date >= :startDate AND e.date <= :endDate");
         }
-        var loader = invoiceRepository.queryLoader("e.dueDate > e.date and e.date >= :startDate and e.date <= :endDate")
-                .parameter("startDate", dateRange.startDate())
-                .parameter("endDate", dateRange.endDate());
+
+        var loader = invoiceRepository.queryLoader(query.toString())
+                .parameter("status", InvoiceStatus.OVERDUE);
+
+        if (dateRange != null) {
+            loader.parameter("startDate", dateRange.startDate())
+                    .parameter("endDate", dateRange.endDate());
+        }
 
         if (limit != null) {
             loader.maxResults(limit);
         }
 
         return loader.list();
+    }
+
+    /**
+     * @see InvoiceService#getInvoicesCount(LocalDateRange, InvoiceStatus...)
+     */
+    public long getInvoicesCount(InvoiceStatus... status) {
+        return getInvoicesCount(null, status);
     }
 
     /**
@@ -114,7 +127,7 @@ public class InvoiceService {
             query.append(" where ").append(String.join(" and ", conditions));
         }
 
-        var loader = invoiceRepository.fluentValueLoader(query.toString(), BigDecimal.class);
+        var loader = invoiceRepository.fluentValueLoader(query.toString(), Long.class);
 
         if (status != null) {
             loader.parameter("status", asList(status));
@@ -125,7 +138,7 @@ public class InvoiceService {
             loader.parameter("endDate", dateRange.endDate());
         }
 
-        return loader.optional().orElse(BigDecimal.ZERO).longValue();
+        return loader.optional().orElse(0L);
     }
 
     /**

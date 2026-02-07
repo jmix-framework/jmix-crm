@@ -27,75 +27,92 @@
         <action id="discardAction" type="lookup_discard"/>
     </actions>
     <layout>
-        <formLayout id="statsBlock" width="100%"
-                    autoResponsive="true" autoRows="true"
-                    expandFields="true" expandColumns="true" rowSpacing="1em">
-            <component id="ordersTotalSumCard" class="com.company.crm.app.ui.component.card.CrmCard"/>
-            <component id="paymentsTotalSumCard" class="com.company.crm.app.ui.component.card.CrmCard"/>
-            <component id="averageBillCard" class="com.company.crm.app.ui.component.card.CrmCard"/>
-        </formLayout>
+        <scroller width="100%" height="100%">
+            <vbox padding="false" width="100%" height="100%">
+                <vbox width="100%" justifyContent="CENTER" alignItems="CENTER" minHeight="12em">
+                    <formLayout id="statsBlock" width="100%">
+                        <responsiveSteps>
+                            <responsiveStep minWidth="0" columns="1"/>
+                            <responsiveStep minWidth="40em" columns="3"/>
+                        </responsiveSteps>
+                        <component id="ordersTotalSumCard" class="com.company.crm.app.ui.component.CrmCard"/>
+                        <component id="paymentsTotalSumCard" class="com.company.crm.app.ui.component.CrmCard"/>
+                        <component id="averageBillCard" class="com.company.crm.app.ui.component.CrmCard"/>
+                    </formLayout>
+                </vbox>
 
-        <div width="100%" maxWidth="40em" css="margin-top: 1em">
-            <formLayout width="100%">
-                <responsiveSteps>
-                    <responsiveStep minWidth="0" columns="1"/>
-                    <responsiveStep minWidth="30em" columns="2"/>
-                </responsiveSteps>
-                <textField id="searchField" width="100%" placeholder="msg://searchField.placeholder"
-                           clearButtonVisible="true">
-                    <prefix>
-                        <icon icon="SEARCH"/>
-                    </prefix>
-                </textField>
-                <switch id="showOnlyMyClientsCheckBox" label="msg://showOnlyMyClients"/>
-            </formLayout>
-            <formLayout>
-                <responsiveSteps>
-                    <responsiveStep minWidth="0" columns="1"/>
-                    <responsiveStep minWidth="30em" columns="3"/>
-                </responsiveSteps>
-                <select id="typeSelect" placeholder="msg://typePlaceholder"
-                        itemsEnum="com.company.crm.model.client.ClientType"
-                        emptySelectionAllowed="true" emptySelectionCaption="msg://allTypes"/>
-                <select id="accountManagerSelect" placeholder="msg://accountManagerPlaceholder"
-                        emptySelectionAllowed="true" emptySelectionCaption="msg://allManagers"/>
-                <select id="categorySelect" placeholder="msg://categoryPlaceholder"
-                        itemsEnum="com.company.crm.view.client.ClientCategory"
-                        emptySelectionAllowed="true" emptySelectionCaption="msg://allClients"/>
-            </formLayout>
-            <genericFilter id="advancedFilter" dataLoader="clientsDl"
-                           opened="false" summaryText="msg:///advanced" themeNames="filled">
-                <properties include=".*"/>
-            </genericFilter>
-        </div>
+                <div width="100%" maxWidth="40em">
+                    <formLayout width="100%">
+                        <responsiveSteps>
+                            <responsiveStep minWidth="0" columns="1"/>
+                            <responsiveStep minWidth="30em" columns="2"/>
+                        </responsiveSteps>
+                        <textField id="searchField" width="100%" placeholder="msg://searchField.placeholder"
+                                   clearButtonVisible="true">
+                            <prefix>
+                                <icon icon="SEARCH"/>
+                            </prefix>
+                        </textField>
+                        <switch id="showOnlyMyClientsCheckBox" label="msg://showOnlyMyClients"/>
+                    </formLayout>
+                    <formLayout>
+                        <responsiveSteps>
+                            <responsiveStep minWidth="0" columns="1"/>
+                            <responsiveStep minWidth="30em" columns="3"/>
+                        </responsiveSteps>
+                        <select id="typeSelect" placeholder="msg://typePlaceholder"
+                                itemsEnum="com.company.crm.model.client.ClientType"
+                                emptySelectionAllowed="true" emptySelectionCaption="msg://allTypes"/>
+                        <select id="accountManagerSelect" placeholder="msg://accountManagerPlaceholder"
+                                emptySelectionAllowed="true" emptySelectionCaption="msg://allManagers"/>
+                        <select id="categorySelect" placeholder="msg://categoryPlaceholder"
+                                itemsEnum="com.company.crm.view.client.ClientCategory"
+                                emptySelectionAllowed="true" emptySelectionCaption="msg://allClients"/>
+                    </formLayout>
+                    <genericFilter id="advancedFilter" dataLoader="clientsDl"
+                                   opened="false" summaryText="msg:///advanced" themeNames="filled">
+                        <properties include=".*"/>
+                    </genericFilter>
+                </div>
 
-        <hbox id="buttonsPanel" classNames="buttons-panel">
-            <button id="createButton" action="clientsDataGrid.createAction"/>
-            <button id="editButton" action="clientsDataGrid.editAction"/>
-            <button id="removeButton" action="clientsDataGrid.removeAction"/>
-            <simplePagination id="pagination" dataLoader="clientsDl" autoLoad="true"/>
-        </hbox>
-        <dataGrid id="clientsDataGrid" dataContainer="clientsDc"
-                  width="100%"
-                  minHeight="30em"
-                  multiSort="true"
-                  themeNames="column-borders"
-                  columnReorderingAllowed="true"
-                  selectionMode="MULTI">
-            <actions>
-                <action id="createAction" type="list_create"/>
-                <action id="editAction" type="list_edit"/>
-                <action id="removeAction" type="list_remove"/>
-            </actions>
-            <columns resizable="true" sortable="true">
-                <column property="name" autoWidth="true" flexGrow="0"/>
-                <column property="type" autoWidth="true" flexGrow="0"/>
-                <column property="accountManager" autoWidth="true" flexGrow="0"/>
-                <column property="vatNumber" autoWidth="true" flexGrow="0"/>
-                <column property="regNumber" autoWidth="true" flexGrow="0"/>
-                <column property="website"/>
-            </columns>
-        </dataGrid>
+                <hbox id="buttonsPanel" classNames="buttons-panel">
+                    <startSlot>
+                        <button id="createButton" action="clientsDataGrid.createAction"/>
+                        <button id="editButton" action="clientsDataGrid.editAction"/>
+                        <button id="removeButton" action="clientsDataGrid.removeAction"/>
+                        <button id="excelExport" action="clientsDataGrid.excelExport"/>
+                    </startSlot>
+                    <endSlot>
+                        <simplePagination id="pagination" dataLoader="clientsDl" autoLoad="true" itemsPerPageVisible="true"/>
+                        <gridColumnVisibility dataGrid="clientsDataGrid" icon="COG_O"
+                                              themeNames="tertiary-inline" hideAllEnabled="false"/>
+                    </endSlot>
+                </hbox>
+                <dataGrid id="clientsDataGrid" dataContainer="clientsDc"
+                          width="100%"
+                          minHeight="28em"
+                          multiSort="true"
+                          themeNames="column-borders"
+                          columnReorderingAllowed="true"
+                          selectionMode="MULTI">
+                    <actions>
+                        <action id="createAction" type="list_create"/>
+                        <action id="editAction" type="list_edit"/>
+                        <action id="removeAction" type="list_remove"/>
+                        <action id="excelExport" type="grdexp_excelExport"/>
+                    </actions>
+                    <columns resizable="true" sortable="true">
+                        <column key="itemDetails" frozen="true" flexGrow="0" autoWidth="true" sortable="false"/>
+                        <column property="name" autoWidth="true" flexGrow="0"/>
+                        <column property="type" autoWidth="true" flexGrow="0"/>
+                        <column property="accountManager" autoWidth="true" flexGrow="0"/>
+                        <column property="vatNumber" autoWidth="true" flexGrow="0"/>
+                        <column property="regNumber" autoWidth="true" flexGrow="0"/>
+                        <column property="website"/>
+                    </columns>
+                </dataGrid>
+            </vbox>
+        </scroller>
         <hbox id="lookupActions" visible="false">
             <button id="selectButton" action="selectAction"/>
             <button id="discardButton" action="discardAction"/>

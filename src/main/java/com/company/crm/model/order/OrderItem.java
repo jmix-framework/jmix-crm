@@ -1,5 +1,6 @@
 package com.company.crm.model.order;
 
+import com.company.crm.app.util.price.PriceCalculator;
 import com.company.crm.model.base.FullAuditEntity;
 import com.company.crm.model.catalog.item.CategoryItem;
 import com.company.crm.model.datatype.PriceDataType;
@@ -19,6 +20,7 @@ import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.PositiveOrZero;
 
 import java.math.BigDecimal;
 
@@ -38,22 +40,24 @@ public class OrderItem extends FullAuditEntity {
     @Column(name = "QUANTITY", precision = 19, scale = 2, nullable = false)
     private BigDecimal quantity;
 
+    @PropertyDatatype(PriceDataType.NAME)
     @Column(name = "DISCOUNT", precision = 19, scale = 2)
     private BigDecimal discount;
 
+    @PositiveOrZero
     @PropertyDatatype(PriceDataType.NAME)
     @Column(name = "NET_PRICE", nullable = false)
     private BigDecimal netPrice;
 
+    @PositiveOrZero
     @PropertyDatatype(PriceDataType.NAME)
     @Column(name = "GROSS_PRICE", nullable = false)
     private BigDecimal grossPrice;
 
-    @Column(name = "VAT_AMOUNT", nullable = false, precision = 19, scale = 2)
-    private BigDecimal vatAmount;
-
-    @Column(name = "VAT_INCLUDED")
-    private Boolean vatIncluded;
+    @PositiveOrZero
+    @PropertyDatatype(PriceDataType.NAME)
+    @Column(name = "VAT", nullable = false, precision = 19, scale = 2)
+    private BigDecimal vat = BigDecimal.ZERO;
 
     @OnDeleteInverse(DeletePolicy.CASCADE)
     @JoinColumn(name = "ORDER_ID", nullable = false)
@@ -70,23 +74,31 @@ public class OrderItem extends FullAuditEntity {
 
     @JmixProperty
     public BigDecimal getTotal() {
-        return netPrice.multiply(getQuantity()).subtract(getDiscount());
+        return PriceCalculator.calculateTotal(this);
     }
 
+    @JmixProperty
+    @DependsOnProperties("categoryItem")
+    @PropertyDatatype(PriceDataType.NAME)
+    public BigDecimal getUnitPrice() {
+        if (categoryItem == null) {
+            return BigDecimal.ZERO;
+        }
+        return categoryItem.getPrice();
+    }
+
+    @JmixProperty
+    @DependsOnProperties("vat")
     public Boolean getVatIncluded() {
-        return vatIncluded;
+        return vat != null && vat.compareTo(BigDecimal.ZERO) > 0;
     }
 
-    public void setVatIncluded(Boolean vatIncluded) {
-        this.vatIncluded = vatIncluded;
+    public BigDecimal getVat() {
+        return vat == null ? BigDecimal.ZERO : vat;
     }
 
-    public BigDecimal getVatAmount() {
-        return vatAmount;
-    }
-
-    public void setVatAmount(BigDecimal vatAmount) {
-        this.vatAmount = vatAmount;
+    public void setVat(BigDecimal vat) {
+        this.vat = vat;
     }
 
     public BigDecimal getGrossPrice() {
@@ -98,7 +110,7 @@ public class OrderItem extends FullAuditEntity {
     }
 
     public BigDecimal getNetPrice() {
-        return netPrice;
+        return netPrice == null ? BigDecimal.ZERO : netPrice;
     }
 
     public void setNetPrice(BigDecimal netPrice) {
@@ -134,7 +146,7 @@ public class OrderItem extends FullAuditEntity {
     public String getInstanceName(MetadataTools metadataTools, DatatypeFormatter datatypeFormatter) {
         return String.format("%s %s of %s",
                 datatypeFormatter.formatBigDecimal(quantity),
-                categoryItem.getUom(),
+                metadataTools.format(categoryItem.getUom()),
                 metadataTools.format(categoryItem));
     }
 }

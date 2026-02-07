@@ -1,6 +1,6 @@
 plugins {
     id 'java'
-    id 'io.jmix' version '2.7.3'
+    id 'io.jmix' version '2.7.4'
     id 'org.jetbrains.gradle.plugin.idea-ext' version '1.1.9'
 }
 
@@ -11,7 +11,7 @@ group = 'com.company'
 version = '0.0.1-SNAPSHOT'
 
 jmix {
-    bomVersion = '2.7.3'
+    bomVersion = '2.7.4'
 }
 
 vaadin {
@@ -75,8 +75,6 @@ dependencies {
 
     implementation 'io.jmix.localfs:jmix-localfs-starter'
 
-    implementation 'io.jmix.jmxconsole:jmix-jmxconsole-starter'
-
     //              --- [ VAADIN ADD-ONS ] ---
     implementation 'org.vaadin.jchristophe:sortable-layout:2.1.0'
 
@@ -85,6 +83,8 @@ dependencies {
 
     //              --- [ DATABASE ] ---
     runtimeOnly 'org.hsqldb:hsqldb'
+    // For online mode
+    implementation 'org.apache.commons:commons-dbcp2'
 
     //              --- [ AI ] ---
     implementation platform("org.springframework.ai:spring-ai-bom:1.1.2")
@@ -108,6 +108,7 @@ configurations.implementation {
     exclude group: 'com.vaadin', module: 'hilla'
     exclude group: 'com.vaadin', module: 'hilla-dev'
     exclude group: 'com.vaadin', module: 'copilot'
+    exclude group: 'commons-logging', module: 'commons-logging'
 }
 
 tasks.register("testPreparing", Delete) {
@@ -134,7 +135,12 @@ idea {
     module {
         excludeDirs.addAll(files '.jmix',
                 'node_modules',
-                'src/main/frontend/generated/',
-                'src/main/bundles')
+                'src/main/frontend/generated/')
+    }
+}
+
+bootBuildImage {
+    if (rootProject.hasProperty('jmixDockerTag')) {
+        imageName = rootProject['jmixDockerTag']
     }
 }

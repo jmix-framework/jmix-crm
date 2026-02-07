@@ -21,7 +21,7 @@
           </option>
         </ModuleSettings>
       </entry>
-      <entry key="b2b-crm.test">
+      <entry key="crm.main">
         <ModuleSettings>
           <option name="dataStoreOptionsV2">
             <map>
@@ -34,7 +34,7 @@
           </option>
         </ModuleSettings>
       </entry>
-      <entry key="crm.main">
+      <entry key="jmix-crm.main">
         <ModuleSettings>
           <option name="dataStoreOptionsV2">
             <map>

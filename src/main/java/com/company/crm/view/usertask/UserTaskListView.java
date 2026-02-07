@@ -26,8 +26,8 @@ import io.jmix.core.LoadContext;
 import io.jmix.core.SaveContext;
 import io.jmix.core.Sort;
 import io.jmix.core.entity.EntityValues;
-import io.jmix.core.querycondition.LogicalCondition;
 import io.jmix.core.querycondition.PropertyCondition;
+import io.jmix.core.repository.JmixDataRepositoryContext;
 import io.jmix.core.security.CurrentAuthentication;
 import io.jmix.core.validation.group.UiCrossFieldChecks;
 import io.jmix.flowui.UiComponentProperties;
@@ -35,14 +35,16 @@ import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.UiViewProperties;
 import io.jmix.flowui.accesscontext.UiEntityAttributeContext;
 import io.jmix.flowui.action.SecuredBaseAction;
-import io.jmix.flowui.action.list.EditAction;
 import io.jmix.flowui.component.UiComponentUtils;
-import io.jmix.flowui.component.checkbox.Switch;
+import io.jmix.flowui.component.checkbox.JmixCheckbox;
 import io.jmix.flowui.component.formlayout.JmixFormLayout;
+import io.jmix.flowui.component.genericfilter.GenericFilter;
 import io.jmix.flowui.component.grid.DataGrid;
+import io.jmix.flowui.component.textfield.TypedTextField;
 import io.jmix.flowui.component.validation.ValidationErrors;
 import io.jmix.flowui.data.EntityValueSource;
 import io.jmix.flowui.data.SupportsValueSource;
+import io.jmix.flowui.data.grid.DataGridItems;
 import io.jmix.flowui.kit.action.Action;
 import io.jmix.flowui.kit.action.ActionPerformedEvent;
 import io.jmix.flowui.kit.component.button.JmixButton;
@@ -68,6 +70,7 @@ import io.jmix.flowui.view.ViewComponent;
 import io.jmix.flowui.view.ViewController;
 import io.jmix.flowui.view.ViewDescriptor;
 import io.jmix.flowui.view.ViewValidation;
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDate;
@@ -75,6 +78,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
+import static com.company.crm.app.util.ui.datacontext.DataContextUtils.addCondition;
 import static io.jmix.core.repository.JmixDataRepositoryUtils.buildPageRequest;
 import static io.jmix.core.repository.JmixDataRepositoryUtils.buildRepositoryContext;
 import static io.jmix.core.repository.JmixDataRepositoryUtils.extractEntityId;
@@ -84,7 +88,7 @@ import static io.jmix.flowui.component.delegate.AbstractFieldDelegate.PROPERTY_I
 @ViewController(id = CrmConstants.ViewIds.USER_TASK_LIST)
 @ViewDescriptor(path = "user-task-list-view.xml")
 @LookupComponent("userTasksDataGrid")
-@DialogMode(width = "64em", resizable = true, closeOnOutsideClick = true, closeOnEsc = true)
+@DialogMode(width = "90%", resizable = true, closeOnOutsideClick = true, closeOnEsc = true)
 public class UserTaskListView extends StandardListView<UserTask> {
 
     @Autowired
@@ -126,6 +130,8 @@ public class UserTaskListView extends StandardListView<UserTask> {
     @ViewComponent
     private VerticalLayout detailsLayout;
     @ViewComponent
+    private TypedTextField<String> titleField;
+    @ViewComponent
     private DataGrid<UserTask> userTasksDataGrid;
     @ViewComponent
     private HorizontalLayout detailActions;
@@ -133,15 +139,25 @@ public class UserTaskListView extends StandardListView<UserTask> {
     private HorizontalLayout buttonsPanel;
     @ViewComponent
     private JmixFormLayout layoutWrapper;
-    @ViewComponent("userTasksDataGrid.editAction")
-    private EditAction<UserTask> userTasksDataGridEditAction;
+    @ViewComponent
+    private GenericFilter genericFilter;
 
     private boolean modifiedAfterEdit;
 
+    @Nullable
     private Boolean gridOnly = null;
 
     public void reloadData() {
         userTasksDl.load();
+    }
+
+    public void setPadding(boolean padding) {
+        getContent().setPadding(padding);
+    }
+
+    public void setMaxHeight(float height, Unit unit) {
+        getContent().setMaxHeight(height, unit);
+        userTasksDataGrid.setMaxHeight(height, unit);
     }
 
     public UserTaskListView detailOnly() {
@@ -163,7 +179,7 @@ public class UserTaskListView extends StandardListView<UserTask> {
 
         Dialog dialog = UiComponentUtils.findDialog(this);
         if (dialog != null) {
-            dialog.setMaxWidth(30, Unit.EM);
+            dialog.setMaxWidth(42, Unit.EM);
         }
 
         layoutWrapper.setAutoResponsive(true);
@@ -175,6 +191,7 @@ public class UserTaskListView extends StandardListView<UserTask> {
         listLayout.setHeight(getContent().getHeight());
         listLayout.setMaxHeight(getContent().getMaxHeight());
 
+        genericFilter.setVisible(false);
         detailsLayout.setVisible(!gridOnly);
         buttonsPanel.setVisible(!gridOnly);
 
@@ -188,8 +205,8 @@ public class UserTaskListView extends StandardListView<UserTask> {
     @Subscribe
     private void onInit(final InitEvent event) {
         userTasksDataGrid.addItemDoubleClickListener(e -> {
-            if (!isGridOnlyMode()) {
-                userTasksDataGridEditAction.execute();
+            if (!isGridOnlyMode() && listLayout.isEnabled()) {
+                updateControls(true);
             }
         });
         userTasksDataGrid.getActions().forEach(action -> {
@@ -206,6 +223,12 @@ public class UserTaskListView extends StandardListView<UserTask> {
 
     @Subscribe
     private void onBeforeShow(final BeforeShowEvent event) {
+        DataGridItems<UserTask> gridItems = userTasksDataGrid.getItems();
+        if (gridItems != null) {
+            gridItems.getItems().stream()
+                    .findFirst()
+                    .ifPresent(userTask -> userTasksDataGrid.select(userTask));
+        }
         processGridOnly();
         updateControls(false);
         processDetailsMode();
@@ -291,11 +314,8 @@ public class UserTaskListView extends StandardListView<UserTask> {
 
     @Install(to = "userTasksDl", target = Target.DATA_LOADER)
     private List<UserTask> listLoadDelegate(LoadContext<UserTask> context) {
-        LoadContext.Query query = new LoadContext.Query("select u from UserTask u");
-        query.setCondition(LogicalCondition.and(PropertyCondition.equal("author", getCurrentUser())));
-        query.setSort(Sort.by(Sort.Direction.ASC, "isCompleted", "dueDate"));
-        context.setQuery(query);
-        return userTaskRepository.findAll(buildPageRequest(context), buildRepositoryContext(context)).getContent();
+        var repositoryContext = prepareTasksLoaderRepositoryContext(context);
+        return userTaskRepository.findAll(buildPageRequest(context), repositoryContext).getContent();
     }
 
     @Install(to = "userTasksDataGrid.removeAction", subject = "delegate")
@@ -306,7 +326,7 @@ public class UserTaskListView extends StandardListView<UserTask> {
     @Supply(to = "userTasksDataGrid.isCompleted", subject = "renderer")
     private Renderer<UserTask> userTasksDataGridIsCompletedRenderer() {
         return new ComponentRenderer<>(userTask -> {
-            Switch editor = uiComponents.create(Switch.class);
+            var editor = uiComponents.create(JmixCheckbox.class);
             editor.setValue(userTask.getIsCompleted());
             editor.addValueChangeListener(e -> {
                 userTask.setIsCompleted(e.getValue());
@@ -314,8 +334,7 @@ public class UserTaskListView extends StandardListView<UserTask> {
                 reloadData();
             });
 
-            HorizontalLayout layout = new HorizontalLayout();
-            // layout.setJustifyContentMode(FlexComponent.JustifyContentMode.CENTER);
+            var layout = new HorizontalLayout();
             layout.setAlignItems(FlexComponent.Alignment.CENTER);
             layout.add(editor);
 
@@ -336,6 +355,14 @@ public class UserTaskListView extends StandardListView<UserTask> {
     @Supply(to = "userTasksDataGrid.dueDate", subject = "renderer")
     private Renderer<UserTask> userTasksDataGridDueDateRenderer() {
         return crmRenderers.taskDueDateRenderer();
+    }
+
+    private JmixDataRepositoryContext prepareTasksLoaderRepositoryContext(LoadContext<UserTask> context) {
+        assert context.getQuery() != null : "Query from cotext cannot be null";
+        context.getQuery().setSort(Sort.by(Sort.Direction.DESC, "dueDate"));
+        JmixDataRepositoryContext repositoryContext = buildRepositoryContext(context);
+        repositoryContext = addCondition(repositoryContext, PropertyCondition.equal("author", getCurrentUser()));
+        return repositoryContext;
     }
 
     private User getCurrentUser() {
@@ -424,6 +451,10 @@ public class UserTaskListView extends StandardListView<UserTask> {
 
         if (!uiComponentProperties.isImmediateRequiredValidationEnabled() && editing) {
             resetFormInvalidState();
+        }
+
+        if (editing) {
+            titleField.focus();
         }
     }
 

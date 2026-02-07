@@ -1,5 +1,6 @@
 package com.company.crm.view.main;
 
+import com.company.crm.app.online.OnlineDemoDataCreator;
 import com.company.crm.app.service.ai.CrmAnalyticsAsyncLoader;
 import com.company.crm.app.ui.component.CrmLoader;
 import com.company.crm.app.util.constant.CrmConstants;
@@ -35,6 +36,7 @@ import io.jmix.flowui.DialogWindows;
 import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.ViewNavigators;
 import io.jmix.flowui.app.main.StandardMainView;
+import io.jmix.flowui.asynctask.UiAsyncTasks;
 import io.jmix.flowui.component.SupportsTypedValue.TypedValueChangeEvent;
 import io.jmix.flowui.component.main.JmixListMenu;
 import io.jmix.flowui.component.main.JmixListMenu.ViewMenuItem;
@@ -44,8 +46,15 @@ import io.jmix.flowui.kit.action.ActionPerformedEvent;
 import io.jmix.flowui.kit.component.button.JmixButton;
 import io.jmix.flowui.kit.component.main.ListMenu.MenuBarItem;
 import io.jmix.flowui.kit.component.main.ListMenu.MenuItem;
+import io.jmix.flowui.view.Install;
+import io.jmix.flowui.view.Subscribe;
+import io.jmix.flowui.view.View;
+import io.jmix.flowui.view.ViewComponent;
+import io.jmix.flowui.view.ViewController;
+import io.jmix.flowui.view.ViewDescriptor;
 import io.jmix.flowui.view.*;
 import org.apache.commons.lang3.StringUtils;
+import org.jspecify.annotations.Nullable;
 import com.company.crm.ai.entity.AiConversation;
 import com.company.crm.ai.jmix.memory.JmixChatMemoryRepository;
 import com.company.crm.ai.service.AiConversationService;
@@ -64,7 +73,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-import static com.company.crm.app.util.demo.DemoUtils.defaultSleepForSearchClient;
+import static com.company.crm.app.util.demo.DemoUtils.defaultSleepForClientsSearching;
 
 @Route("")
 @ViewController(id = CrmConstants.ViewIds.MAIN)
@@ -79,6 +88,8 @@ public class MainView extends StandardMainView {
     private Metadata metadata;
     @Autowired
     private UiComponents uiComponents;
+    @Autowired
+    private UiAsyncTasks uiAsyncTasks;
     @Autowired
     private ViewNavigators viewNavigators;
     @Autowired
@@ -100,6 +111,9 @@ public class MainView extends StandardMainView {
     @Autowired
     private JmixChatMemoryRepository chatMemoryRepository;
 
+    @Autowired(required = false)
+    private OnlineDemoDataCreator onlineDemoDataCreator;
+
     @ViewComponent
     private JmixListMenu menu;
     @ViewComponent
@@ -119,6 +133,9 @@ public class MainView extends StandardMainView {
     @Subscribe
     private void onReady(final ReadyEvent event) {
         selectSuitableMenuItem();
+        if (onlineDemoDataCreator != null) {
+            onlineDemoDataCreator.createDemoDataIfNeeded();
+        }
     }
 
     @Subscribe("userMenu.profileItem.profileAction")
@@ -401,7 +418,7 @@ public class MainView extends StandardMainView {
     }
 
     private List<Client> searchClientsByName(String name, int size) {
-        defaultSleepForSearchClient();
+        defaultSleepForClientsSearching();
         return clientRepository.findAllByNameContains(name, Pageable.ofSize(size));
     }
 

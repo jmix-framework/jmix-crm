@@ -1,9 +1,13 @@
 package com.company.crm.view.login;
 
 import com.company.crm.app.util.constant.CrmConstants;
+import com.google.common.base.Strings;
+import com.vaadin.flow.component.AbstractField;
+import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.UI;
-import com.vaadin.flow.component.login.AbstractLogin.LoginEvent;
-import com.vaadin.flow.component.login.LoginI18n;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.H5;
+import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.i18n.LocaleChangeEvent;
 import com.vaadin.flow.i18n.LocaleChangeObserver;
 import com.vaadin.flow.router.Route;
@@ -11,15 +15,20 @@ import com.vaadin.flow.server.VaadinSession;
 import io.jmix.core.CoreProperties;
 import io.jmix.core.MessageTools;
 import io.jmix.core.security.AccessDeniedException;
-import io.jmix.flowui.component.loginform.JmixLoginForm;
+import io.jmix.flowui.component.checkbox.JmixCheckbox;
+import io.jmix.flowui.component.select.JmixSelect;
+import io.jmix.flowui.component.textfield.JmixPasswordField;
+import io.jmix.flowui.component.textfield.TypedTextField;
+import io.jmix.flowui.component.validation.ValidationErrors;
 import io.jmix.flowui.kit.component.ComponentUtils;
-import io.jmix.flowui.kit.component.loginform.JmixLoginI18n;
+import io.jmix.flowui.kit.component.button.JmixButton;
 import io.jmix.flowui.view.MessageBundle;
 import io.jmix.flowui.view.StandardView;
 import io.jmix.flowui.view.Subscribe;
 import io.jmix.flowui.view.ViewComponent;
 import io.jmix.flowui.view.ViewController;
 import io.jmix.flowui.view.ViewDescriptor;
+import io.jmix.flowui.view.ViewValidation;
 import io.jmix.securityflowui.authentication.AuthDetails;
 import io.jmix.securityflowui.authentication.LoginViewSupport;
 import org.apache.commons.lang3.StringUtils;
@@ -32,6 +41,7 @@ import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.LockedException;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -42,21 +52,34 @@ import java.util.stream.Collectors;
 public class LoginView extends StandardView implements LocaleChangeObserver {
 
     private static final Logger log = LoggerFactory.getLogger(LoginView.class);
+    
+    @ViewComponent
+    private TypedTextField<String> usernameField;
+    @ViewComponent
+    private JmixPasswordField passwordField;
+    @ViewComponent
+    private JmixCheckbox rememberMe;
+    @ViewComponent
+    private JmixSelect<Locale> localeSelect;
+    @ViewComponent
+    private JmixButton submitBtn;
+    @ViewComponent
+    private Div errorMessage;
+    @ViewComponent
+    private H5 errorMessageTitle;
+    @ViewComponent
+    private Paragraph errorMessageDescription;
 
     @Autowired
     private CoreProperties coreProperties;
-
     @Autowired
     private LoginViewSupport loginViewSupport;
-
     @Autowired
     private MessageTools messageTools;
-
-    @ViewComponent
-    private JmixLoginForm login;
-
     @ViewComponent
     private MessageBundle messageBundle;
+    @Autowired
+    private ViewValidation viewValidation;
 
     @Value("${ui.login.defaultUsername:}")
     private String defaultUsername;
@@ -65,7 +88,7 @@ public class LoginView extends StandardView implements LocaleChangeObserver {
     private String defaultPassword;
 
     @Subscribe
-    private void onInit(final InitEvent event) {
+    public void onInit(final InitEvent event) {
         initLocales();
         initDefaultCredentials();
     }
@@ -75,32 +98,55 @@ public class LoginView extends StandardView implements LocaleChangeObserver {
                 .collect(Collectors.toMap(Function.identity(), messageTools::getLocaleDisplayName, (s1, s2) -> s1,
                         LinkedHashMap::new));
 
-        ComponentUtils.setItemsMap(login, locales);
+        ComponentUtils.setItemsMap(localeSelect, locales);
 
-        login.setSelectedLocale(VaadinSession.getCurrent().getLocale());
+        localeSelect.setValue(VaadinSession.getCurrent().getLocale());
     }
 
     private void initDefaultCredentials() {
         if (StringUtils.isNotBlank(defaultUsername)) {
-            login.setUsername(defaultUsername);
+            usernameField.setTypedValue(defaultUsername);
         }
 
         if (StringUtils.isNotBlank(defaultPassword)) {
-            login.setPassword(defaultPassword);
+            passwordField.setValue(defaultPassword);
         }
     }
 
-    @Subscribe("login")
-    private void onLogin(final LoginEvent event) {
+    @Subscribe("localeSelect")
+    public void onLocaleSelectComponentValueChange(final AbstractField.ComponentValueChangeEvent<JmixSelect<Locale>, Locale> event) {
+        Locale locale = event.getValue();
+        VaadinSession.getCurrent().setLocale(locale);
+    }
+
+    @Subscribe(id = "submitBtn", subject = "clickListener")
+    public void onSubmitBtnClick(final ClickEvent<JmixButton> event) {
+        errorMessage.setVisible(false);
+
+        ValidationErrors validationErrors =
+                viewValidation.validateUiComponents(List.of(usernameField, passwordField));
+
+        String username = usernameField.getValue();
+        String password = passwordField.getValue();
+
+        if (!validationErrors.isEmpty()
+                || Strings.isNullOrEmpty(username)
+                || Strings.isNullOrEmpty(password)) {
+            return;
+        }
+
         try {
             loginViewSupport.authenticate(
-                    AuthDetails.of(event.getUsername(), event.getPassword())
-                            .withLocale(login.getSelectedLocale())
-                            .withRememberMe(login.isRememberMe())
+                    AuthDetails.of(username, password)
+                            .withLocale(localeSelect.getValue())
+                            .withRememberMe(rememberMe.getValue())
             );
         } catch (final BadCredentialsException | DisabledException | LockedException | AccessDeniedException e) {
-            log.warn("Login failed for user '{}': {}", event.getUsername(), e.toString());
-            event.getSource().setError(true);
+            log.warn("Login failed for user '{}': {}", username, e.toString());
+
+            errorMessageTitle.setText(messageBundle.getMessage("loginForm.errorTitle"));
+            errorMessageDescription.setText(messageBundle.getMessage("loginForm.badCredentials"));
+            errorMessage.setVisible(true);
         }
     }
 
@@ -108,24 +154,11 @@ public class LoginView extends StandardView implements LocaleChangeObserver {
     public void localeChange(final LocaleChangeEvent event) {
         UI.getCurrent().getPage().setTitle(messageBundle.getMessage("LoginView.title"));
 
-        final JmixLoginI18n loginI18n = JmixLoginI18n.createDefault();
-
-        final JmixLoginI18n.JmixForm form = new JmixLoginI18n.JmixForm();
-        form.setTitle(messageBundle.getMessage("loginForm.headerTitle"));
-        form.setUsername(messageBundle.getMessage("loginForm.username"));
-        form.setPassword(messageBundle.getMessage("loginForm.password"));
-        form.setSubmit(messageBundle.getMessage("loginForm.submit"));
-        form.setForgotPassword(messageBundle.getMessage("loginForm.forgotPassword"));
-        form.setRememberMe(messageBundle.getMessage("loginForm.rememberMe"));
-        loginI18n.setForm(form);
-
-        final LoginI18n.ErrorMessage errorMessage = new LoginI18n.ErrorMessage();
-        errorMessage.setTitle(messageBundle.getMessage("loginForm.errorTitle"));
-        errorMessage.setMessage(messageBundle.getMessage("loginForm.badCredentials"));
-        errorMessage.setUsername(messageBundle.getMessage("loginForm.errorUsername"));
-        errorMessage.setPassword(messageBundle.getMessage("loginForm.errorPassword"));
-        loginI18n.setErrorMessage(errorMessage);
-
-        login.setI18n(loginI18n);
+        usernameField.setLabel(messageBundle.getMessage("loginForm.username"));
+        usernameField.setRequiredMessage(messageBundle.getMessage("loginForm.errorUsername"));
+        passwordField.setLabel(messageBundle.getMessage("loginForm.password"));
+        passwordField.setRequiredMessage(messageBundle.getMessage("loginForm.errorPassword"));
+        rememberMe.setLabel(messageBundle.getMessage("loginForm.rememberMe"));
+        submitBtn.setText(messageBundle.getMessage("loginForm.submit"));
     }
 }

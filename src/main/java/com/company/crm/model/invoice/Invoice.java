@@ -1,15 +1,18 @@
 package com.company.crm.model.invoice;
 
+import com.company.crm.model.HasUniqueNumber;
 import com.company.crm.model.base.FullAuditEntity;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.datatype.PriceDataType;
 import com.company.crm.model.order.Order;
 import com.company.crm.model.payment.Payment;
 import io.jmix.core.DeletePolicy;
+import io.jmix.core.Messages;
 import io.jmix.core.entity.annotation.OnDelete;
 import io.jmix.core.metamodel.annotation.DependsOnProperties;
 import io.jmix.core.metamodel.annotation.InstanceName;
 import io.jmix.core.metamodel.annotation.JmixEntity;
+import io.jmix.core.metamodel.annotation.JmixProperty;
 import io.jmix.core.metamodel.annotation.PropertyDatatype;
 import io.jmix.core.metamodel.datatype.DatatypeFormatter;
 import jakarta.persistence.Column;
@@ -20,7 +23,10 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.PositiveOrZero;
+import org.apache.commons.lang3.StringUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -32,13 +38,16 @@ import java.util.List;
         @Index(name = "IDX_INVOICE_ORDER", columnList = "ORDER_ID"),
         @Index(name = "IDX_INVOICE_CLIENT", columnList = "CLIENT_ID")
 })
-public class Invoice extends FullAuditEntity {
+public class Invoice extends FullAuditEntity implements HasUniqueNumber {
+
+    @Column(name = "NUMBER", nullable = false, unique = true)
+    private String number;
 
     @JoinColumn(name = "CLIENT_ID", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     private Client client;
 
-    @OrderBy("date")
+    @OrderBy("date DESC")
     @OnDelete(DeletePolicy.CASCADE)
     @OneToMany(mappedBy = "invoice")
     private List<Payment> payments;
@@ -53,20 +62,45 @@ public class Invoice extends FullAuditEntity {
     @Column(name = "DUE_DATE")
     private LocalDate dueDate;
 
+    @PositiveOrZero
     @PropertyDatatype(PriceDataType.NAME)
     @Column(name = "SUBTOTAL")
     private BigDecimal subtotal;
 
+    @PositiveOrZero
     @PropertyDatatype(PriceDataType.NAME)
     @Column(name = "VAT")
     private BigDecimal vat;
 
+    @PositiveOrZero
     @PropertyDatatype(PriceDataType.NAME)
     @Column(name = "TOTAL")
     private BigDecimal total;
 
     @Column(name = "STATUS")
     private Integer status;
+
+    @InstanceName
+    @DependsOnProperties({"number", "date"})
+    public String getInstanceName(DatatypeFormatter datatypeFormatter, Messages messages) {
+        if (StringUtils.isNotBlank(number)) {
+            return String.format("%s from %s", number, datatypeFormatter.formatLocalDate(date));
+        } else {
+            return messages.getMessage("newInvoice");
+        }
+    }
+
+    @JmixProperty
+    @DependsOnProperties({"payments"})
+    public BigDecimal getPaymentsSum() {
+        if (payments == null || payments.isEmpty()) {
+            return BigDecimal.ZERO;
+        }
+
+        return payments.stream()
+                .map(Payment::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
 
     public List<Payment> getPayments() {
         return payments;
@@ -140,12 +174,16 @@ public class Invoice extends FullAuditEntity {
         this.order = order;
     }
 
-    @InstanceName
-    @DependsOnProperties({"order", "date", "total"})
-    public String getInstanceName(DatatypeFormatter datatypeFormatter) {
-        return String.format("Invoice for order %s from %s: %s",
-                order.getNumber(),
-                datatypeFormatter.formatLocalDate(date),
-                datatypeFormatter.formatBigDecimal(total));
+    public String getNumber() {
+        return number == null ? getNumberWillBeGeneratedMessage() : number;
+    }
+
+    public void setNumber(String number) {
+        this.number = number;
+    }
+
+    @PrePersist
+    public void prePersist() {
+        setNumber(generateNextNumber());
     }
 }

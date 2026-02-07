@@ -22,9 +22,7 @@ public class UserUiTest extends AbstractUiTest {
     @Test
     void test_createUser() {
         // Navigate to user list view
-        viewNavigators.view(UiTestUtils.getCurrentView(), UserListView.class).navigate();
-
-        UserListView userListView = UiTestUtils.getCurrentView();
+        UserListView userListView = viewTestSupport.navigateTo(UserListView.class);
 
         // Click the "Create" button
         JmixButton createBtn = UiTestUtils.getComponent(userListView, "createButton");

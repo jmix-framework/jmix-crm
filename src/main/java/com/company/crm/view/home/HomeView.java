@@ -4,13 +4,15 @@ import com.company.crm.app.service.datetime.DateTimeService;
 import com.company.crm.app.service.finance.InvoiceService;
 import com.company.crm.app.service.finance.PaymentService;
 import com.company.crm.app.service.order.OrderService;
+import com.company.crm.app.ui.component.CrmCard;
+import com.company.crm.app.ui.component.CrmCard.RangeStatCardInfo;
 import com.company.crm.app.ui.component.RecentActivitiesBlock;
-import com.company.crm.app.ui.component.card.CardPeriod;
-import com.company.crm.app.ui.component.card.CrmCard;
-import com.company.crm.app.ui.component.card.CrmCard.RangeStatCardInfo;
 import com.company.crm.app.util.constant.CrmConstants;
+import com.company.crm.app.util.date.Period;
+import com.company.crm.app.util.ui.chart.ChartsUtils;
 import com.company.crm.app.util.ui.listener.resize.WidthResizeListener;
 import com.company.crm.app.util.ui.renderer.CrmRenderers;
+import com.company.crm.model.client.Client;
 import com.company.crm.model.datatype.PriceDataType;
 import com.company.crm.model.invoice.Invoice;
 import com.company.crm.model.order.Order;
@@ -22,22 +24,22 @@ import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.card.CardVariant;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H4;
-import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility.Margin;
 import io.jmix.chartsflowui.component.Chart;
 import io.jmix.chartsflowui.kit.component.model.DataSet;
 import io.jmix.chartsflowui.kit.component.model.Grid;
 import io.jmix.chartsflowui.kit.component.model.Title;
-import io.jmix.chartsflowui.kit.component.model.legend.Legend;
+import io.jmix.chartsflowui.kit.component.model.Tooltip;
+import io.jmix.chartsflowui.kit.component.model.legend.ScrollableLegend;
 import io.jmix.chartsflowui.kit.component.model.series.Label;
 import io.jmix.chartsflowui.kit.component.model.series.PieSeries;
 import io.jmix.chartsflowui.kit.component.model.shared.FontStyle;
@@ -46,6 +48,7 @@ import io.jmix.chartsflowui.kit.component.model.toolbox.SaveAsImageFeature;
 import io.jmix.chartsflowui.kit.component.model.toolbox.Toolbox;
 import io.jmix.chartsflowui.kit.data.chart.ListChartItems;
 import io.jmix.core.Messages;
+import io.jmix.core.Metadata;
 import io.jmix.flowui.DialogWindows;
 import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.Views;
@@ -53,8 +56,11 @@ import io.jmix.flowui.component.card.JmixCard;
 import io.jmix.flowui.component.formatter.DateFormatter;
 import io.jmix.flowui.component.formlayout.JmixFormLayout;
 import io.jmix.flowui.component.grid.DataGrid;
-import io.jmix.flowui.component.layout.ViewLayout;
 import io.jmix.flowui.component.splitlayout.JmixSplitLayout;
+import io.jmix.flowui.data.grid.ContainerDataGridItems;
+import io.jmix.flowui.model.CollectionContainer;
+import io.jmix.flowui.model.CollectionLoader;
+import io.jmix.flowui.model.DataComponents;
 import io.jmix.flowui.view.MessageBundle;
 import io.jmix.flowui.view.StandardOutcome;
 import io.jmix.flowui.view.StandardView;
@@ -73,6 +79,8 @@ import java.util.List;
 import java.util.Map;
 
 import static com.company.crm.app.feature.sortable.SortableFeature.makeSortable;
+import static com.company.crm.app.util.ui.CrmUiUtils.setBackgroundTransparent;
+import static com.company.crm.app.util.ui.CrmUiUtils.setDefaultEmptyStateComponent;
 import static com.company.crm.app.util.ui.listener.resize.WidthResizeListener.isWidthChanged;
 import static io.jmix.flowui.component.UiComponentUtils.traverseComponents;
 
@@ -82,7 +90,13 @@ import static io.jmix.flowui.component.UiComponentUtils.traverseComponents;
 public class HomeView extends StandardView implements WidthResizeListener {
 
     @Autowired
+    private Metadata metadata;
+    @Autowired
+    private ChartsUtils chartsUtils;
+    @Autowired
     private OrderService orderService;
+    @Autowired
+    private DataComponents dataComponents;
     @Autowired
     private PaymentService paymentService;
     @Autowired
@@ -166,22 +180,42 @@ public class HomeView extends StandardView implements WidthResizeListener {
     }
 
     private List<JmixCard> getLeftCards() {
-        var totalOrdersCard = uiComponents.create(CrmCard.class);
-        totalOrdersCard.setId("totalOrdersCard");
-        totalOrdersCard.defaultRangeStatPeriodCard(messageBundle.getMessage("card.totalOrdersValue"), this::createTotalOrdersValueComponent);
+        return List.of(
+                createTotalOrdersCard(),
+                createPaymentsCard(),
+                createMyTasksCard(),
+                createOverdueInvoicesCard());
+    }
 
-        var paymentsCard = uiComponents.create(CrmCard.class);
-        paymentsCard.setId("paymentsCard");
-        paymentsCard.defaultRangeStatPeriodCard(messageBundle.getMessage("cards.payments"), this::createPaymentsComponent);
+    private CrmCard createMyTasksCard() {
+        return uiComponents.create(CrmCard.class)
+                .fillAsPeriodCard("myTasks", 2, myTasksTitleComponent(), this::createMyTasksComponent)
+                .withPeriodFilter(false)
+                .withoutBackground(true);
+    }
 
-        var overdueInvoicesCard = uiComponents.create(CrmCard.class).withoutBackground(true);
-        overdueInvoicesCard.fillAsPeriodCard("overdueInvoicesCard", 2,
-                messageBundle.getMessage("cards.overdueInvoices"), this::createOverdueInvoicesComponent);
+    private CrmCard createOverdueInvoicesCard() {
+        return uiComponents.create(CrmCard.class)
+                .fillAsPeriodCard("overdueInvoicesCard", 2,
+                        messageBundle.getMessage("cards.overdueInvoices"), this::createOverdueInvoicesComponent)
+                .withPeriodFilter(false)
+                .withoutBackground(true);
+    }
 
-        var myTasksCard = uiComponents.create(CrmCard.class).withoutBackground(true);
-        myTasksCard.fillAsPeriodCard("myTasks", 2, myTasksTitleComponent(), this::createMyTasksComponent);
+    private CrmCard createPaymentsCard() {
+        return uiComponents.create(CrmCard.class)
+                .withId("paymentsCard")
+                .defaultRangeStatPeriodCard(
+                        messageBundle.getMessage("cards.payments"),
+                        this::createPaymentsComponent);
+    }
 
-        return List.of(totalOrdersCard, paymentsCard, overdueInvoicesCard, myTasksCard);
+    private CrmCard createTotalOrdersCard() {
+        return uiComponents.create(CrmCard.class)
+                .withId("totalOrdersCard")
+                .defaultRangeStatPeriodCard(
+                        messageBundle.getMessage("card.totalOrdersValue"),
+                        this::createTotalOrdersValueComponent);
     }
 
     private Component myTasksTitleComponent() {
@@ -190,10 +224,10 @@ public class HomeView extends StandardView implements WidthResizeListener {
         container.setAlignItems(FlexComponent.Alignment.CENTER);
         container.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
 
-        var title = new H4("My Tasks");
+        var title = new H4(messageBundle.getMessage("myTasks"));
         container.add(title);
 
-        var newTaskButton = new Button("New Task");
+        var newTaskButton = new Button(messageBundle.getMessage("newTask"));
         newTaskButton.setIcon(VaadinIcon.PLUS.create());
         newTaskButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         newTaskButton.addClickListener(clickEvent ->
@@ -214,15 +248,22 @@ public class HomeView extends StandardView implements WidthResizeListener {
     }
 
     private List<JmixCard> getRightCards() {
-        var salesCard = uiComponents.create(CrmCard.class);
-        salesCard.setId("salesCard");
-        salesCard.fillAsPeriodCard("Sales Chart", 2, this::createSalesFunnelComponent);
+        return List.of(createSalesCard(), createRecentActivitiesCard());
+    }
 
-        var activitiesCard = uiComponents.create(CrmCard.class).withoutBackground(true);
-        activitiesCard.setId("activitiesCard");
-        activitiesCard.fillAsStaticCard("", 2, createRecentActivitiesComponent());
+    private CrmCard createRecentActivitiesCard() {
+        return uiComponents.create(CrmCard.class)
+                .withId("activitiesCard")
+                .withoutBackground(true)
+                .fillAsStaticCard("", 2, createRecentActivitiesComponent());
+    }
 
-        return List.of(salesCard, activitiesCard);
+    private CrmCard createSalesCard() {
+        return uiComponents.create(CrmCard.class)
+                .withId("salesCard")
+                .fillAsPeriodCard(
+                        messageBundle.getMessage("salesCardTitle"),
+                        2, this::createSalesFunnelComponent);
     }
 
     private void doCreateCards(List<JmixCard> cards, JmixFormLayout form) {
@@ -232,7 +273,7 @@ public class HomeView extends StandardView implements WidthResizeListener {
         }
     }
 
-    private RangeStatCardInfo createTotalOrdersValueComponent(CardPeriod period) {
+    private RangeStatCardInfo createTotalOrdersValueComponent(Period period) {
         var range = period.getDateRange(dateTimeService);
         var previousRange = period.getPreviousDateRangeFor(range);
 
@@ -247,11 +288,11 @@ public class HomeView extends StandardView implements WidthResizeListener {
 
         return new RangeStatCardInfo(
                 range,
-                PriceDataType.formatEndingCurrency(sum),
+                PriceDataType.defaultFormat(sum),
                 getDeltaString(sum, previousSum));
     }
 
-    private RangeStatCardInfo createPaymentsComponent(CardPeriod period) {
+    private RangeStatCardInfo createPaymentsComponent(Period period) {
         var range = period.getDateRange(dateTimeService);
         var previousRange = period.getPreviousDateRangeFor(range);
 
@@ -266,36 +307,52 @@ public class HomeView extends StandardView implements WidthResizeListener {
 
         return new RangeStatCardInfo(
                 range,
-                PriceDataType.formatEndingCurrency(sum),
+                PriceDataType.defaultFormat(sum),
                 getDeltaString(sum, previousSum));
     }
 
-    private Component createOverdueInvoicesComponent(CardPeriod period) {
+    private Component createOverdueInvoicesComponent(Period period) {
+        CollectionContainer<Invoice> invoicesDc = dataComponents.createCollectionContainer(Invoice.class);
+        CollectionLoader<Invoice> invoicesDl = dataComponents.createCollectionLoader();
+        invoicesDl.setLoadDelegate(ctx ->
+                invoiceService.getOverdueInvoices(period.getDateRange(dateTimeService), 30));
+        invoicesDl.setContainer(invoicesDc);
+        invoicesDl.load();
+
+        ContainerDataGridItems<Invoice> gridItems = new ContainerDataGridItems<>(invoicesDc);
+
+        @SuppressWarnings("unchecked")
         DataGrid<Invoice> grid = uiComponents.create(DataGrid.class);
-
-        grid.addColumn(new ComponentRenderer<>(r -> new Span(r.getClient().getName())))
-                .setHeader(messages.getMessage("com.company.crm.model.client/Client"))
-                .setRenderer(crmRenderers.invoiceClientLink());
-        localDateFormatter.setUseUserTimezone(true);
-        localDateFormatter.setFormat(messages.getMessage("dateFormat"));
-        grid.addColumn(new ComponentRenderer<>(r -> new Span(localDateFormatter.apply(r.getDueDate()))))
-                .setHeader(messages.getMessage("com.company.crm.model.invoice/Invoice.dueDate"));
-
-        grid.setItems(invoiceService.getOverdueInvoices());
-
+        grid.setDataProvider(gridItems);
         grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         grid.setMinHeight(10, Unit.EM);
         grid.setMaxHeight(15, Unit.EM);
-        grid.setEmptyStateText(messageBundle.getMessage("noOverdueInvoices"));
+        setDefaultEmptyStateComponent(grid);
+        grid.addItemClickListener(e ->
+                dialogWindows.detail(this, Invoice.class).editEntity(e.getItem()).open());
+
+        var clientColumn = grid.addColumn("client", metadata.getClass(Invoice.class).getPropertyPath("client"));
+        clientColumn.setRenderer(crmRenderers.invoiceClientLink());
+        clientColumn.setHeader(messages.getMessage(Client.class, "Client"));
+        clientColumn.setFilterable(true);
+        clientColumn.setSortable(true);
+
+        localDateFormatter.setUseUserTimezone(true);
+        localDateFormatter.setFormat(messages.getMessage("dateFormat"));
+
+        var dueDateColumn = grid.addColumn("dueDate", metadata.getClass(Invoice.class).getPropertyPath("dueDate"));
+        dueDateColumn.setRenderer(crmRenderers.invoiceDueDateRenderer());
+        dueDateColumn.setHeader(messages.getMessage(Invoice.class, "Invoice.dueDate"));
+        dueDateColumn.setFilterable(true);
+        dueDateColumn.setSortable(true);
 
         return grid;
     }
 
-    private Component createMyTasksComponent(CardPeriod period) {
+    private Component createMyTasksComponent(Period period) {
         UserTaskListView userTasksView = views.create(UserTaskListView.class).gridOnly();
-        ViewLayout viewLayout = userTasksView.getContent();
-        viewLayout.setPadding(false);
-        viewLayout.setMaxHeight(15, Unit.EM);
+        userTasksView.setPadding(false);
+        userTasksView.setMaxHeight(15, Unit.EM);
         return userTasksView;
     }
 
@@ -311,7 +368,7 @@ public class HomeView extends StandardView implements WidthResizeListener {
         return (percentChange.compareTo(BigDecimal.ZERO) >= 0 ? "↑" : "↓") + percentChange.abs() + "%";
     }
 
-    private Component createSalesFunnelComponent(CardPeriod period) {
+    private Component createSalesFunnelComponent(Period period) {
         var range = period.getDateRange(dateTimeService);
         var previousRange = period.getPreviousDateRangeFor(range);
 
@@ -339,15 +396,18 @@ public class HomeView extends StandardView implements WidthResizeListener {
                         .withLabel(new Label().withShow(false))
                         .withLabelLine(new PieSeries.LabelLine().withShow(false))
                         .withAnimation(true))
+                .withTooltip(new Tooltip()
+                        .withShow(true))
                 .withToolbox(new Toolbox()
                         .withShow(true)
                         .withFeatures(new SaveAsImageFeature().withType(SaveAsImageFeature.SaveType.PNG)))
                 .withTitle(new Title()
-                        .withText("STATUS")
+                        .withText(messageBundle.getMessage("salesChartTitle"))
                         .withTextStyle(new Title.TextStyle()
                                 .withFontSize(12)
                                 .withFontStyle(FontStyle.NORMAL)))
-                .withLegend(new Legend()
+                .withLegend(new ScrollableLegend()
+                        .withHeight("100")
                         .withTop("20")
                         .withLeft("0")
                         .withOrientation(Orientation.VERTICAL))
@@ -357,11 +417,14 @@ public class HomeView extends StandardView implements WidthResizeListener {
                         .withRight("0"));
 
         chart.setHeight(30, Unit.EM);
+        setBackgroundTransparent(chart);
 
-        Div container = new Div(chart);
-        container.getStyle().setMarginTop("1em");
+        var wrapper = chartsUtils.createViewStatChartWrapper(chart, false);
+        wrapper.removeThemeVariants(CardVariant.values());
+        wrapper.getStyle().setMarginTop("1em");
+        setBackgroundTransparent(wrapper);
 
-        return container;
+        return wrapper;
     }
 
     private DataSet createSalesChartDataSet(List<Order> orders) {

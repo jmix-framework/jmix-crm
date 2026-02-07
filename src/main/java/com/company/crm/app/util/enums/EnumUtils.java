@@ -1,7 +1,7 @@
 package com.company.crm.app.util.enums;
 
 import io.jmix.core.metamodel.datatype.EnumClass;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 public final class EnumUtils {
 

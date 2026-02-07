@@ -65,20 +65,21 @@ public class UserActivityRecorder {
         ClientUserActivity userActivity = dataManager.create(ClientUserActivity.class);
         userActivity.setClient(client);
 
+        String clientName = client.getName();
         if (isEntityCreatedEvent(event)) {
             getCreatedBy(client).ifPresent(createdBy -> {
                 userActivity.setUser(createdBy);
-                userActivity.setActionDescription("Add new client to system");
+                userActivity.setActionDescription(String.format("%s client added", clientName));
             });
         } else if (isEntityUpdatedEvent(event)) {
             getUpdatedBy(client).ifPresent(updatedBy -> {
                 userActivity.setUser(updatedBy);
-                userActivity.setActionDescription("Update client profile");
+                userActivity.setActionDescription(String.format("%s profile updated", clientName));
             });
         } else if (isEntityDeletedEvent(event)) {
             getDeletedBy(client).ifPresent(deletedBy -> {
                 userActivity.setUser(deletedBy);
-                userActivity.setActionDescription("Delete client from system");
+                userActivity.setActionDescription(String.format("%s client removed", clientName));
             });
         }
 

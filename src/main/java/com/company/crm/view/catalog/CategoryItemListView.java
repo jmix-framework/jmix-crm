@@ -1,38 +1,33 @@
 package com.company.crm.view.catalog;
 
 import com.company.crm.app.feature.queryparameters.filters.FieldValueQueryParameterBinder;
+import com.company.crm.app.service.catalog.CatalogImportSettings;
 import com.company.crm.app.service.catalog.CatalogService;
-import com.company.crm.app.service.datetime.DateTimeService;
 import com.company.crm.app.util.constant.CrmConstants;
-import com.company.crm.app.util.date.range.LocalDateRange;
-import com.company.crm.app.util.ui.chart.ChartsUtils;
 import com.company.crm.app.util.ui.renderer.CrmRenderers;
 import com.company.crm.model.catalog.category.Category;
 import com.company.crm.model.catalog.category.CategoryRepository;
 import com.company.crm.model.catalog.item.CategoryItem;
 import com.company.crm.model.catalog.item.CategoryItemRepository;
-import com.company.crm.view.catalog.charts.ItemOrdersAmountItem;
-import com.company.crm.view.catalog.charts.ItemOrdersAmountValueDescription;
 import com.company.crm.view.main.MainView;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.HasValue;
 import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.router.Route;
-import io.jmix.chartsflowui.component.Chart;
-import io.jmix.chartsflowui.kit.component.model.DataSet;
-import io.jmix.chartsflowui.kit.data.chart.ListChartItems;
-import io.jmix.core.common.datastruct.Pair;
 import io.jmix.core.querycondition.LogicalCondition;
 import io.jmix.core.repository.JmixDataRepositoryContext;
-import io.jmix.flowui.component.formlayout.JmixFormLayout;
+import io.jmix.flowui.component.grid.DataGrid;
 import io.jmix.flowui.component.select.JmixSelect;
 import io.jmix.flowui.component.textfield.TypedTextField;
+import io.jmix.flowui.component.upload.FileUploadField;
+import io.jmix.flowui.kit.action.ActionPerformedEvent;
+import io.jmix.flowui.kit.component.upload.event.FileUploadSucceededEvent;
 import io.jmix.flowui.model.CollectionLoader;
 import io.jmix.flowui.view.DialogMode;
 import io.jmix.flowui.view.Install;
 import io.jmix.flowui.view.LookupComponent;
-import io.jmix.flowui.view.MessageBundle;
 import io.jmix.flowui.view.StandardListView;
+import io.jmix.flowui.view.Subscribe;
 import io.jmix.flowui.view.Supply;
 import io.jmix.flowui.view.Target;
 import io.jmix.flowui.view.ViewComponent;
@@ -40,18 +35,15 @@ import io.jmix.flowui.view.ViewController;
 import io.jmix.flowui.view.ViewDescriptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
-import org.springframework.lang.Nullable;
 
-import java.math.BigDecimal;
-import java.util.ArrayList;
+import java.io.ByteArrayInputStream;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
-import static com.company.crm.app.util.ui.datacontext.DataContextUtils.wrapCondition;
+import static com.company.crm.app.util.ui.CrmUiUtils.addRowSelectionInMultiSelectMode;
+import static com.company.crm.app.util.ui.CrmUiUtils.setSearchHintPopover;
+import static com.company.crm.app.util.ui.datacontext.DataContextUtils.addCondition;
 import static io.jmix.core.querycondition.PropertyCondition.contains;
 import static io.jmix.core.querycondition.PropertyCondition.equal;
 
@@ -59,11 +51,9 @@ import static io.jmix.core.querycondition.PropertyCondition.equal;
 @ViewController(id = CrmConstants.ViewIds.CATEGORY_ITEM_LIST)
 @ViewDescriptor(path = "category-item-list-view.xml")
 @LookupComponent("categoryItemsDataGrid")
-@DialogMode(width = "64em")
+@DialogMode(width = "64em", resizable = true)
 public class CategoryItemListView extends StandardListView<CategoryItem> {
 
-    @Autowired
-    private ChartsUtils chartsUtils;
     @Autowired
     private CrmRenderers crmRenderers;
     @Autowired
@@ -71,37 +61,35 @@ public class CategoryItemListView extends StandardListView<CategoryItem> {
     @Autowired
     private CategoryRepository categoryRepository;
     @Autowired
-    private DateTimeService dateTimeService;
-    @Autowired
     private CatalogService catalogService;
 
-    @ViewComponent
-    private MessageBundle messageBundle;
-    @ViewComponent
-    private JmixFormLayout chartsBlock;
     @ViewComponent
     private TypedTextField<String> items_searchField;
     @ViewComponent
     private JmixSelect<Category> items_categorySelect;
     @ViewComponent
     private CollectionLoader<CategoryItem> categoryItemsDl;
+    @ViewComponent
+    private FileUploadField updateCatalogField;
 
     private final LogicalCondition filtersCondition = LogicalCondition.and();
+    @ViewComponent
+    private DataGrid<CategoryItem> categoryItemsDataGrid;
 
     @Override
     protected void onAttach(AttachEvent attachEvent) {
-        initialize();
         super.onAttach(attachEvent);
+        initialize();
     }
 
     @Install(to = "categoryItemsDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
     private List<CategoryItem> loadDelegate(Pageable pageable, JmixDataRepositoryContext context) {
-        return itemRepository.findAll(pageable, wrapCondition(context, filtersCondition)).getContent();
+        return itemRepository.findAll(pageable, addCondition(context, filtersCondition)).getContent();
     }
 
     @Install(to = "items_pagination", subject = "totalCountByRepositoryDelegate")
     private Long paginationTotalCountByRepositoryDelegate(final JmixDataRepositoryContext context) {
-        return itemRepository.count(wrapCondition(context, filtersCondition));
+        return itemRepository.count(addCondition(context, filtersCondition));
     }
 
     @Install(to = "categoryItemsDataGrid.removeAction", subject = "delegate")
@@ -124,10 +112,27 @@ public class CategoryItemListView extends StandardListView<CategoryItem> {
         return crmRenderers.categoryItemCode();
     }
 
+    @Subscribe("updateCatalogField")
+    public void onImportCatalogFieldFileUploadSucceeded(FileUploadSucceededEvent<FileUploadField> event) {
+        byte[] content = updateCatalogField.getValue();
+        if (content != null) {
+            ByteArrayInputStream inputStream = new ByteArrayInputStream(content);
+            CatalogImportSettings importSettings = new CatalogImportSettings(inputStream);
+            catalogService.updateCatalog(importSettings);
+            categoryItemsDl.load();
+        }
+    }
+
+    @Subscribe("categoryItemsDataGrid.downloadXls")
+    private void onCategoryItemsDataGridDownloadXls(final ActionPerformedEvent event) {
+        catalogService.downloadCatalogXls();
+        categoryItemsDl.load();
+    }
+
     private void initialize() {
         loadData();
-        initializeChartsBlock();
         initializeFilterFields();
+        addRowSelectionInMultiSelectMode(categoryItemsDataGrid, "code");
     }
 
     private void loadData() {
@@ -154,6 +159,7 @@ public class CategoryItemListView extends StandardListView<CategoryItem> {
         List<Category> categories = categoryRepository.findAll();
         items_categorySelect.setItems(categories);
 
+        setSearchHintPopover(items_searchField);
         List.<HasValue<?, ?>>of(items_searchField, items_categorySelect)
                 .forEach(field -> field.addValueChangeListener(e -> applyFilters()));
 
@@ -167,52 +173,5 @@ public class CategoryItemListView extends StandardListView<CategoryItem> {
     private void applyFilters() {
         updateFiltersCondition();
         categoryItemsDl.load();
-    }
-
-    private void initializeChartsBlock() {
-        chartsUtils.initializeChartsAsync(getChartsLoaders());
-    }
-
-    private Map<Chart, Supplier<DataSet>> getChartsLoaders() {
-        var chart2DataSetLoader = new HashMap<Chart, Supplier<DataSet>>();
-
-        new ArrayList<Pair<Chart, Supplier<DataSet>>>() {{
-            add(createBestOrderItemsChart());
-            add(createOrderedThisMonthChart());
-        }}.forEach(chart2Initializer -> {
-            Chart chart = chart2Initializer.getFirst();
-            Supplier<DataSet> dataSetSupplier = chart2Initializer.getSecond();
-            chartsBlock.add(chartsUtils.createViewStatChartWrapper(chart));
-            chart2DataSetLoader.put(chart, dataSetSupplier);
-        });
-        return chart2DataSetLoader;
-    }
-
-    private Pair<Chart, Supplier<DataSet>> createBestOrderItemsChart() {
-        Chart chart = chartsUtils.createViewStatPieChart(messageBundle.getMessage("bestOrderItems"));
-        return new Pair<>(chart, () -> createBestOrderItemsChartDataSet(null));
-    }
-
-    private Pair<Chart, Supplier<DataSet>> createOrderedThisMonthChart() {
-        Chart chart = chartsUtils.createViewStatPieChart(messageBundle.getMessage("orderedThisMonth"));
-        return new Pair<>(chart, () -> createBestOrderItemsChartDataSet(dateTimeService.getCurrentMonthRange()));
-    }
-
-    private DataSet createBestOrderItemsChartDataSet(@Nullable LocalDateRange dateRange) {
-        var dataItems = new ArrayList<ItemOrdersAmountItem>();
-
-        for (Map.Entry<CategoryItem, BigDecimal> entry : catalogService.getBestOrderedItems(4, dateRange).entrySet()) {
-            String key = entry.getKey().getName();
-            BigDecimal value = entry.getValue();
-            ItemOrdersAmountValueDescription valueDescription = new ItemOrdersAmountValueDescription(key, value);
-            dataItems.add(new ItemOrdersAmountItem(valueDescription));
-        }
-
-        return new DataSet().withSource(
-                new DataSet.Source<ItemOrdersAmountItem>()
-                        .withDataProvider(new ListChartItems<>(dataItems))
-                        .withCategoryField("item")
-                        .withValueField("amount")
-        );
     }
 }

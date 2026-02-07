@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <view xmlns="http://jmix.io/schema/flowui/view" xmlns:dynattr="http://jmix.io/schema/dynattr/flowui"
-      title="msg://categoryItemDetailView.title">
+      title="msg://categoryItemDetailView.title" focusMode="NO_FOCUS">
     <data>
         <instance id="categoryItemDc"
                   class="com.company.crm.model.catalog.item.CategoryItem">
@@ -11,6 +11,7 @@
         </instance>
     </data>
     <facets>
+        <settings auto="true"/>
         <dataLoadCoordinator auto="true"/>
         <dynattr:dynamicAttributes/>
     </facets>
@@ -26,7 +27,9 @@
                         <responsiveStep minWidth="0" columns="1"/>
                         <responsiveStep minWidth="40em" columns="2"/>
                     </responsiveSteps>
-                    <entityComboBox id="categoriesComboBox" property="category" colspan="2"
+                    <textField id="codeField" property="code"/>
+                    <textField id="nameField" property="name"/>
+                    <entityComboBox id="categoriesComboBox" property="category"
                                     dataContainer="categoryItemDc">
                         <actions>
                             <action id="lookupAction" type="entity_lookup"/>
@@ -40,14 +43,20 @@
                             </query>
                         </itemsQuery>
                     </entityComboBox>
-                    <textField property="name"/>
-                    <textField property="code"/>
-                    <textField property="uom"/>
+                    <select id="uomField" property="uom"/>
+                    <textField id="priceField" property="price" required="true"/>
+                    <formLayout id="dynamicAttributes" dataContainer="categoryItemDc" colspan="2">
+                        <responsiveSteps>
+                            <responsiveStep minWidth="0" columns="1"/>
+                            <responsiveStep minWidth="40em" columns="2"/>
+                        </responsiveSteps>
+                    </formLayout>
                     <textArea property="description" height="15em"/>
                 </formLayout>
             </vbox>
             <vbox alignItems="CENTER" maxWidth="40em" minWidth="30em" classNames="pt-xl">
-                <image id="image" classNames="border rounded-l" resource="images/no_image.svg" width="20em" height="20em"/>
+                <image id="image" resource="images/no_image.svg"
+                       classNames="border rounded-l" width="20em" height="20em"/>
                 <fileStorageUploadField id="imageUpload" dataContainer="categoryItemDc" property="image"
                                         dropAllowed="true" clearButtonVisible="true" fileNameVisible="true"/>
             </vbox>

@@ -5,8 +5,8 @@ import com.company.crm.app.service.client.ClientService;
 import com.company.crm.app.service.finance.PaymentService;
 import com.company.crm.app.service.order.OrderService;
 import com.company.crm.app.service.user.UserService;
+import com.company.crm.app.ui.component.CrmCard;
 import com.company.crm.app.ui.component.CrmLoader;
-import com.company.crm.app.ui.component.card.CrmCard;
 import com.company.crm.app.util.AsyncTasksRegistry;
 import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.app.util.ui.CrmUiUtils;
@@ -36,6 +36,12 @@ import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.data.selection.SelectionEvent;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility;
+import com.vaadin.flow.theme.lumo.LumoUtility.FontSize;
+import com.vaadin.flow.theme.lumo.LumoUtility.FontWeight;
+import com.vaadin.flow.theme.lumo.LumoUtility.Overflow;
+import com.vaadin.flow.theme.lumo.LumoUtility.TextOverflow;
+import com.vaadin.flow.theme.lumo.LumoUtility.Whitespace;
+import io.jmix.core.Messages;
 import io.jmix.core.querycondition.LogicalCondition;
 import io.jmix.core.repository.JmixDataRepositoryContext;
 import io.jmix.core.security.CurrentAuthentication;
@@ -50,6 +56,7 @@ import io.jmix.flowui.model.CollectionLoader;
 import io.jmix.flowui.view.DialogMode;
 import io.jmix.flowui.view.Install;
 import io.jmix.flowui.view.LookupComponent;
+import io.jmix.flowui.view.MessageBundle;
 import io.jmix.flowui.view.StandardListView;
 import io.jmix.flowui.view.Subscribe;
 import io.jmix.flowui.view.Supply;
@@ -68,10 +75,11 @@ import java.util.List;
 import java.util.Objects;
 
 import static com.company.crm.app.feature.sortable.SortableFeature.makeSortable;
-import static com.company.crm.app.util.demo.DemoUtils.defaultSleepForStatisticLoading;
+import static com.company.crm.app.util.demo.DemoUtils.defaultSleepForStatisticsLoading;
 import static com.company.crm.app.util.ui.CrmUiUtils.addRowSelectionInMultiSelectMode;
 import static com.company.crm.app.util.ui.CrmUiUtils.openLink;
-import static com.company.crm.app.util.ui.datacontext.DataContextUtils.wrapCondition;
+import static com.company.crm.app.util.ui.CrmUiUtils.setSearchHintPopover;
+import static com.company.crm.app.util.ui.datacontext.DataContextUtils.addCondition;
 import static com.company.crm.app.util.ui.listener.resize.WidthResizeListener.isWidthChanged;
 import static io.jmix.core.querycondition.PropertyCondition.contains;
 import static io.jmix.core.querycondition.PropertyCondition.equal;
@@ -81,9 +89,11 @@ import static io.jmix.core.querycondition.PropertyCondition.isCollectionEmpty;
 @ViewController(id = CrmConstants.ViewIds.CLIENT_LIST)
 @ViewDescriptor(path = "client-list-view.xml")
 @LookupComponent("clientsDataGrid")
-@DialogMode(width = "64em")
+@DialogMode(width = "90%", resizable = true)
 public class ClientListView extends StandardListView<Client> implements WidthResizeListener {
 
+    @Autowired
+    private Messages messages;
     @Autowired
     private UserService userService;
     @Autowired
@@ -127,6 +137,8 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
     private CollectionLoader<Client> clientsDl;
     @ViewComponent
     private DataGrid<Client> clientsDataGrid;
+    @ViewComponent
+    private MessageBundle messageBundle;
 
     private static volatile int lastWidth = -1;
     private static final int widthBreakpoint = 600;
@@ -145,13 +157,13 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
 
     @Override
     protected void onAttach(AttachEvent attachEvent) {
-        initialize();
         super.onAttach(attachEvent);
+        initialize();
     }
 
     @Install(to = "clientsDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
     private List<Client> loadDelegate(Pageable pageable, JmixDataRepositoryContext context) {
-        return clientRepository.findAll(pageable, wrapCondition(context, filtersCondition)).getContent();
+        return clientRepository.findAll(pageable, addCondition(context, filtersCondition)).getContent();
     }
 
     @Install(to = "clientsDataGrid.removeAction", subject = "delegate")
@@ -161,7 +173,7 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
 
     @Install(to = "pagination", subject = "totalCountByRepositoryDelegate")
     private Long paginationTotalCountByRepositoryDelegate(final JmixDataRepositoryContext context) {
-        return clientRepository.count(wrapCondition(context, filtersCondition));
+        return clientRepository.count(addCondition(context, filtersCondition));
     }
 
     @Subscribe("showOnlyMyClientsCheckBox")
@@ -187,6 +199,11 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
     @Subscribe("clientsDataGrid")
     private void onClientsDataGridSelection(final SelectionEvent<DataGrid<Client>, Client> event) {
         calculateCardsValues(event.getAllSelectedItems().toArray(new Client[0]));
+    }
+
+    @Supply(to = "clientsDataGrid.itemDetails", subject = "renderer")
+    private Renderer<Client> clientsDataGridItemDetailsRenderer() {
+        return crmRenderers.itemDetailsColumnRenderer(clientsDataGrid);
     }
 
     @Supply(to = "clientsDataGrid.accountManager", subject = "renderer")
@@ -225,7 +242,7 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
             Span span = new Span(website);
             CrmUiUtils.setCursorPointer(span);
             span.setTitle(c.getWebsite());
-            span.addClassNames(LumoUtility.TextColor.PRIMARY, LumoUtility.TextColor.SECONDARY, LumoUtility.TextOverflow.ELLIPSIS);
+            span.addClassNames(LumoUtility.TextColor.PRIMARY, LumoUtility.TextColor.SECONDARY, TextOverflow.ELLIPSIS);
             span.addClickListener(e -> openLink(c.getWebsite()));
             return span;
         });
@@ -235,7 +252,7 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
         initializeStatsBlock();
         initializeFilterFields();
         addDetachListener(e -> asyncTasksRegistry.cancelAll());
-        addRowSelectionInMultiSelectMode(clientsDataGrid, "vatNumber", "regNumber");
+        configureGrid();
     }
 
     private void initializeStatsBlock() {
@@ -244,10 +261,16 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
         calculateCardsValues();
     }
 
+    private void configureGrid() {
+        addRowSelectionInMultiSelectMode(clientsDataGrid, "itemDetails", "vatNumber", "regNumber");
+        clientsDataGrid.setItemDetailsRenderer(crmRenderers.clientDetails());
+        clientsDataGrid.setDetailsVisibleOnClick(false);
+    }
+
     private void configureCardsSize() {
         statsBlock.getChildren().forEach(card -> {
             if (card instanceof HasSize hasSize) {
-                hasSize.setMaxHeight(10, Unit.EM);
+                hasSize.setMaxHeight(12, Unit.EM);
             }
         });
     }
@@ -293,7 +316,7 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
         SupplierConfigurer<?> task = uiAsyncTasks.supplierConfigurer(() -> calculateOrdersTotalSum(clients))
                 .withExceptionHandler(e -> SkeletonStyler.remove(ordersTotalSumCard))
                 .withResultHandler(ordersTotalSum ->
-                        fillStatCard("Orders Total", ordersTotalSumCard, ordersTotalSum));
+                        fillStatCard(messages.getMessage("ordersTotal"), ordersTotalSumCard, ordersTotalSum));
         asyncTasksRegistry.placeTask("ordersTotalSumTask", task);
     }
 
@@ -301,19 +324,19 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
         SupplierConfigurer<BigDecimal> taskConfigurer = uiAsyncTasks.supplierConfigurer(() -> calculatePaymentsTotalSum(clients))
                 .withExceptionHandler(e -> SkeletonStyler.remove(paymentsTotalSumCard))
                 .withResultHandler(paymentsTotalSum ->
-                        fillStatCard("Payments Total", paymentsTotalSumCard, paymentsTotalSum));
+                        fillStatCard(messages.getMessage("paymentsTotal"), paymentsTotalSumCard, paymentsTotalSum));
         asyncTasksRegistry.placeTask("paymentsTotalSumTask", taskConfigurer);
     }
 
     private void scheduleAverageBillCalculating(Client... clients) {
         SupplierConfigurer<?> task = uiAsyncTasks.supplierConfigurer(() -> calculateAverageBill(clients))
                 .withExceptionHandler(e -> SkeletonStyler.remove(averageBillCard))
-                .withResultHandler(averageBill -> fillStatCard("Average Bill", averageBillCard, averageBill));
+                .withResultHandler(averageBill -> fillStatCard(messages.getMessage("averageBill"), averageBillCard, averageBill));
         asyncTasksRegistry.placeTask("averageBillTask", task);
     }
 
     private BigDecimal calculateOrdersTotalSum(Client[] selectedClients) {
-        defaultSleepForStatisticLoading();
+        defaultSleepForStatisticsLoading();
         BigDecimal ordersTotalSum;
         if (selectedClients.length == 0 && !isFilterConditionEmpty()) {
             selectedClients = loadFilteredClients();
@@ -332,7 +355,7 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
     }
 
     private BigDecimal calculatePaymentsTotalSum(Client[] selectedClients) {
-        defaultSleepForStatisticLoading();
+        defaultSleepForStatisticsLoading();
         BigDecimal paymentsTotalSum;
         if (selectedClients.length == 0 && !isFilterConditionEmpty()) {
             selectedClients = loadFilteredClients();
@@ -351,7 +374,7 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
     }
 
     private BigDecimal calculateAverageBill(Client[] selectedClients) {
-        defaultSleepForStatisticLoading();
+        defaultSleepForStatisticsLoading();
         BigDecimal averageBill;
         if (selectedClients.length == 0 && !isFilterConditionEmpty()) {
             selectedClients = loadFilteredClients();
@@ -369,9 +392,17 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
     }
 
     private void fillStatCard(String title, CrmCard card, BigDecimal content) {
-        VerticalLayout component = new VerticalLayout(new H1(PriceDataType.formatEndingCurrency(content)));
+        var contentComponent = new H1(PriceDataType.defaultFormat(content));
+        contentComponent.setWidthFull();
+        contentComponent.setMaxWidth(12, Unit.EM);
+        contentComponent.addClassNames(Overflow.HIDDEN, TextOverflow.ELLIPSIS, Whitespace.NOWRAP);
+
+        VerticalLayout component = new VerticalLayout(contentComponent);
+        component.setWidthFull();
         component.setPadding(false);
+        component.addClassNames(Overflow.HIDDEN);
         component.add(createStatCardFooter());
+
         card.fillAsStaticCard(title, component);
         SkeletonStyler.remove(card);
     }
@@ -392,24 +423,26 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
         Client[] selectedClients = getSelectedClients();
 
         if (selectedClients.length == 1) {
-            mainText = new Span("for " + selectedClients[0].getName());
-            badge = "warning";
+            mainText = new Span(messageBundle.getMessage("for") + " " + selectedClients[0].getName());
+            badge = CrmUiUtils.WARNING_BADGE;
         } else if (selectedClients.length == 0 && isFilterConditionEmpty()) {
-            mainText = new Span("for all clients");
-            badge = "default";
+            mainText = new Span(messageBundle.getMessage("forAllClients"));
+            badge = CrmUiUtils.DEFAULT_BADGE;
         } else if (selectedClients.length > 0) {
-            mainText = new Span("for %d selected clients".formatted(selectedClients.length));
-            badge = "warning";
+            mainText = new Span(messageBundle.formatMessage("mainText", selectedClients.length));
+            badge = CrmUiUtils.WARNING_BADGE;
         } else {
-            mainText = new Span("for filtered clients");
-            badge = "success";
+            mainText = new Span(messageBundle.getMessage("forFilteredClients"));
+            badge = CrmUiUtils.SUCCESS_BADGE;
         }
 
         CrmUiUtils.setBadge(mainText, badge);
-        mainText.addClassNames(LumoUtility.FontSize.LARGE, LumoUtility.FontWeight.MEDIUM);
+        mainText.addClassNames(FontSize.LARGE, FontWeight.MEDIUM);
+        mainText.addClassNames(Overflow.HIDDEN, TextOverflow.ELLIPSIS, Whitespace.NOWRAP);
+        mainText.setWidthFull();
 
-        Span hintText = new Span("Select clients in the table to show their statistics");
-        hintText.addClassNames(LumoUtility.FontSize.XSMALL, LumoUtility.FontWeight.THIN);
+        Span hintText = new Span(messageBundle.getMessage("cardHintText"));
+        hintText.addClassNames(FontSize.XSMALL, FontWeight.THIN);
 
         VerticalLayout layout = new VerticalLayout(mainText, hintText);
         layout.setWidthFull();
@@ -423,6 +456,8 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
         List<User> accountManagers = new ArrayList<>(userService.loadAccountManagers());
         accountManagers.addFirst(getCurrentUser());
         accountManagerSelect.setItems(accountManagers);
+
+        setSearchHintPopover(searchField);
 
         List.<HasValue<?, ?>>of(searchField, typeSelect, accountManagerSelect, categorySelect)
                 .forEach(field -> field.addValueChangeListener(e -> applyFilters()));

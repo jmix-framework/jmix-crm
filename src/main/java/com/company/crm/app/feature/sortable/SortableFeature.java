@@ -14,13 +14,15 @@ import org.vaadin.jchristophe.SortableLayout;
 import java.util.List;
 import java.util.Optional;
 
+import static com.company.crm.app.util.ui.CrmUiUtils.setCursor;
+
 public final class SortableFeature {
 
-    public static void makeSortable(Component component) {
+    public static SortableLayout makeSortable(Component component) {
         var defaultConfig = new SortableConfig();
         defaultConfig.setDelayOnTouchOnly(true);
         defaultConfig.setDelay(1_000);
-        makeSortable(component, defaultConfig);
+        return makeSortable(component, defaultConfig);
     }
 
     public static SortableLayout makeSortable(Component component, SortableConfig config) {
@@ -68,6 +70,10 @@ public final class SortableFeature {
             sortableLayout.setWidth(hasSize.getWidth());
             sortableLayout.setHeight(hasSize.getHeight());
         }
+
+        sortableLayout.addClassNames(component.getClassNames().toArray(String[]::new));
+
+        component.getChildren().forEach(child -> setCursor(child, "grab"));
 
         return sortableLayout;
     }

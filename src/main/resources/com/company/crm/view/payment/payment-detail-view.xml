@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <view xmlns="http://jmix.io/schema/flowui/view"
-      title="msg://paymentDetailView.title">
+      title="msg://paymentDetailView.title" focusMode="NO_FOCUS">
     <data>
         <instance id="paymentDc"
                   class="com.company.crm.model.payment.Payment">
@@ -14,6 +14,7 @@
         </collection>
     </data>
     <facets>
+        <settings auto="true"/>
         <dataLoadCoordinator auto="true"/>
     </facets>
     <actions>
@@ -26,9 +27,10 @@
                 <responsiveStep minWidth="0" columns="1"/>
                 <responsiveStep minWidth="40em" columns="2"/>
             </responsiveSteps>
+            <textField id="numberField" property="number" readOnly="true" colspan="2"/>
             <entityComboBox id="invoiceField" property="invoice" itemsContainer="invoicesDc">
                 <actions>
-                    <action id="entityLookupAction" type="entity_lookup"/>
+                    <action id="entityLookupAction" icon="PLUS"/>
                     <action id="entityClearAction" type="entity_clear"/>
                 </actions>
             </entityComboBox>

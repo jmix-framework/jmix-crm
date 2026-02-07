@@ -6,8 +6,6 @@ import com.company.crm.model.order.Order;
 import com.company.crm.model.order.OrderRepository;
 import com.company.crm.model.order.OrderStatus;
 import io.jmix.core.entity.KeyValueEntity;
-import io.jmix.data.Sequence;
-import io.jmix.data.Sequences;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -19,33 +17,24 @@ import java.util.Map;
 @Service
 public class OrderService {
 
-    private static final Sequence ORDER_NUMBER_SEQUENCE =
-            Sequence.withName("CRM_ORDER_NUMBER").setStartValue(1000);
-
-    private final Sequences sequences;
     private final OrderRepository orderRepository;
     private final PaymentService paymentService;
 
-    public OrderService(OrderRepository orderRepository, Sequences sequences, PaymentService paymentService) {
-        this.sequences = sequences;
+    public OrderService(OrderRepository orderRepository, PaymentService paymentService) {
         this.orderRepository = orderRepository;
         this.paymentService = paymentService;
     }
 
-    public BigDecimal getOrderPaymentsSum(Order order) {
+    public BigDecimal getPaid(Order order) {
         return paymentService.getPaymentsTotalSum(order);
     }
 
-    public BigDecimal getOrderLeftOverSum(Order order) {
-        BigDecimal result = order.getTotal().subtract(getOrderPaymentsSum(order));
+    public BigDecimal getLeftOverSum(Order order) {
+        BigDecimal result = order.getTotal().subtract(getPaid(order));
         if (result.compareTo(BigDecimal.ZERO) < 0) {
             return BigDecimal.ZERO;
         }
         return result;
-    }
-
-    public String getNextOrderNumber() {
-        return String.valueOf(sequences.createNextValue(ORDER_NUMBER_SEQUENCE));
     }
 
     public Map<OrderStatus, BigDecimal> getOrdersAmountByStatus() {
@@ -68,7 +57,7 @@ public class OrderService {
     public Map<OrderStatus, List<Order>> getOrdersByStatus() {
         Map<OrderStatus, List<Order>> ordersByStatus = new HashMap<>();
         orderRepository.findAll().forEach(order ->
-                ordersByStatus.getOrDefault(order.getStatus(), new ArrayList<>()).add(order));
+                ordersByStatus.computeIfAbsent(order.getStatus(), status -> new ArrayList<>()).add(order));
         return ordersByStatus;
     }
 
@@ -84,9 +73,8 @@ public class OrderService {
      */
     public BigDecimal getOrdersTotalSum() {
         return orderRepository.fluentValueLoader(
-                        "select sum(e.total) as total " +
-                                "from Order_ e " +
-                                "order by total desc", BigDecimal.class)
+                        "select sum(e.total) " +
+                                "from Order_ e", BigDecimal.class)
                 .optional().orElse(BigDecimal.ZERO);
     }
 

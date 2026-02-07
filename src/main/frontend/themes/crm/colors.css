@@ -1,18 +1,10 @@
 /* custom theme colors*/
 html {
-    --lumo-line-height-m: 1.4;
-    --lumo-line-height-s: 1.2;
-    --lumo-line-height-xs: 1.1;
-
-    --lumo-border-radius: 0.5em;
-
-    --lumo-primary-text-color: rgb(22, 89, 243);
-    --lumo-primary-color-50pct: rgba(22, 89, 243, 0.5);
-    --lumo-primary-color-10pct: rgba(22, 89, 243, 0.1);
     --lumo-primary-color: rgb(0, 106, 245);
 }
 
 [theme~="dark"] {
+    --lumo-primary-color: rgb(0, 106, 245);
     --lumo-base-color: hsl(214, 14%, 10%);
 
     --lumo-shade-5pct: rgba(27, 37, 50, 0.05);

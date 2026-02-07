@@ -1,6 +1,5 @@
 package com.company.crm.app.service.user;
 
-import com.company.crm.model.client.Client;
 import com.company.crm.model.client.ClientRepository;
 import com.company.crm.model.user.User;
 import org.springframework.stereotype.Service;
@@ -17,9 +16,10 @@ public class UserService {
     }
 
     public List<User> loadAccountManagers() {
-        return clientRepository.findAllByAccountManagerNotNull().stream()
-                .map(Client::getAccountManager)
-                .distinct()
-                .toList();
+        return clientRepository.fluentValueLoader(
+                        "select distinct e.accountManager " +
+                                "from Client e " +
+                                "where e.accountManager is not null", User.class)
+                .list();
     }
 }

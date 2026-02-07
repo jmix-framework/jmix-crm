@@ -64,11 +64,12 @@ public class CategoryItemDetailView extends StandardDetailView<CategoryItem> imp
     private void onInit(InitEvent event) {
         imageUpload.setAcceptedFileTypes("image/*");
         imageUpload.addValueChangeListener(this::updateImagePreview);
+
     }
 
     @Install(to = "categoryItemDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
     private Optional<CategoryItem> loadDelegate(UUID id, FetchPlan fetchPlan) {
-        return itemRepository.findById(id, fetchPlan);
+        return itemRepository.findByIdWithDynamicAttributes(id, fetchPlan);
     }
 
     @Install(target = Target.DATA_CONTEXT)

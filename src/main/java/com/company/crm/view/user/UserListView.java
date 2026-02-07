@@ -14,6 +14,6 @@ import io.jmix.flowui.view.ViewDescriptor;
 @ViewController(id = CrmConstants.ViewIds.USER_LIST)
 @ViewDescriptor(path = "user-list-view.xml")
 @LookupComponent("usersDataGrid")
-@DialogMode(width = "64em")
+@DialogMode(width = "64em", resizable = true)
 public class UserListView extends StandardListView<User> {
 }

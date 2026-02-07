@@ -1,7 +1,6 @@
 package com.company.crm.app.util.ui.loader;
 
-import com.company.crm.model.settings.CrmSettings;
-import io.jmix.appsettings.AppSettings;
+import com.company.crm.app.service.settings.CrmSettingsService;
 import io.jmix.flowui.xml.layout.loader.MainViewLoader;
 import org.dom4j.Element;
 import org.springframework.context.annotation.Primary;
@@ -12,8 +11,8 @@ import org.springframework.stereotype.Component;
 public class CrmMainViewLoader extends MainViewLoader {
     @Override
     protected Element getAppLayoutElement() {
-        AppSettings appSettings = applicationContext.getBean(AppSettings.class);
-        Boolean touchOptimized = appSettings.load(CrmSettings.class).getNavigationBarTouchOptimized();
+        CrmSettingsService appSettings = applicationContext.getBean(CrmSettingsService.class);
+        Boolean touchOptimized = appSettings.loadSettings().getNavigationBarTouchOptimized();
         Element appLayoutElement = super.getAppLayoutElement();
         appLayoutElement.element("navigationBar")
                 .addAttribute("touchOptimized", touchOptimized.toString());
