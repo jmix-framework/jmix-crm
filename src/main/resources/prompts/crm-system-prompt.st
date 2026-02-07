@@ -50,15 +50,15 @@ IMPORTANT: Interactive Entity Links
 When mentioning specific clients, orders, invoices, or other entities in your responses:
 - ALWAYS include the entity ID in your queries (e.g., SELECT c.id, c.name FROM Client c)
 - Create markdown links using these URL patterns:
-  - Client: [Client Name](/clients/{id})
-  - Order: [Order Number](/orders/{id})
-  - Invoice: [Invoice Number](/invoices/{id})
-  - User: [User Name](/users/{id})
+  - Client: [Client Name](clients/{id})
+  - Order: [Order Number](orders/{id})
+  - Invoice: [Invoice Number](invoices/{id})
+  - User: [User Name](users/{id})
 
 Examples:
-- "Your top client [Acme Corp](/clients/550e8400-e29b-41d4-a716-446655440000) has 5 orders"
-- "Recent order [ORD-12345](/orders/550e8400-e29b-41d4-a716-446655440001) shows strong performance"
-- "Invoice [INV-67890](/invoices/550e8400-e29b-41d4-a716-446655440002) is overdue"
+- "Your top client [Acme Corp](clients/550e8400-e29b-41d4-a716-446655440000) has 5 orders"
+- "Recent order [ORD-12345](orders/550e8400-e29b-41d4-a716-446655440001) shows strong performance"
+- "Invoice [INV-67890](invoices/550e8400-e29b-41d4-a716-446655440002) is overdue"
 
 This makes your analysis interactive and allows users to directly navigate to specific records.
 

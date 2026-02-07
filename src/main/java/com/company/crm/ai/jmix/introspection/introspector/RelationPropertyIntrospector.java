@@ -1,6 +1,7 @@
 package com.company.crm.ai.jmix.introspection.introspector;
 
 import com.company.crm.ai.jmix.introspection.model.AiPropertyDescriptor;
+import io.jmix.core.MessageTools;
 import io.jmix.core.MetadataTools;
 import io.jmix.core.metamodel.annotation.Comment;
 import io.jmix.core.metamodel.model.MetaProperty;
@@ -16,6 +17,9 @@ public class RelationPropertyIntrospector implements MetaPropertyIntrospector {
 
     @Autowired
     private MetadataTools metadataTools;
+
+    @Autowired
+    private MessageTools messageTools;
 
     @Override
     public boolean supports(MetaProperty property) {
@@ -40,7 +44,7 @@ public class RelationPropertyIntrospector implements MetaPropertyIntrospector {
         String mappedBy = getMappedByValue(property);
         String comment = metadataTools.getMetaAnnotationValue(property, Comment.class);
 
-        String caption = metadataTools.getPropertyCaption(property);
+        String caption = messageTools.getPropertyCaption(property.getDomain(), property.getName());
         return AiPropertyDescriptor.relationProperty(caption, comment, type, javaType, target, optional, mappedBy);
     }
 

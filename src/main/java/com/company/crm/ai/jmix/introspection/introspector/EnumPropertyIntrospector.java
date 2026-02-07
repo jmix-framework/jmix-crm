@@ -2,6 +2,7 @@ package com.company.crm.ai.jmix.introspection.introspector;
 
 import com.company.crm.ai.jmix.introspection.model.AiPropertyDescriptor;
 import io.jmix.core.Messages;
+import io.jmix.core.MessageTools;
 import io.jmix.core.MetadataTools;
 import io.jmix.core.metamodel.annotation.Comment;
 import io.jmix.core.metamodel.datatype.EnumClass;
@@ -19,10 +20,12 @@ public class EnumPropertyIntrospector implements MetaPropertyIntrospector {
 
     private final MetadataTools metadataTools;
     private final Messages messages;
+    private final MessageTools messageTools;
 
-    public EnumPropertyIntrospector(MetadataTools metadataTools, Messages messages) {
+    public EnumPropertyIntrospector(MetadataTools metadataTools, Messages messages, MessageTools messageTools) {
         this.metadataTools = metadataTools;
         this.messages = messages;
+        this.messageTools = messageTools;
     }
 
     @Override
@@ -36,8 +39,6 @@ public class EnumPropertyIntrospector implements MetaPropertyIntrospector {
             return null;
         }
         String javaType = property.getJavaType().getSimpleName();
-        String type = property.getType().name().toLowerCase();
-        Boolean identifier = isIdProperty(property) ? true : null;
         String comment = metadataTools.getMetaAnnotationValue(property, Comment.class);
         String caption = getPropertyCaption(property);
         Map<String, Object> enumValues = null;
@@ -79,16 +80,7 @@ public class EnumPropertyIntrospector implements MetaPropertyIntrospector {
         return AiPropertyDescriptor.enumProperty(caption, comment, javaType, enumValues, enumDescriptions);
     }
 
-    private boolean isIdProperty(MetaProperty property) {
-        if (property.getAnnotatedElement().isAnnotationPresent(jakarta.persistence.Id.class) ||
-            property.getAnnotatedElement().isAnnotationPresent(jakarta.persistence.EmbeddedId.class)) {
-            return true;
-        }
-
-        return "id".equals(property.getName());
-    }
-
     private String getPropertyCaption(MetaProperty property) {
-        return metadataTools.getPropertyCaption(property);
+        return messageTools.getPropertyCaption(property.getDomain(), property.getName());
     }
 }

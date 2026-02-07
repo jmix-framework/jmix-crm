@@ -311,9 +311,9 @@ class CrmAnalyticsServiceLLMTest extends AbstractTest {
         assertThat(response).isNotNull();
 
         // Check that response contains links to the correct client IDs (flexible link text)
-        assertThat(response).contains("/clients/" + alphaClientId + ")");
-        assertThat(response).contains("/clients/" + betaClientId + ")");
-        assertThat(response).contains("/clients/" + charlieClientId + ")");
+        assertThat(response).contains("clients/" + alphaClientId + ")");
+        assertThat(response).contains("clients/" + betaClientId + ")");
+        assertThat(response).contains("clients/" + charlieClientId + ")");
 
         // Also check that the client names appear somewhere (but not necessarily in link format)
         assertThat(response).containsIgnoringCase("TestClient_Alpha");

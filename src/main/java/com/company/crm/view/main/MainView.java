@@ -36,7 +36,6 @@ import io.jmix.flowui.DialogWindows;
 import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.ViewNavigators;
 import io.jmix.flowui.app.main.StandardMainView;
-import io.jmix.flowui.asynctask.UiAsyncTasks;
 import io.jmix.flowui.component.SupportsTypedValue.TypedValueChangeEvent;
 import io.jmix.flowui.component.main.JmixListMenu;
 import io.jmix.flowui.component.main.JmixListMenu.ViewMenuItem;
@@ -61,7 +60,6 @@ import com.company.crm.ai.service.AiConversationService;
 import com.company.crm.view.component.aiconversation.AiConversationComponent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
-import org.springframework.lang.Nullable;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -104,8 +102,6 @@ public class MainView extends StandardMainView {
     private DataManager dataManager;
     @Autowired
     private CrmAnalyticsAsyncLoader crmAnalyticsAsyncLoader;
-    @Autowired
-    private UiAsyncTasks uiAsyncTasks;
     @Autowired
     private AiConversationService aiConversationService;
     @Autowired
