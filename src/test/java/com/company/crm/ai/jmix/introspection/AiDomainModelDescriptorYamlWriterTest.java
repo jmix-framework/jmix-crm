@@ -1,6 +1,5 @@
-package com.company.crm.ai.jmix;
+package com.company.crm.ai.jmix.introspection;
 
-import com.company.crm.ai.jmix.introspection.AiDomainModelDescriptorYamlWriter;
 import com.company.crm.ai.jmix.introspection.model.AiPropertyDescriptor;
 import com.company.crm.ai.jmix.introspection.model.AiEntityDescriptor;
 import com.company.crm.ai.jmix.introspection.model.AiDomainModelDescriptor;
