@@ -21,9 +21,9 @@ import org.slf4j.LoggerFactory;
 @Route("test-ai-annotations")
 @ViewController("TestAiAnnotations")
 @ViewDescriptor("test-ai-annotations-view.xml")
-public class TestAiAnnotationsView extends StandardView {
+public class AiConversationAnnotationTestView extends StandardView {
 
-    private static final Logger log = LoggerFactory.getLogger(TestAiAnnotationsView.class);
+    private static final Logger log = LoggerFactory.getLogger(AiConversationAnnotationTestView.class);
 
     @ViewComponent
     public AiConversationComponent aiComponent;
