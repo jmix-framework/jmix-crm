@@ -40,7 +40,8 @@ public class RelationPropertyIntrospector implements MetaPropertyIntrospector {
         String mappedBy = getMappedByValue(property);
         String comment = metadataTools.getMetaAnnotationValue(property, Comment.class);
 
-        return AiPropertyDescriptor.relationProperty(null, comment, type, javaType, target, optional, mappedBy);
+        String caption = metadataTools.getPropertyCaption(property);
+        return AiPropertyDescriptor.relationProperty(caption, comment, type, javaType, target, optional, mappedBy);
     }
 
 

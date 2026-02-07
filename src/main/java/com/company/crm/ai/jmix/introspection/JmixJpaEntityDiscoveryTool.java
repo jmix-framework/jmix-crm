@@ -11,17 +11,17 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Spring AI Tool for listing all available entity names.
- * Provides generic list of all JPA entity names via Jmix Metadata API.
+ * Spring AI Tool for discovering all available entity names in the Jmix application.
+ * Provides a comprehensive list of all JPA entity names via Jmix Metadata API.
  */
-@Component("ai_EntityListTool")
-public class EntityListTool {
+@Component("ai_JmixJpaEntityDiscoveryTool")
+public class JmixJpaEntityDiscoveryTool {
 
-    private static final Logger log = LoggerFactory.getLogger(EntityListTool.class);
+    private static final Logger log = LoggerFactory.getLogger(JmixJpaEntityDiscoveryTool.class);
 
     private final MetadataTools metadataTools;
 
-    public EntityListTool(MetadataTools metadataTools) {
+    public JmixJpaEntityDiscoveryTool(MetadataTools metadataTools) {
         this.metadataTools = metadataTools;
     }
 

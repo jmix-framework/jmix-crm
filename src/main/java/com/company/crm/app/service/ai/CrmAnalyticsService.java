@@ -1,6 +1,6 @@
 package com.company.crm.app.service.ai;
 
-import com.company.crm.ai.jmix.introspection.EntityListTool;
+import com.company.crm.ai.jmix.introspection.JmixJpaEntityDiscoveryTool;
 import com.company.crm.ai.jmix.query.JpqlQueryTool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +27,7 @@ public class CrmAnalyticsService {
     private final ChatClient chatClient;
     private final JpqlQueryTool jpqlQueryTool;
     private final CrmDomainModelIntrospectionTool crmDomainModelIntrospectionTool;
-    private final EntityListTool entityListTool;
+    private final JmixJpaEntityDiscoveryTool jmixJpaEntityDiscoveryTool;
 
     @Autowired
     public CrmAnalyticsService(
@@ -35,7 +35,7 @@ public class CrmAnalyticsService {
             @Value("classpath:prompts/crm-system-prompt.st") Resource systemPrompt,
             JpqlQueryTool jpqlQueryTool,
             CrmDomainModelIntrospectionTool crmDomainModelIntrospectionTool,
-            EntityListTool entityListTool,
+            JmixJpaEntityDiscoveryTool jmixJpaEntityDiscoveryTool,
             ChatMemoryRepository chatMemoryRepository
     ) {
         ChatMemory chatMemory = MessageWindowChatMemory.builder()
@@ -52,7 +52,7 @@ public class CrmAnalyticsService {
 
         this.jpqlQueryTool = jpqlQueryTool;
         this.crmDomainModelIntrospectionTool = crmDomainModelIntrospectionTool;
-        this.entityListTool = entityListTool;
+        this.jmixJpaEntityDiscoveryTool = jmixJpaEntityDiscoveryTool;
 
         log.info("CRM Analytics Service initialized with custom ChatClient configuration");
     }
@@ -72,7 +72,7 @@ public class CrmAnalyticsService {
             return chatClient.prompt()
                     .user(userQuestion)
                     .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
-                    .tools(jpqlQueryTool, crmDomainModelIntrospectionTool, entityListTool)
+                    .tools(jpqlQueryTool, crmDomainModelIntrospectionTool, jmixJpaEntityDiscoveryTool)
                     .call()
                     .content();
 

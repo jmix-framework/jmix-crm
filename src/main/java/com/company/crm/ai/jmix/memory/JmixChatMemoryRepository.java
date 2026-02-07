@@ -25,6 +25,25 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Jmix-based implementation of Spring AI ChatMemoryRepository.
+ *
+ * <p>This repository provides persistent storage for AI chat conversations using Jmix data management capabilities.
+ * It stores chat messages and conversation history in the database through Jmix entities, enabling:
+ * <ul>
+ *   <li>Persistent conversation memory across application restarts</li>
+ *   <li>Multi-user conversation support with proper isolation</li>
+ *   <li>Full integration with Jmix security and data access patterns</li>
+ *   <li>Transactional consistency for chat operations</li>
+ * </ul>
+ *
+ * <p>The implementation handles conversion between Spring AI message types (UserMessage, AssistantMessage, SystemMessage)
+ * and Jmix ChatMessage entities, maintaining message ordering and conversation context.
+ *
+ * @see ChatMemoryRepository
+ * @see AiConversation
+ * @see ChatMessage
+ */
 @Component
 public class JmixChatMemoryRepository implements ChatMemoryRepository {
 

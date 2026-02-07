@@ -2,7 +2,6 @@ package com.company.crm.ai.jmix.introspection.introspector;
 
 import com.company.crm.ai.jmix.introspection.model.AiPropertyDescriptor;
 import io.jmix.core.Messages;
-import io.jmix.core.MessageTools;
 import io.jmix.core.MetadataTools;
 import io.jmix.core.metamodel.annotation.Comment;
 import io.jmix.core.metamodel.datatype.EnumClass;
@@ -20,12 +19,10 @@ public class EnumPropertyIntrospector implements MetaPropertyIntrospector {
 
     private final MetadataTools metadataTools;
     private final Messages messages;
-    private final MessageTools messageTools;
 
-    public EnumPropertyIntrospector(MetadataTools metadataTools, Messages messages, MessageTools messageTools) {
+    public EnumPropertyIntrospector(MetadataTools metadataTools, Messages messages) {
         this.metadataTools = metadataTools;
         this.messages = messages;
-        this.messageTools = messageTools;
     }
 
     @Override
@@ -92,6 +89,6 @@ public class EnumPropertyIntrospector implements MetaPropertyIntrospector {
     }
 
     private String getPropertyCaption(MetaProperty property) {
-        return messageTools.getPropertyCaption(property.getDomain(), property.getName());
+        return metadataTools.getPropertyCaption(property);
     }
 }

@@ -109,7 +109,7 @@ public class CrmDomainModelIntrospectionTool {
         This is useful when you need detailed schema information for only a subset of entities
         to reduce response size and focus on specific domain areas.
 
-        IMPORTANT: Use EntityListTool.getAllEntityNames() first to get the list of all available entity names.
+        IMPORTANT: Use JmixJpaEntityDiscoveryTool.getAllEntityNames() first to get the list of all available entity names.
 
         Returns the same detailed YAML format as getCrmDomainModel() but only for requested entities.
         Use this when you know exactly which entities you need to work with.
@@ -128,7 +128,7 @@ public class CrmDomainModelIntrospectionTool {
 
             if (requestedEntities.isEmpty()) {
                 log.warn("No valid CRM entities found for names: {}", entityNames);
-                return "Error: No valid CRM entity names provided. Use EntityListTool.getAllEntityNames() to get available entities.";
+                return "Error: No valid CRM entity names provided. Use JmixJpaEntityDiscoveryTool.getAllEntityNames() to get available entities.";
             }
 
             String yamlSchema = yamlExporter.export(requestedEntities);
