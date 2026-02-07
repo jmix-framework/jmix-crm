@@ -4,6 +4,16 @@ import com.company.crm.AbstractTest;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+/**
+ * Documentation tests that capture known limitations in Jmix JPQL parser.
+ *
+ * <p>These tests are disabled by default as they demonstrate parsing failures
+ * rather than successful functionality. Each test documents a specific JPQL
+ * construct that is either not supported or has limitations in the Jmix framework.
+ *
+ * <p>This serves as both documentation for developers and a reference for
+ * potential future improvements to JPQL parsing capabilities.
+ */
 @Disabled("All tests document Jmix-JPQL limitations")
 class JpqlParserLimitationsDocumentationTest extends AbstractTest {
 
