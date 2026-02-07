@@ -1,1 +1,0 @@
-docker buildx build --platform linux/amd64 -t fedoseew/b2b-crm:latest . --push
