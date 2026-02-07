@@ -81,8 +81,6 @@ class AiJpqlQueryServiceTest extends AbstractTest {
         var result = aiJpqlQueryService.executeJpqlQuery(jpql, parameters, Arrays.asList("clientName"));
 
         assertThat(result.success()).as("Query should succeed with integer string parameter").isTrue();
-
-        log.info("Collection size string parameter test passed: success={}", result.success());
     }
 
     @Test
