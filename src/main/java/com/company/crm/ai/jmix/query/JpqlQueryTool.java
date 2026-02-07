@@ -10,8 +10,28 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Spring AI Tool for executing JPQL queries against JPA databases
- * Uses @Tool annotation pattern - generic implementation for Jmix applications
+ * Spring AI Tool for executing JPQL queries against JPA databases in Jmix applications.
+ *
+ * <p>This component provides AI systems with the ability to execute JPQL queries and retrieve
+ * data from the database. It serves as the primary data access interface for AI-powered
+ * business intelligence and analytics features.
+ *
+ * <h3>Key Features</h3>
+ * <ul>
+ *   <li>Automatic parameter type conversion for AI-generated queries</li>
+ *   <li>Safe result serialization for AI consumption</li>
+ *   <li>Support for entity relationships and complex JPQL constructs</li>
+ *   <li>Comprehensive error handling and validation</li>
+ * </ul>
+ *
+ * <h3>Usage Pattern</h3>
+ * <p>AI systems should first call domain model introspection tools to understand
+ * the available entities and their properties, then construct appropriate JPQL queries
+ * using this tool for execution.
+ *
+ * @see AiJpqlQueryService
+ * @see AiJpqlParameterConverter
+ * @see ResultConverter
  */
 @Component("ai_JpqlQueryTool")
 public class JpqlQueryTool {
@@ -236,12 +256,7 @@ public class JpqlQueryTool {
 
         } catch (Exception e) {
             log.error("Query Error: {} - {}", jpqlQuery, e.getMessage());
-            return new QueryExecutionResult(
-                    false,
-                    List.of(),
-                    0,
-                    "Error executing query: " + e.getMessage()
-            );
+            return QueryExecutionResult.failed("Error executing query: " + e.getMessage());
         }
     }
 

@@ -3,9 +3,11 @@ package com.company.crm.view.main;
 import com.company.crm.AbstractUiTest;
 import com.company.crm.app.service.ai.CrmAnalyticsService;
 import com.company.crm.view.main.MainView;
+import io.jmix.flowui.ViewNavigators;
 import io.jmix.flowui.kit.component.button.JmixButton;
 import io.jmix.flowui.testassist.UiTestUtils;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
@@ -18,6 +20,9 @@ import static org.mockito.Mockito.when;
  * Tests the chat button and popover integration.
  */
 public class MainViewAiIntegrationTest extends AbstractUiTest {
+
+    @Autowired
+    private ViewNavigators viewNavigators;
 
     @MockitoBean
     private CrmAnalyticsService mockAnalyticsService;

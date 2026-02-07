@@ -3,7 +3,7 @@
       xmlns:ai="http://company.crm/ai-conversation-component.xsd"
       title="AI Callback Test View">
     <layout>
-
+        <vbox>
             <ai:aiConversation id="aiComponent"
                                showHeader="true"
                                headerTitle="Callback Test Assistant"

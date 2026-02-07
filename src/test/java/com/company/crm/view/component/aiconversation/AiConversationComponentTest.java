@@ -2,10 +2,12 @@ package com.company.crm.view.component.aiconversation;
 
 import com.company.crm.AbstractUiTest;
 import com.company.crm.util.extenstion.DataCleaner;
+import io.jmix.flowui.ViewNavigators;
 import io.jmix.flowui.testassist.UiTest;
 import io.jmix.flowui.testassist.UiTestUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -15,6 +17,9 @@ import static org.assertj.core.api.Assertions.*;
 @UiTest
 @ExtendWith(DataCleaner.class)
 public class AiConversationComponentTest extends AbstractUiTest {
+
+    @Autowired
+    private ViewNavigators viewNavigators;
 
     // No mocks needed - TestAiAnnotationsView has built-in @Install messageProcessor
 

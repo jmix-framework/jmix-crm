@@ -70,9 +70,6 @@ public class JmixChatMemoryRepository implements ChatMemoryRepository {
 
     @Override
     public List<Message> findByConversationId(@NonNull String conversationId) {
-        if (conversationId == null || conversationId.trim().isEmpty()) {
-            throw new IllegalArgumentException("Conversation ID cannot be null or empty");
-        }
 
         try {
             UUID uuid = parseConversationId(conversationId);
@@ -92,46 +89,35 @@ public class JmixChatMemoryRepository implements ChatMemoryRepository {
     @Override
     @Transactional
     public void saveAll(@NonNull String conversationId, List<Message> messages) {
-        if (conversationId == null || conversationId.trim().isEmpty()) {
-            log.warn("Cannot save messages: conversation ID is null or empty");
-            return;
-        }
 
         try {
             UUID uuid = parseConversationId(conversationId);
             AiConversation conversation = findOrCreateConversation(uuid);
 
-            // Create save context for atomic transaction
             SaveContext saveContext = new SaveContext();
 
-            // Delete existing messages for this conversation (replace semantics)
-            loadChatMessages(uuid).forEach(saveContext::removing);
+            List<ChatMessage> existingMessages = loadChatMessages(uuid);
+            if (!messagesAreEqual(messages, existingMessages)) {
+                existingMessages.forEach(saveContext::removing);
 
-            // Create new messages with explicit ordering
-            OffsetDateTime baseTime = OffsetDateTime.now();
-            for (int i = 0; i < messages.size(); i++) {
-                Message message = messages.get(i);
-                ChatMessage chatMessage = mapMessageToEntity(message, conversation);
-                // Set explicit creation time with microsecond increments to preserve order
-                chatMessage.setCreatedDate(baseTime.plusNanos(i * 1000L));
-                saveContext.saving(chatMessage);
+                OffsetDateTime baseTime = OffsetDateTime.now();
+                for (int i = 0; i < messages.size(); i++) {
+                    Message message = messages.get(i);
+                    ChatMessage chatMessage = mapMessageToEntity(message, conversation);
+                    chatMessage.setCreatedDate(baseTime.plusNanos(i * 1000L));
+                    saveContext.saving(chatMessage);
+                }
             }
 
             dataManager.save(saveContext);
         } catch (IllegalArgumentException e) {
-            // Already logged in parseConversationId
-        } catch (Exception e) {
-            log.error("Error saving messages for conversation: {}", conversationId, e);
+            throw e;
         }
     }
 
     @Override
     @Transactional
     public void deleteByConversationId(@NonNull String conversationId) {
-        if (conversationId == null || conversationId.trim().isEmpty()) {
-            log.warn("Cannot delete conversation: ID is null or empty");
-            return;
-        }
 
         UUID uuid = parseConversationId(conversationId);
         dataManager.load(AiConversation.class)
@@ -139,7 +125,6 @@ public class JmixChatMemoryRepository implements ChatMemoryRepository {
                 .optional()
                 .ifPresent(conversation -> {
                     SaveContext saveContext = new SaveContext();
-
                     loadChatMessages(uuid).forEach(saveContext::removing);
                     saveContext.removing(conversation);
 
@@ -205,5 +190,22 @@ public class JmixChatMemoryRepository implements ChatMemoryRepository {
                 .condition(PropertyCondition.equal("conversation.id", conversationId))
                 .sort(Sort.by("createdDate"))
                 .list();
+    }
+
+    private boolean messagesAreEqual(List<Message> newMessages, List<ChatMessage> existingMessages) {
+        if (newMessages.size() != existingMessages.size()) {
+            return false;
+        }
+
+        for (int i = 0; i < newMessages.size(); i++) {
+            Message newMessage = newMessages.get(i);
+            ChatMessage existingMessage = existingMessages.get(i);
+
+            if (!newMessage.getText().equals(existingMessage.getContent()) ||
+                !mapMessageToType(newMessage).equals(existingMessage.getType())) {
+                return false;
+            }
+        }
+        return true;
     }
 }

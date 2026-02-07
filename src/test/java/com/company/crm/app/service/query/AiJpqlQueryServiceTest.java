@@ -3,6 +3,7 @@ package com.company.crm.app.service.query;
 import com.company.crm.AbstractTest;
 import com.company.crm.ai.jmix.query.AiJpqlQueryService;
 import com.company.crm.model.client.Client;
+import com.company.crm.util.extenstion.AuthenticatedAs;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -20,6 +21,7 @@ import static org.assertj.core.api.Assertions.*;
 /**
  * Test class for JpqlQueryService focusing on automatic parameter type conversion
  */
+@AuthenticatedAs(AuthenticatedAs.ADMIN_USERNAME)
 class AiJpqlQueryServiceTest extends AbstractTest {
 
     private static final Logger log = LoggerFactory.getLogger(AiJpqlQueryServiceTest.class);

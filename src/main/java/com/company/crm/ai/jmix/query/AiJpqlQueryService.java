@@ -1,15 +1,12 @@
 package com.company.crm.ai.jmix.query;
 
 import io.jmix.core.DataManager;
-import io.jmix.core.EntitySerialization;
 import io.jmix.core.entity.KeyValueEntity;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -20,14 +17,14 @@ public class AiJpqlQueryService {
 
     private final DataManager dataManager;
     private final AiJpqlParameterConverter parameterConverter;
-    private final EntitySerialization entitySerialization;
+    private final ResultConverter resultConverter;
 
     public AiJpqlQueryService(DataManager dataManager,
                              AiJpqlParameterConverter parameterConverter,
-                             EntitySerialization entitySerialization) {
+                             ResultConverter resultConverter) {
         this.dataManager = dataManager;
         this.parameterConverter = parameterConverter;
-        this.entitySerialization = entitySerialization;
+        this.resultConverter = resultConverter;
     }
 
 
@@ -77,98 +74,18 @@ public class AiJpqlQueryService {
 
             List<KeyValueEntity> results = loadValuesBuilder.list();
 
-            List<Map<String, Object>> resultMaps = convertToMapList(results, propertyNames);
+            List<Map<String, Object>> resultMaps = resultConverter.convertToMapList(results, propertyNames);
 
             log.debug("Query executed successfully with {} parameters, {} rows returned",
                     converted ? "converted" : "original", results.size());
             log.debug("Result data: {}", resultMaps);
 
-            return new QueryExecutionResult(
-                    true,
-                    resultMaps,
-                    results.size(),
-                    null
-            );
+            return QueryExecutionResult.success(resultMaps);
 
         } catch (Exception e) {
             log.debug("Query failed with {} parameters: {}", converted ? "converted" : "original", e.getMessage());
-            return new QueryExecutionResult(
-                    false,
-                    new ArrayList<>(),
-                    0,
-                    e.getMessage()
-            );
+            return QueryExecutionResult.failed(e.getMessage());
         }
     }
 
-    /**
-     * Convert KeyValueEntity results to List of Maps
-     * Uses Jmix EntitySerialization to handle entities safely
-     */
-    private List<Map<String, Object>> convertToMapList(List<KeyValueEntity> results, String[] propertyNames) {
-        if (results == null || results.isEmpty()) {
-            return new ArrayList<>();
-        }
-
-        try {
-            List<Map<String, Object>> resultList = new ArrayList<>();
-
-            for (KeyValueEntity entity : results) {
-                Map<String, Object> rowMap = new HashMap<>();
-
-                for (String propName : propertyNames) {
-                    Object value = entity.getValue(propName);
-                    rowMap.put(propName, convertToSerializableValue(value));
-                }
-
-                resultList.add(rowMap);
-            }
-
-            return resultList;
-
-        } catch (Exception e) {
-            log.error("Error converting KeyValueEntities to Maps: {}", e.getMessage());
-            return new ArrayList<>();
-        }
-    }
-
-    /**
-     * Convert value to a JSON-serializable representation using Jmix EntitySerialization
-     */
-    private Object convertToSerializableValue(Object value) {
-        if (value == null) {
-            return null;
-        }
-
-        // For primitive types, return as-is (they're already JSON-serializable)
-        if (value instanceof String || value instanceof Number || value instanceof Boolean) {
-            return value;
-        }
-
-        // Handle Java time types specially - GSON can't serialize them due to module system restrictions
-        if (value instanceof java.time.LocalDate ||
-            value instanceof java.time.LocalDateTime ||
-            value instanceof java.time.LocalTime ||
-            value instanceof java.time.OffsetDateTime ||
-            value instanceof java.time.ZonedDateTime ||
-            value instanceof java.time.Instant) {
-            return value.toString(); // ISO format string representation
-        }
-
-        // Handle Date types
-        if (value instanceof java.util.Date) {
-            return value.toString();
-        }
-
-        // For complex objects (entities, collections), use Jmix EntitySerialization
-        // This avoids lazy loading issues by only serializing loaded attributes
-        try {
-            return entitySerialization.objectToJson(value);
-        } catch (Exception e) {
-            log.debug("EntitySerialization failed for {}, using toString(): {}",
-                     value.getClass().getSimpleName(), e.getMessage());
-            // Fallback to toString if serialization fails completely
-            return value.toString();
-        }
-    }
 }

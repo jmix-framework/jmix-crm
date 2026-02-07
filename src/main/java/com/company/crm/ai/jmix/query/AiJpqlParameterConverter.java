@@ -18,8 +18,25 @@ import java.util.UUID;
 /**
  * Smart converter for JPQL query parameters using Spring's ConversionService.
  *
- * Philosophy: We maintain a list of target types that we systematically try to convert to.
- * We ask Spring: "Can you convert this string to each target type?" and use the first successful conversion.
+ * <p>This component automatically converts string parameters from AI queries to appropriate Java types
+ * for JPQL execution. It uses Spring's ConversionService to handle type conversion systematically.
+ *
+ * <h3>Conversion Strategy</h3>
+ * <p>The converter maintains a prioritized list of target types and attempts conversion in order:
+ * <ol>
+ *   <li>Java Time API types (LocalDate, LocalDateTime, etc.)</li>
+ *   <li>Legacy SQL types (Date, Time, Timestamp)</li>
+ *   <li>Numeric types (BigDecimal, Long, Integer, Double)</li>
+ *   <li>UUID for entity references</li>
+ *   <li>Boolean for true/false values</li>
+ * </ol>
+ *
+ * <p>For each string parameter, we ask Spring's ConversionService: "Can you convert this string
+ * to each target type?" and use the first successful conversion. This approach leverages Spring's
+ * robust type conversion capabilities while maintaining predictable behavior.
+ *
+ * @see ConversionService
+ * @see org.springframework.core.convert.converter.Converter
  */
 @Component("ai_JpqlParameterConverter")
 public class AiJpqlParameterConverter {

@@ -3,6 +3,7 @@ package com.company.crm.view.component.aiconversation;
 import com.company.crm.AbstractUiTest;
 import com.company.crm.util.extenstion.DataCleaner;
 import com.vaadin.flow.router.Route;
+import io.jmix.flowui.ViewNavigators;
 import io.jmix.flowui.testassist.UiTest;
 import io.jmix.flowui.testassist.UiTestUtils;
 import io.jmix.flowui.view.Install;
@@ -14,6 +15,7 @@ import io.jmix.flowui.view.ViewController;
 import io.jmix.flowui.view.ViewDescriptor;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.function.Function;
 
@@ -27,6 +29,9 @@ import static org.assertj.core.api.Assertions.*;
 @UiTest
 @ExtendWith(DataCleaner.class)
 public class AiConversationCallbackTest extends AbstractUiTest {
+
+    @Autowired
+    private ViewNavigators viewNavigators;
 
     @Test
     void test_functionBasedCallback_whenSetProgrammatically_customProcessorApplied() {

@@ -24,7 +24,7 @@ import static org.assertj.core.api.Assertions.*;
  * to verify the correctness of AI-generated answers against known data.
  *
  */
-//@EnabledIfEnvironmentVariable(named = "AI_ENABLED", matches = "true")
+@EnabledIfEnvironmentVariable(named = "AI_ENABLED", matches = "true")
 class CrmAnalyticsServiceLLMTest extends AbstractTest {
 
     private static final Logger log = LoggerFactory.getLogger(CrmAnalyticsServiceLLMTest.class);

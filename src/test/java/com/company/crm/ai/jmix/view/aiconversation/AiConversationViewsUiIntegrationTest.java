@@ -3,11 +3,13 @@ package com.company.crm.ai.jmix.view.aiconversation;
 import com.company.crm.AbstractUiTest;
 import com.company.crm.ai.entity.AiConversation;
 import com.company.crm.app.service.ai.CrmAnalyticsService;
+import io.jmix.flowui.ViewNavigators;
 import io.jmix.flowui.component.grid.DataGrid;
 import io.jmix.flowui.data.grid.DataGridItems;
 import io.jmix.flowui.kit.component.button.JmixButton;
 import io.jmix.flowui.testassist.UiTestUtils;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.time.OffsetDateTime;
@@ -22,6 +24,9 @@ import static org.mockito.Mockito.when;
  * Tests the complete UI workflow from list view to detail view using Jmix UI components.
  */
 public class AiConversationViewsUiIntegrationTest extends AbstractUiTest {
+
+    @Autowired
+    private ViewNavigators viewNavigators;
 
     @MockitoBean
     private CrmAnalyticsService mockAnalyticsService;

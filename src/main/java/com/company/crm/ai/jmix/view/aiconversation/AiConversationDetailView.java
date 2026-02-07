@@ -47,8 +47,15 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
 
 
     /**
-     * @Install for messageProcessor - starts async processing and returns immediately
-     * The actual AI response will be added to the component once the async processing completes
+     * Handles user messages in the AI conversation interface.
+     *
+     * <p>This method processes user messages asynchronously to avoid blocking the UI thread
+     * during AI query processing. The message is forwarded to the CRM analytics service
+     * which will generate a response and update the conversation component automatically.
+     *
+     * @param userMessage the message entered by the user
+     * @return null to indicate async processing (actual response will be added later)
+     * @see CrmAnalyticsAsyncLoader#processMessageAsync
      */
     @Install(to = "aiComponent", subject = "messageProcessor")
     private String processMessage(String userMessage) {

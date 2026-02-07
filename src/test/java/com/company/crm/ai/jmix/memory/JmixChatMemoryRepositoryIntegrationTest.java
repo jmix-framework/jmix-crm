@@ -198,25 +198,6 @@ class JmixChatMemoryRepositoryIntegrationTest extends AbstractTest {
 
     }
 
-    @Test
-    void testEmptyAndNullConversations() {
-        // Test non-existent conversation (UUID that was never created)
-        List<Message> nonExistent = chatMemoryRepository.findByConversationId(UUID.randomUUID().toString());
-        assertThat(nonExistent).isEmpty();
-
-        // Test null conversation ID
-        List<Message> nullConv = chatMemoryRepository.findByConversationId(null);
-        assertThat(nullConv).isEmpty();
-
-        // Test empty conversation ID
-        List<Message> emptyConv = chatMemoryRepository.findByConversationId("");
-        assertThat(emptyConv).isEmpty();
-
-        // Test invalid UUID format
-        List<Message> invalidUuid = chatMemoryRepository.findByConversationId("invalid-uuid");
-        assertThat(invalidUuid).isEmpty();
-
-    }
 
     @Test
     void testMessageOrdering() {

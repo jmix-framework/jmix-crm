@@ -3,6 +3,7 @@ package com.company.crm.ai.jmix.query;
 import com.company.crm.AbstractTest;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.order.Order;
+import com.company.crm.util.extenstion.AuthenticatedAs;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -18,19 +19,19 @@ import static org.assertj.core.api.Assertions.*;
  * Integration test for Jmix JPQL Extensions and Functions
  * Tests all documented JPQL functions and extensions to ensure they work correctly
  */
+@AuthenticatedAs(AuthenticatedAs.ADMIN_USERNAME)
 class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
 
     private JpqlQueryTool jpqlQueryTool;
 
     @BeforeEach
     void setUp() {
-        jpqlQueryTool = new JpqlQueryTool(applicationContext.getBean(AiJpqlQueryService.class));
+        jpqlQueryTool = applicationContext.getBean(JpqlQueryTool.class);
         setupTestData();
     }
 
     @Test
     void testDateTimeFunctions() {
-
         // Test EXTRACT functions
         QueryExecutionResult result = jpqlQueryTool.executeQuery(
             "SELECT EXTRACT(YEAR FROM o.date) AS orderYear, EXTRACT(MONTH FROM o.date) AS orderMonth, COUNT(o) AS orderCount " +
@@ -52,7 +53,6 @@ class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
 
     @Test
     void testMathematicalFunctions() {
-
         // Test simpler mathematical operations first
         QueryExecutionResult result = jpqlQueryTool.executeQuery(
             "SELECT o.total AS originalTotal, (o.total * 2) AS doubledTotal FROM Order_ o WHERE o.total > 0 ORDER BY o.total",
@@ -73,7 +73,6 @@ class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
 
     @Test
     void testStringFunctions() {
-
         QueryExecutionResult result = jpqlQueryTool.executeQuery(
             "SELECT " +
             "UPPER(c.name) AS upperName, " +
@@ -99,7 +98,6 @@ class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
 
     @Test
     void testConditionalFunctions() {
-
         QueryExecutionResult result = jpqlQueryTool.executeQuery(
             "SELECT " +
             "c.name AS clientName, " +
@@ -121,7 +119,6 @@ class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
 
     @Test
     void testTypeConversion() {
-
         QueryExecutionResult result = jpqlQueryTool.executeQuery(
             "SELECT c.name AS clientName, o.total AS orderTotal FROM Client c JOIN c.orders o ORDER BY o.total DESC",
             Map.of(),
@@ -140,7 +137,6 @@ class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
 
     @Test
     void testAggregateFunctions() {
-
         QueryExecutionResult result = jpqlQueryTool.executeQuery(
             "SELECT " +
             "COUNT(o) AS orderCount, " +
@@ -171,7 +167,6 @@ class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
 
     @Test
     void testDateMacros() {
-
         // Test @between macro for recent orders
         QueryExecutionResult recentResult = jpqlQueryTool.executeQuery(
             "SELECT o.number AS orderNumber, o.date AS orderDate " +
@@ -197,7 +192,6 @@ class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
 
     @Test
     void testRegexpFunction() {
-
         QueryExecutionResult result = jpqlQueryTool.executeQuery(
             "SELECT c.name AS clientName FROM Client c WHERE UPPER(c.name) LIKE '%CORP%' OR UPPER(c.name) LIKE '%ENTERPRISE%'",
             Map.of(),
