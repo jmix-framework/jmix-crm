@@ -27,6 +27,9 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
 
     private static final Logger log = LoggerFactory.getLogger(AiConversationDetailView.class);
 
+    /** Indicates that message processing is handled asynchronously */
+    private static final String ASYNC_PROCESSING = null;
+
     @ViewComponent
     AiConversationComponent aiComponent; // package-private for testing
 
@@ -84,15 +87,8 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
     }
 
     private void setupConversationComponent() {
-        // Set conversation ID - historyLoader is now handled via @Install annotation
         aiComponent.setConversationId(getEditedEntity().getId().toString());
-
-        // Set current username for user messages
         aiComponent.setUserName(((com.company.crm.model.user.User) currentAuthentication.getUser()).getUsername());
-
-        // No additional message sent handler needed - component handles everything
-
-        // Load existing conversation history
         aiComponent.loadHistory();
 
         log.info("AI conversation component setup complete with @Install messageProcessor and @Install historyLoader");
