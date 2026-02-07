@@ -15,9 +15,7 @@
     </facets>
     <layout>
 
-        <!-- Chat Section with @Install pattern integration -->
         <vbox id="chatSection" expand="aiComponent" height="100%" spacing="true">
-            <!-- AI Conversation Component configured via @Install annotations -->
             <ai:aiConversation id="aiComponent"
                                showHeader="false"
                                width="100%" height="100%"/>
