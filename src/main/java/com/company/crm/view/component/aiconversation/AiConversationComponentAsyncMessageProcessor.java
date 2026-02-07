@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
-import java.util.function.Function;
+import java.util.function.BiFunction;
 
 /**
  * Generic utility for handling asynchronous conversation processing with UI updates.
@@ -38,14 +38,12 @@ public class AiConversationComponentAsyncMessageProcessor {
      */
     public void processMessage(String userMessage, String conversationId,
                                AiConversationComponent aiComponent,
-                               Function<ConversationRequest, String> processor) {
+                               BiFunction<String, String, String> processor) {
         log.info("Processing message async: {}", userMessage);
-
-        ConversationRequest request = new ConversationRequest(userMessage, conversationId);
 
         uiAsyncTasks.supplierConfigurer(() -> {
                     try {
-                        String response = processor.apply(request);
+                        String response = processor.apply(userMessage, conversationId);
                         log.info("Response generated: {}", response);
                         return response;
                     } catch (Exception e) {

@@ -33,7 +33,7 @@ public class CrmAnalyticsAsyncLoader {
             userMessage,
             conversationId,
             aiComponent,
-            request -> crmAnalyticsService.processBusinessQuestion(request.userMessage(), request.conversationId())
+            (message, convId) -> crmAnalyticsService.processBusinessQuestion(message, convId)
         );
     }
 }
