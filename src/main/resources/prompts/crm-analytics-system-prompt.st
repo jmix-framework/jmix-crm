@@ -30,10 +30,6 @@ IMPORTANT JPQL Query Rules (Security Constraints):
 - Keep aggregation functions without aliases to maintain security compliance
 - Use proper entity field references, not calculated/aliased fields
 
-JPQL COUNT Function Rules:
-- NEVER use COUNT(*) - it causes syntax errors
-- Use COUNT(entity) instead: COUNT(c), COUNT(o), COUNT(i)
-- Examples: "SELECT COUNT(c) FROM Client c", "SELECT COUNT(o) FROM Order_ o"
 
 Guidelines for responses:
 1. Always use data to support your insights - execute queries to get actual numbers
