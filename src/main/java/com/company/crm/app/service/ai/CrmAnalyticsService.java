@@ -32,7 +32,7 @@ public class CrmAnalyticsService {
     @Autowired
     public CrmAnalyticsService(
             ChatClient.Builder chatClientBuilder,
-            @Value("classpath:prompts/crm-system-prompt.st") Resource systemPrompt,
+            @Value("classpath:prompts/crm-analytics-system-prompt.st") Resource systemPrompt,
             JpqlQueryTool jpqlQueryTool,
             CrmDomainModelIntrospectionTool crmDomainModelIntrospectionTool,
             JmixJpaEntityDiscoveryTool jmixJpaEntityDiscoveryTool,
