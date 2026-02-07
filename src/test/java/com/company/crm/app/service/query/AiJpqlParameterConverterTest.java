@@ -1,11 +1,11 @@
 package com.company.crm.app.service.query;
 
 import com.company.crm.ai.jmix.query.AiJpqlParameterConverter;
+import com.company.crm.app.annotation.TestProfile;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.convert.ConversionService;
-import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -20,7 +20,7 @@ import static org.assertj.core.api.Assertions.*;
  * required for AI-assisted JPQL query processing.
  */
 @SpringBootTest
-@ActiveProfiles("test")
+@TestProfile
 class AiJpqlParameterConverterTest {
 
     @Autowired
