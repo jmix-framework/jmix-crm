@@ -28,10 +28,6 @@ public class AiConversationListView extends StandardListView<AiConversation> {
 
     @Subscribe("aiConversationsDataGrid.createAction")
     public void onAiConversationsDataGridCreateAction(ActionPerformedEvent event) {
-        createNewChatAndNavigate();
-    }
-
-    private void createNewChatAndNavigate() {
         String welcomeMessage = messages.getMessage("aiConversation.welcomeMessage");
         AiConversation savedConversation = aiConversationService.createNewConversation(welcomeMessage);
 
