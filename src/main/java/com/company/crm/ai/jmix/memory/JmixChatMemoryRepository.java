@@ -71,48 +71,40 @@ public class JmixChatMemoryRepository implements ChatMemoryRepository {
     @Override
     public List<Message> findByConversationId(@NonNull String conversationId) {
 
-        try {
-            UUID uuid = parseConversationId(conversationId);
-            return dataManager.load(AiConversation.class)
-                    .id(uuid)
-                    .optional()
-                    .map(conversation -> loadChatMessages(uuid).stream()
-                            .map(this::mapEntityToMessage)
-                            .toList())
-                    .orElse(Collections.emptyList());
-        } catch (IllegalArgumentException e) {
-            // Invalid UUID format - return empty list as expected by tests
-            return Collections.emptyList();
-        }
+        UUID uuid = parseConversationId(conversationId);
+        return dataManager.load(AiConversation.class)
+                .id(uuid)
+                .optional()
+                .map(conversation -> loadChatMessages(uuid).stream()
+                        .map(this::mapEntityToMessage)
+                        .toList())
+                .orElse(Collections.emptyList());
+
     }
 
     @Override
     @Transactional
     public void saveAll(@NonNull String conversationId, List<Message> messages) {
 
-        try {
-            UUID uuid = parseConversationId(conversationId);
-            AiConversation conversation = findOrCreateConversation(uuid);
+        UUID uuid = parseConversationId(conversationId);
+        AiConversation conversation = findOrCreateConversation(uuid);
 
-            SaveContext saveContext = new SaveContext();
+        SaveContext saveContext = new SaveContext();
 
-            List<ChatMessage> existingMessages = loadChatMessages(uuid);
-            if (!messagesAreEqual(messages, existingMessages)) {
-                existingMessages.forEach(saveContext::removing);
+        List<ChatMessage> existingMessages = loadChatMessages(uuid);
+        if (!messagesAreEqual(messages, existingMessages)) {
+            existingMessages.forEach(saveContext::removing);
 
-                OffsetDateTime baseTime = OffsetDateTime.now();
-                for (int i = 0; i < messages.size(); i++) {
-                    Message message = messages.get(i);
-                    ChatMessage chatMessage = mapMessageToEntity(message, conversation);
-                    chatMessage.setCreatedDate(baseTime.plusNanos(i * 1000L));
-                    saveContext.saving(chatMessage);
-                }
+            OffsetDateTime baseTime = OffsetDateTime.now();
+            for (int i = 0; i < messages.size(); i++) {
+                Message message = messages.get(i);
+                ChatMessage chatMessage = mapMessageToEntity(message, conversation);
+                chatMessage.setCreatedDate(baseTime.plusNanos(i * 1000L));
+                saveContext.saving(chatMessage);
             }
-
-            dataManager.save(saveContext);
-        } catch (IllegalArgumentException e) {
-            throw e;
         }
+
+        dataManager.save(saveContext);
     }
 
     @Override
@@ -202,7 +194,7 @@ public class JmixChatMemoryRepository implements ChatMemoryRepository {
             ChatMessage existingMessage = existingMessages.get(i);
 
             if (!newMessage.getText().equals(existingMessage.getContent()) ||
-                !mapMessageToType(newMessage).equals(existingMessage.getType())) {
+                    !mapMessageToType(newMessage).equals(existingMessage.getType())) {
                 return false;
             }
         }
