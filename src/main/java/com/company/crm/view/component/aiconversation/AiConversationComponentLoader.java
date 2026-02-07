@@ -38,11 +38,8 @@ public class AiConversationComponentLoader extends AbstractComponentLoader<AiCon
         loadResourceString(element, "assistantName", context.getMessageGroup(), component::setAssistantName);
         loadResourceString(element, "userName", context.getMessageGroup(), component::setUserName);
 
-        // Apply the configuration directly - no need for builder pattern
         if (showHeader) {
             component.setHeaderVisible(true);
         }
-
-        // Note: The view must still provide the MessageProcessor via setMessageProcessor()
     }
 }
