@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      xmlns:ai="http://company.crm/ai-conversation-component.xsd"
+      title="AI Callback Test View">
+    <layout>
+        <vbox id="mainVBox" padding="true" spacing="true" width="100%" height="100%">
+            <h1 text="AI Callback Test"/>
+            <span text="This view demonstrates programmatic callback patterns with the AiConversationComponent."/>
+
+            <span text="Programmatic API Patterns:"/>
+            <vbox spacing="true" padding="true">
+                <span text="• setMessageProcessor() - Function-based programmatic API"/>
+                <span text="• Lambda expressions - Clean callback syntax"/>
+                <span text="• Runtime configuration - Dynamic behavior setup"/>
+            </vbox>
+
+            <ai:aiConversation id="aiComponent"
+                               showHeader="true"
+                               headerTitle="Callback Test Assistant"
+                               assistantName="Assistant"
+                               userName="User"
+                               width="100%" height="400px"/>
+        </vbox>
+    </layout>
+</view>

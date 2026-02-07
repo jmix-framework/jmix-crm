@@ -48,6 +48,7 @@ public class AiConversationComponent extends Composite<VerticalLayout>
 
     private String assistantName = "Assistant";
     private String userName = "User";
+    private String welcomeMessage;
 
     private java.util.function.Supplier<List<Component>> headerButtonProvider;
 
@@ -150,6 +151,29 @@ public class AiConversationComponent extends Composite<VerticalLayout>
         return assistantName;
     }
 
+    /**
+     * Gets the welcome message.
+     *
+     * @return the welcome message
+     */
+    public String getWelcomeMessage() {
+        return welcomeMessage;
+    }
+
+    /**
+     * Sets the welcome message and automatically adds it to the conversation.
+     *
+     * @param welcomeMessage the welcome message to set
+     */
+    @SuppressWarnings("unused") // Used by XML configuration
+    public void setWelcomeMessage(String welcomeMessage) {
+        this.welcomeMessage = welcomeMessage;
+        // Automatically add the welcome message when it's set
+        if (welcomeMessage != null && !welcomeMessage.trim().isEmpty()) {
+            addWelcomeMessage(welcomeMessage);
+        }
+    }
+
 
 
     /**
@@ -205,9 +229,33 @@ public class AiConversationComponent extends Composite<VerticalLayout>
      * @param colorIndex the color index for the message
      */
     public void addMessage(String content, String username, int colorIndex) {
-        MessageListItem item = new MessageListItem(content, username);
-        item.setUserColorIndex(colorIndex);
-        messageList.addItem(item);
+        log.info("AiConversationComponent.addMessage() called - username: {}, colorIndex: {}, content length: {}",
+                username, colorIndex, content != null ? content.length() : 0);
+
+        try {
+            MessageListItem item = new MessageListItem(content, username);
+            log.info("MessageListItem created successfully");
+
+            item.setUserColorIndex(colorIndex);
+            log.info("UserColorIndex set successfully");
+
+            // Check messageList state
+            log.info("MessageList state - current item count: {}, visible: {}",
+                    messageList.getItems() != null ? messageList.getItems().size() : "NULL",
+                    messageList.isVisible());
+
+            messageList.addItem(item);
+            log.info("MessageList.addItem() completed - new item count: {}",
+                    messageList.getItems() != null ? messageList.getItems().size() : "NULL");
+
+            // Check component hierarchy
+            log.info("Component attached status - messageList: {}, this component: {}",
+                    messageList.getUI().isPresent(), this.getUI().isPresent());
+
+        } catch (Exception e) {
+            log.error("Exception in addMessage(): {}", e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -279,6 +327,10 @@ public class AiConversationComponent extends Composite<VerticalLayout>
             String response = messageProcessorProvider.apply(userText);
             if (response != null) {
                 handleAiResponse(response);
+            } else {
+                // For async processing, the processor returns null
+                // The async handler will call hideProgress() and enable input
+                // So we don't need to do anything here - just keep progress showing
             }
         } catch (Exception e) {
             handleAiError(e);

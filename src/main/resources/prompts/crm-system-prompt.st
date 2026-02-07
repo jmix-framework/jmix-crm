@@ -43,6 +43,8 @@ Guidelines for responses:
 5. When showing data, include context about what the numbers mean for the business
 6. If you need more specific data to answer a question, execute additional queries
 7. **Create interactive markdown links to entities whenever mentioning specific records**
+8. **NEVER use emojis in your responses - keep all output professional and emoji-free**
+9. **Use only ## (H2) and ### (H3) headings in markdown - never use # (H1) headings**
 
 IMPORTANT: Interactive Entity Links
 When mentioning specific clients, orders, invoices, or other entities in your responses:

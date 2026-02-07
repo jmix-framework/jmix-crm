@@ -197,6 +197,21 @@ public class JpqlQueryTool {
         - REGEXP for pattern matching (use LIKE instead)
         - Complex CAST operations
         - LEFT/RIGHT string functions (limited support)
+        - CASE WHEN expressions inside aggregate functions (COUNT, SUM, etc.)
+        - @between macros inside CASE WHEN expressions
+
+        CRITICAL JPQL PARSER LIMITATIONS:
+        ✗ INCORRECT: COUNT(CASE WHEN o.date >= '2025-01-01' THEN 1 END)
+        ✗ INCORRECT: SUM(CASE WHEN @between(o.date, now-90, now, day) THEN o.total ELSE 0 END)
+        ✗ INCORRECT: COUNT(CASE WHEN @between(o.date, now-90, now, day) THEN o ELSE NULL END)
+
+        ✓ CORRECT: Use separate queries with simple WHERE clauses:
+        - Query 1: WHERE o.date >= '2025-01-01' - then COUNT(o), SUM(o.total)
+        - Query 2: WHERE @between(o.date, now-90, now, day) - then COUNT(o), SUM(o.total)
+        - Query 3: WHERE @between(o.date, now-180, now-91, day) - then COUNT(o), SUM(o.total)
+
+        For period comparisons, ALWAYS use multiple simple queries instead of CASE expressions.
+        The application can then combine results from multiple queries to create comparisons.
 
         Without domain model tools first, queries may fail due to incorrect entity/attribute names.
         For date ranges, prefer Jmix macros over parameters for better handling.
@@ -212,6 +227,7 @@ public class JpqlQueryTool {
 
             if (result.success()) {
                 log.info("Query Result: {} rows returned", result.rowCount());
+                log.debug("Query Data returned to LLM: {}", result.data());
             } else {
                 log.warn("Query Failed: {}", result.errorMessage());
             }

@@ -1,6 +1,7 @@
 package com.company.crm.ai.entity;
 
 import io.jmix.core.entity.annotation.JmixGeneratedValue;
+import io.jmix.core.metamodel.annotation.DependsOnProperties;
 import io.jmix.core.metamodel.annotation.InstanceName;
 import io.jmix.core.metamodel.annotation.JmixEntity;
 import jakarta.persistence.Column;
@@ -22,7 +23,6 @@ public class AiConversation {
     @Id
     private UUID id;
 
-    @InstanceName
     @Column(name = "TITLE")
     private String title;
 

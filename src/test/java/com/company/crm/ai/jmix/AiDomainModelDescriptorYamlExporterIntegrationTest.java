@@ -15,7 +15,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Integration test for the complete domain model export functionality.
  * Tests against our test entities to verify all features work correctly.
  */
-class AiDomainModelDescriptorYamlExporterIT extends AbstractTest {
+class AiDomainModelDescriptorYamlExporterIntegrationTest extends AbstractTest {
 
     @Autowired
     private AiDomainModelDescriptorYamlExporter exporter;

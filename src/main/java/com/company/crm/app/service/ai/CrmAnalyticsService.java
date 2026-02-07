@@ -24,7 +24,7 @@ public class CrmAnalyticsService {
 
     private static final Logger log = LoggerFactory.getLogger(CrmAnalyticsService.class);
 
-    private final ChatClient chatClientWithMemory;
+    private final ChatClient chatClient;
     private final JpqlQueryTool jpqlQueryTool;
     private final CrmDomainModelIntrospectionTool crmDomainModelIntrospectionTool;
     private final EntityListTool entityListTool;
@@ -42,7 +42,7 @@ public class CrmAnalyticsService {
                 .chatMemoryRepository(chatMemoryRepository)
                 .build();
 
-        this.chatClientWithMemory = chatClientBuilder
+        this.chatClient = chatClientBuilder
                 .defaultSystem(systemPrompt)
                 .defaultAdvisors(
                         SimpleLoggerAdvisor.builder().build(),
@@ -69,7 +69,7 @@ public class CrmAnalyticsService {
 
         try {
 
-            return chatClientWithMemory.prompt()
+            return chatClient.prompt()
                     .user(userQuestion)
                     .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
                     .tools(jpqlQueryTool, crmDomainModelIntrospectionTool, entityListTool)

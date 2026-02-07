@@ -34,7 +34,7 @@ public class AiConversationComponentLoader extends AbstractComponentLoader<AiCon
 
         // Load resource strings for internationalization
         loadResourceString(element, "headerTitle", context.getMessageGroup(), component::setHeaderTitle);
-        loadResourceString(element, "welcomeMessage", context.getMessageGroup(), component::addWelcomeMessage);
+        loadResourceString(element, "welcomeMessage", context.getMessageGroup(), component::setWelcomeMessage);
         loadResourceString(element, "assistantName", context.getMessageGroup(), component::setAssistantName);
         loadResourceString(element, "userName", context.getMessageGroup(), component::setUserName);
 

@@ -142,14 +142,7 @@ public class JmixChatMemoryRepository implements ChatMemoryRepository {
         return dataManager.load(AiConversation.class)
                 .id(conversationId)
                 .optional()
-                .orElseGet(() -> createNewConversation(conversationId));
-    }
-
-    private AiConversation createNewConversation(UUID id) {
-        AiConversation conversation = dataManager.create(AiConversation.class);
-        conversation.setId(id);
-        conversation.setTitle("Chat " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
-        return dataManager.save(conversation);
+                .orElseThrow(() -> new IllegalArgumentException("Conversation not found: " + conversationId));
     }
 
     private ChatMessage mapMessageToEntity(Message message, AiConversation conversation) {

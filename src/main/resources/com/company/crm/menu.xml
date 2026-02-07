@@ -23,6 +23,11 @@
           title="msg://com.company.crm/menu_config.finance.title"
           icon="vaadin:pie-chart"/>
 
+
+    <item view="AiConversation.list"
+          title="msg://com.company.crm.ai.jmix.view.aiconversation/aiConversationListView.title"
+          icon="vaadin:magic"/>
+
     <menu id="administration"
           description="msg://com.company.crm/menu_config.administration.description"
           title="msg://com.company.crm/menu_config.administration.title"
@@ -36,7 +41,4 @@
               icon="vaadin:list-select"
               title="msg://io.jmix.jmxconsole/jmxConsoleView.menu"/>
     </menu>
-    <item view="AiConversation.list"
-          title="msg://com.company.crm.ai.jmix.view.aiconversation/aiConversationListView.title"
-          icon="vaadin:magic"/>
 </menu-config>

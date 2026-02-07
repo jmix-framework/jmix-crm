@@ -8,6 +8,7 @@ import io.jmix.flowui.testassist.UiTestUtils;
 import io.jmix.flowui.view.Install;
 import io.jmix.flowui.view.Supply;
 import io.jmix.flowui.view.StandardView;
+import io.jmix.flowui.view.Subscribe;
 import io.jmix.flowui.view.ViewComponent;
 import io.jmix.flowui.view.ViewController;
 import io.jmix.flowui.view.ViewDescriptor;
@@ -93,6 +94,12 @@ public class AiConversationCallbackTest extends AbstractUiTest {
 
         @ViewComponent
         private AiConversationComponent aiComponent;
+
+        @Subscribe
+        public void onReady(ReadyEvent event) {
+            // Add welcome message for test expectations
+            aiComponent.addWelcomeMessage("Welcome to callback test!");
+        }
 
         // Test helper methods
         public AiConversationComponent getAiComponent() {

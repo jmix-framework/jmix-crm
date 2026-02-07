@@ -5,8 +5,6 @@ import com.company.crm.model.client.Client;
 import com.company.crm.model.order.Order;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -22,8 +20,6 @@ import static org.assertj.core.api.Assertions.*;
  */
 class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
 
-    private static final Logger log = LoggerFactory.getLogger(JmixJpqlExtensionsIntegrationTest.class);
-
     private JpqlQueryTool jpqlQueryTool;
 
     @BeforeEach
@@ -34,7 +30,6 @@ class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
 
     @Test
     void testDateTimeFunctions() {
-        log.info("Testing DATE/TIME functions");
 
         // Test EXTRACT functions
         QueryExecutionResult result = jpqlQueryTool.executeQuery(
@@ -53,13 +48,10 @@ class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
         assertThat(year).isBetween(2024, 2026); // Allow some flexibility for test dates
         assertThat(firstRow.get("orderMonth")).isInstanceOf(Integer.class);
         assertThat(firstRow.get("orderCount")).isInstanceOf(Long.class);
-
-        log.info("EXTRACT functions work correctly: {}", result.data());
     }
 
     @Test
     void testMathematicalFunctions() {
-        log.info("Testing MATHEMATICAL functions");
 
         // Test simpler mathematical operations first
         QueryExecutionResult result = jpqlQueryTool.executeQuery(
@@ -73,9 +65,7 @@ class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
             Map<String, Object> firstRow = result.data().getFirst();
             assertThat(firstRow.get("originalTotal")).isInstanceOf(Number.class);
             assertThat(firstRow.get("doubledTotal")).isInstanceOf(Number.class);
-            log.info("Basic mathematical operations work: {}", firstRow);
         } else {
-            log.warn("Mathematical functions not fully supported: {}", result.errorMessage());
             // Just verify the query was attempted
             assertThat(result.errorMessage()).isNotNull();
         }
@@ -83,7 +73,6 @@ class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
 
     @Test
     void testStringFunctions() {
-        log.info("Testing STRING functions");
 
         QueryExecutionResult result = jpqlQueryTool.executeQuery(
             "SELECT " +
@@ -106,13 +95,10 @@ class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
         assertThat(firstRow.get("nameLength")).isInstanceOf(Integer.class);
         assertThat(firstRow.get("nameSubstring")).isInstanceOf(String.class);
         assertThat(firstRow.get("concatName")).asString().endsWith(" - Client");
-
-        log.info("String functions work correctly: {}", firstRow);
     }
 
     @Test
     void testConditionalFunctions() {
-        log.info("Testing CONDITIONAL functions");
 
         QueryExecutionResult result = jpqlQueryTool.executeQuery(
             "SELECT " +
@@ -131,13 +117,10 @@ class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
         assertThat(firstRow.get("clientName")).isInstanceOf(String.class);
         assertThat(firstRow.get("clientCategory")).isIn("High Volume", "Regular", "No Orders");
         assertThat(firstRow.get("totalRevenue")).isInstanceOf(BigDecimal.class);
-
-        log.info("Conditional functions work correctly: {}", firstRow);
     }
 
     @Test
     void testTypeConversion() {
-        log.info("Testing TYPE CONVERSION functions");
 
         QueryExecutionResult result = jpqlQueryTool.executeQuery(
             "SELECT c.name AS clientName, o.total AS orderTotal FROM Client c JOIN c.orders o ORDER BY o.total DESC",
@@ -150,16 +133,13 @@ class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
             Map<String, Object> firstRow = result.data().getFirst();
             assertThat(firstRow.get("clientName")).isInstanceOf(String.class);
             assertThat(firstRow.get("orderTotal")).isInstanceOf(Number.class);
-            log.info("Basic type queries work correctly: {}", firstRow);
         } else {
-            log.warn("Type conversion functions not supported: {}", result.errorMessage());
             assertThat(result.errorMessage()).isNotNull();
         }
     }
 
     @Test
     void testAggregateFunctions() {
-        log.info("Testing AGGREGATE functions");
 
         QueryExecutionResult result = jpqlQueryTool.executeQuery(
             "SELECT " +
@@ -187,13 +167,10 @@ class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
         // Verify logical constraints
         Long count = (Long) row.get("orderCount");
         assertThat(count).isGreaterThan(0);
-
-        log.info("Aggregate functions work correctly: {}", row);
     }
 
     @Test
     void testDateMacros() {
-        log.info("Testing DATE MACROS");
 
         // Test @between macro for recent orders
         QueryExecutionResult recentResult = jpqlQueryTool.executeQuery(
@@ -216,14 +193,10 @@ class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
         assertThat(todayResult.success()).isTrue();
         Long todayCount = (Long) todayResult.data().getFirst().get("todayOrderCount");
         assertThat(todayCount).isNotNull();
-
-        log.info("Date macros work correctly - Recent: {}, Today: {}",
-                recentResult.data().size(), todayCount);
     }
 
     @Test
     void testRegexpFunction() {
-        log.info("Testing REGEXP function");
 
         QueryExecutionResult result = jpqlQueryTool.executeQuery(
             "SELECT c.name AS clientName FROM Client c WHERE UPPER(c.name) LIKE '%CORP%' OR UPPER(c.name) LIKE '%ENTERPRISE%'",
@@ -232,14 +205,11 @@ class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
         );
 
         if (result.success()) {
-            log.info("LIKE-based pattern matching works, found {} matching clients", result.data().size());
-
             for (Map<String, Object> row : result.data()) {
                 String name = (String) row.get("clientName");
                 assertThat(name.toLowerCase()).containsAnyOf("corp", "enterprise");
             }
         } else {
-            log.warn("Pattern matching functions not supported: {}", result.errorMessage());
             assertThat(result.errorMessage()).isNotNull();
         }
     }
@@ -266,8 +236,6 @@ class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
         createTestOrder(regularClient, "REG-002", new BigDecimal("7500.50"), LocalDate.now().minusDays(30));
 
         createTestOrder(smallClient, "START-001", new BigDecimal("1200.00"), LocalDate.now().minusDays(45));
-
-        log.info("Created test data: 4 clients with 8 orders for JPQL function testing");
     }
 
     private void createTestOrder(Client client, String orderNumber, BigDecimal total, LocalDate date) {

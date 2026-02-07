@@ -1,6 +1,7 @@
 package com.company.crm.ai.jmix.query;
 
 import io.jmix.core.DataManager;
+import io.jmix.core.EntitySerialization;
 import io.jmix.core.entity.KeyValueEntity;
 
 import org.slf4j.Logger;
@@ -19,10 +20,14 @@ public class AiJpqlQueryService {
 
     private final DataManager dataManager;
     private final AiJpqlParameterConverter parameterConverter;
+    private final EntitySerialization entitySerialization;
 
-    public AiJpqlQueryService(DataManager dataManager, AiJpqlParameterConverter parameterConverter) {
+    public AiJpqlQueryService(DataManager dataManager,
+                             AiJpqlParameterConverter parameterConverter,
+                             EntitySerialization entitySerialization) {
         this.dataManager = dataManager;
         this.parameterConverter = parameterConverter;
+        this.entitySerialization = entitySerialization;
     }
 
 
@@ -76,6 +81,7 @@ public class AiJpqlQueryService {
 
             log.debug("Query executed successfully with {} parameters, {} rows returned",
                     converted ? "converted" : "original", results.size());
+            log.debug("Result data: {}", resultMaps);
 
             return new QueryExecutionResult(
                     true,
@@ -97,6 +103,7 @@ public class AiJpqlQueryService {
 
     /**
      * Convert KeyValueEntity results to List of Maps
+     * Uses Jmix EntitySerialization to handle entities safely
      */
     private List<Map<String, Object>> convertToMapList(List<KeyValueEntity> results, String[] propertyNames) {
         if (results == null || results.isEmpty()) {
@@ -111,7 +118,7 @@ public class AiJpqlQueryService {
 
                 for (String propName : propertyNames) {
                     Object value = entity.getValue(propName);
-                    rowMap.put(propName, value);
+                    rowMap.put(propName, convertToSerializableValue(value));
                 }
 
                 resultList.add(rowMap);
@@ -122,6 +129,46 @@ public class AiJpqlQueryService {
         } catch (Exception e) {
             log.error("Error converting KeyValueEntities to Maps: {}", e.getMessage());
             return new ArrayList<>();
+        }
+    }
+
+    /**
+     * Convert value to a JSON-serializable representation using Jmix EntitySerialization
+     */
+    private Object convertToSerializableValue(Object value) {
+        if (value == null) {
+            return null;
+        }
+
+        // For primitive types, return as-is (they're already JSON-serializable)
+        if (value instanceof String || value instanceof Number || value instanceof Boolean) {
+            return value;
+        }
+
+        // Handle Java time types specially - GSON can't serialize them due to module system restrictions
+        if (value instanceof java.time.LocalDate ||
+            value instanceof java.time.LocalDateTime ||
+            value instanceof java.time.LocalTime ||
+            value instanceof java.time.OffsetDateTime ||
+            value instanceof java.time.ZonedDateTime ||
+            value instanceof java.time.Instant) {
+            return value.toString(); // ISO format string representation
+        }
+
+        // Handle Date types
+        if (value instanceof java.util.Date) {
+            return value.toString();
+        }
+
+        // For complex objects (entities, collections), use Jmix EntitySerialization
+        // This avoids lazy loading issues by only serializing loaded attributes
+        try {
+            return entitySerialization.objectToJson(value);
+        } catch (Exception e) {
+            log.debug("EntitySerialization failed for {}, using toString(): {}",
+                     value.getClass().getSimpleName(), e.getMessage());
+            // Fallback to toString if serialization fails completely
+            return value.toString();
         }
     }
 }

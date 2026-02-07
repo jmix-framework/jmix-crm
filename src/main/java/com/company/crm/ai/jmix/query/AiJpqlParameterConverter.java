@@ -21,7 +21,7 @@ import java.util.UUID;
  * Philosophy: We maintain a list of target types that we systematically try to convert to.
  * We ask Spring: "Can you convert this string to each target type?" and use the first successful conversion.
  */
-@Component("crm_JpqlParameterConverter")
+@Component("ai_JpqlParameterConverter")
 public class AiJpqlParameterConverter {
 
     private static final Logger log = LoggerFactory.getLogger(AiJpqlParameterConverter.class);
