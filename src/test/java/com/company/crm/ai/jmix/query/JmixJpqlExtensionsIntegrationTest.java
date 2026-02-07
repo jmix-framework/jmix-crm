@@ -6,6 +6,7 @@ import com.company.crm.model.order.Order;
 import com.company.crm.util.extenstion.AuthenticatedAs;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -22,11 +23,11 @@ import static org.assertj.core.api.Assertions.*;
 @AuthenticatedAs(AuthenticatedAs.ADMIN_USERNAME)
 class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
 
+    @Autowired
     private JpqlQueryTool jpqlQueryTool;
 
     @BeforeEach
     void setUp() {
-        jpqlQueryTool = applicationContext.getBean(JpqlQueryTool.class);
         setupTestData();
     }
 
@@ -43,10 +44,10 @@ class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
         assertThat(result.success()).isTrue();
         assertThat(result.data()).isNotEmpty();
 
-        // Verify we have year data (might be current or previous year depending on test data)
+        // Verify we have year data - should be current year since test data uses LocalDate.now()
         Map<String, Object> firstRow = result.data().getFirst();
         Integer year = (Integer) firstRow.get("orderYear");
-        assertThat(year).isBetween(2024, 2026); // Allow some flexibility for test dates
+        assertThat(year).isEqualTo(LocalDate.now().getYear());
         assertThat(firstRow.get("orderMonth")).isInstanceOf(Integer.class);
         assertThat(firstRow.get("orderCount")).isInstanceOf(Long.class);
     }
