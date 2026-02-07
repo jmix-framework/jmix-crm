@@ -27,10 +27,6 @@ class ParameterTypeTest {
                 "text", "Hello World"
         );
 
-        log.info("=== Well-typed parameters (Jackson did its job): ===");
-        wellTypedParameters.forEach((key, value) -> {
-            log.info("  {}: {} ({})", key, value, value.getClass().getSimpleName());
-        });
 
         // Scenario 2: LLM sends everything as strings (worst case)
         Map<String, Object> stringParameters = Map.of(
@@ -41,10 +37,6 @@ class ParameterTypeTest {
                 "text", "Hello World"
         );
 
-        log.info("=== String parameters (Jackson didn't help): ===");
-        stringParameters.forEach((key, value) -> {
-            log.info("  {}: {} ({})", key, value, value.getClass().getSimpleName());
-        });
 
         // Scenario 3: Mixed (realistic)
         Map<String, Object> mixedParameters = Map.of(
