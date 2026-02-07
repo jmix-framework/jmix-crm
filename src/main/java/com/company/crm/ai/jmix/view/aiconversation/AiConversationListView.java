@@ -35,7 +35,6 @@ public class AiConversationListView extends StandardListView<AiConversation> {
         String welcomeMessage = messages.getMessage("aiConversation.welcomeMessage");
         AiConversation savedConversation = aiConversationService.createNewConversation(welcomeMessage);
 
-        // Navigate to the detail view with the saved conversation
         viewNavigators.detailView(this, AiConversation.class)
                 .editEntity(savedConversation)
                 .navigate();
