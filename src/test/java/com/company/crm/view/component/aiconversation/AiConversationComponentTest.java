@@ -21,31 +21,22 @@ public class AiConversationComponentTest extends AbstractUiTest {
     @Autowired
     private ViewNavigators viewNavigators;
 
-    // No mocks needed - TestAiAnnotationsView has built-in @Install messageProcessor
-
     @Test
     public void test_messageProcessing() {
-        // Navigate to test view
         TestAiAnnotationsView view = navigateToTestAnnotationsView();
 
-        // Verify view opened successfully
         assertThat(view).isNotNull();
 
-        // Get the AI component
         AiConversationComponent aiComponent = view.aiComponent;
         assertThat(aiComponent).isNotNull();
 
-        // Test message processing by sending a message
         aiComponent.submitMessage("Test message");
 
-        // Verify message was processed
-        assertThat(getMessageCount(aiComponent)).isEqualTo(2); // user message + AI response
+        assertThat(getMessageCount(aiComponent)).isEqualTo(2);
 
-        // Verify user message
         String userMessage = getMessageText(aiComponent, 0);
         assertThat(userMessage).isEqualTo("Test message");
 
-        // Verify AI response
         String aiResponse = getMessageText(aiComponent, 1);
         assertThat(aiResponse).isEqualTo("Annotation processed: TEST MESSAGE (processed via @Install)");
         assertThat(getMessageAuthor(aiComponent, 1)).isEqualTo("crm.assistant.name"); // Message key wird nicht aufgelöst
