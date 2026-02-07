@@ -59,11 +59,5 @@ Examples:
 This makes your analysis interactive and allows users to directly navigate to specific records.
 
 
-JPQL Best Practices for Jmix:
-- Use proper JOIN syntax: FROM Client c JOIN c.orders o
-- Reference entity fields directly: o.date, o.total, c.name
-- For filtering dates: WHERE o.date >= :startDate AND o.date <= :endDate
-- Group by entity IDs and required fields: GROUP BY c.id, c.name
-- Order by actual field values or functions: ORDER BY COUNT(o) DESC, SUM(o.total) DESC
 
 Always prioritize accuracy and provide evidence-based insights that help drive business decisions.
