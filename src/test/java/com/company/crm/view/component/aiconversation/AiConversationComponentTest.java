@@ -23,7 +23,7 @@ public class AiConversationComponentTest extends AbstractUiTest {
 
     @Test
     public void test_messageProcessing() {
-        TestAiAnnotationsView view = navigateToTestAnnotationsView();
+        AiConversationAnnotationTestView view = navigateToTestAnnotationsView();
 
         assertThat(view).isNotNull();
 
@@ -45,7 +45,7 @@ public class AiConversationComponentTest extends AbstractUiTest {
     @Test
     public void test_basicFunctionality() {
         // Navigate to test annotations view
-        TestAiAnnotationsView view = navigateToTestAnnotationsView();
+        AiConversationAnnotationTestView view = navigateToTestAnnotationsView();
 
         // Verify view opened successfully
         assertThat(view).isNotNull();
@@ -67,7 +67,7 @@ public class AiConversationComponentTest extends AbstractUiTest {
     @Test
     public void test_messageSentHandler() {
         // Navigate to test annotations view
-        TestAiAnnotationsView view = navigateToTestAnnotationsView();
+        AiConversationAnnotationTestView view = navigateToTestAnnotationsView();
 
         // Verify view opened successfully and component is properly configured
         assertThat(view).isNotNull();
@@ -85,9 +85,9 @@ public class AiConversationComponentTest extends AbstractUiTest {
     }
 
     // Helper methods
-    private TestAiAnnotationsView navigateToTestAnnotationsView() {
+    private AiConversationAnnotationTestView navigateToTestAnnotationsView() {
         // Navigate to test annotations view
-        viewNavigators.view(UiTestUtils.getCurrentView(), TestAiAnnotationsView.class).navigate();
+        viewNavigators.view(UiTestUtils.getCurrentView(), AiConversationAnnotationTestView.class).navigate();
         return UiTestUtils.getCurrentView();
     }
 
