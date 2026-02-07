@@ -24,7 +24,6 @@ import static org.assertj.core.api.Assertions.*;
 /**
  * Integration test demonstrating callback pattern improvements with AiConversationComponent.
  * Shows the evolution from hacky to clean Jmix Function-based patterns.
- * TODO: Add @Supply/@Install support once we understand the exact Jmix framework requirements.
  */
 @UiTest
 @ExtendWith(DataCleaner.class)
