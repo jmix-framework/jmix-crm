@@ -8,7 +8,6 @@ import com.company.crm.ai.jmix.introspection.model.AiPropertyDescriptor;
 import com.company.crm.ai.jmix.testmodel.OriginalTestEntity;
 import com.company.crm.ai.jmix.testmodel.ReplacedTestEntity;
 import io.jmix.core.Metadata;
-import io.jmix.core.MetadataTools;
 import io.jmix.core.metamodel.model.MetaClass;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,13 +20,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Tests for AI Domain Model Introspector with Jmix Data Model Extensions (@ReplaceEntity)
  */
-class AiDomainModelExtensionTest extends AbstractTest {
+class AiDomainModelIntrospectorModelExtensionTest extends AbstractTest {
 
     @Autowired
     private JpaDomainModelIntrospector introspector;
-
-    @Autowired
-    private MetadataTools metadataTools;
 
     @Autowired
     private Metadata metadata;
