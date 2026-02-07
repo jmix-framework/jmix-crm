@@ -88,8 +88,9 @@ public class AiConversationCallbackTest extends AbstractUiTest {
     }
 
     /**
-     * Simple Test View that demonstrates improved Function-based callback patterns.
-     * No complex @Install/@Supply for now - just clean programmatic API.
+     * Test view that demonstrates programmatic AI conversation callback configuration.
+     * This view uses function-based callback patterns instead of complex annotation-based
+     * approaches, providing a clean API for handling AI conversation interactions.
      */
     @Route(value = "test-callback-ai-conversation")
     @ViewController("CallbackTestView")

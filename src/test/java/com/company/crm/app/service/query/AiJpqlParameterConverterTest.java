@@ -15,7 +15,9 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.*;
 
 /**
- * Test for the simplified JpqlParameterConverter that only handles obvious conversions
+ * Integration tests for {@link AiJpqlParameterConverter} that verify parameter conversion functionality.
+ * Tests focus on the converter's ability to handle basic parameter types and transformations
+ * required for AI-assisted JPQL query processing.
  */
 @SpringBootTest
 @ActiveProfiles("test")
