@@ -55,13 +55,10 @@ import io.jmix.flowui.view.*;
 import org.apache.commons.lang3.StringUtils;
 import org.jspecify.annotations.Nullable;
 import com.company.crm.ai.entity.AiConversation;
-import com.company.crm.ai.jmix.memory.JmixChatMemoryRepository;
 import com.company.crm.ai.service.AiConversationService;
 import com.company.crm.view.component.aiconversation.AiConversationComponent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
-import org.springframework.ai.chat.messages.AssistantMessage;
-import org.springframework.ai.chat.messages.Message;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -104,8 +101,6 @@ public class MainView extends StandardMainView {
     private CrmAnalyticsAsyncLoader crmAnalyticsAsyncLoader;
     @Autowired
     private AiConversationService aiConversationService;
-    @Autowired
-    private JmixChatMemoryRepository chatMemoryRepository;
 
     @Autowired(required = false)
     private OnlineDemoDataCreator onlineDemoDataCreator;
@@ -475,23 +470,9 @@ public class MainView extends StandardMainView {
      * HistoryLoader for popover AI component - loads conversation history
      */
     private List<MessageListItem> loadPopoverHistory(String conversationId) {
-        log.info("Loading popover history for conversation: {}", conversationId);
-        List<Message> messages = chatMemoryRepository.findByConversationId(conversationId);
-
-        return messages.stream()
-                .map(this::createMessageItem)
-                .toList();
+        return crmAnalyticsAsyncLoader.loadConversationHistory(conversationId);
     }
 
-    private MessageListItem createMessageItem(Message message) {
-        boolean isAssistant = message instanceof AssistantMessage;
-        MessageListItem item = new MessageListItem(
-                message.getText(),
-                isAssistant ? "Assistant" : currentAuthentication.getUser().getUsername()
-        );
-        item.setUserColorIndex(isAssistant ? 2 : 1);
-        return item;
-    }
 
     private String getCurrentPopoverConversationId() {
         return currentAiComponent != null ? currentAiComponent.getConversationId() : null;
