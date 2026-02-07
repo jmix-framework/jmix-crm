@@ -30,6 +30,10 @@
           title="msg:///menu_config.orders.title"
           icon="vaadin:cart"/>
 
+    <item view="AiConversation.list"
+          title="msg://com.company.crm.ai.jmix.view.aiconversation/aiConversationListView.title"
+          icon="vaadin:magic"/>
+
     <menu id="finance"
           title="msg:///menu_config.finance.title"
           icon="vaadin:pie-chart"

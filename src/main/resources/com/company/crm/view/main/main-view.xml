@@ -42,6 +42,8 @@
                         <icon icon="SEARCH"/>
                     </suffix>
                 </textField>
+                <button id="chatButton" icon="MAGIC" themeNames="tertiary" classNames="me-l"
+                        text="msg://crmAiButton"/>
                 <button id="notificationsButton" icon="BELL_O" themeNames="tertiary" classNames="me-l"
                         css="background-color: var(--lumo-shade-5pct);"/>
                 <userMenu id="userMenu" themeNames="tertiary" classNames="me-l">

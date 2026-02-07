@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      xmlns:ai="http://company.crm/ai-conversation-component.xsd"
+      title="AI Callback Test View">
+    <layout>
+        <vbox>
+            <ai:aiConversation id="aiComponent"
+                               showHeader="true"
+                               headerTitle="Callback Test Assistant"
+                               assistantName="Assistant"
+                               userName="User"
+                               width="100%" height="400px"/>
+        </vbox>
+    </layout>
+</view>

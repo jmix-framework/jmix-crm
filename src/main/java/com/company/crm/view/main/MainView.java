@@ -1,6 +1,7 @@
 package com.company.crm.view.main;
 
 import com.company.crm.app.online.OnlineDemoDataCreator;
+import com.company.crm.app.service.ai.CrmAnalyticsAsyncLoader;
 import com.company.crm.app.ui.component.CrmLoader;
 import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.model.client.Client;
@@ -22,17 +23,19 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.popover.Popover;
+import com.vaadin.flow.component.messages.MessageListItem;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.Route;
+import io.jmix.core.DataManager;
 import io.jmix.core.Messages;
 import io.jmix.core.Metadata;
 import io.jmix.core.security.CurrentAuthentication;
+import io.jmix.flowui.asynctask.UiAsyncTasks;
 import io.jmix.core.usersubstitution.CurrentUserSubstitution;
 import io.jmix.flowui.DialogWindows;
 import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.ViewNavigators;
 import io.jmix.flowui.app.main.StandardMainView;
-import io.jmix.flowui.asynctask.UiAsyncTasks;
 import io.jmix.flowui.component.SupportsTypedValue.TypedValueChangeEvent;
 import io.jmix.flowui.component.main.JmixListMenu;
 import io.jmix.flowui.component.main.JmixListMenu.ViewMenuItem;
@@ -48,11 +51,17 @@ import io.jmix.flowui.view.View;
 import io.jmix.flowui.view.ViewComponent;
 import io.jmix.flowui.view.ViewController;
 import io.jmix.flowui.view.ViewDescriptor;
+import io.jmix.flowui.view.*;
 import org.apache.commons.lang3.StringUtils;
 import org.jspecify.annotations.Nullable;
+import com.company.crm.ai.entity.AiConversation;
+import com.company.crm.ai.service.AiConversationService;
+import com.company.crm.view.component.aiconversation.AiConversationComponent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -65,6 +74,8 @@ import static com.company.crm.app.util.demo.DemoUtils.defaultSleepForClientsSear
 @ViewController(id = CrmConstants.ViewIds.MAIN)
 @ViewDescriptor(path = "main-view.xml")
 public class MainView extends StandardMainView {
+
+    private static final Logger log = LoggerFactory.getLogger(MainView.class);
 
     @Autowired
     private Messages messages;
@@ -84,6 +95,12 @@ public class MainView extends StandardMainView {
     private CurrentAuthentication currentAuthentication;
     @Autowired
     private CurrentUserSubstitution currentUserSubstitution;
+    @Autowired
+    private DataManager dataManager;
+    @Autowired
+    private CrmAnalyticsAsyncLoader crmAnalyticsAsyncLoader;
+    @Autowired
+    private AiConversationService aiConversationService;
 
     @Autowired(required = false)
     private OnlineDemoDataCreator onlineDemoDataCreator;
@@ -94,9 +111,15 @@ public class MainView extends StandardMainView {
     private TypedTextField<String> searchField;
     @ViewComponent
     private JmixButton notificationsButton;
+    @ViewComponent
+    private JmixButton chatButton;
 
     final Popover[] searchPopover = {null};
     final Popover[] notificationsPopover = {null};
+    final Popover[] chatPopover = {null};
+    private AiConversationComponent currentAiComponent = null;
+    @ViewComponent
+    private MessageBundle messageBundle;
 
     @Subscribe
     private void onReady(final ReadyEvent event) {
@@ -193,6 +216,55 @@ public class MainView extends StandardMainView {
         onNotificationButtonClick();
     }
 
+    @Subscribe(id = "chatButton", subject = "clickListener")
+    private void onChatButtonClick(final ClickEvent<JmixButton> event) {
+        Optional.ofNullable(chatPopover[0]).ifPresent(Popover::removeFromParent);
+
+        String welcomeMessage = messages.getMessage("aiConversation.welcomeMessage");
+        final AiConversation savedConversation = aiConversationService.createNewConversation(welcomeMessage);
+
+        AiConversationComponent aiComponent = uiComponents.create(AiConversationComponent.class);
+
+        aiComponent.setUserName(currentAuthentication.getUser().getUsername());
+        aiComponent.setConversationId(savedConversation.getId().toString());
+
+        aiComponent.setMessageProcessor(this::processPopoverMessage);
+        aiComponent.setHistoryLoader(this::loadPopoverHistory);
+
+        aiComponent.setHeaderButtonProvider(() -> {
+            JmixButton openInViewButton = uiComponents.create(JmixButton.class);
+            openInViewButton.setText(messageBundle.getMessage("aiConversation.openInView"));
+            openInViewButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_SMALL);
+            openInViewButton.setIcon(VaadinIcon.EXTERNAL_LINK.create());
+            openInViewButton.addClickListener(click -> {
+                Optional.ofNullable(chatPopover[0]).ifPresent(Popover::close);
+                viewNavigators.detailView(this, AiConversation.class)
+                        .editEntity(savedConversation)
+                        .navigate();
+            });
+            return List.of(openInViewButton);
+        });
+
+        aiComponent.setHeaderVisible(true);
+        aiComponent.setHeaderTitle(messageBundle.getMessage("aiConversation.title"));
+
+        aiComponent.loadHistory();
+
+        currentAiComponent = aiComponent;
+
+        Popover popover = new Popover(aiComponent);
+        popover.setTarget(chatButton);
+        popover.setWidth("40em");
+        popover.setHeight("35em");
+        popover.setCloseOnEsc(true);
+        popover.setCloseOnOutsideClick(false); // Keep chat open when clicking inside
+        popover.open();
+
+        aiComponent.focus();
+
+        chatPopover[0] = popover;
+    }
+
     @Subscribe(id = "applicationTitle", subject = "clickListener")
     private void onApplicationTitleClick(final ClickEvent<H2> event) {
         UI currentUI = UI.getCurrent();
@@ -253,6 +325,7 @@ public class MainView extends StandardMainView {
 
         notificationsPopover[0] = popover;
     }
+
 
     private void onSearchFieldValueChange(TypedValueChangeEvent<TypedTextField<String>, String> event) {
         Optional.ofNullable(searchPopover[0]).ifPresent(Popover::removeFromParent);
@@ -377,6 +450,32 @@ public class MainView extends StandardMainView {
                 buildMenuStructureRecursively(childItem, menuItem, menuStructure);
             }
         }
+    }
+
+    /**
+     * MessageProcessor for popover AI component - async processing with real CRM analytics service
+     */
+    private String processPopoverMessage(String userMessage) {
+        String conversationId = getCurrentPopoverConversationId();
+
+        if (currentAiComponent != null) {
+            crmAnalyticsAsyncLoader.processMessageAsync(userMessage, conversationId, currentAiComponent);
+        }
+
+        // Return null - async processing will handle UI updates
+        return null;
+    }
+
+    /**
+     * HistoryLoader for popover AI component - loads conversation history
+     */
+    private List<MessageListItem> loadPopoverHistory(String conversationId) {
+        return crmAnalyticsAsyncLoader.loadConversationHistory(conversationId);
+    }
+
+
+    private String getCurrentPopoverConversationId() {
+        return currentAiComponent != null ? currentAiComponent.getConversationId() : null;
     }
 
     private record MenuItemStructure(Collection<MenuItemInfo> itemsInfo) {

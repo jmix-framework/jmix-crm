@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      xmlns:ai="http://company.crm/ai-conversation-component.xsd"
+      title="AI Annotations Test View">
+    <layout>
+        <vbox id="mainVBox" padding="true" spacing="true" width="100%" height="100%">
+
+            <ai:aiConversation id="aiComponent"
+                               showHeader="true"
+                               headerTitle="msg://crm.chat.title"
+                               assistantName="msg://crm.assistant.name"
+                               userName="msg://crm.user.name"
+                               width="100%" height="400px"/>
+        </vbox>
+    </layout>
+</view>

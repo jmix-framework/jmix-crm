@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+    <changeSet id="1" author="b2b-crm">
+        <createTable tableName="AI_CONVERSATION">
+            <column name="ID" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_AI_CONVERSATION"/>
+            </column>
+            <column name="TITLE" type="VARCHAR(255)"/>
+            <column name="CREATED_BY" type="VARCHAR(255)"/>
+            <column name="CREATED_DATE" type="${offsetDateTime.type}"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="2" author="b2b-crm">
+        <createTable tableName="CHAT_MESSAGE">
+            <column name="ID" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_CHAT_MESSAGE"/>
+            </column>
+            <column name="CONVERSATION_ID" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CONTENT" type="CLOB"/>
+            <column name="CREATED_BY" type="VARCHAR(255)"/>
+            <column name="CREATED_DATE" type="${offsetDateTime.type}"/>
+            <column name="TYPE_" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet id="3" author="b2b-crm">
+        <createIndex indexName="IDX_CHAT_MESSAGE" tableName="CHAT_MESSAGE">
+            <column name="CONVERSATION_ID"/>
+            <column name="CREATED_DATE"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="4" author="b2b-crm">
+        <createIndex indexName="IDX_CHAT_MESSAGE_CONVERSATION" tableName="CHAT_MESSAGE">
+            <column name="CONVERSATION_ID"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseColumnNames="CONVERSATION_ID" baseTableName="CHAT_MESSAGE"
+                                 constraintName="FK_CHAT_MESSAGE_ON_CONVERSATION" referencedColumnNames="ID"
+                                 referencedTableName="AI_CONVERSATION"/>
+    </changeSet>
+</databaseChangeLog>

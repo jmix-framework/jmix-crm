@@ -86,6 +86,13 @@ dependencies {
     // For online mode
     implementation 'org.apache.commons:commons-dbcp2'
 
+    //              --- [ AI ] ---
+    implementation platform("org.springframework.ai:spring-ai-bom:1.1.2")
+    implementation 'org.springframework.ai:spring-ai-starter-model-bedrock-converse'
+
+    //              --- [ YAML ] ---
+    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml'
+
     //              --- [ OTHER ] ---
     // Java Faker for demo data generation
     implementation 'net.datafaker:datafaker:2.5.0'
