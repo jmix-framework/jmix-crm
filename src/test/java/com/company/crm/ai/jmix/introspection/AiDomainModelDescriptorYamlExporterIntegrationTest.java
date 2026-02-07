@@ -1,7 +1,6 @@
-package com.company.crm.ai.jmix;
+package com.company.crm.ai.jmix.introspection;
 
 import com.company.crm.AbstractTest;
-import com.company.crm.ai.jmix.introspection.AiDomainModelDescriptorYamlExporter;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.invoice.Invoice;
 import org.junit.jupiter.api.Test;
