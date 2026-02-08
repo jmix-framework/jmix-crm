@@ -15,7 +15,7 @@
     <layout>
         <vbox id="chatSection" expand="aiConversationFragment" height="100%" spacing="true">
             <fragment id="aiConversationFragment"
-                      class="com.company.crm.view.aiconversation.AiConversationFragment"
+                      class="com.company.crm.ai.jmix.view.aiconversation.AiConversationFragment"
                       width="100%" height="100%">
                 <properties>
                     <property name="conversationContainer" value="aiConversationDc" type="CONTAINER_REF"/>

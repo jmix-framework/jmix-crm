@@ -1,7 +1,7 @@
 package com.company.crm.ai.jmix.view.aiconversation;
 
 import com.company.crm.ai.entity.AiConversation;
-import com.company.crm.view.aiconversation.AiConversationFragment;
+import com.company.crm.ai.jmix.view.aiconversation.AiConversationFragment;
 import com.company.crm.view.main.MainView;
 import com.vaadin.flow.router.Route;
 import io.jmix.core.security.CurrentAuthentication;

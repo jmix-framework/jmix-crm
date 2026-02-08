@@ -1,4 +1,4 @@
-package com.company.crm.view.aiconversation;
+package com.company.crm.ai.jmix.view.aiconversation;
 
 import com.company.crm.ai.entity.AiConversation;
 import com.company.crm.ai.entity.ChatMessage;
