@@ -16,6 +16,7 @@ import io.jmix.flowui.fragment.Fragment;
 import io.jmix.flowui.fragment.FragmentDescriptor;
 import io.jmix.flowui.model.CollectionContainer;
 import io.jmix.flowui.model.InstanceContainer;
+import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.view.Subscribe;
 import io.jmix.flowui.view.ViewComponent;
 import org.slf4j.Logger;
@@ -34,14 +35,14 @@ public class AiConversationFragment extends Fragment<VerticalLayout> {
 
     private static final Logger log = LoggerFactory.getLogger(AiConversationFragment.class);
 
-    @ViewComponent
     private MessageList messageList;
-
-    @ViewComponent
     private MessageInput messageInput;
 
     @ViewComponent
     private ProgressBar progressBar;
+
+    @ViewComponent
+    private VerticalLayout mainLayout;
 
     @ViewComponent
     private InstanceContainer<AiConversation> conversationDc;
@@ -61,6 +62,9 @@ public class AiConversationFragment extends Fragment<VerticalLayout> {
     @Autowired
     private UiAsyncTasks uiAsyncTasks;
 
+    @Autowired
+    private UiComponents uiComponents;
+
     private String assistantName = "Assistant";
     private String userName = "User";
 
@@ -71,15 +75,22 @@ public class AiConversationFragment extends Fragment<VerticalLayout> {
     }
 
     private void initializeFragment() {
-        // Configure MessageList
+        // Create MessageList programmatically
+        messageList = uiComponents.create(MessageList.class);
         messageList.setSizeFull();
         messageList.setMarkdown(true);
 
-        // Configure MessageInput
+        // Create MessageInput programmatically
+        messageInput = uiComponents.create(MessageInput.class);
         messageInput.setWidthFull();
         messageInput.addSubmitListener(this::onMessageSubmit);
 
-        // Configure ProgressBar
+        // Add components to layout
+        mainLayout.add(messageList);
+        mainLayout.add(messageInput);
+        mainLayout.setFlexGrow(1, messageList);
+
+        // Configure ProgressBar (already in XML)
         progressBar.setIndeterminate(true);
         progressBar.setVisible(false);
 
