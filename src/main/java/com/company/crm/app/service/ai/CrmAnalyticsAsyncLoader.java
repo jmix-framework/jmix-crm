@@ -1,7 +1,5 @@
 package com.company.crm.app.service.ai;
 
-import com.company.crm.view.component.aiconversation.AiConversationComponent;
-import com.company.crm.view.component.aiconversation.AiConversationComponentAsyncMessageProcessor;
 import org.springframework.ai.chat.memory.ChatMemoryRepository;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
@@ -11,39 +9,31 @@ import com.vaadin.flow.component.messages.MessageListItem;
 import java.util.List;
 
 /**
- * CRM-specific async loader that handles AI analytics processing.
- * Uses the generic AiComponentAsyncConversationLoader for UI updates.
+ * CRM-specific service that handles AI analytics processing and history loading.
+ * Provides methods for both async processing and conversation history retrieval.
  */
 @Component
 public class CrmAnalyticsAsyncLoader {
 
     private final CrmAnalyticsService crmAnalyticsService;
-    private final AiConversationComponentAsyncMessageProcessor aiConversationComponentAsyncMessageProcessor;
     private final ChatMemoryRepository chatMemoryRepository;
 
     public CrmAnalyticsAsyncLoader(CrmAnalyticsService crmAnalyticsService,
-                                 AiConversationComponentAsyncMessageProcessor aiConversationComponentAsyncMessageProcessor,
                                  ChatMemoryRepository chatMemoryRepository) {
         this.crmAnalyticsService = crmAnalyticsService;
-        this.aiConversationComponentAsyncMessageProcessor = aiConversationComponentAsyncMessageProcessor;
         this.chatMemoryRepository = chatMemoryRepository;
     }
 
     /**
-     * Processes a user message asynchronously using CRM analytics service and updates the AI component.
+     * Processes a business question using the CRM analytics service.
+     * This method is synchronous and should be called within async context.
      *
      * @param userMessage the user's message
      * @param conversationId the conversation ID
-     * @param aiComponent the AI component to update
+     * @return the AI response
      */
-    public void processMessageAsync(String userMessage, String conversationId,
-                                  AiConversationComponent aiComponent) {
-        aiConversationComponentAsyncMessageProcessor.processMessage(
-            userMessage,
-            conversationId,
-            aiComponent,
-            (message, convId) -> crmAnalyticsService.processBusinessQuestion(message, convId)
-        );
+    public String processBusinessQuestion(String userMessage, String conversationId) {
+        return crmAnalyticsService.processBusinessQuestion(userMessage, conversationId);
     }
 
     /**

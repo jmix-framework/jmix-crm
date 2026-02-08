@@ -56,7 +56,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.jspecify.annotations.Nullable;
 import com.company.crm.ai.entity.AiConversation;
 import com.company.crm.ai.service.AiConversationService;
-import com.company.crm.view.component.aiconversation.AiConversationComponent;
+// Note: AiConversationComponent removed - popover chat temporarily disabled
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -117,7 +117,7 @@ public class MainView extends StandardMainView {
     final Popover[] searchPopover = {null};
     final Popover[] notificationsPopover = {null};
     final Popover[] chatPopover = {null};
-    private AiConversationComponent currentAiComponent = null;
+    // Note: currentAiComponent removed - popover chat temporarily disabled
     @ViewComponent
     private MessageBundle messageBundle;
 
@@ -218,51 +218,14 @@ public class MainView extends StandardMainView {
 
     @Subscribe(id = "chatButton", subject = "clickListener")
     private void onChatButtonClick(final ClickEvent<JmixButton> event) {
-        Optional.ofNullable(chatPopover[0]).ifPresent(Popover::removeFromParent);
-
+        // Create new conversation and navigate directly to detail view
         String welcomeMessage = messages.getMessage("aiConversation.welcomeMessage");
         final AiConversation savedConversation = aiConversationService.createNewConversation(welcomeMessage);
 
-        AiConversationComponent aiComponent = uiComponents.create(AiConversationComponent.class);
-
-        aiComponent.setUserName(currentAuthentication.getUser().getUsername());
-        aiComponent.setConversationId(savedConversation.getId().toString());
-
-        aiComponent.setMessageProcessor(this::processPopoverMessage);
-        aiComponent.setHistoryLoader(this::loadPopoverHistory);
-
-        aiComponent.setHeaderButtonProvider(() -> {
-            JmixButton openInViewButton = uiComponents.create(JmixButton.class);
-            openInViewButton.setText(messageBundle.getMessage("aiConversation.openInView"));
-            openInViewButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_SMALL);
-            openInViewButton.setIcon(VaadinIcon.EXTERNAL_LINK.create());
-            openInViewButton.addClickListener(click -> {
-                Optional.ofNullable(chatPopover[0]).ifPresent(Popover::close);
-                viewNavigators.detailView(this, AiConversation.class)
-                        .editEntity(savedConversation)
-                        .navigate();
-            });
-            return List.of(openInViewButton);
-        });
-
-        aiComponent.setHeaderVisible(true);
-        aiComponent.setHeaderTitle(messageBundle.getMessage("aiConversation.title"));
-
-        aiComponent.loadHistory();
-
-        currentAiComponent = aiComponent;
-
-        Popover popover = new Popover(aiComponent);
-        popover.setTarget(chatButton);
-        popover.setWidth("40em");
-        popover.setHeight("35em");
-        popover.setCloseOnEsc(true);
-        popover.setCloseOnOutsideClick(false); // Keep chat open when clicking inside
-        popover.open();
-
-        aiComponent.focus();
-
-        chatPopover[0] = popover;
+        // Navigate to the detail view with the Fragment-based interface
+        viewNavigators.detailView(this, AiConversation.class)
+                .editEntity(savedConversation)
+                .navigate();
     }
 
     @Subscribe(id = "applicationTitle", subject = "clickListener")
@@ -452,31 +415,8 @@ public class MainView extends StandardMainView {
         }
     }
 
-    /**
-     * MessageProcessor for popover AI component - async processing with real CRM analytics service
-     */
-    private String processPopoverMessage(String userMessage) {
-        String conversationId = getCurrentPopoverConversationId();
-
-        if (currentAiComponent != null) {
-            crmAnalyticsAsyncLoader.processMessageAsync(userMessage, conversationId, currentAiComponent);
-        }
-
-        // Return null - async processing will handle UI updates
-        return null;
-    }
-
-    /**
-     * HistoryLoader for popover AI component - loads conversation history
-     */
-    private List<MessageListItem> loadPopoverHistory(String conversationId) {
-        return crmAnalyticsAsyncLoader.loadConversationHistory(conversationId);
-    }
-
-
-    private String getCurrentPopoverConversationId() {
-        return currentAiComponent != null ? currentAiComponent.getConversationId() : null;
-    }
+    // Note: Popover-specific message processing methods removed
+    // Chat functionality now uses the Fragment-based detail view
 
     private record MenuItemStructure(Collection<MenuItemInfo> itemsInfo) {
 
