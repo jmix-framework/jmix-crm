@@ -36,6 +36,9 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
             aiConversationFragment.setUserName(userName);
         }
 
+        // Pass the conversation to the fragment
+        aiConversationFragment.setConversation(getEditedEntity());
+
         // Focus the fragment
         aiConversationFragment.focus();
 
