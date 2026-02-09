@@ -35,6 +35,7 @@ public class AiConversation {
 
     @Composition
     @OneToMany(mappedBy = "conversation")
+    @OrderBy("createdDate ASC")
     private List<ChatMessage> messages;
 
     public List<ChatMessage> getMessages() {

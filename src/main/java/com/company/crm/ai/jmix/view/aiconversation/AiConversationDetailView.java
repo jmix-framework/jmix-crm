@@ -26,18 +26,14 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
 
     @Subscribe
     public void onReady(ReadyEvent event) {
-        setupConversationFragment();
-    }
+        // Set conversation ID for the fragment
+        aiConversationFragment.setConversationId(getEditedEntity().getId());
 
-    private void setupConversationFragment() {
         // Set user name from current authentication
         if (currentAuthentication.getUser() instanceof com.company.crm.model.user.User) {
             String userName = ((com.company.crm.model.user.User) currentAuthentication.getUser()).getUsername();
             aiConversationFragment.setUserName(userName);
         }
-
-        // Pass the conversation to the fragment
-        aiConversationFragment.setConversation(getEditedEntity());
 
         // Focus the fragment
         aiConversationFragment.focus();

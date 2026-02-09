@@ -9,26 +9,24 @@ import com.vaadin.flow.component.messages.MessageList;
 import com.vaadin.flow.component.messages.MessageListItem;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.progressbar.ProgressBar;
-import io.jmix.core.DataManager;
 import io.jmix.core.security.CurrentAuthentication;
 import io.jmix.flowui.asynctask.UiAsyncTasks;
 import io.jmix.flowui.fragment.Fragment;
 import io.jmix.flowui.fragment.FragmentDescriptor;
-// No more data containers - work directly with injected conversation
 import io.jmix.flowui.UiComponents;
+import io.jmix.core.DataManager;
 import io.jmix.flowui.view.Subscribe;
 import io.jmix.flowui.view.ViewComponent;
-// BeforeShowEvent not available for Fragments
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.OffsetDateTime;
-import java.util.List;
+import java.util.UUID;
 
 /**
  * Fragment for AI conversation interface that provides chat functionality.
- * Works directly with AiConversation and ChatMessage entities for simplified data handling.
+ * Has its own data loading logic and works with conversationId parameter.
  */
 @FragmentDescriptor("ai-conversation-fragment.xml")
 public class AiConversationFragment extends Fragment<VerticalLayout> {
@@ -43,8 +41,6 @@ public class AiConversationFragment extends Fragment<VerticalLayout> {
 
     @ViewComponent
     private VerticalLayout mainLayout;
-
-    private AiConversation conversation;
 
     @Autowired
     private CrmAnalyticsService crmAnalyticsService;
@@ -63,24 +59,15 @@ public class AiConversationFragment extends Fragment<VerticalLayout> {
 
     private String assistantName = "Assistant";
     private String userName = "User";
+    private UUID conversationId;
 
     /**
-     * Sets the conversation for this Fragment to work with.
+     * Sets the conversation ID for this fragment.
      */
-    public void setConversation(AiConversation conversation) {
-        this.conversation = conversation;
-        // Reload history when conversation changes
-        if (conversation != null && messageList != null) {
-            loadConversationHistory();
-        }
+    public void setConversationId(UUID conversationId) {
+        this.conversationId = conversationId;
     }
 
-    /**
-     * Gets the current conversation.
-     */
-    public AiConversation getConversation() {
-        return conversation;
-    }
 
     @Subscribe
     public void onReady(ReadyEvent event) {
@@ -99,65 +86,69 @@ public class AiConversationFragment extends Fragment<VerticalLayout> {
         messageInput.setWidthFull();
         messageInput.addSubmitListener(this::onMessageSubmit);
 
-        // Add components to layout
-        mainLayout.add(messageList);
-        mainLayout.add(messageInput);
-        mainLayout.setFlexGrow(1, messageList);
-
         // Configure ProgressBar (already in XML)
         progressBar.setIndeterminate(true);
         progressBar.setVisible(false);
+
+        // Add components to layout in correct order: MessageList, ProgressBar, MessageInput
+        mainLayout.remove(progressBar); // Remove from default position
+        mainLayout.add(messageList);
+        mainLayout.add(progressBar); // Add between list and input
+        mainLayout.add(messageInput);
+        mainLayout.setFlexGrow(1, messageList);
 
         // Set user name from current authentication
         if (currentAuthentication.getUser() instanceof com.company.crm.model.user.User) {
             userName = ((com.company.crm.model.user.User) currentAuthentication.getUser()).getUsername();
         }
 
-        // Load conversation history - will be called in a delayed fashion
-        loadConversationHistoryDelayed();
+        // Load conversation data if conversationId is set
+        if (conversationId != null) {
+            loadConversationData();
+        }
     }
 
     /**
-     * Loads conversation history with a slight delay to ensure data containers are ready.
+     * Loads conversation data from database using DataManager.
      */
-    private void loadConversationHistoryDelayed() {
-        // Use UI access to ensure proper timing
-        getUI().ifPresent(ui -> {
-            ui.access(() -> {
-                loadConversationHistory();
-            });
-        });
+    private void loadConversationData() {
+        log.info("Loading conversation data for ID: {}", conversationId);
+
+        AiConversation conversation = dataManager.load(AiConversation.class)
+                .id(conversationId)
+                .fetchPlan(builder -> builder.add("_base").add("messages", "_base"))
+                .optional()
+                .orElse(null);
+
+        if (conversation != null) {
+            updateMessageList(conversation);
+        } else {
+            log.warn("Conversation not found: {}", conversationId);
+        }
     }
 
     /**
-     * Loads conversation history from ChatMessage entities and displays them in the MessageList.
+     * Updates the MessageList with messages from the conversation.
      */
-    private void loadConversationHistory() {
-        if (conversation == null) {
-            log.warn("No conversation available - waiting for data");
+    private void updateMessageList(AiConversation conversation) {
+        if (messageList == null) {
             return;
         }
 
-        log.info("Loading conversation history for conversation ID: {}", conversation.getId());
+        messageList.setItems(); // Clear existing items
 
-        // Load messages from database directly
-        List<ChatMessage> messages = dataManager.load(ChatMessage.class)
-                .query("select m from ChatMessage m where m.conversation = :conversation order by m.createdDate")
-                .parameter("conversation", conversation)
-                .list();
-
-        // Convert to MessageListItems and add to MessageList
-        messageList.setItems();  // Clear existing items
-
-        if (messages != null) {
-            for (ChatMessage message : messages) {
+        if (conversation.getMessages() != null) {
+            // Messages are already sorted by createdDate via @OrderBy annotation on the entity
+            for (ChatMessage message : conversation.getMessages()) {
                 MessageListItem item = createMessageListItem(message);
                 messageList.addItem(item);
             }
         }
 
-        log.info("Loaded {} messages for conversation", messages != null ? messages.size() : 0);
+        log.info("Updated MessageList with {} messages",
+                conversation.getMessages() != null ? conversation.getMessages().size() : 0);
     }
+
 
     /**
      * Converts a ChatMessage entity to a MessageListItem for display.
@@ -188,8 +179,7 @@ public class AiConversationFragment extends Fragment<VerticalLayout> {
         userItem.setUserColorIndex(1);
         messageList.addItem(userItem);
 
-        // Save user message to database
-        saveMessage(userMessage, ChatMessageType.USER);
+        // User message will be saved by Spring AI ChatMemory in CrmAnalyticsService
 
         // Show progress and disable input
         showProgress();
@@ -203,11 +193,11 @@ public class AiConversationFragment extends Fragment<VerticalLayout> {
      * Processes the user message asynchronously and handles the response.
      */
     private void processMessageAsync(String userMessage) {
-        String conversationId = conversation.getId().toString();
+        String conversationIdStr = conversationId.toString();
 
         uiAsyncTasks.supplierConfigurer(() -> {
                     try {
-                        return crmAnalyticsService.processBusinessQuestion(userMessage, conversationId);
+                        return crmAnalyticsService.processBusinessQuestion(userMessage, conversationIdStr);
                     } catch (Exception e) {
                         log.error("Error processing message async", e);
                         return "I'm sorry, I encountered an error while processing your request: " + e.getMessage() +
@@ -220,12 +210,13 @@ public class AiConversationFragment extends Fragment<VerticalLayout> {
                     assistantItem.setUserColorIndex(2);
                     messageList.addItem(assistantItem);
 
-                    // Save assistant message to database
-                    saveMessage(response, ChatMessageType.ASSISTANT);
+                    // Reload conversation data to get the latest persisted messages
+                    loadConversationData();
 
-                    // Hide progress and enable input
+                    // Hide progress, enable input and focus for immediate typing
                     hideProgress();
                     messageInput.setEnabled(true);
+                    messageInput.focus();
 
                     log.info("Assistant response processed and displayed");
                 })
@@ -240,33 +231,22 @@ public class AiConversationFragment extends Fragment<VerticalLayout> {
                     errorItem.setUserColorIndex(2);
                     messageList.addItem(errorItem);
 
-                    // Hide progress and enable input
+                    // Hide progress, enable input and focus for retry
                     hideProgress();
                     messageInput.setEnabled(true);
+                    messageInput.focus();
                 })
                 .supplyAsync();
     }
 
     /**
-     * Saves a message to the database as a ChatMessage entity.
+     * Saves a message via the Spring AI ChatMemory (not directly to DataContext).
+     * The message will be persisted by the ChatMemory and can be loaded later.
      */
     private void saveMessage(String content, ChatMessageType type) {
-        if (conversation == null) {
-            log.error("Cannot save message - no conversation available");
-            return;
-        }
-
-        ChatMessage message = dataManager.create(ChatMessage.class);
-        message.setConversation(conversation);
-        message.setContent(content);
-        message.setType(type);
-        message.setCreatedDate(OffsetDateTime.now());
-        message.setCreatedBy(currentAuthentication.getUser().getUsername());
-
-        // Save the message
-        dataManager.save(message);
-
-        log.info("Saved {} message to database", type);
+        // Message is already saved by Spring AI ChatMemory in CrmAnalyticsService
+        // We don't need to manually save it here to avoid Jmix "unsaved changes" warnings
+        log.info("Message saved via Spring AI ChatMemory: {}", type);
     }
 
     /**
@@ -328,10 +308,10 @@ public class AiConversationFragment extends Fragment<VerticalLayout> {
     }
 
     /**
-     * Refreshes the conversation history from the database.
+     * Refreshes the conversation history by reloading data from database.
      */
     public void refreshHistory() {
-        loadConversationHistory();
+        loadConversationData();
     }
 
     /**

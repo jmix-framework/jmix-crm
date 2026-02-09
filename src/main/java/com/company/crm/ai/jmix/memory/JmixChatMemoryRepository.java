@@ -99,7 +99,8 @@ public class JmixChatMemoryRepository implements ChatMemoryRepository {
             for (int i = 0; i < messages.size(); i++) {
                 Message message = messages.get(i);
                 ChatMessage chatMessage = mapMessageToEntity(message, conversation);
-                chatMessage.setCreatedDate(baseTime.plusNanos(i * 1000L));
+                // Use larger time increments to ensure proper ordering even across different saveAll calls
+                chatMessage.setCreatedDate(baseTime.plusSeconds(i));
                 saveContext.saving(chatMessage);
             }
         }

@@ -9,6 +9,9 @@ import com.company.crm.model.client.ClientRepository;
 import com.company.crm.model.user.User;
 import com.company.crm.view.client.ClientListView;
 import com.company.crm.view.home.HomeView;
+import com.company.crm.ai.jmix.view.aiconversation.AiConversationFragment;
+import com.company.crm.ai.entity.AiConversation;
+import com.company.crm.ai.service.AiConversationService;
 import com.google.common.base.Strings;
 import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.Component;
@@ -18,6 +21,8 @@ import com.vaadin.flow.component.avatar.AvatarVariant;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.popover.Popover;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
@@ -35,6 +40,7 @@ import io.jmix.core.usersubstitution.CurrentUserSubstitution;
 import io.jmix.flowui.DialogWindows;
 import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.ViewNavigators;
+import io.jmix.flowui.Fragments;
 import io.jmix.flowui.app.main.StandardMainView;
 import io.jmix.flowui.component.SupportsTypedValue.TypedValueChangeEvent;
 import io.jmix.flowui.component.main.JmixListMenu;
@@ -101,6 +107,9 @@ public class MainView extends StandardMainView {
     private CrmAnalyticsAsyncLoader crmAnalyticsAsyncLoader;
     @Autowired
     private AiConversationService aiConversationService;
+
+    @Autowired
+    private Fragments fragments;
 
     @Autowired(required = false)
     private OnlineDemoDataCreator onlineDemoDataCreator;
@@ -218,14 +227,34 @@ public class MainView extends StandardMainView {
 
     @Subscribe(id = "chatButton", subject = "clickListener")
     private void onChatButtonClick(final ClickEvent<JmixButton> event) {
-        // Create new conversation and navigate directly to detail view
+        showAiConversationPopover();
+    }
+
+    private void showAiConversationPopover() {
+        // Create new conversation for the popover
         String welcomeMessage = messages.getMessage("aiConversation.welcomeMessage");
         final AiConversation savedConversation = aiConversationService.createNewConversation(welcomeMessage);
 
-        // Navigate to the detail view with the Fragment-based interface
-        viewNavigators.detailView(this, AiConversation.class)
-                .editEntity(savedConversation)
-                .navigate();
+        // Create the Fragment programmatically
+        AiConversationFragment fragment = fragments.create(this, AiConversationFragment.class);
+        fragment.setConversationId(savedConversation.getId());
+
+        // Create container for the popover
+        VerticalLayout popoverContent = uiComponents.create(VerticalLayout.class);
+        popoverContent.setWidthFull();
+        popoverContent.setHeight("500px");
+        popoverContent.add(fragment);
+
+        // Show popover
+        Popover popover = uiComponents.create(Popover.class);
+        popover.setTarget(chatButton);
+        popover.add(popoverContent);
+        popover.setWidth("600px");
+        popover.setHeight("600px");
+        popover.open();
+
+        // Focus the fragment after a short delay to ensure it's rendered
+        fragment.focus();
     }
 
     @Subscribe(id = "applicationTitle", subject = "clickListener")

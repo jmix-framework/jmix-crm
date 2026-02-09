@@ -5,9 +5,7 @@
     <data>
         <instance id="aiConversationDc"
                   class="com.company.crm.ai.entity.AiConversation">
-            <fetchPlan extends="_base">
-                <property name="messages" fetchPlan="_base"/>
-            </fetchPlan>
+            <fetchPlan extends="_base"/>
             <loader id="aiConversationDl"/>
         </instance>
     </data>
