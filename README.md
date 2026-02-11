@@ -1,6 +1,6 @@
 # ![CRM](src/main/resources/META-INF/resources/images/logo.svg) B2B CRM
 
-### Is a [Jmix](https://jmix.io) application for managing client relationships
+`B2B CRM` is an enterprise demo application built with Jmix that showcases how to develop **production-ready** business systems including `customers`, `orders`, `invoicing`, `finance` and `analytics`. <br>It reflects real **ERP/CRM** scenarios and demonstrates best practices in domain modeling, UI, security and business logic implementation.
 
 ## 📑 Table of Contents
 
