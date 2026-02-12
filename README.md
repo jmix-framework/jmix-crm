@@ -54,7 +54,7 @@ Prerequisites: Java 21+
    ./gradlew bootRun
    ```
 
-2. [Open application URL](http://localhost:8080/crm)
+2. [Open application URL](http://localhost:8080/b2b-crm)
 
 ### Run via JAR:
 
