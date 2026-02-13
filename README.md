@@ -48,7 +48,7 @@ Prerequisites: Java 21+
 
 ### Run Project
 
-1. Run [B2B CRM](.run/b2b-app.run.xml) Jmix run configuration or execute
+1. Run [B2B CRM](.run/crm-app.run.xml) Jmix run configuration or execute
 
    ```bash
    ./gradlew bootRun
