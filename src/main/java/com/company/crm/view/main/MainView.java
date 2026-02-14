@@ -1,7 +1,6 @@
 package com.company.crm.view.main;
 
 import com.company.crm.app.online.OnlineDemoDataCreator;
-import com.company.crm.app.service.ai.CrmAnalyticsAsyncLoader;
 import com.company.crm.app.ui.component.CrmLoader;
 import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.model.client.Client;
@@ -28,7 +27,6 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.popover.Popover;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.Route;
-import io.jmix.core.DataManager;
 import io.jmix.core.Messages;
 import io.jmix.core.Metadata;
 import io.jmix.core.security.CurrentAuthentication;
@@ -95,10 +93,6 @@ public class MainView extends StandardMainView {
     private CurrentAuthentication currentAuthentication;
     @Autowired
     private CurrentUserSubstitution currentUserSubstitution;
-    @Autowired
-    private DataManager dataManager;
-    @Autowired
-    private CrmAnalyticsAsyncLoader crmAnalyticsAsyncLoader;
     @Autowired
     private AiConversationService aiConversationService;
 
