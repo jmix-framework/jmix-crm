@@ -5,6 +5,7 @@ import com.company.crm.ai.entity.ChatMessage;
 import com.company.crm.ai.entity.ChatMessageType;
 import io.jmix.core.DataManager;
 import io.jmix.core.SaveContext;
+import io.jmix.core.TimeSource;
 import io.jmix.core.querycondition.PropertyCondition;
 import io.jmix.core.Sort;
 import org.slf4j.Logger;
@@ -23,9 +24,11 @@ import java.util.UUID;
 public class AiConversationService {
 
     private final DataManager dataManager;
+    private final TimeSource timeSource;
 
-    public AiConversationService(DataManager dataManager) {
+    public AiConversationService(DataManager dataManager, TimeSource timeSource) {
         this.dataManager = dataManager;
+        this.timeSource = timeSource;
     }
 
     /**
@@ -46,8 +49,6 @@ public class AiConversationService {
         SaveContext saveContext = new SaveContext();
         saveContext.saving(conversation);
         saveContext.saving(welcomeMessageEntity);
-        dataManager.save(saveContext);
-
-        return conversation;
+        return dataManager.save(saveContext).get(conversation);
     }
 }
