@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      title="msg://aiConversationDetailView.title"
+      focusComponent="aiConversationFragment">
+    <data>
+        <instance id="aiConversationDc"
+                  class="com.company.crm.ai.entity.AiConversation">
+            <fetchPlan extends="_base">
+                <property name="messages" fetchPlan="_base"/>
+            </fetchPlan>
+            <loader id="aiConversationDl"/>
+        </instance>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+    </facets>
+    <layout>
+        <vbox id="chatSection" expand="aiConversationFragment" height="100%" spacing="true">
+            <fragment id="aiConversationFragment"
+                      class="com.company.crm.ai.jmix.view.aiconversation.AiConversationFragment"/>
+        </vbox>
+    </layout>
+</view>
