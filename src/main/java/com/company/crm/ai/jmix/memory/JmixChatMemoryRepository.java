@@ -5,7 +5,6 @@ import com.company.crm.ai.entity.ChatMessage;
 import com.company.crm.ai.entity.ChatMessageType;
 import io.jmix.core.DataManager;
 import io.jmix.core.SaveContext;
-import io.jmix.core.TimeSource;
 import io.jmix.core.querycondition.PropertyCondition;
 import io.jmix.core.Sort;
 import org.jspecify.annotations.NonNull;
@@ -49,11 +48,9 @@ public class JmixChatMemoryRepository implements ChatMemoryRepository {
     private static final String ENTITY_ID_METADATA_KEY = "jmixEntityId";
 
     private final DataManager dataManager;
-    private final TimeSource timeSource;
 
-    public JmixChatMemoryRepository(DataManager dataManager, TimeSource timeSource) {
+    public JmixChatMemoryRepository(DataManager dataManager) {
         this.dataManager = dataManager;
-        this.timeSource = timeSource;
     }
 
     @Override
@@ -98,6 +95,7 @@ public class JmixChatMemoryRepository implements ChatMemoryRepository {
 
         markNewMessagesForSavingInSaveContext(messages, existingMessages, conversation, saveContext);
 
+        saveContext.setDiscardSaved(true);
         dataManager.save(saveContext);
     }
 
@@ -140,6 +138,7 @@ public class JmixChatMemoryRepository implements ChatMemoryRepository {
                     loadChatMessages(uuid).forEach(saveContext::removing);
                     saveContext.removing(conversation);
 
+                    saveContext.setDiscardSaved(true);
                     dataManager.save(saveContext);
                 });
 

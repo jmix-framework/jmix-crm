@@ -239,6 +239,6 @@ class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
         order.setClient(client);
         order.setTotal(total);
         order.setDate(date);
-        dataManager.save(order);
+        dataManager.saveWithoutReload(order);
     }
 }

@@ -50,7 +50,7 @@ class CrmAnalyticsServiceLLMTest extends AbstractTest {
         // Create a test conversation for each test
         AiConversation conversation = dataManager.create(AiConversation.class);
         conversation.setTitle("Test LLM Judge Conversation");
-        dataManager.save(conversation);
+        dataManager.saveWithoutReload(conversation);
         conversationId = conversation.getId().toString();
         log.info("Created test conversation with ID: {}", conversationId);
     }
@@ -507,6 +507,6 @@ class CrmAnalyticsServiceLLMTest extends AbstractTest {
         order.setClient(client);
         order.setTotal(total);
         order.setDate(date);
-        dataManager.save(order);
+        dataManager.saveWithoutReload(order);
     }
 }
