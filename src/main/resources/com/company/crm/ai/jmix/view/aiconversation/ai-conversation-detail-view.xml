@@ -5,7 +5,9 @@
     <data>
         <instance id="aiConversationDc"
                   class="com.company.crm.ai.entity.AiConversation">
-            <fetchPlan extends="_base"/>
+            <fetchPlan extends="_base">
+                <property name="messages" fetchPlan="_base"/>
+            </fetchPlan>
             <loader id="aiConversationDl"/>
         </instance>
     </data>
@@ -15,8 +17,7 @@
     <layout>
         <vbox id="chatSection" expand="aiConversationFragment" height="100%" spacing="true">
             <fragment id="aiConversationFragment"
-                      class="com.company.crm.ai.jmix.view.aiconversation.AiConversationFragment"
-                      width="100%" height="100%"/>
+                      class="com.company.crm.ai.jmix.view.aiconversation.AiConversationFragment"/>
         </vbox>
     </layout>
 </view>

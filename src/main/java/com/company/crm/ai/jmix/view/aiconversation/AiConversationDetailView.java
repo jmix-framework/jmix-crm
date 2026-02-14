@@ -16,28 +16,4 @@ import org.springframework.beans.factory.annotation.Autowired;
 @EditedEntityContainer("aiConversationDc")
 public class AiConversationDetailView extends StandardDetailView<AiConversation> {
 
-    private static final Logger log = LoggerFactory.getLogger(AiConversationDetailView.class);
-
-    @ViewComponent
-    private AiConversationFragment aiConversationFragment;
-
-    @Autowired
-    private CurrentAuthentication currentAuthentication;
-
-    @Subscribe
-    public void onReady(ReadyEvent event) {
-        // Set conversation ID for the fragment
-        aiConversationFragment.setConversationId(getEditedEntity().getId());
-
-        // Set user name from current authentication
-        if (currentAuthentication.getUser() instanceof com.company.crm.model.user.User) {
-            String userName = ((com.company.crm.model.user.User) currentAuthentication.getUser()).getUsername();
-            aiConversationFragment.setUserName(userName);
-        }
-
-        // Focus the fragment
-        aiConversationFragment.focus();
-
-        log.info("AI conversation fragment setup complete");
-    }
 }

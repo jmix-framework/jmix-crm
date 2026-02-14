@@ -249,4 +249,78 @@ class JmixChatMemoryRepositoryIntegrationTest extends AbstractTest {
         assertThat(firstChatMessage.getConversation().getId()).isEqualTo(uuid);
 
     }
+
+    @Test
+    void testIncrementalSaveDoesNotDuplicateMessages() {
+        AiConversation conversation = aiConversationService.createNewConversation("Incremental save test");
+        String conversationId = conversation.getId().toString();
+
+        // Save initial messages
+        List<Message> initialMessages = List.of(
+            new UserMessage("First message"),
+            new AssistantMessage("First response")
+        );
+        chatMemoryRepository.saveAll(conversationId, initialMessages);
+
+        // Load messages to get their entityIds and timestamps
+        List<Message> loadedMessages = chatMemoryRepository.findByConversationId(conversationId);
+        assertThat(loadedMessages).hasSize(2);
+
+        // Extract original timestamps by checking the database directly
+        UUID uuid = UUID.fromString(conversationId);
+        List<ChatMessage> originalChatMessages = dataManager.load(ChatMessage.class)
+            .query("SELECT m FROM ChatMessage m WHERE m.conversation.id = :conversationId ORDER BY m.createdDate")
+            .parameter("conversationId", uuid)
+            .list();
+
+        assertThat(originalChatMessages).hasSize(2);
+        var firstOriginalTimestamp = originalChatMessages.get(0).getCreatedDate();
+        var secondOriginalTimestamp = originalChatMessages.get(1).getCreatedDate();
+        var firstOriginalId = originalChatMessages.get(0).getId();
+        var secondOriginalId = originalChatMessages.get(1).getId();
+
+        // Wait a bit to ensure new timestamps would be different
+        try {
+            Thread.sleep(10);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
+        // Save the same messages again (they should have entityIds now from the previous load)
+        // This should NOT create duplicates - existing messages should be ignored
+        chatMemoryRepository.saveAll(conversationId, loadedMessages);
+
+        // Verify no duplicates were created and timestamps remain unchanged
+        List<ChatMessage> reloadedChatMessages = dataManager.load(ChatMessage.class)
+            .query("SELECT m FROM ChatMessage m WHERE m.conversation.id = :conversationId ORDER BY m.createdDate")
+            .parameter("conversationId", uuid)
+            .list();
+
+        // Still only 2 messages (no duplicates)
+        assertThat(reloadedChatMessages).hasSize(2);
+
+        // Find messages by content to match them correctly
+        ChatMessage firstReloaded = reloadedChatMessages.stream()
+            .filter(msg -> "First message".equals(msg.getContent()))
+            .findFirst()
+            .orElseThrow();
+        ChatMessage secondReloaded = reloadedChatMessages.stream()
+            .filter(msg -> "First response".equals(msg.getContent()))
+            .findFirst()
+            .orElseThrow();
+
+        // Verify timestamps are exactly the same (nothing was touched)
+        assertThat(firstReloaded.getCreatedDate()).isEqualTo(firstOriginalTimestamp);
+        assertThat(secondReloaded.getCreatedDate()).isEqualTo(secondOriginalTimestamp);
+
+        // Verify IDs are preserved too (same entities)
+        assertThat(firstReloaded.getId()).isEqualTo(firstOriginalId);
+        assertThat(secondReloaded.getId()).isEqualTo(secondOriginalId);
+
+        // Verify content is still correct
+        assertThat(firstReloaded.getContent()).isEqualTo("First message");
+        assertThat(secondReloaded.getContent()).isEqualTo("First response");
+        assertThat(firstReloaded.getType()).isEqualTo(ChatMessageType.USER);
+        assertThat(secondReloaded.getType()).isEqualTo(ChatMessageType.ASSISTANT);
+    }
 }

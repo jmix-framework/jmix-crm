@@ -9,7 +9,7 @@ import com.company.crm.model.client.ClientRepository;
 import com.company.crm.model.user.User;
 import com.company.crm.view.client.ClientListView;
 import com.company.crm.view.home.HomeView;
-import com.company.crm.ai.jmix.view.aiconversation.AiConversationFragment;
+import com.company.crm.ai.jmix.view.aiconversation.AiConversationDetailView;
 import com.company.crm.ai.entity.AiConversation;
 import com.company.crm.ai.service.AiConversationService;
 import com.google.common.base.Strings;
@@ -21,14 +21,11 @@ import com.vaadin.flow.component.avatar.AvatarVariant;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.popover.Popover;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.popover.Popover;
-import com.vaadin.flow.component.messages.MessageListItem;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.Route;
 import io.jmix.core.DataManager;
@@ -40,7 +37,6 @@ import io.jmix.core.usersubstitution.CurrentUserSubstitution;
 import io.jmix.flowui.DialogWindows;
 import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.ViewNavigators;
-import io.jmix.flowui.Fragments;
 import io.jmix.flowui.app.main.StandardMainView;
 import io.jmix.flowui.component.SupportsTypedValue.TypedValueChangeEvent;
 import io.jmix.flowui.component.main.JmixListMenu;
@@ -60,8 +56,6 @@ import io.jmix.flowui.view.ViewDescriptor;
 import io.jmix.flowui.view.*;
 import org.apache.commons.lang3.StringUtils;
 import org.jspecify.annotations.Nullable;
-import com.company.crm.ai.entity.AiConversation;
-import com.company.crm.ai.service.AiConversationService;
 // Note: AiConversationComponent removed - popover chat temporarily disabled
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
@@ -108,9 +102,6 @@ public class MainView extends StandardMainView {
     @Autowired
     private AiConversationService aiConversationService;
 
-    @Autowired
-    private Fragments fragments;
-
     @Autowired(required = false)
     private OnlineDemoDataCreator onlineDemoDataCreator;
 
@@ -125,8 +116,6 @@ public class MainView extends StandardMainView {
 
     final Popover[] searchPopover = {null};
     final Popover[] notificationsPopover = {null};
-    final Popover[] chatPopover = {null};
-    // Note: currentAiComponent removed - popover chat temporarily disabled
     @ViewComponent
     private MessageBundle messageBundle;
 
@@ -227,34 +216,21 @@ public class MainView extends StandardMainView {
 
     @Subscribe(id = "chatButton", subject = "clickListener")
     private void onChatButtonClick(final ClickEvent<JmixButton> event) {
-        showAiConversationPopover();
-    }
-
-    private void showAiConversationPopover() {
-        // Create new conversation for the popover
         String welcomeMessage = messages.getMessage("aiConversation.welcomeMessage");
         final AiConversation savedConversation = aiConversationService.createNewConversation(welcomeMessage);
 
-        // Create the Fragment programmatically
-        AiConversationFragment fragment = fragments.create(this, AiConversationFragment.class);
-        fragment.setConversationId(savedConversation.getId());
+        DialogWindow<AiConversationDetailView> dialogWindow = dialogWindows.detail(this, AiConversation.class)
+                .editEntity(savedConversation)
+                .withViewClass(AiConversationDetailView.class)
+                .build();
 
-        // Create container for the popover
-        VerticalLayout popoverContent = uiComponents.create(VerticalLayout.class);
-        popoverContent.setWidthFull();
-        popoverContent.setHeight("500px");
-        popoverContent.add(fragment);
-
-        // Show popover
-        Popover popover = uiComponents.create(Popover.class);
-        popover.setTarget(chatButton);
-        popover.add(popoverContent);
-        popover.setWidth("600px");
-        popover.setHeight("600px");
-        popover.open();
-
-        // Focus the fragment after a short delay to ensure it's rendered
-        fragment.focus();
+        dialogWindow.setModal(false);
+        dialogWindow.setLeft("65%");
+        dialogWindow.setResizable(true);
+        dialogWindow.setTop("5%");
+        dialogWindow.setWidth("35%");
+        dialogWindow.setHeight("75%");
+        dialogWindow.open();
     }
 
     @Subscribe(id = "applicationTitle", subject = "clickListener")

@@ -5,6 +5,7 @@ import com.company.crm.ai.entity.ChatMessage;
 import com.company.crm.ai.entity.ChatMessageType;
 import io.jmix.core.DataManager;
 import io.jmix.core.SaveContext;
+import io.jmix.core.TimeSource;
 import io.jmix.core.querycondition.PropertyCondition;
 import io.jmix.core.Sort;
 import org.jspecify.annotations.NonNull;
@@ -18,12 +19,8 @@ import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Jmix-based implementation of Spring AI ChatMemoryRepository.
@@ -47,20 +44,25 @@ import java.util.UUID;
 @Component
 public class JmixChatMemoryRepository implements ChatMemoryRepository {
 
-    private final DataManager dataManager;
-    private static final Logger log = LoggerFactory.getLogger(JmixChatMemoryRepository.class);
 
-    public JmixChatMemoryRepository(DataManager dataManager) {
+    private static final Logger log = LoggerFactory.getLogger(JmixChatMemoryRepository.class);
+    private static final String ENTITY_ID_METADATA_KEY = "jmixEntityId";
+
+    private final DataManager dataManager;
+    private final TimeSource timeSource;
+
+    public JmixChatMemoryRepository(DataManager dataManager, TimeSource timeSource) {
         this.dataManager = dataManager;
+        this.timeSource = timeSource;
     }
 
     @Override
     public List<String> findConversationIds() {
         try {
-            return dataManager.loadValues("select c.id from AiConversation c")
-                    .properties("id")
-                    .list().stream()
-                    .map(keyValueEntity -> keyValueEntity.getValue("id").toString())
+            return dataManager.loadValue("select c.id from AiConversation c", UUID.class)
+                    .list()
+                    .stream()
+                    .map(UUID::toString)
                     .toList();
         } catch (Exception e) {
             log.error("Error finding conversation IDs", e);
@@ -90,23 +92,40 @@ public class JmixChatMemoryRepository implements ChatMemoryRepository {
         AiConversation conversation = findOrCreateConversation(uuid);
 
         SaveContext saveContext = new SaveContext();
-
         List<ChatMessage> existingMessages = loadChatMessages(uuid);
-        if (!messagesAreEqual(messages, existingMessages)) {
-            existingMessages.forEach(saveContext::removing);
 
-            OffsetDateTime baseTime = OffsetDateTime.now();
-            for (int i = 0; i < messages.size(); i++) {
-                Message message = messages.get(i);
-                ChatMessage chatMessage = mapMessageToEntity(message, conversation);
-                // Use larger time increments to ensure proper ordering even across different saveAll calls
-                chatMessage.setCreatedDate(baseTime.plusSeconds(i));
-                saveContext.saving(chatMessage);
-            }
-        }
+        markRemovedMessageForRemovalInSaveContext(messages, existingMessages, saveContext);
+
+        markNewMessagesForSavingInSaveContext(messages, existingMessages, conversation, saveContext);
 
         dataManager.save(saveContext);
     }
+
+    private void markNewMessagesForSavingInSaveContext(List<Message> messages, List<ChatMessage> existingMessages, AiConversation conversation, SaveContext saveContext) {
+        Set<UUID> existingEntityIds = existingMessages.stream()
+                .map(ChatMessage::getId)
+                .collect(Collectors.toSet());
+
+        messages.stream()
+                .filter(message -> {
+                    UUID entityId = (UUID) message.getMetadata().get(ENTITY_ID_METADATA_KEY);
+                    return entityId == null || !existingEntityIds.contains(entityId);
+                })
+                .map(newMessage -> mapMessageToEntity(newMessage, conversation))
+                .forEach(saveContext::saving);
+    }
+
+    private void markRemovedMessageForRemovalInSaveContext(List<Message> messages, List<ChatMessage> existingMessages, SaveContext saveContext) {
+        Set<UUID> newMessageEntityIds = messages.stream()
+                .map(message -> (UUID) message.getMetadata().get(ENTITY_ID_METADATA_KEY))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        existingMessages.stream()
+                .filter(existingMessage -> !newMessageEntityIds.contains(existingMessage.getId()))
+                .forEach(saveContext::removing);
+    }
+
 
     @Override
     @Transactional
@@ -138,13 +157,14 @@ public class JmixChatMemoryRepository implements ChatMemoryRepository {
         chatMessage.setConversation(conversation);
         chatMessage.setContent(message.getText());
         chatMessage.setType(mapMessageToType(message));
+        chatMessage.setCreatedDate(timeSource.now().toOffsetDateTime());
         return chatMessage;
     }
 
     private Message mapEntityToMessage(ChatMessage chatMessage) {
         String content = chatMessage.getContent();
         ChatMessageType type = chatMessage.getType();
-        return mapTypeToMessage(content, type);
+        return mapTypeToMessage(content, type, chatMessage.getId());
     }
 
     private ChatMessageType mapMessageToType(Message message) {
@@ -156,16 +176,19 @@ public class JmixChatMemoryRepository implements ChatMemoryRepository {
         };
     }
 
-    private Message mapTypeToMessage(String content, ChatMessageType type) {
+    private Message mapTypeToMessage(String content, ChatMessageType type, UUID entityId) {
         if (type == null) {
             return new SystemMessage(content != null ? content : "");
         }
 
+        final Map<String, Object> metadata = Map.of(ENTITY_ID_METADATA_KEY, entityId);
         return switch (type) {
-            case USER -> new UserMessage(content != null ? content : "");
-            case ASSISTANT -> new AssistantMessage(content != null ? content : "");
-            case SYSTEM -> new SystemMessage(content != null ? content : "");
-            case TOOL -> new AssistantMessage(content != null ? content : ""); // Fallback to assistant
+            case USER -> UserMessage.builder().text(content)
+                    .metadata(metadata).build();
+            case ASSISTANT, TOOL -> AssistantMessage.builder()
+                    .content(content)
+                    .properties(metadata).build();
+            case SYSTEM -> SystemMessage.builder().text(content).metadata(metadata).build();
         };
     }
 
@@ -185,20 +208,4 @@ public class JmixChatMemoryRepository implements ChatMemoryRepository {
                 .list();
     }
 
-    private boolean messagesAreEqual(List<Message> newMessages, List<ChatMessage> existingMessages) {
-        if (newMessages.size() != existingMessages.size()) {
-            return false;
-        }
-
-        for (int i = 0; i < newMessages.size(); i++) {
-            Message newMessage = newMessages.get(i);
-            ChatMessage existingMessage = existingMessages.get(i);
-
-            if (!newMessage.getText().equals(existingMessage.getContent()) ||
-                    !mapMessageToType(newMessage).equals(existingMessage.getType())) {
-                return false;
-            }
-        }
-        return true;
-    }
 }

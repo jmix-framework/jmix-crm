@@ -9,24 +9,27 @@ import com.vaadin.flow.component.messages.MessageList;
 import com.vaadin.flow.component.messages.MessageListItem;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.progressbar.ProgressBar;
+import io.jmix.core.MetadataTools;
+import io.jmix.core.TimeSource;
 import io.jmix.core.security.CurrentAuthentication;
 import io.jmix.flowui.asynctask.UiAsyncTasks;
 import io.jmix.flowui.fragment.Fragment;
 import io.jmix.flowui.fragment.FragmentDescriptor;
+import io.jmix.flowui.model.InstanceContainer;
 import io.jmix.flowui.UiComponents;
-import io.jmix.core.DataManager;
-import io.jmix.flowui.view.Subscribe;
-import io.jmix.flowui.view.ViewComponent;
+import io.jmix.flowui.view.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.OffsetDateTime;
-import java.util.UUID;
+import java.util.List;
+
 
 /**
  * Fragment for AI conversation interface that provides chat functionality.
- * Has its own data loading logic and works with conversationId parameter.
+ * Uses provided data containers from the host view for data binding.
  */
 @FragmentDescriptor("ai-conversation-fragment.xml")
 public class AiConversationFragment extends Fragment<VerticalLayout> {
@@ -35,118 +38,60 @@ public class AiConversationFragment extends Fragment<VerticalLayout> {
 
     private MessageList messageList;
     private MessageInput messageInput;
-
-    @ViewComponent
     private ProgressBar progressBar;
 
     @ViewComponent
     private VerticalLayout mainLayout;
+    @ViewComponent
+    private InstanceContainer<AiConversation> aiConversationDc;
 
     @Autowired
     private CrmAnalyticsService crmAnalyticsService;
-
-    @Autowired
-    private DataManager dataManager;
-
     @Autowired
     private CurrentAuthentication currentAuthentication;
-
     @Autowired
     private UiAsyncTasks uiAsyncTasks;
-
     @Autowired
     private UiComponents uiComponents;
-
-    private String assistantName = "Assistant";
-    private String userName = "User";
-    private UUID conversationId;
-
-    /**
-     * Sets the conversation ID for this fragment.
-     */
-    public void setConversationId(UUID conversationId) {
-        this.conversationId = conversationId;
-    }
+    @ViewComponent
+    private MessageBundle messageBundle;
+    @Autowired
+    private TimeSource timeSource;
+    @Autowired
+    private MetadataTools metadataTools;
 
 
     @Subscribe
     public void onReady(ReadyEvent event) {
-        log.info("AiConversationFragment ready - initializing component");
-        initializeFragment();
-    }
-
-    private void initializeFragment() {
-        // Create MessageList programmatically
         messageList = uiComponents.create(MessageList.class);
         messageList.setSizeFull();
         messageList.setMarkdown(true);
 
-        // Create MessageInput programmatically
         messageInput = uiComponents.create(MessageInput.class);
         messageInput.setWidthFull();
         messageInput.addSubmitListener(this::onMessageSubmit);
 
-        // Configure ProgressBar (already in XML)
+        progressBar = uiComponents.create(ProgressBar.class);
+        progressBar.setWidthFull();
         progressBar.setIndeterminate(true);
         progressBar.setVisible(false);
 
-        // Add components to layout in correct order: MessageList, ProgressBar, MessageInput
-        mainLayout.remove(progressBar); // Remove from default position
         mainLayout.add(messageList);
-        mainLayout.add(progressBar); // Add between list and input
+        mainLayout.add(progressBar);
         mainLayout.add(messageInput);
         mainLayout.setFlexGrow(1, messageList);
 
-        // Set user name from current authentication
-        if (currentAuthentication.getUser() instanceof com.company.crm.model.user.User) {
-            userName = ((com.company.crm.model.user.User) currentAuthentication.getUser()).getUsername();
-        }
-
-        // Load conversation data if conversationId is set
-        if (conversationId != null) {
-            loadConversationData();
-        }
+        focusInput();
     }
 
-    /**
-     * Loads conversation data from database using DataManager.
-     */
-    private void loadConversationData() {
-        log.info("Loading conversation data for ID: {}", conversationId);
+    @Subscribe(target = Target.HOST_CONTROLLER)
+    public void onHostBeforeShow(View.BeforeShowEvent event) {
+        List<MessageListItem> messageListItems = aiConversationDc.getItem().getMessages()
+                .stream()
+                .map(this::createMessageListItem)
+                .toList();
 
-        AiConversation conversation = dataManager.load(AiConversation.class)
-                .id(conversationId)
-                .fetchPlan(builder -> builder.add("_base").add("messages", "_base"))
-                .optional()
-                .orElse(null);
-
-        if (conversation != null) {
-            updateMessageList(conversation);
-        } else {
-            log.warn("Conversation not found: {}", conversationId);
-        }
-    }
-
-    /**
-     * Updates the MessageList with messages from the conversation.
-     */
-    private void updateMessageList(AiConversation conversation) {
-        if (messageList == null) {
-            return;
-        }
-
-        messageList.setItems(); // Clear existing items
-
-        if (conversation.getMessages() != null) {
-            // Messages are already sorted by createdDate via @OrderBy annotation on the entity
-            for (ChatMessage message : conversation.getMessages()) {
-                MessageListItem item = createMessageListItem(message);
-                messageList.addItem(item);
-            }
-        }
-
-        log.info("Updated MessageList with {} messages",
-                conversation.getMessages() != null ? conversation.getMessages().size() : 0);
+        messageList.setItems(messageListItems);
     }
 
 
@@ -155,11 +100,29 @@ public class AiConversationFragment extends Fragment<VerticalLayout> {
      */
     private MessageListItem createMessageListItem(ChatMessage message) {
         boolean isAssistant = ChatMessageType.ASSISTANT.equals(message.getType());
-        String displayName = isAssistant ? assistantName : userName;
+        return isAssistant ?
+                assistantMessageListItem(message.getContent(), message.getCreatedDate()) :
+                userMessageListItem(message.getContent(), message.getCreatedDate());
+    }
 
-        MessageListItem item = new MessageListItem(message.getContent(), displayName);
-        item.setUserColorIndex(isAssistant ? 2 : 1);
+    /**
+     * Creates a MessageListItem for an assistant message with consistent styling.
+     */
+    private MessageListItem assistantMessageListItem(String content, OffsetDateTime createdAt) {
+        MessageListItem item = new MessageListItem(content, createdAt.toInstant(), messageBundle.getMessage("assistantName"));
+        item.setUserColorIndex(2);
+        return item;
+    }
 
+    /**
+     * Creates a MessageListItem for a user message with consistent styling.
+     */
+    private MessageListItem userMessageListItem(String content, OffsetDateTime createdAt) {
+        UserDetails user = currentAuthentication.getUser();
+        String userName = metadataTools.getInstanceName(user);
+        MessageListItem item = new MessageListItem(content, createdAt.toInstant(), userName);
+        item.setUserAbbreviation(user.getUsername().substring(0, 1));
+        item.setUserColorIndex(1);
         return item;
     }
 
@@ -174,169 +137,40 @@ public class AiConversationFragment extends Fragment<VerticalLayout> {
 
         log.info("Processing user message: {}", userMessage);
 
-        // Add user message to UI immediately
-        MessageListItem userItem = new MessageListItem(userMessage, userName);
-        userItem.setUserColorIndex(1);
+        MessageListItem userItem = userMessageListItem(userMessage, now());
         messageList.addItem(userItem);
 
-        // User message will be saved by Spring AI ChatMemory in CrmAnalyticsService
-
-        // Show progress and disable input
-        showProgress();
+        progressBar.setVisible(true);
         messageInput.setEnabled(false);
 
-        // Process message asynchronously
-        processMessageAsync(userMessage);
-    }
+        AiConversation conversation = aiConversationDc.getItem();
 
-    /**
-     * Processes the user message asynchronously and handles the response.
-     */
-    private void processMessageAsync(String userMessage) {
-        String conversationIdStr = conversationId.toString();
-
-        uiAsyncTasks.supplierConfigurer(() -> {
-                    try {
-                        return crmAnalyticsService.processBusinessQuestion(userMessage, conversationIdStr);
-                    } catch (Exception e) {
-                        log.error("Error processing message async", e);
-                        return "I'm sorry, I encountered an error while processing your request: " + e.getMessage() +
-                                "\n\nPlease try rephrasing your question or contact support if the problem persists.";
-                    }
-                })
+        uiAsyncTasks.supplierConfigurer(() ->
+                    crmAnalyticsService.processBusinessQuestion(userMessage, conversation.getId().toString())
+                )
                 .withResultHandler(response -> {
-                    // Add assistant response to UI
-                    MessageListItem assistantItem = new MessageListItem(response, assistantName);
-                    assistantItem.setUserColorIndex(2);
-                    messageList.addItem(assistantItem);
-
-                    // Reload conversation data to get the latest persisted messages
-                    loadConversationData();
-
-                    // Hide progress, enable input and focus for immediate typing
-                    hideProgress();
-                    messageInput.setEnabled(true);
-                    messageInput.focus();
-
-                    log.info("Assistant response processed and displayed");
+                    messageList.addItem(assistantMessageListItem(response, now()));
+                    getFragmentData().loadAll();
+                    focusInput();
                 })
                 .withExceptionHandler(e -> {
-                    log.error("Async processing failed", e);
-
-                    // Add error message to UI
-                    MessageListItem errorItem = new MessageListItem(
-                            "I'm sorry, something went wrong while processing your request.",
-                            assistantName
-                    );
-                    errorItem.setUserColorIndex(2);
+                    log.error("Error processing message async", e);
+                    String errorMessage = "I'm sorry, I encountered an error while processing your request: " + e.getMessage() +
+                            "\n\nPlease try rephrasing your question or contact support if the problem persists.";
+                    MessageListItem errorItem = assistantMessageListItem(errorMessage, now());
                     messageList.addItem(errorItem);
-
-                    // Hide progress, enable input and focus for retry
-                    hideProgress();
-                    messageInput.setEnabled(true);
-                    messageInput.focus();
+                    focusInput();
                 })
                 .supplyAsync();
     }
 
-    /**
-     * Saves a message via the Spring AI ChatMemory (not directly to DataContext).
-     * The message will be persisted by the ChatMemory and can be loaded later.
-     */
-    private void saveMessage(String content, ChatMessageType type) {
-        // Message is already saved by Spring AI ChatMemory in CrmAnalyticsService
-        // We don't need to manually save it here to avoid Jmix "unsaved changes" warnings
-        log.info("Message saved via Spring AI ChatMemory: {}", type);
-    }
-
-    /**
-     * Shows the progress indicator.
-     */
-    public void showProgress() {
-        progressBar.setVisible(true);
-    }
-
-    /**
-     * Hides the progress indicator.
-     */
-    public void hideProgress() {
+    public void focusInput() {
         progressBar.setVisible(false);
+        messageInput.setEnabled(true);
+        messageInput.focus();
     }
 
-    /**
-     * Sets the assistant name for display in messages.
-     */
-    public void setAssistantName(String assistantName) {
-        this.assistantName = assistantName != null ? assistantName : "Assistant";
-    }
-
-    /**
-     * Gets the assistant name.
-     */
-    public String getAssistantName() {
-        return assistantName;
-    }
-
-    /**
-     * Sets the user name for display in messages.
-     */
-    public void setUserName(String userName) {
-        this.userName = userName != null ? userName : "User";
-    }
-
-    /**
-     * Gets the user name.
-     */
-    public String getUserName() {
-        return userName;
-    }
-
-    /**
-     * Focuses the message input field.
-     */
-    public void focus() {
-        if (messageInput != null) {
-            messageInput.focus();
-        }
-    }
-
-    /**
-     * Clears all messages from the UI (does not affect database).
-     */
-    public void clearMessages() {
-        messageList.setItems();
-    }
-
-    /**
-     * Refreshes the conversation history by reloading data from database.
-     */
-    public void refreshHistory() {
-        loadConversationData();
-    }
-
-    /**
-     * Gets the MessageList component for testing purposes.
-     */
-    public MessageList getMessageList() {
-        return messageList;
-    }
-
-    /**
-     * Gets the MessageInput component for testing purposes.
-     */
-    public MessageInput getMessageInput() {
-        return messageInput;
-    }
-
-    /**
-     * Programmatically submits a message (for testing purposes).
-     */
-    public void submitMessage(String message) {
-        if (message == null || message.trim().isEmpty()) {
-            return;
-        }
-
-        MessageInput.SubmitEvent event = new MessageInput.SubmitEvent(messageInput, false, message);
-        onMessageSubmit(event);
+    private OffsetDateTime now() {
+        return timeSource.now().toOffsetDateTime();
     }
 }
