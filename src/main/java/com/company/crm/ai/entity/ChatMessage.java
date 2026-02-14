@@ -36,6 +36,7 @@ public class ChatMessage {
     @Column(name = "CREATED_BY")
     private String createdBy;
 
+    @CreatedDate
     @Column(name = "CREATED_DATE")
     private OffsetDateTime createdDate;
 

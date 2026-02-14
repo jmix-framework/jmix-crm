@@ -45,7 +45,6 @@ public class AiConversationService {
         welcomeMessageEntity.setConversation(conversation);
         welcomeMessageEntity.setContent(welcomeMessage);
         welcomeMessageEntity.setType(ChatMessageType.ASSISTANT);
-        welcomeMessageEntity.setCreatedDate(timeSource.now().toOffsetDateTime());
 
         SaveContext saveContext = new SaveContext();
         saveContext.saving(conversation);

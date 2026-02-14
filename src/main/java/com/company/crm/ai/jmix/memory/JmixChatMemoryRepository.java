@@ -157,7 +157,6 @@ public class JmixChatMemoryRepository implements ChatMemoryRepository {
         chatMessage.setConversation(conversation);
         chatMessage.setContent(message.getText());
         chatMessage.setType(mapMessageToType(message));
-        chatMessage.setCreatedDate(timeSource.now().toOffsetDateTime());
         return chatMessage;
     }
 
