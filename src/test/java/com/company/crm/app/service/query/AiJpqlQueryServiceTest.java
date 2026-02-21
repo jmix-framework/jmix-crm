@@ -46,7 +46,7 @@ class AiJpqlQueryServiceTest extends AbstractTest {
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("startDate", LocalDate.now().minusDays(15).toString()); // "2024-01-02" format
 
-        var result = aiJpqlQueryService.executeJpqlQuery(jpql, parameters, Arrays.asList("orderNumber", "orderTotal"));
+        var result = aiJpqlQueryService.executeJpqlQuery(jpql, parameters, Arrays.asList("orderNumber", "orderTotal"), 0, 10);
 
         assertThat(result.success()).as("Query should succeed with LocalDate string parameter").isTrue();
         assertThat(result.data()).as("Should return order data").isNotEmpty();
@@ -62,7 +62,7 @@ class AiJpqlQueryServiceTest extends AbstractTest {
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("minValue", "2000.00"); // String - JPQL engine will convert based on parameter type
 
-        var result = aiJpqlQueryService.executeJpqlQuery(jpql, parameters, Arrays.asList("orderNumber", "orderTotal"));
+        var result = aiJpqlQueryService.executeJpqlQuery(jpql, parameters, Arrays.asList("orderNumber", "orderTotal"), 0, 10);
 
         assertThat(result.success()).as("Query should succeed with numeric string parameter").isTrue();
         assertThat(result.data()).as("Should return high-value orders").isNotEmpty();
@@ -78,7 +78,7 @@ class AiJpqlQueryServiceTest extends AbstractTest {
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("minOrders", "0"); // String - JPQL engine will convert to integer
 
-        var result = aiJpqlQueryService.executeJpqlQuery(jpql, parameters, Arrays.asList("clientName"));
+        var result = aiJpqlQueryService.executeJpqlQuery(jpql, parameters, Arrays.asList("clientName"), 0, 10);
 
         assertThat(result.success()).as("Query should succeed with integer string parameter").isTrue();
     }
@@ -90,7 +90,7 @@ class AiJpqlQueryServiceTest extends AbstractTest {
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("pattern", "%Test%"); // LIKE pattern should remain string
 
-        var result = aiJpqlQueryService.executeJpqlQuery(jpql, parameters, Arrays.asList("clientName"));
+        var result = aiJpqlQueryService.executeJpqlQuery(jpql, parameters, Arrays.asList("clientName"), 0, 10);
 
         assertThat(result.success()).as("Query should succeed with string LIKE parameter").isTrue();
         assertThat(result.data()).as("Should return matching clients").isNotEmpty();
@@ -108,11 +108,46 @@ class AiJpqlQueryServiceTest extends AbstractTest {
         parameters.put("startDate", LocalDate.now().minusDays(20).toString()); // Will be converted to LocalDate
         parameters.put("minValue", "1000.00"); // Will remain string for JPQL engine to convert
 
-        var result = aiJpqlQueryService.executeJpqlQuery(jpql, parameters, Arrays.asList("orderNumber", "orderTotal"));
+        var result = aiJpqlQueryService.executeJpqlQuery(jpql, parameters, Arrays.asList("orderNumber", "orderTotal"), 0, 10);
 
         assertThat(result.success()).as("Query should succeed with mixed parameter types").isTrue();
 
         log.info("Mixed parameter types test passed: {} rows returned", result.rowCount());
+    }
+
+    @Test
+    void testPagination() {
+        // Test pagination and hasMore detection with unique prefix to avoid demo data interference
+        var client = entities.client("Pagination Client");
+        
+        var order1 = entities.order(client, LocalDate.now(), com.company.crm.model.order.OrderStatus.DONE, BigDecimal.TEN);
+        order1.setNumber("PAG-TEST-001");
+        dataManager.save(order1);
+
+        var order2 = entities.order(client, LocalDate.now(), com.company.crm.model.order.OrderStatus.DONE, BigDecimal.TEN);
+        order2.setNumber("PAG-TEST-002");
+        dataManager.save(order2);
+
+        String jpql = "SELECT o.number AS orderNumber FROM Order_ o WHERE o.number LIKE 'PAG-TEST-%' ORDER BY o.number ASC";
+        
+        // Request limit 1, we have 2 orders with this prefix
+        var result = aiJpqlQueryService.executeJpqlQuery(jpql, Map.of(), Arrays.asList("orderNumber"), 0, 1);
+        
+        assertThat(result.success()).isTrue();
+        assertThat(result.rowCount()).isEqualTo(1);
+        assertThat(result.hasMore()).as("Should have more rows because 2 rows exist but limit is 1").isTrue();
+        assertThat(result.offset()).isEqualTo(0);
+        assertThat(result.limit()).isEqualTo(1);
+        assertThat(result.data().get(0).get("orderNumber")).isEqualTo("PAG-TEST-001");
+
+        // Request next page
+        var secondPageResult = aiJpqlQueryService.executeJpqlQuery(jpql, Map.of(), Arrays.asList("orderNumber"), 1, 1);
+        
+        assertThat(secondPageResult.success()).isTrue();
+        assertThat(secondPageResult.rowCount()).isEqualTo(1);
+        assertThat(secondPageResult.hasMore()).as("Should NOT have more rows").isFalse();
+        assertThat(secondPageResult.offset()).isEqualTo(1);
+        assertThat(secondPageResult.data().get(0).get("orderNumber")).isEqualTo("PAG-TEST-002");
     }
 
     /**

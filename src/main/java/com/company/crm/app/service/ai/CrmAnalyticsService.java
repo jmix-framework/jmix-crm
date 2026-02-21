@@ -6,6 +6,8 @@ import com.company.crm.ai.jmix.query.AiJpqlQueryService;
 import com.company.crm.ai.jmix.query.JpqlQueryTool;
 import com.company.crm.ai.jmix.report.introspection.AiReportModelDescriptorYamlExporter;
 import com.company.crm.ai.jmix.report.introspection.JmixReportDiscoveryTool;
+import com.company.crm.ai.jmix.report.run.AiReportExecutionService;
+import com.company.crm.ai.jmix.report.run.RunReportTool;
 import com.company.crm.model.catalog.category.Category;
 import com.company.crm.model.catalog.item.CategoryItem;
 import com.company.crm.model.catalog.item.CategoryItemComment;
@@ -32,6 +34,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * AI-powered analytics service that processes natural language business questions against CRM data.
@@ -56,6 +59,7 @@ public class CrmAnalyticsService {
     private final JpqlQueryTool jpqlQueryTool;
     private final JmixJpaEntityDiscoveryTool jmixJpaEntityDiscoveryTool;
     private final JmixReportDiscoveryTool jmixReportDiscoveryTool;
+    private final RunReportTool runReportTool;
 
     @Autowired
     public CrmAnalyticsService(
@@ -64,6 +68,7 @@ public class CrmAnalyticsService {
             AiJpqlQueryService aiJpqlQueryService,
             AiDomainModelDescriptorYamlExporter entityYamlExporter,
             AiReportModelDescriptorYamlExporter reportYamlExporter,
+            AiReportExecutionService aiReportExecutionService,
             MetadataTools metadataTools,
             ChatMemoryRepository chatMemoryRepository
     ) {
@@ -83,25 +88,27 @@ public class CrmAnalyticsService {
         this.jpqlQueryTool = new JpqlQueryTool(aiJpqlQueryService);
         this.jmixJpaEntityDiscoveryTool = new JmixJpaEntityDiscoveryTool(metadataTools, entityYamlExporter, CRM_ENTITIES);
         this.jmixReportDiscoveryTool = new JmixReportDiscoveryTool(reportYamlExporter, CRM_REPORTS);
+        this.runReportTool = new RunReportTool(aiReportExecutionService, CRM_REPORTS);
     }
 
     /**
      * Processes a natural language business question and returns AI-generated insights.
      */
     public String processBusinessQuestion(String userQuestion, String conversationId) {
-        log.info("Processing business question: {} (conversation: {})", userQuestion, conversationId);
+        log.debug("Processing business question: {} (conversation: {})", userQuestion, conversationId);
 
         try {
             return chatClient.prompt()
                     .user(userQuestion)
                     .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
-                    .tools(jpqlQueryTool, jmixJpaEntityDiscoveryTool, jmixReportDiscoveryTool)
+                    .tools(jpqlQueryTool, jmixJpaEntityDiscoveryTool, jmixReportDiscoveryTool, runReportTool)
                     .call()
                     .content();
 
         } catch (Exception e) {
-            log.error("Error processing business question", e);
-            return "I encountered an error while analyzing your question: " + e.getMessage();
+            String errorId = UUID.randomUUID().toString().substring(0, 8);
+            log.error("Error processing business question [Error ID: {}]", errorId, e);
+            return "I encountered an error while analyzing your question. Please contact support and provide this Error ID: " + errorId;
         }
     }
 }

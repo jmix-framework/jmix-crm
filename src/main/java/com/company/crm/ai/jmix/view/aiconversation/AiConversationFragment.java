@@ -25,6 +25,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.UUID;
 
 
 /**
@@ -135,7 +136,7 @@ public class AiConversationFragment extends Fragment<VerticalLayout> {
             return;
         }
 
-        log.info("Processing user message: {}", userMessage);
+        log.debug("Processing user message: {}", userMessage);
 
         MessageListItem userItem = userMessageListItem(userMessage, now());
         messageList.addItem(userItem);
@@ -154,9 +155,10 @@ public class AiConversationFragment extends Fragment<VerticalLayout> {
                     focusInput();
                 })
                 .withExceptionHandler(e -> {
-                    log.error("Error processing message async", e);
-                    String errorMessage = "I'm sorry, I encountered an error while processing your request: " + e.getMessage() +
-                            "\n\nPlease try rephrasing your question or contact support if the problem persists.";
+                    String errorId = UUID.randomUUID().toString().substring(0, 8);
+                    log.error("Error processing message async [Error ID: {}]", errorId, e);
+                    String errorMessage = "I'm sorry, I encountered a technical error while processing your request. " +
+                            "Please try again later or contact support with Error ID: " + errorId;
                     MessageListItem errorItem = assistantMessageListItem(errorMessage, now());
                     messageList.addItem(errorItem);
                     focusInput();

@@ -43,41 +43,6 @@ public class AiJpqlParameterConverter {
 
     private static final Logger log = LoggerFactory.getLogger(AiJpqlParameterConverter.class);
 
-    /**
-     * Target types we attempt to convert string parameters to, in order of preference
-     */
-    private static final List<Class<?>> TARGET_TYPES = List.of(
-            // Modern Java Time API
-            LocalDate.class,
-            LocalDateTime.class,
-            LocalTime.class,
-            ZonedDateTime.class,
-            OffsetDateTime.class,
-            OffsetTime.class,
-
-            // Legacy Java Date API
-            java.util.Date.class,
-            Date.class,
-            Timestamp.class,
-            Time.class,
-
-            // Numeric types for calculations
-            BigDecimal.class,
-            Integer.class,
-            Long.class,
-            Double.class,
-            Float.class,
-
-            // UUID for entity IDs
-            UUID.class,
-
-            // Boolean
-            Boolean.class,
-
-            // Instant last - can convert any number to timestamp
-            Instant.class
-    );
-
     private final ConversionService conversionService;
 
     public AiJpqlParameterConverter(ConversionService conversionService) {
@@ -105,9 +70,8 @@ public class AiJpqlParameterConverter {
 
     /**
      * Convert a single parameter value by trying each target type in order.
-     *
-     * We systematically try each target type using Spring's ConversionService.
-     * The first successful conversion wins.
+     * Only attempts conversion if the string matches likely patterns for the target types
+     * to avoid aggressive mis-conversion of plain strings.
      */
     public Object convertParameterValue(Object value) {
         if (value == null) {
@@ -121,23 +85,80 @@ public class AiJpqlParameterConverter {
             return value;
         }
 
-        // Try each target type using Spring ConversionService
-        Object converted = TARGET_TYPES.stream()
-                .filter(targetType -> conversionService.canConvert(String.class, targetType))
-                .map(targetType -> tryConvertToType(stringValue, targetType))
+        if (stringValue.isBlank()) {
+            return stringValue;
+        }
+
+        // 1. Check for Boolean (very specific)
+        if ("true".equalsIgnoreCase(stringValue) || "false".equalsIgnoreCase(stringValue)) {
+            return Boolean.valueOf(stringValue);
+        }
+
+        // 2. Check for UUID pattern
+        if (stringValue.length() == 36 && stringValue.contains("-")) {
+            Object uuid = tryConvertToType(stringValue, UUID.class);
+            if (uuid != null) return uuid;
+        }
+
+        // 3. Check for Date/Time patterns (e.g., 2024-01-15 or 2024-01-15T10:00:00)
+        if (stringValue.length() >= 10 && Character.isDigit(stringValue.charAt(0)) && stringValue.contains("-")) {
+            Object date = tryConvertDateTypes(stringValue);
+            if (date != null) return date;
+        }
+
+        // 4. Check for Numeric patterns (only if it looks like a number and isn't too long to be an ID)
+        if (isLikelyNumeric(stringValue)) {
+            Object numeric = tryConvertNumericTypes(stringValue);
+            if (numeric != null) return numeric;
+        }
+
+        // No conversion possible or likely: let JPQL engine handle it
+        log.debug("No conversion likely for '{}', letting JPQL engine handle it as String", stringValue);
+        return stringValue;
+    }
+
+    private Object tryConvertDateTypes(String stringValue) {
+        List<Class<?>> dateTypes = List.of(
+                LocalDate.class, LocalDateTime.class, OffsetDateTime.class,
+                ZonedDateTime.class, java.util.Date.class, Timestamp.class
+        );
+        return dateTypes.stream()
+                .filter(type -> conversionService.canConvert(String.class, type))
+                .map(type -> tryConvertToType(stringValue, type))
                 .filter(Objects::nonNull)
                 .findFirst()
                 .orElse(null);
+    }
 
-        if (converted != null) {
-            log.debug("Spring converted parameter '{}' from String to {}: {}",
-                    stringValue, converted.getClass().getSimpleName(), converted);
-            return converted;
+    private Object tryConvertNumericTypes(String stringValue) {
+        // Don't convert very long digit strings (likely IDs or codes)
+        if (stringValue.length() > 15 && !stringValue.contains(".")) {
+            return null;
         }
+        
+        List<Class<?>> numericTypes = List.of(BigDecimal.class, Long.class, Integer.class);
+        return numericTypes.stream()
+                .filter(type -> conversionService.canConvert(String.class, type))
+                .map(type -> tryConvertToType(stringValue, type))
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse(null);
+    }
 
-        // No conversion possible: let JPQL engine handle it
-        log.debug("No conversion possible for '{}', letting JPQL engine handle it", stringValue);
-        return stringValue;
+    private boolean isLikelyNumeric(String s) {
+        if (s == null || s.isEmpty()) return false;
+        int dotCount = 0;
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (Character.isDigit(c)) continue;
+            if (c == '.' && dotCount == 0) {
+                dotCount++;
+                continue;
+            }
+            if (i == 0 && (c == '-' || c == '+')) continue;
+            return false;
+        }
+        return Character.isDigit(s.charAt(s.length() - 1)); // Must end with digit
     }
 
     /**

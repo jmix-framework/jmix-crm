@@ -51,11 +51,11 @@ class Client360ReportIntegrationTest extends AbstractTest {
 
         // Client information assertions
         assertThat(htmlContent).contains(client.getName());
-        assertThat(htmlContent).contains("Report Period:");
+        assertThat(htmlContent).contains("Period:");
 
         // Essential sections must be present (using correct HTML labels)
         assertThat(htmlContent).contains("Orders (");
-        assertThat(htmlContent).contains("€"); // Currency formatting
+        assertThat(htmlContent).contains("$"); // Currency formatting (now $)
         assertThat(htmlContent).contains("Invoice Total");    // Korrekte Bezeichnung aus HTML
         assertThat(htmlContent).contains("Amount Paid");      // Korrekte Bezeichnung aus HTML
         assertThat(htmlContent).contains("Outstanding");
@@ -64,8 +64,8 @@ class Client360ReportIntegrationTest extends AbstractTest {
         assertThat(htmlContent).contains("Orders (0)");
         assertThat(htmlContent).contains("No orders found");
 
-        // Check for zero currency formatting (€ 0,00 is default in template)
-        assertThat(htmlContent).contains("€ 0,00");
+        // Check for zero currency formatting ($0.00 is default in template)
+        assertThat(htmlContent).contains("$0.00");
 
         // Risk indicators section should be present
         assertThat(htmlContent).contains("Risk Level:");

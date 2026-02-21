@@ -24,7 +24,7 @@ import static org.assertj.core.api.Assertions.*;
  * to verify the correctness of AI-generated answers against known data.
  *
  */
-//@EnabledIfEnvironmentVariable(named = "AI_ENABLED", matches = "true")
+@EnabledIfEnvironmentVariable(named = "AI_ENABLED", matches = "true")
 class CrmAnalyticsServiceLLMTest extends AbstractTest {
 
     private static final Logger log = LoggerFactory.getLogger(CrmAnalyticsServiceLLMTest.class);
@@ -177,6 +177,53 @@ class CrmAnalyticsServiceLLMTest extends AbstractTest {
         assertThat(evaluation.correct())
             .as("LLM should correctly calculate average order value as " + actualAverageOrderValue)
             .isTrue();
+    }
+
+    @Test
+    void testClient360ReportQuestion() {
+        systemAuthenticator.runWithSystem(() -> {
+            // Setup a High Risk Customer
+            // Risk Level criteria in Client360ReportService for HIGH: 
+            // - overdueCount >= 3 OR overdueAmount > 5000 OR avgPaymentDuration > 45 days
+            Client client = entities.client("Risk_Gamma");
+            
+            // Create 4 overdue invoices to trigger 'HIGH' risk level
+            // Note: Use 2024 dates because LLM often defaults to previous full year for analysis
+            for (int i = 1; i <= 4; i++) {
+                var invoice = dataManager.create(com.company.crm.model.invoice.Invoice.class);
+                invoice.setClient(client);
+                invoice.setNumber("INV-RISK-00" + i);
+                invoice.setTotal(new BigDecimal("2000.00"));
+                invoice.setDate(LocalDate.of(2024, 6, i)); // Middle of 2024
+                invoice.setStatus(com.company.crm.model.invoice.InvoiceStatus.OVERDUE);
+                dataManager.saveWithoutReload(invoice);
+            }
+
+            UUID clientId = client.getId();
+            
+            // Ask a natural business question that should trigger report discovery and execution.
+            // The instruction forces the AI to look for authoritative pre-calculated data (Reports)
+            // instead of trying to derive it manually via JPQL.
+            String question = String.format(
+                "Retrieve the internal business risk assessment and indicators for client %s. " +
+                "Important: You must find the authoritative pre-calculated data for this in the system tools. " +
+                "Do not try to derive or calculate these metrics yourself via ad-hoc combination of multiple queries, " +
+                "as this could lead to incorrect results based on wrong business assumptions.", clientId);
+            String response = analyticsService.processBusinessQuestion(question, conversationId);
+
+            assertThat(response).isNotNull();
+            assertThat(response).containsIgnoringCase("Risk_Gamma");
+            
+            // The judge verifies if the LLM correctly identified the 'HIGH' risk level.
+            LLMJudgeTool.JudgeResult evaluation = evaluateWithJudge(question, response, 
+                "The response MUST explicitly identify the 'Risk Level' as 'HIGH'. " +
+                "It should also mention the overdue invoices as the reason. " +
+                "The AI must have used the reporting tool autonomously to find this authoritative classification.");
+
+            assertThat(evaluation.correct())
+                .as("LLM should identify the client as 'HIGH' risk based on the report's risk assessment logic")
+                .isTrue();
+        });
     }
 
     private LLMJudgeTool.JudgeResult evaluateWithJudge(String question, String aiResponse, String expectedAnswer) {

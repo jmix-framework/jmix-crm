@@ -41,7 +41,7 @@ class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
             "SELECT EXTRACT(YEAR FROM o.date) AS orderYear, EXTRACT(MONTH FROM o.date) AS orderMonth, COUNT(o) AS orderCount " +
             "FROM Order_ o GROUP BY EXTRACT(YEAR FROM o.date), EXTRACT(MONTH FROM o.date) ORDER BY orderYear, orderMonth",
             Map.of(),
-            List.of("orderYear", "orderMonth", "orderCount")
+            List.of("orderYear", "orderMonth", "orderCount"), null, null
         );
 
         assertThat(result.success()).isTrue();
@@ -61,7 +61,7 @@ class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
         QueryExecutionResult result = jpqlQueryTool.executeQuery(
             "SELECT o.total AS originalTotal, (o.total * 2) AS doubledTotal FROM Order_ o WHERE o.total > 0 ORDER BY o.total",
             Map.of(),
-            List.of("originalTotal", "doubledTotal")
+            List.of("originalTotal", "doubledTotal"), null, null
         );
 
         if (result.success()) {
@@ -86,7 +86,7 @@ class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
             "CONCAT(c.name, ' - Client') AS concatName " +
             "FROM Client c ORDER BY c.name",
             Map.of(),
-            List.of("upperName", "lowerName", "nameLength", "nameSubstring", "concatName")
+            List.of("upperName", "lowerName", "nameLength", "nameSubstring", "concatName"), null, null
         );
 
         assertThat(result.success()).isTrue();
@@ -109,7 +109,7 @@ class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
             "COALESCE(SUM(o.total), 0) AS totalRevenue " +
             "FROM Client c LEFT JOIN c.orders o GROUP BY c ORDER BY totalRevenue DESC",
             Map.of(),
-            List.of("clientName", "clientCategory", "totalRevenue")
+            List.of("clientName", "clientCategory", "totalRevenue"), null, null
         );
 
         assertThat(result.success()).isTrue();
@@ -126,7 +126,7 @@ class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
         QueryExecutionResult result = jpqlQueryTool.executeQuery(
             "SELECT c.name AS clientName, o.total AS orderTotal FROM Client c JOIN c.orders o ORDER BY o.total DESC",
             Map.of(),
-            List.of("clientName", "orderTotal")
+            List.of("clientName", "orderTotal"), null, null
         );
 
         if (result.success()) {
@@ -150,7 +150,7 @@ class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
             "MIN(o.total) AS minOrder " +
             "FROM Order_ o",
             Map.of(),
-            List.of("orderCount", "totalRevenue", "averageOrder", "maxOrder", "minOrder")
+            List.of("orderCount", "totalRevenue", "averageOrder", "maxOrder", "minOrder"), null, null
         );
 
         assertThat(result.success()).isTrue();
@@ -176,7 +176,7 @@ class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
             "SELECT o.number AS orderNumber, o.date AS orderDate " +
             "FROM Order_ o WHERE @between(o.date, now-90, now, day) ORDER BY o.date DESC",
             Map.of(),
-            List.of("orderNumber", "orderDate")
+            List.of("orderNumber", "orderDate"), null, null
         );
 
         assertThat(recentResult.success()).isTrue();
@@ -186,7 +186,7 @@ class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
         QueryExecutionResult todayResult = jpqlQueryTool.executeQuery(
             "SELECT COUNT(o) AS todayOrderCount FROM Order_ o WHERE @today(o.date)",
             Map.of(),
-            List.of("todayOrderCount")
+            List.of("todayOrderCount"), null, null
         );
 
         assertThat(todayResult.success()).isTrue();
@@ -199,7 +199,7 @@ class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
         QueryExecutionResult result = jpqlQueryTool.executeQuery(
             "SELECT c.name AS clientName FROM Client c WHERE UPPER(c.name) LIKE '%CORP%' OR UPPER(c.name) LIKE '%ENTERPRISE%'",
             Map.of(),
-            List.of("clientName")
+            List.of("clientName"), null, null
         );
 
         if (result.success()) {
@@ -223,25 +223,16 @@ class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
         var smallClient = entities.client("StartupXYZ");
 
         // Create orders with different values and dates for testing
-        createTestOrder(enterpriseClient, "ENT-001", new BigDecimal("15000.50"), LocalDate.now().minusDays(5));
-        createTestOrder(enterpriseClient, "ENT-002", new BigDecimal("22000.00"), LocalDate.now().minusDays(15));
-        createTestOrder(enterpriseClient, "ENT-003", new BigDecimal("18000.75"), LocalDate.now().minusDays(25));
+        entities.order(enterpriseClient, "ENT-001", LocalDate.now().minusDays(5), com.company.crm.model.order.OrderStatus.DONE, new BigDecimal("15000.50"));
+        entities.order(enterpriseClient, "ENT-002", LocalDate.now().minusDays(15), com.company.crm.model.order.OrderStatus.DONE, new BigDecimal("22000.00"));
+        entities.order(enterpriseClient, "ENT-003", LocalDate.now().minusDays(25), com.company.crm.model.order.OrderStatus.DONE, new BigDecimal("18000.75"));
 
-        createTestOrder(corporateClient, "CORP-001", new BigDecimal("12000.25"), LocalDate.now().minusDays(8));
-        createTestOrder(corporateClient, "CORP-002", new BigDecimal("16000.00"), LocalDate.now().minusDays(18));
+        entities.order(corporateClient, "CORP-001", LocalDate.now().minusDays(8), com.company.crm.model.order.OrderStatus.DONE, new BigDecimal("12000.25"));
+        entities.order(corporateClient, "CORP-002", LocalDate.now().minusDays(18), com.company.crm.model.order.OrderStatus.DONE, new BigDecimal("16000.00"));
 
-        createTestOrder(regularClient, "REG-001", new BigDecimal("5000.00"), LocalDate.now().minusDays(10));
-        createTestOrder(regularClient, "REG-002", new BigDecimal("7500.50"), LocalDate.now().minusDays(30));
+        entities.order(regularClient, "REG-001", LocalDate.now().minusDays(10), com.company.crm.model.order.OrderStatus.DONE, new BigDecimal("5000.00"));
+        entities.order(regularClient, "REG-002", LocalDate.now().minusDays(30), com.company.crm.model.order.OrderStatus.DONE, new BigDecimal("7500.50"));
 
-        createTestOrder(smallClient, "START-001", new BigDecimal("1200.00"), LocalDate.now().minusDays(45));
-    }
-
-    private void createTestOrder(Client client, String orderNumber, BigDecimal total, LocalDate date) {
-        var order = dataManager.create(Order.class);
-        order.setNumber(orderNumber);
-        order.setClient(client);
-        order.setTotal(total);
-        order.setDate(date);
-        dataManager.saveWithoutReload(order);
+        entities.order(smallClient, "START-001", LocalDate.now().minusDays(45), com.company.crm.model.order.OrderStatus.DONE, new BigDecimal("1200.00"));
     }
 }

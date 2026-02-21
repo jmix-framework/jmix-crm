@@ -68,7 +68,7 @@ class Client360ReportServiceCustomerTest extends AbstractServiceTest<Client360Re
 
     @Test
     void isNewCustomer_returnsFalseForOldClient() {
-        Client client = entities.client("Old Customer", 60);
+        Client client = entities.client("Old Customer", 61);
 
         boolean result = service.isNewCustomer(client);
 
@@ -200,7 +200,7 @@ class Client360ReportServiceCustomerTest extends AbstractServiceTest<Client360Re
 
     @Test
     void getCustomerTenure_returnsCorrectTenureForMonthsOldCustomer() {
-        Client client = entities.client("Month Customer", 90); // ~3 months
+        Client client = entities.client("Month Customer", 95); // ~3 months
 
         String tenure = service.getCustomerTenure(client);
 
@@ -209,7 +209,7 @@ class Client360ReportServiceCustomerTest extends AbstractServiceTest<Client360Re
 
     @Test
     void getCustomerTenure_returnsCorrectTenureForYearsOldCustomer() {
-        Client client = entities.client("Year Customer", 730); // ~2 years
+        Client client = entities.client("Year Customer", 750); // ~2 years
 
         String tenure = service.getCustomerTenure(client);
 

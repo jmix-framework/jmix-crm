@@ -776,8 +776,8 @@
                                     <div class="contact-position">${contact.fields.position}</div>
                                 </#if>
                             </div>
-                            <span class="contact-status ${contact.fields.isActive?then('contact-active', 'contact-inactive')}">
-                                ${contact.fields.isActive?then('Active', 'Inactive')}
+                            <span class="contact-status <#if (contact.fields.isActive!false)?string == 'true'>contact-active<#else>contact-inactive</#if>">
+                                <#if (contact.fields.isActive!false)?string == 'true'>Active<#else>Inactive</#if>
                             </span>
                         </div>
 

@@ -46,6 +46,8 @@ public class JpqlQueryTool {
      * @param jpqlQuery The JPQL query to execute against the CRM database. Use proper entity names like 'Client', 'Order_', 'OrderItem', etc.
      * @param parameters Named parameters for the query.
      * @param selectAliases List of aliases used in SELECT clause, in order.
+     * @param offset Optional: Starting row index (default: 0).
+     * @param limit Optional: Maximum number of rows to return (default: 50, max: 200).
      * @return Query execution result with data or error message
      */
     @Tool(description = """
@@ -57,6 +59,12 @@ public class JpqlQueryTool {
         3. MUST provide the selectAliases parameter with all aliases in order
         4. Use exact entity names and attribute names from the schema
         5. Prefer tested and reliable functions over advanced/experimental features
+
+        PAGINATION:
+        - Results are limited to 50 rows by default (max 200).
+        - If the result contains 'hasMore: true', more data is available in the database.
+        - To fetch the next set of results, call this tool again with an increased 'offset'.
+        - Use server-side aggregation (COUNT, SUM, AVG) whenever possible instead of fetching all rows.
 
         ALIAS REQUIREMENT:
         ✓ CORRECT: SELECT c.name AS clientName, COUNT(o) AS orderCount FROM Client c LEFT JOIN c.orders o GROUP BY c
@@ -71,7 +79,7 @@ public class JpqlQueryTool {
         - Use entity relationships for joins not foreign keys
         - No SELECT * allowed - specify exact attributes
         - Use COUNT(entity) not COUNT(*)
-        - No aliases in SELECT for security (AS aliases required for this tool only)
+        - AS aliases are MANDATORY for all SELECT fields (security and parsing requirement)
         - No subqueries in SELECT clause
         - Use GROUP BY entity not GROUP BY entity.id
 
@@ -192,10 +200,12 @@ public class JpqlQueryTool {
     public QueryExecutionResult executeQuery(
             @ToolParam(description = "JPQL query with AS aliases for all SELECT fields") String jpqlQuery,
             @ToolParam(description = "Named parameters for the query (empty map if none)") Map<String, Object> parameters,
-            @ToolParam(description = "List of aliases used in SELECT clause, in order (e.g., ['clientName', 'orderCount'])") List<String> selectAliases) {
+            @ToolParam(description = "List of aliases used in SELECT clause, in order (e.g., ['clientName', 'orderCount'])") List<String> selectAliases,
+            @ToolParam(description = "Optional: Starting row index (default: 0)") Integer offset,
+            @ToolParam(description = "Optional: Maximum number of rows to return (default: 50, max: 200)") Integer limit) {
         try {
-            log.info("LLM Tool Call: executeQuery()");
-            return aiJpqlQueryService.executeJpqlQuery(jpqlQuery, parameters, selectAliases);
+            log.info("LLM Tool Call: executeQuery(offset={}, limit={})", offset, limit);
+            return aiJpqlQueryService.executeJpqlQuery(jpqlQuery, parameters, selectAliases, offset, limit);
         } catch (Exception e) {
             log.error("Query Error: {} - {}", jpqlQuery, e.getMessage());
             return QueryExecutionResult.failed("Error executing query: " + e.getMessage());

@@ -1,0 +1,106 @@
+package com.company.crm.ai.jmix.report.run;
+
+import com.company.crm.AbstractTest;
+import com.company.crm.ai.jmix.report.introspection.AiReportModelDescriptorYamlExporter;
+import com.company.crm.ai.jmix.report.introspection.JmixReportDiscoveryTool;
+import com.company.crm.model.client.Client;
+import com.company.crm.service.ai.LLMJudgeTool;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
+import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+/**
+ * Integration test for RunReportTool using a real ChatClient to verify tool orchestration.
+ */
+@EnabledIfEnvironmentVariable(named = "AI_ENABLED", matches = "true")
+class RunReportToolLLMIntegrationTest extends AbstractTest {
+
+    @Autowired
+    private AiReportExecutionService executionService;
+
+    @Autowired
+    private AiReportModelDescriptorYamlExporter reportYamlExporter;
+
+    @Autowired
+    private ChatClient.Builder chatClientBuilder;
+
+    private ChatClient chatClient;
+    private LLMJudgeTool llmJudgeTool;
+    private ChatClient judgeClient;
+
+    private JmixReportDiscoveryTool discoveryTool;
+    private RunReportTool runReportTool;
+
+    @BeforeEach
+    @Override
+    protected void beforeEach() {
+        List<String> allowedReports = List.of("client-360-report");
+        discoveryTool = new JmixReportDiscoveryTool(reportYamlExporter, allowedReports);
+        runReportTool = new RunReportTool(executionService, allowedReports);
+        
+        // Use a fresh builder from the context to avoid state pollution
+        this.chatClient = applicationContext.getBean(ChatClient.Builder.class)
+                .defaultSystem("You are a helpful assistant. Use report tools to answer questions.")
+                .build();
+
+        llmJudgeTool = new LLMJudgeTool();
+        this.judgeClient = applicationContext.getBean(ChatClient.Builder.class)
+                .defaultSystem("You are an LLM Judge. Evaluate if AI responses correctly answer questions based on the provided data.")
+                .defaultTools(llmJudgeTool)
+                .build();
+    }
+
+    @Test
+    void testDiscoveryAndRunReportFlow() {
+        systemAuthenticator.runWithSystem(() -> {
+            Client client = entities.client("LLM Test Client");
+            String clientId = client.getId().toString();
+            String fromDate = LocalDate.now().minusDays(30).toString();
+            String toDate = LocalDate.now().toString();
+
+            String question = String.format(
+                    "Discover the reports, find the one for client 360 overview, and run it for client ID %s from %s to %s. Summarize the report. " +
+                    "Important: At the end of your response, explicitly list the technical tool calls you made (e.g., 'Executed: toolName(args)') " +
+                    "so I can verify your workflow.",
+                    clientId, fromDate, toDate);
+
+            String response = chatClient.prompt()
+                    .user(question)
+                    .tools(discoveryTool, runReportTool)
+                    .call()
+                    .content();
+
+            assertThat(response).containsIgnoringCase("Client 360");
+            assertThat(response).containsIgnoringCase("LLM Test Client");
+
+            LLMJudgeTool.JudgeResult evaluation = evaluateWithJudge(question, response, 
+                    "The AI should have identified client-360-report and called runReport with correct parameters. " +
+                    "The summary should reflect the content of the report. " +
+                    "Verify that the AI reported calling both 'getAvailableReports' and 'runReport' in its technical summary.");
+            
+            assertThat(evaluation.correct()).isTrue();
+        });
+    }
+
+    private LLMJudgeTool.JudgeResult evaluateWithJudge(String question, String aiResponse, String criteria) {
+        String judgePrompt = String.format("""
+                Question: %s
+                AI Response: %s
+                Criteria: %s
+                
+                Verify if the AI followed the correct workflow and provided a meaningful summary of the report content.
+                Use submitJudgement(correct, reasoning).
+                """, question, aiResponse, criteria);
+
+        judgeClient.prompt(judgePrompt).call().content();
+        return llmJudgeTool.getLastResult();
+    }
+}

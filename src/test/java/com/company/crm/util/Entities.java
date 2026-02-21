@@ -61,15 +61,16 @@ public class Entities {
     }
 
     public Client client(String name, int daysAgo) {
-        return createAndSaveEntity(Client.class, client -> {
-            client.setName(name);
-            client.setAddress(address());
-            client.setCreatedDate(
-                    LocalDate.now().minusDays(daysAgo)
-                            .atStartOfDay()
-                            .atZone(java.time.ZoneId.systemDefault())
-                            .toOffsetDateTime());
+        Client client = createAndSaveEntity(Client.class, c -> {
+            c.setName(name);
+            c.setAddress(address());
         });
+        client.setCreatedDate(
+                LocalDate.now().minusDays(daysAgo)
+                        .atStartOfDay()
+                        .atZone(java.time.ZoneId.systemDefault())
+                        .toOffsetDateTime());
+        return saveWithoutReload(client);
     }
 
     public Order order(Client client, LocalDate date, OrderStatus status) {
@@ -80,7 +81,17 @@ public class Entities {
         });
     }
 
-    public Order order(Client client, LocalDate date, OrderStatus status, BigDecimal total) {
+    public Order order(Client client, String orderNumber, LocalDate date, com.company.crm.model.order.OrderStatus status, BigDecimal total) {
+        Order order = createEntity(Order.class);
+        order.setClient(client);
+        order.setNumber(orderNumber);
+        order.setDate(date);
+        order.setStatus(status);
+        order.setTotal(total);
+        return saveWithoutReload(order);
+    }
+
+    public Order order(Client client, LocalDate date, com.company.crm.model.order.OrderStatus status, BigDecimal total) {
         return createAndSaveEntity(Order.class, order -> {
             order.setClient(client);
             order.setDate(date);

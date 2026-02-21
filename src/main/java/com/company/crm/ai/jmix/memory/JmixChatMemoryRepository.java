@@ -91,8 +91,6 @@ public class JmixChatMemoryRepository implements ChatMemoryRepository {
         SaveContext saveContext = new SaveContext();
         List<ChatMessage> existingMessages = loadChatMessages(uuid);
 
-        markRemovedMessageForRemovalInSaveContext(messages, existingMessages, saveContext);
-
         markNewMessagesForSavingInSaveContext(messages, existingMessages, conversation, saveContext);
 
         saveContext.setDiscardSaved(true);
@@ -111,17 +109,6 @@ public class JmixChatMemoryRepository implements ChatMemoryRepository {
                 })
                 .map(newMessage -> mapMessageToEntity(newMessage, conversation))
                 .forEach(saveContext::saving);
-    }
-
-    private void markRemovedMessageForRemovalInSaveContext(List<Message> messages, List<ChatMessage> existingMessages, SaveContext saveContext) {
-        Set<UUID> newMessageEntityIds = messages.stream()
-                .map(message -> (UUID) message.getMetadata().get(ENTITY_ID_METADATA_KEY))
-                .filter(Objects::nonNull)
-                .collect(Collectors.toSet());
-
-        existingMessages.stream()
-                .filter(existingMessage -> !newMessageEntityIds.contains(existingMessage.getId()))
-                .forEach(saveContext::removing);
     }
 
 
@@ -202,7 +189,7 @@ public class JmixChatMemoryRepository implements ChatMemoryRepository {
     private List<ChatMessage> loadChatMessages(UUID conversationId) {
         return dataManager.load(ChatMessage.class)
                 .condition(PropertyCondition.equal("conversation.id", conversationId))
-                .sort(Sort.by("createdDate"))
+                .sort(Sort.by(Sort.Order.asc("createdDate"), Sort.Order.asc("id")))
                 .list();
     }
 

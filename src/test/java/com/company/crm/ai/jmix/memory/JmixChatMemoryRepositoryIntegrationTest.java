@@ -5,6 +5,8 @@ import com.company.crm.ai.entity.AiConversation;
 import com.company.crm.ai.entity.ChatMessage;
 import com.company.crm.ai.entity.ChatMessageType;
 import com.company.crm.ai.service.AiConversationService;
+import com.company.crm.security.role.AiChatUserRole;
+import com.company.crm.security.role.ManagerRole;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,70 +28,68 @@ class JmixChatMemoryRepositoryIntegrationTest extends AbstractTest {
     @Autowired
     private AiConversationService aiConversationService;
 
-    @Test
-    void testSaveAndLoadMessages() {
-        AiConversation conversation = aiConversationService.createNewConversation("Test conversation");
-        String conversationId = conversation.getId().toString();
-
-        // Create simple test messages
-        List<Message> originalMessages = List.of(
-            new UserMessage("Message 1"),
-            new AssistantMessage("Message 2")
-        );
-
-        // Save messages
-        chatMemoryRepository.saveAll(conversationId, originalMessages);
-
-        // Verify conversation was created by checking conversation IDs
-        List<String> conversationIds = chatMemoryRepository.findConversationIds();
-        assertThat(conversationIds).contains(conversationId);
-
-        // Load messages back and verify count
-        List<Message> loadedMessages = chatMemoryRepository.findByConversationId(conversationId);
-        assertThat(loadedMessages).hasSize(2);
-
-        // Simple content check without strict ordering for now
-        assertThat(loadedMessages.stream().map(Message::getText).toList())
-            .containsExactlyInAnyOrder("Message 1", "Message 2");
-
-    }
-
-    @Test
-    void testReplaceSemantics() {
-        AiConversation conversation = aiConversationService.createNewConversation("Replace test conversation");
-        String conversationId = conversation.getId().toString();
-
-        // Save initial messages
-        List<Message> initialMessages = List.of(
-            new UserMessage("First message"),
-            new AssistantMessage("First response")
-        );
-        chatMemoryRepository.saveAll(conversationId, initialMessages);
-
-        // Verify initial save
-        List<Message> firstLoad = chatMemoryRepository.findByConversationId(conversationId);
-        assertThat(firstLoad).hasSize(2);
-
-        // Save different messages to same conversation (should replace)
-        List<Message> replacementMessages = List.of(
-            new UserMessage("New first message"),
-            new AssistantMessage("New first response"),
-            new UserMessage("Additional message")
-        );
-        chatMemoryRepository.saveAll(conversationId, replacementMessages);
-
-        // Verify replacement
-        List<Message> secondLoad = chatMemoryRepository.findByConversationId(conversationId);
-        assertThat(secondLoad).hasSize(3);
-        assertThat(secondLoad.get(0).getText()).isEqualTo("New first message");
-        assertThat(secondLoad.get(1).getText()).isEqualTo("New first response");
-        assertThat(secondLoad.get(2).getText()).isEqualTo("Additional message");
-
-    }
+        @Test
+        void testSaveAndLoadMessages() {
+            AiConversation conversation = aiConversationService.createNewConversation("Welcome");
+            String conversationId = conversation.getId().toString();
+    
+            // Create simple test messages
+            List<Message> originalMessages = List.of(
+                new UserMessage("Message 1"),
+                new AssistantMessage("Message 2")
+            );
+    
+            // Save messages
+            chatMemoryRepository.saveAll(conversationId, originalMessages);
+    
+            // Verify conversation was created by checking conversation IDs
+            List<String> conversationIds = chatMemoryRepository.findConversationIds();
+            assertThat(conversationIds).contains(conversationId);
+    
+            // Load messages back and verify count (1 welcome + 2 new)
+            List<Message> loadedMessages = chatMemoryRepository.findByConversationId(conversationId);
+            assertThat(loadedMessages).hasSize(3);
+    
+            // Simple content check
+            assertThat(loadedMessages.stream().map(Message::getText).toList())
+                .contains("Welcome", "Message 1", "Message 2");
+    
+        }
+    
+        @Test
+        void testAdditiveSemantics() {
+            AiConversation conversation = aiConversationService.createNewConversation("Welcome");
+            String conversationId = conversation.getId().toString();
+    
+            // Save initial messages
+            List<Message> initialMessages = List.of(
+                new UserMessage("First message"),
+                new AssistantMessage("First response")
+            );
+            chatMemoryRepository.saveAll(conversationId, initialMessages);
+    
+            // Verify initial save (1 welcome + 2 initial)
+            List<Message> firstLoad = chatMemoryRepository.findByConversationId(conversationId);
+            assertThat(firstLoad).hasSize(3);
+    
+            // Save different messages to same conversation (should be additive now, no more replacement)
+            List<Message> additionalMessages = List.of(
+                new UserMessage("New first message"),
+                new AssistantMessage("New first response"),
+                new UserMessage("Additional message")
+            );
+            chatMemoryRepository.saveAll(conversationId, additionalMessages);
+    
+            // Verify additive behavior (1 welcome + 2 initial + 3 additional)
+            List<Message> secondLoad = chatMemoryRepository.findByConversationId(conversationId);
+            assertThat(secondLoad).hasSize(6);
+            assertThat(secondLoad.stream().map(Message::getText).toList())
+                .contains("Welcome", "First message", "First response", "New first message", "New first response", "Additional message");
+        }
 
     @Test
     void testMessageTypeConversions() {
-        AiConversation conversation = aiConversationService.createNewConversation("Message type test");
+        AiConversation conversation = aiConversationService.createNewConversation("Welcome");
         String conversationId = conversation.getId().toString();
 
         // Create messages of different types
@@ -102,22 +102,22 @@ class JmixChatMemoryRepositoryIntegrationTest extends AbstractTest {
         chatMemoryRepository.saveAll(conversationId, mixedMessages);
         List<Message> loadedMessages = chatMemoryRepository.findByConversationId(conversationId);
 
-        // Verify type conversion
-        assertThat(loadedMessages).hasSize(3);
-        assertThat(loadedMessages.get(0)).isInstanceOf(UserMessage.class);
-        assertThat(loadedMessages.get(1)).isInstanceOf(AssistantMessage.class);
-        assertThat(loadedMessages.get(2)).isInstanceOf(SystemMessage.class);
+        // Verify type conversion (1 welcome + 3 new)
+        assertThat(loadedMessages).hasSize(4);
+        
+        // Find by content to be stable
+        Message userMsg = loadedMessages.stream().filter(m -> "User question".equals(m.getText())).findFirst().orElseThrow();
+        Message assistantMsg = loadedMessages.stream().filter(m -> "Assistant response".equals(m.getText())).findFirst().orElseThrow();
+        Message systemMsg = loadedMessages.stream().filter(m -> "System message for context".equals(m.getText())).findFirst().orElseThrow();
 
-        // Verify content preservation
-        assertThat(loadedMessages.get(0).getText()).isEqualTo("User question");
-        assertThat(loadedMessages.get(1).getText()).isEqualTo("Assistant response");
-        assertThat(loadedMessages.get(2).getText()).isEqualTo("System message for context");
-
+        assertThat(userMsg).isInstanceOf(UserMessage.class);
+        assertThat(assistantMsg).isInstanceOf(AssistantMessage.class);
+        assertThat(systemMsg).isInstanceOf(SystemMessage.class);
     }
 
     @Test
     void testConversationCreation() {
-        AiConversation conversation = aiConversationService.createNewConversation("Conversation creation test");
+        AiConversation conversation = aiConversationService.createNewConversation("Welcome");
         String conversationId = conversation.getId().toString();
 
         // Save messages to pre-created conversation
@@ -128,6 +128,9 @@ class JmixChatMemoryRepositoryIntegrationTest extends AbstractTest {
         List<String> idsAfterSave = chatMemoryRepository.findConversationIds();
         assertThat(idsAfterSave).contains(conversationId);
 
+        // Verify messages exist (1 welcome + 1 new)
+        assertThat(chatMemoryRepository.findByConversationId(conversationId)).hasSize(2);
+
         // Verify conversation exists in database
         UUID uuid = UUID.fromString(conversationId);
         AiConversation reloadedConversation = dataManager.load(AiConversation.class).id(uuid).one();
@@ -137,8 +140,8 @@ class JmixChatMemoryRepositoryIntegrationTest extends AbstractTest {
 
     @Test
     void testMultipleConversationIsolation() {
-        AiConversation conversation1 = aiConversationService.createNewConversation("Conversation 1");
-        AiConversation conversation2 = aiConversationService.createNewConversation("Conversation 2");
+        AiConversation conversation1 = aiConversationService.createNewConversation("Welcome 1");
+        AiConversation conversation2 = aiConversationService.createNewConversation("Welcome 2");
         String conversation1Id = conversation1.getId().toString();
         String conversation2Id = conversation2.getId().toString();
 
@@ -159,12 +162,13 @@ class JmixChatMemoryRepositoryIntegrationTest extends AbstractTest {
         List<Message> conv1Loaded = chatMemoryRepository.findByConversationId(conversation1Id);
         List<Message> conv2Loaded = chatMemoryRepository.findByConversationId(conversation2Id);
 
-        assertThat(conv1Loaded).hasSize(1);
-        assertThat(conv1Loaded.get(0).getText()).isEqualTo("Conversation 1 message");
+        // 1 welcome + 1 new
+        assertThat(conv1Loaded).hasSize(2);
+        assertThat(conv1Loaded.stream().map(Message::getText).toList()).contains("Welcome 1", "Conversation 1 message");
 
-        assertThat(conv2Loaded).hasSize(2);
-        assertThat(conv2Loaded.get(0).getText()).isEqualTo("Conversation 2 message");
-        assertThat(conv2Loaded.get(1).getText()).isEqualTo("Conversation 2 response");
+        // 1 welcome + 2 new
+        assertThat(conv2Loaded).hasSize(3);
+        assertThat(conv2Loaded.stream().map(Message::getText).toList()).contains("Welcome 2", "Conversation 2 message", "Conversation 2 response");
 
     }
 
@@ -180,9 +184,9 @@ class JmixChatMemoryRepositoryIntegrationTest extends AbstractTest {
         );
         chatMemoryRepository.saveAll(conversationId, messages);
 
-        // Verify messages exist
+        // Verify messages exist (1 welcome + 2 new)
         List<Message> beforeDelete = chatMemoryRepository.findByConversationId(conversationId);
-        assertThat(beforeDelete).hasSize(2);
+        assertThat(beforeDelete).hasSize(3);
 
         // Delete conversation
         chatMemoryRepository.deleteByConversationId(conversationId);
@@ -201,7 +205,7 @@ class JmixChatMemoryRepositoryIntegrationTest extends AbstractTest {
 
     @Test
     void testMessageOrdering() {
-        AiConversation conversation = aiConversationService.createNewConversation("Message ordering test");
+        AiConversation conversation = aiConversationService.createNewConversation("Welcome");
         String conversationId = conversation.getId().toString();
 
         // Save messages and verify they maintain order
@@ -215,12 +219,13 @@ class JmixChatMemoryRepositoryIntegrationTest extends AbstractTest {
 
         chatMemoryRepository.saveAll(conversationId, orderedMessages);
 
-        // Load and verify order
+        // Load and verify order (1 welcome + 5 new)
         List<Message> loadedMessages = chatMemoryRepository.findByConversationId(conversationId);
-        assertThat(loadedMessages).hasSize(5);
+        assertThat(loadedMessages).hasSize(6);
 
+        assertThat(loadedMessages.get(0).getText()).isEqualTo("Welcome");
         for (int i = 0; i < orderedMessages.size(); i++) {
-            assertThat(loadedMessages.get(i).getText())
+            assertThat(loadedMessages.get(i + 1).getText())
                 .isEqualTo(orderedMessages.get(i).getText());
         }
 
@@ -228,7 +233,7 @@ class JmixChatMemoryRepositoryIntegrationTest extends AbstractTest {
 
     @Test
     void testEntityMappingConsistency() {
-        AiConversation conversation = aiConversationService.createNewConversation("Entity mapping test");
+        AiConversation conversation = aiConversationService.createNewConversation("Welcome");
         String conversationId = conversation.getId().toString();
 
         // Save a message and verify entity mapping
@@ -238,16 +243,96 @@ class JmixChatMemoryRepositoryIntegrationTest extends AbstractTest {
         // Check entity directly in database
         UUID uuid = UUID.fromString(conversationId);
         List<ChatMessage> chatMessages = dataManager.load(ChatMessage.class)
-            .query("SELECT m FROM ChatMessage m WHERE m.conversation.id = :conversationId")
+            .query("SELECT m FROM ChatMessage m WHERE m.conversation.id = :conversationId ORDER BY m.createdDate, m.id")
             .parameter("conversationId", uuid)
             .list();
 
-        assertThat(chatMessages).hasSize(1);
-        ChatMessage firstChatMessage = chatMessages.get(0);
-        assertThat(firstChatMessage.getContent()).isEqualTo("Test content");
-        assertThat(firstChatMessage.getType()).isEqualTo(ChatMessageType.USER);
-        assertThat(firstChatMessage.getConversation().getId()).isEqualTo(uuid);
+        // 1 welcome + 1 new
+        assertThat(chatMessages).hasSize(2);
+        
+        // Use content-based matching instead of index assuming
+        ChatMessage testContentEntity = chatMessages.stream()
+            .filter(m -> "Test content".equals(m.getContent()))
+            .findFirst()
+            .orElseThrow();
+            
+        assertThat(testContentEntity.getContent()).isEqualTo("Test content");
+        assertThat(testContentEntity.getType()).isEqualTo(ChatMessageType.USER);
+        assertThat(testContentEntity.getConversation().getId()).isEqualTo(uuid);
 
+    }
+
+    @Test
+    void testIsolationBetweenUsers() {
+        // 1. Create a conversation as Admin
+        final String[] conversationIdWrapper = new String[1];
+        systemAuthenticator.runWithSystem(() -> {
+            AiConversation conversation = aiConversationService.createNewConversation("Admin Private Chat");
+            conversationIdWrapper[0] = conversation.getId().toString();
+        });
+        String conversationId = conversationIdWrapper[0];
+
+        // 2. Try to access it as Manager
+        systemAuthenticator.runWithSystem(() -> {
+            testUsers.assignRowLevelRole(ManagerRole.CODE, AiChatUserRole.CODE);
+        });
+
+        runWithManager(() -> {
+            // Memory Repository should NOT find it
+            List<Message> loadedMessages = chatMemoryRepository.findByConversationId(conversationId);
+            assertThat(loadedMessages).isEmpty();
+
+            // Conversation list should NOT contain it
+            List<String> conversationIds = chatMemoryRepository.findConversationIds();
+            assertThat(conversationIds).doesNotContain(conversationId);
+        });
+
+        // 3. Admin can still see it
+        systemAuthenticator.runWithSystem(() -> {
+            List<Message> loadedMessages = chatMemoryRepository.findByConversationId(conversationId);
+            assertThat(loadedMessages).isNotEmpty();
+        });
+    }
+
+    @Test
+    void testSaveSubsetDoesNotDeleteOldMessages() {
+        AiConversation conversation = aiConversationService.createNewConversation("Welcome");
+        String conversationId = conversation.getId().toString();
+
+        // 1. Save initial 4 messages
+        List<Message> initialMessages = List.of(
+            new UserMessage("Msg 1"),
+            new AssistantMessage("Resp 1"),
+            new UserMessage("Msg 2"),
+            new AssistantMessage("Resp 2")
+        );
+        chatMemoryRepository.saveAll(conversationId, initialMessages);
+
+        // Verify all 5 are there (1 welcome + 4 new)
+        assertThat(chatMemoryRepository.findByConversationId(conversationId)).hasSize(5);
+
+        // 2. Simulate a moving window by saving only the last 2 messages
+        List<Message> loadedMessages = chatMemoryRepository.findByConversationId(conversationId);
+        // loadedMessages is [Welcome, Msg 1, Resp 1, Msg 2, Resp 2]
+        // indices [0, 1, 2, 3, 4]
+        List<Message> lastTwoMessages = loadedMessages.subList(3, 5); // [Msg 2, Resp 2]
+        
+        chatMemoryRepository.saveAll(conversationId, lastTwoMessages);
+
+        // 3. Verify that we STILL have all 5 messages in the database
+        UUID uuid = UUID.fromString(conversationId);
+        List<ChatMessage> allEntities = dataManager.load(ChatMessage.class)
+            .query("SELECT m FROM ChatMessage m WHERE m.conversation.id = :conversationId ORDER BY m.createdDate, m.id")
+            .parameter("conversationId", uuid)
+            .list();
+
+        assertThat(allEntities).hasSize(5);
+        assertThat(allEntities.stream().map(ChatMessage::getContent).toList())
+            .containsExactly("Welcome", "Msg 1", "Resp 1", "Msg 2", "Resp 2");
+    }
+
+    private List<Message> lastTwoTwoMessages(List<Message> msgs) {
+        return msgs;
     }
 
     @Test
@@ -264,20 +349,30 @@ class JmixChatMemoryRepositoryIntegrationTest extends AbstractTest {
 
         // Load messages to get their entityIds and timestamps
         List<Message> loadedMessages = chatMemoryRepository.findByConversationId(conversationId);
-        assertThat(loadedMessages).hasSize(2);
+        assertThat(loadedMessages).hasSize(3); // 1 welcome + 2 initial
 
         // Extract original timestamps by checking the database directly
         UUID uuid = UUID.fromString(conversationId);
         List<ChatMessage> originalChatMessages = dataManager.load(ChatMessage.class)
-            .query("SELECT m FROM ChatMessage m WHERE m.conversation.id = :conversationId ORDER BY m.createdDate")
+            .query("SELECT m FROM ChatMessage m WHERE m.conversation.id = :conversationId ORDER BY m.createdDate, m.id")
             .parameter("conversationId", uuid)
             .list();
 
-        assertThat(originalChatMessages).hasSize(2);
-        var firstOriginalTimestamp = originalChatMessages.get(0).getCreatedDate();
-        var secondOriginalTimestamp = originalChatMessages.get(1).getCreatedDate();
-        var firstOriginalId = originalChatMessages.get(0).getId();
-        var secondOriginalId = originalChatMessages.get(1).getId();
+        assertThat(originalChatMessages).hasSize(3);
+        
+        ChatMessage firstOriginalEntity = originalChatMessages.stream()
+            .filter(msg -> "First message".equals(msg.getContent()))
+            .findFirst()
+            .orElseThrow();
+        ChatMessage secondOriginalEntity = originalChatMessages.stream()
+            .filter(msg -> "First response".equals(msg.getContent()))
+            .findFirst()
+            .orElseThrow();
+
+        var firstOriginalTimestamp = firstOriginalEntity.getCreatedDate();
+        var secondOriginalTimestamp = secondOriginalEntity.getCreatedDate();
+        var firstOriginalId = firstOriginalEntity.getId();
+        var secondOriginalId = secondOriginalEntity.getId();
 
         // Wait a bit to ensure new timestamps would be different
         try {
@@ -292,12 +387,12 @@ class JmixChatMemoryRepositoryIntegrationTest extends AbstractTest {
 
         // Verify no duplicates were created and timestamps remain unchanged
         List<ChatMessage> reloadedChatMessages = dataManager.load(ChatMessage.class)
-            .query("SELECT m FROM ChatMessage m WHERE m.conversation.id = :conversationId ORDER BY m.createdDate")
+            .query("SELECT m FROM ChatMessage m WHERE m.conversation.id = :conversationId ORDER BY m.createdDate, m.id")
             .parameter("conversationId", uuid)
             .list();
 
-        // Still only 2 messages (no duplicates)
-        assertThat(reloadedChatMessages).hasSize(2);
+        // Still only 3 messages (no duplicates)
+        assertThat(reloadedChatMessages).hasSize(3);
 
         // Find messages by content to match them correctly
         ChatMessage firstReloaded = reloadedChatMessages.stream()

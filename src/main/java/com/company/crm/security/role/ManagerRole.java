@@ -1,5 +1,7 @@
 package com.company.crm.security.role;
 
+import com.company.crm.ai.entity.AiConversation;
+import com.company.crm.ai.entity.ChatMessage;
 import com.company.crm.model.address.Address;
 import com.company.crm.model.catalog.category.Category;
 import com.company.crm.model.catalog.item.CategoryItem;
@@ -32,8 +34,16 @@ public interface ManagerRole extends UiMinimalRole {
     String NAME = "Manager";
 
     @MenuPolicy(menuIds = {"home", "tasks", "clients", "orders"})
-    @ViewPolicy(viewIds = {"HomeView", "UserTask.list", "Client.list", "Order.list", "CategoryItem.detail", "Category.detail", "Client.detail", "Invoice.detail", "Invoice.list", "OrderItem.detail", "Order.detail", "Payment.detail", "Payment.list", "AddressFragment", "Contact.detail", "flowui_AddConditionView", "flowui_GroupFilterCondition.detail", "flowui_JpqlFilterCondition.detail", "flowui_PropertyFilterCondition.detail", "flowui_DateIntervalDialog", "FragmentRenderer"})
+    @ViewPolicy(viewIds = {"HomeView", "UserTask.list", "Client.list", "Order.list", "CategoryItem.detail", "Category.detail", "Client.detail", "Invoice.detail", "Invoice.list", "OrderItem.detail", "Order.detail", "Payment.detail", "Payment.list", "AddressFragment", "Contact.detail", "flowui_AddConditionView", "flowui_GroupFilterCondition.detail", "flowui_JpqlFilterCondition.detail", "flowui_PropertyFilterCondition.detail", "flowui_DateIntervalDialog", "FragmentRenderer", "AiConversation.list", "AiConversation.detail"})
     void views();
+
+    @EntityAttributePolicy(entityClass = AiConversation.class, attributes = "*", action = EntityAttributePolicyAction.MODIFY)
+    @EntityPolicy(entityClass = AiConversation.class, actions = EntityPolicyAction.ALL)
+    void aiConversation();
+
+    @EntityAttributePolicy(entityClass = ChatMessage.class, attributes = "*", action = EntityAttributePolicyAction.MODIFY)
+    @EntityPolicy(entityClass = ChatMessage.class, actions = EntityPolicyAction.ALL)
+    void chatMessage();
 
     @EntityAttributePolicy(entityClass = Address.class, attributes = "*", action = EntityAttributePolicyAction.MODIFY)
     @EntityPolicy(entityClass = Address.class, actions = EntityPolicyAction.ALL)
