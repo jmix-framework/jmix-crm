@@ -39,6 +39,45 @@ public class ClientService {
         return getInvoicesTotalSum(client).subtract(getPaymentsTotalSum(client));
     }
 
+    /**
+     * Retrieves the most recent transaction date for the specified client.
+     * Combines order dates, invoice dates, and payment dates to find the latest activity.
+     *
+     * @param client the {@link Client} whose last transaction date is to be found
+     * @return the most recent transaction date, or null if no transactions exist
+     */
+    public LocalDate getLastTransactionDate(Client client) {
+        try {
+            // Get last order date
+            LocalDate lastOrder = clientRepository.fluentValueLoader(
+                    "select max(o.date) from Order_ o where o.client = :client", LocalDate.class)
+                    .parameter("client", client)
+                    .optional().orElse(null);
+
+            // Get last invoice date
+            LocalDate lastInvoice = clientRepository.fluentValueLoader(
+                    "select max(i.date) from Invoice i where i.client = :client", LocalDate.class)
+                    .parameter("client", client)
+                    .optional().orElse(null);
+
+            // Get last payment date
+            LocalDate lastPayment = clientRepository.fluentValueLoader(
+                    "select max(p.date) from Payment p where p.invoice.client = :client", LocalDate.class)
+                    .parameter("client", client)
+                    .optional().orElse(null);
+
+            // Return the most recent date
+            LocalDate maxDate = null;
+            if (lastOrder != null) maxDate = lastOrder;
+            if (lastInvoice != null && (maxDate == null || lastInvoice.isAfter(maxDate))) maxDate = lastInvoice;
+            if (lastPayment != null && (maxDate == null || lastPayment.isAfter(maxDate))) maxDate = lastPayment;
+
+            return maxDate;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     public List<CompletedOrdersByDateRangeInfo> getCompletedOrdersInfo(@Nullable LocalDateRange dateRange, Client... clients) {
         boolean clientsSpecified = clients.length > 0;
 

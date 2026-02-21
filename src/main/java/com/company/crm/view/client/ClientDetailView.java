@@ -52,7 +52,6 @@ import io.jmix.core.Messages;
 import io.jmix.core.MetadataTools;
 import io.jmix.core.SaveContext;
 import io.jmix.flowui.Fragments;
-import io.jmix.flowui.Notifications;
 import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.action.view.DetailSaveCloseAction;
 import io.jmix.flowui.asynctask.UiAsyncTasks;
@@ -61,7 +60,6 @@ import io.jmix.flowui.component.formlayout.JmixFormLayout;
 import io.jmix.flowui.component.splitlayout.JmixSplitLayout;
 import io.jmix.flowui.component.tabsheet.JmixTabSheet;
 import io.jmix.flowui.component.textarea.JmixTextArea;
-import io.jmix.flowui.kit.action.ActionPerformedEvent;
 import io.jmix.flowui.kit.component.button.JmixButton;
 import io.jmix.flowui.model.DataContext;
 import io.jmix.flowui.model.InstancePropertyContainer;
@@ -75,10 +73,13 @@ import io.jmix.flowui.view.Target;
 import io.jmix.flowui.view.ViewComponent;
 import io.jmix.flowui.view.ViewController;
 import io.jmix.flowui.view.ViewDescriptor;
+import io.jmix.reportsflowui.runner.UiReportRunner;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.Date;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -113,6 +114,8 @@ public class ClientDetailView extends StandardDetailView<Client> implements Widt
     private DateTimeService dateTimeService;
     @Autowired
     private ClientRepository clientRepository;
+    @Autowired
+    private UiReportRunner uiReportRunner;
 
     @ViewComponent
     private JmixTabSheet tabSheet;
@@ -135,8 +138,6 @@ public class ClientDetailView extends StandardDetailView<Client> implements Widt
 
     @SuppressWarnings("FieldCanBeLocal")
     private final int loadStatsForLastYearsAmount = 3;
-    @Autowired
-    private Notifications notifications;
     @Autowired
     private Fragments fragments;
     @Autowired
@@ -168,6 +169,21 @@ public class ClientDetailView extends StandardDetailView<Client> implements Widt
     private void onInit(final InitEvent event) {
         TabIndexUrlQueryParameterBinder.register(this, tabSheet);
         addDetachListener(e -> asyncTasksRegistry.cancelAll());
+    }
+
+    @Subscribe("downloadProfileButton")
+    public void onDownloadProfileButtonClick(ClickEvent<JmixButton> event) {
+        LocalDate now = LocalDate.now();
+        LocalDate oneYearAgo = now.minusYears(1);
+
+        Date fromDate = Date.from(oneYearAgo.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        Date toDate = Date.from(now.atStartOfDay(ZoneId.systemDefault()).toInstant());
+
+        uiReportRunner.byReportCode("client-360-report")
+                .addParam("client", getEditedEntity())
+                .addParam("fromDate", fromDate)
+                .addParam("toDate", toDate)
+                .runAndShow();
     }
 
     @Subscribe
@@ -217,13 +233,6 @@ public class ClientDetailView extends StandardDetailView<Client> implements Widt
         paymentDetail.setClient(getEditedEntity());
     }
 
-    @Subscribe("downloadProfile")
-    private void onDownloadProfile(final ActionPerformedEvent event) {
-        // TODO: download custom design-time report
-        notifications.create("Company profile download is not available yet")
-                .withType(Notifications.Type.WARNING)
-                .show();
-    }
 
     @Subscribe(id = "addressEditBtn", subject = "clickListener")
     private void onAddressEditBtnClick(final ClickEvent<JmixButton> event) {

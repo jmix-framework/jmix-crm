@@ -6,6 +6,7 @@ import com.company.crm.model.base.UuidEntity;
 import com.company.crm.model.catalog.category.Category;
 import com.company.crm.model.catalog.item.CategoryItem;
 import com.company.crm.model.client.Client;
+import com.company.crm.model.contact.Contact;
 import com.company.crm.model.invoice.Invoice;
 import com.company.crm.model.order.Order;
 import com.company.crm.model.order.OrderItem;
@@ -40,6 +41,7 @@ public class DataCleaner implements AfterAllCallback, AfterEachCallback {
             Invoice.class,
             OrderItem.class,
             Order.class,
+            Contact.class,
             Client.class,
             CategoryItem.class,
             Category.class,

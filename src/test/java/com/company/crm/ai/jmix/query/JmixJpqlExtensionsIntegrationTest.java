@@ -23,11 +23,14 @@ import static org.assertj.core.api.Assertions.*;
 @AuthenticatedAs(AuthenticatedAs.ADMIN_USERNAME)
 class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
 
-    @Autowired
     private JpqlQueryTool jpqlQueryTool;
+
+    @Autowired
+    private AiJpqlQueryService aiJpqlQueryService;
 
     @BeforeEach
     void setUp() {
+        jpqlQueryTool = new JpqlQueryTool(aiJpqlQueryService);
         setupTestData();
     }
 

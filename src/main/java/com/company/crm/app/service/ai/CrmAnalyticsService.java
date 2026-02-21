@@ -1,7 +1,22 @@
 package com.company.crm.app.service.ai;
 
+import com.company.crm.ai.jmix.introspection.AiDomainModelDescriptorYamlExporter;
 import com.company.crm.ai.jmix.introspection.JmixJpaEntityDiscoveryTool;
+import com.company.crm.ai.jmix.query.AiJpqlQueryService;
 import com.company.crm.ai.jmix.query.JpqlQueryTool;
+import com.company.crm.ai.jmix.report.introspection.AiReportModelDescriptorYamlExporter;
+import com.company.crm.ai.jmix.report.introspection.JmixReportDiscoveryTool;
+import com.company.crm.model.catalog.category.Category;
+import com.company.crm.model.catalog.item.CategoryItem;
+import com.company.crm.model.catalog.item.CategoryItemComment;
+import com.company.crm.model.client.Client;
+import com.company.crm.model.contact.Contact;
+import com.company.crm.model.invoice.Invoice;
+import com.company.crm.model.order.Order;
+import com.company.crm.model.order.OrderItem;
+import com.company.crm.model.payment.Payment;
+import com.company.crm.model.user.User;
+import io.jmix.core.MetadataTools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
@@ -15,37 +30,41 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Set;
+
 /**
  * AI-powered analytics service that processes natural language business questions against CRM data.
- *
- * <p>This service leverages Spring AI's ChatClient with function calling capabilities to:
- * <ul>
- *   <li>Understand natural language business questions</li>
- *   <li>Generate and execute JPQL queries against the CRM database</li>
- *   <li>Introspect the CRM domain model for context</li>
- *   <li>Maintain conversation memory for contextual multi-turn interactions</li>
- * </ul>
- *
- * <p>The service is configured with a system prompt that defines its role and capabilities,
- * and uses three main tools: JPQL query execution, domain model introspection, and JPA entity discovery.
  */
 @Service("crm_CrmAnalyticsService")
 public class CrmAnalyticsService {
 
     private static final Logger log = LoggerFactory.getLogger(CrmAnalyticsService.class);
 
+    private static final Set<Class<?>> CRM_ENTITIES = Set.of(
+            Client.class, Order.class, OrderItem.class, Category.class,
+            CategoryItem.class, CategoryItemComment.class, Invoice.class,
+            Payment.class, User.class, Contact.class
+    );
+
+    // Whitelist for reports allowed in this service
+    private static final List<String> CRM_REPORTS = List.of("client-360-report", "invoice-report");
+
     private final ChatClient chatClient;
+    
+    // Tools are manually instantiated POJOs
     private final JpqlQueryTool jpqlQueryTool;
-    private final CrmDomainModelIntrospectionTool crmDomainModelIntrospectionTool;
     private final JmixJpaEntityDiscoveryTool jmixJpaEntityDiscoveryTool;
+    private final JmixReportDiscoveryTool jmixReportDiscoveryTool;
 
     @Autowired
     public CrmAnalyticsService(
             ChatClient.Builder chatClientBuilder,
             @Value("classpath:prompts/crm-analytics-system-prompt.st") Resource systemPrompt,
-            JpqlQueryTool jpqlQueryTool,
-            CrmDomainModelIntrospectionTool crmDomainModelIntrospectionTool,
-            JmixJpaEntityDiscoveryTool jmixJpaEntityDiscoveryTool,
+            AiJpqlQueryService aiJpqlQueryService,
+            AiDomainModelDescriptorYamlExporter entityYamlExporter,
+            AiReportModelDescriptorYamlExporter reportYamlExporter,
+            MetadataTools metadataTools,
             ChatMemoryRepository chatMemoryRepository
     ) {
         ChatMemory chatMemory = MessageWindowChatMemory.builder()
@@ -60,39 +79,29 @@ public class CrmAnalyticsService {
                 )
                 .build();
 
-        this.jpqlQueryTool = jpqlQueryTool;
-        this.crmDomainModelIntrospectionTool = crmDomainModelIntrospectionTool;
-        this.jmixJpaEntityDiscoveryTool = jmixJpaEntityDiscoveryTool;
+        // Instantiate tools with specific whitelists
+        this.jpqlQueryTool = new JpqlQueryTool(aiJpqlQueryService);
+        this.jmixJpaEntityDiscoveryTool = new JmixJpaEntityDiscoveryTool(metadataTools, entityYamlExporter, CRM_ENTITIES);
+        this.jmixReportDiscoveryTool = new JmixReportDiscoveryTool(reportYamlExporter, CRM_REPORTS);
     }
 
     /**
      * Processes a natural language business question and returns AI-generated insights.
-     *
-     * <p>The question is processed using AI function calling to query the CRM database and
-     * introspect the domain model as needed. Conversation memory is maintained using the
-     * provided conversation ID to enable contextual multi-turn interactions.
-     *
-     * @param userQuestion the natural language business question to process
-     * @param conversationId unique identifier for maintaining conversation context
-     * @return AI-generated response with insights based on CRM data, or error message if processing fails
      */
     public String processBusinessQuestion(String userQuestion, String conversationId) {
-        log.info("Processing business question with memory: {} (conversation: {})", userQuestion, conversationId);
+        log.info("Processing business question: {} (conversation: {})", userQuestion, conversationId);
 
         try {
-
             return chatClient.prompt()
                     .user(userQuestion)
                     .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
-                    .tools(jpqlQueryTool, crmDomainModelIntrospectionTool, jmixJpaEntityDiscoveryTool)
+                    .tools(jpqlQueryTool, jmixJpaEntityDiscoveryTool, jmixReportDiscoveryTool)
                     .call()
                     .content();
 
         } catch (Exception e) {
-            log.error("Error processing business question with memory: {} (conversation: {})", userQuestion, conversationId, e);
-            return "I encountered an error while analyzing your question: " + e.getMessage() +
-                   "\\nPlease try rephrasing your question or check the system configuration.";
+            log.error("Error processing business question", e);
+            return "I encountered an error while analyzing your question: " + e.getMessage();
         }
     }
-
 }

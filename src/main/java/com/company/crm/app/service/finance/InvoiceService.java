@@ -1,6 +1,7 @@
 package com.company.crm.app.service.finance;
 
 import com.company.crm.app.util.date.range.LocalDateRange;
+import com.company.crm.model.client.Client;
 import com.company.crm.model.invoice.Invoice;
 import com.company.crm.model.invoice.InvoiceRepository;
 import com.company.crm.model.invoice.InvoiceStatus;
@@ -100,6 +101,49 @@ public class InvoiceService {
      */
     public long getInvoicesCount(InvoiceStatus... status) {
         return getInvoicesCount(null, status);
+    }
+
+    /**
+     * Retrieves the count of invoices for a specific client, filtered by status and date range using JPQL aggregation.
+     * This method is lightweight and does not load invoice entities into memory.
+     *
+     * @param client    the {@link Client} to filter invoices by
+     * @param dateRange an optional date range to filter invoices; if null, no date range filtering is applied
+     * @param status    the {@link InvoiceStatus} to filter by
+     * @return the count of invoices matching the criteria for the specified client, or zero if no invoices are found
+     */
+    public long getInvoicesCountForClient(Client client, @Nullable LocalDateRange dateRange, InvoiceStatus... status) {
+        StringBuilder query = new StringBuilder("select count(e) from Invoice e");
+        List<String> conditions = new ArrayList<>();
+
+        conditions.add("e.client = :client");
+
+        if (status != null && status.length > 0) {
+            conditions.add("e.status in :status");
+        }
+
+        if (dateRange != null) {
+            conditions.add("e.date >= :startDate");
+            conditions.add("e.date <= :endDate");
+        }
+
+        if (!conditions.isEmpty()) {
+            query.append(" where ").append(String.join(" and ", conditions));
+        }
+
+        var loader = invoiceRepository.fluentValueLoader(query.toString(), Long.class)
+                .parameter("client", client);
+
+        if (status != null) {
+            loader.parameter("status", asList(status));
+        }
+
+        if (dateRange != null) {
+            loader.parameter("startDate", dateRange.startDate());
+            loader.parameter("endDate", dateRange.endDate());
+        }
+
+        return loader.optional().orElse(0L);
     }
 
     /**

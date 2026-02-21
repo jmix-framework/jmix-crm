@@ -3,7 +3,6 @@ package com.company.crm.ai.jmix.introspection.introspector;
 import com.company.crm.ai.jmix.introspection.model.AiPropertyDescriptor;
 import com.company.crm.ai.jmix.introspection.model.AiDomainModelDescriptor;
 import com.company.crm.ai.jmix.introspection.model.AiEntityDescriptor;
-import io.jmix.core.Messages;
 import io.jmix.core.MessageTools;
 import io.jmix.core.MetadataTools;
 import io.jmix.core.metamodel.annotation.Comment;
@@ -23,19 +22,35 @@ public class JpaDomainModelIntrospector {
 
 
     private final MetadataTools metadataTools;
-    private final Messages messages;
     private final MessageTools messageTools;
     private final List<MetaPropertyIntrospector> introspectors;
 
-    public JpaDomainModelIntrospector(MetadataTools metadataTools, Messages messages, MessageTools messageTools, List<MetaPropertyIntrospector> introspectors) {
+    public JpaDomainModelIntrospector(MetadataTools metadataTools, MessageTools messageTools, List<MetaPropertyIntrospector> introspectors) {
         this.metadataTools = metadataTools;
-        this.messages = messages;
         this.messageTools = messageTools;
         this.introspectors = introspectors;
     }
 
     public AiDomainModelDescriptor introspect() {
         return introspect(metadataTools.getAllJpaEntityMetaClasses());
+    }
+
+    /**
+     * Introspect only specified entities by their names.
+     *
+     * @param entityNames collection of entity names to introspect
+     * @return AiDomainModelDescriptor containing only the requested entities
+     */
+    public AiDomainModelDescriptor introspectByNames(Collection<String> entityNames) {
+        if (entityNames == null || entityNames.isEmpty()) {
+            return new AiDomainModelDescriptor(Map.of());
+        }
+
+        List<MetaClass> filteredMetaClasses = metadataTools.getAllJpaEntityMetaClasses().stream()
+                .filter(mc -> entityNames.contains(mc.getName()))
+                .toList();
+
+        return introspect(filteredMetaClasses);
     }
 
     /**

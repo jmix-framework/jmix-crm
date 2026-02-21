@@ -5,7 +5,9 @@ import com.company.crm.model.catalog.category.Category;
 import com.company.crm.model.catalog.item.CategoryItem;
 import com.company.crm.model.catalog.item.UomType;
 import com.company.crm.model.client.Client;
+import com.company.crm.model.contact.Contact;
 import com.company.crm.model.invoice.Invoice;
+import com.company.crm.model.invoice.InvoiceStatus;
 import com.company.crm.model.order.Order;
 import com.company.crm.model.order.OrderItem;
 import com.company.crm.model.order.OrderStatus;
@@ -58,11 +60,32 @@ public class Entities {
         });
     }
 
+    public Client client(String name, int daysAgo) {
+        return createAndSaveEntity(Client.class, client -> {
+            client.setName(name);
+            client.setAddress(address());
+            client.setCreatedDate(
+                    LocalDate.now().minusDays(daysAgo)
+                            .atStartOfDay()
+                            .atZone(java.time.ZoneId.systemDefault())
+                            .toOffsetDateTime());
+        });
+    }
+
     public Order order(Client client, LocalDate date, OrderStatus status) {
         return createAndSaveEntity(Order.class, order -> {
             order.setClient(client);
             order.setDate(date);
             order.setStatus(status);
+        });
+    }
+
+    public Order order(Client client, LocalDate date, OrderStatus status, BigDecimal total) {
+        return createAndSaveEntity(Order.class, order -> {
+            order.setClient(client);
+            order.setDate(date);
+            order.setStatus(status);
+            order.setTotal(total);
         });
     }
 
@@ -78,6 +101,34 @@ public class Entities {
             payment.setInvoice(invoice);
             payment.setDate(date);
             payment.setAmount(BigDecimal.TEN);
+        });
+    }
+
+
+    public Invoice invoice(Client client, Order order, BigDecimal total, InvoiceStatus status, LocalDate invoiceDate) {
+        return createAndSaveEntity(Invoice.class, invoice -> {
+            invoice.setClient(client);
+            invoice.setOrder(order);
+            invoice.setTotal(total);
+            invoice.setStatus(status);
+            invoice.setDate(invoiceDate);
+        });
+    }
+
+    public Payment payment(Invoice invoice, LocalDate date, BigDecimal amount) {
+        return createAndSaveEntity(Payment.class, payment -> {
+            payment.setInvoice(invoice);
+            payment.setDate(date);
+            payment.setAmount(amount);
+        });
+    }
+
+    public Contact contact(Client client, String person, String position) {
+        return createAndSaveEntity(Contact.class, contact -> {
+            contact.setClient(client);
+            contact.setPerson(person);
+            contact.setPosition(position);
+            contact.setStartDate(LocalDate.now().minusMonths(6));
         });
     }
 

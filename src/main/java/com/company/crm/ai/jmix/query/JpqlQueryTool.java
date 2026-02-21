@@ -4,7 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
-import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
@@ -30,10 +29,7 @@ import java.util.Map;
  * using this tool for execution.
  *
  * @see AiJpqlQueryService
- * @see AiJpqlParameterConverter
- * @see ResultConverter
  */
-@Component("ai_JpqlQueryTool")
 public class JpqlQueryTool {
 
     private static final Logger log = LoggerFactory.getLogger(JpqlQueryTool.class);
@@ -49,6 +45,7 @@ public class JpqlQueryTool {
      *
      * @param jpqlQuery The JPQL query to execute against the CRM database. Use proper entity names like 'Client', 'Order_', 'OrderItem', etc.
      * @param parameters Named parameters for the query.
+     * @param selectAliases List of aliases used in SELECT clause, in order.
      * @return Query execution result with data or error message
      */
     @Tool(description = """
@@ -128,7 +125,7 @@ public class JpqlQueryTool {
 
         DATE/TIME FUNCTIONS:
         - EXTRACT(field FROM date) - Extract date/time parts: YEAR, MONTH, DAY, HOUR, MINUTE, SECOND
-          Examples: EXTRACT(YEAR FROM o.date), EXTRACT(MONTH FROM o.createdDate)
+          Examples: EXTRACT(YEAR FROM o.date), EXTRACT(MONTH FROM o.date)
         - CURRENT_DATE, CURRENT_TIME, CURRENT_TIMESTAMP - Current date/time values
         - DATE(datetime) - Extract date part from datetime
         - TIME(datetime) - Extract time part from datetime
@@ -139,9 +136,6 @@ public class JpqlQueryTool {
         - ABS(number) - Absolute value (limited support)
         - ROUND(number, digits) - Round to specified decimal places (limited support)
 
-        Note: Advanced mathematical functions (SQRT, MOD, CEIL, FLOOR, POWER, EXP, LN, LOG)
-        may not be fully supported in all EclipseLink versions. Use basic arithmetic where possible.
-
         STRING FUNCTIONS:
         - CONCAT(str1, str2, ...) - Concatenate strings
         - SUBSTRING(string, start, length) - Extract substring
@@ -150,39 +144,24 @@ public class JpqlQueryTool {
         - UPPER(string) - Convert to uppercase
         - LOWER(string) - Convert to lowercase
         - TRIM(string) - Remove leading/trailing whitespace
-        - TRIM(LEADING/TRAILING/BOTH char FROM string) - Trim specific characters
-        - LEFT(string, length) - Left substring (limited support)
-        - RIGHT(string, length) - Right substring (limited support)
-        - REPLACE(string, search, replace) - Replace occurrences (limited support)
         - LIKE with wildcards (%, _) - Pattern matching (recommended)
-        - REGEXP(string, pattern) - Regular expression matching (limited support, use LIKE instead)
 
         CONDITIONAL FUNCTIONS:
         - CASE WHEN condition THEN result ELSE alternative END - Conditional expressions
         - COALESCE(value1, value2, ...) - Return first non-null value
         - NULLIF(value1, value2) - Return null if values are equal
 
-        TYPE CONVERSION:
-        - CAST(expression AS type) - Type conversion (limited support)
-          Types: text, int, long, double, boolean, date, time, timestamp
-          Example: CAST(e.number AS text), CAST(:param AS double)
-          Note: Basic type conversions may work, but prefer native column types when possible
-
         AGGREGATE FUNCTIONS:
         - COUNT(entity) - Count entities (use entity, not *)
-        - SUM(expression) - Sum of values (returns Number, may be Double)
-        - AVG(expression) - Average value (returns Number, may be Double)
+        - SUM(expression) - Sum of values
+        - AVG(expression) - Average value
         - MAX(expression) - Maximum value
         - MIN(expression) - Minimum value
         - DISTINCT - Use with aggregates for unique values
 
-        Note: Aggregate functions may return Double for calculated values instead of BigDecimal
-
         COLLECTION FUNCTIONS:
         - SIZE(collection) - Collection size
         - IS EMPTY / IS NOT EMPTY - Check if collection is empty
-        - MEMBER OF - Check collection membership
-        - INDEX(alias) - Index of element in ordered collection
 
         DATE MACROS (Jmix-specific):
         - @between(field, start, end, unit) - Date range queries
@@ -194,44 +173,18 @@ public class JpqlQueryTool {
         - @dateAfter(field, value) - Date after
         - Special values: now, now-N (N units ago)
 
-        EXAMPLES:
-        - Monthly revenue: SELECT EXTRACT(MONTH FROM o.date) AS month, SUM(o.total) AS revenue FROM Order_ o GROUP BY EXTRACT(MONTH FROM o.date)
-        - Client search: SELECT c FROM Client c WHERE UPPER(c.name) LIKE UPPER(:pattern)
-        - Pattern matching: SELECT c FROM Client c WHERE UPPER(c.name) LIKE '%CORP%' OR UPPER(c.name) LIKE '%ENTERPRISE%'
-        - Recent orders: SELECT o FROM Order_ o WHERE @between(o.date, now-30, now, day)
-        - Order statistics: SELECT COUNT(o) AS orderCount, AVG(o.total) AS avgValue FROM Order_ o
-        - Basic math: SELECT o.total AS originalTotal, (o.total * 1.19) AS totalWithTax FROM Order_ o
-        - Conditional logic: SELECT c.name AS clientName, CASE WHEN COUNT(o) > 2 THEN 'High Volume' ELSE 'Regular' END AS category FROM Client c LEFT JOIN c.orders o GROUP BY c
-
         BEST PRACTICES (TESTED AND RELIABLE):
         - Use EXTRACT for date parts instead of proprietary functions
         - Use LIKE with wildcards instead of REGEXP for pattern matching
         - Use basic arithmetic (+, -, *, /) instead of advanced mathematical functions
-        - Prefer native column types over CAST conversions
         - Use Jmix date macros (@between, @today) for date filtering
-        - Be aware that aggregate functions may return Double instead of BigDecimal
         - Test complex functions in development before using in production queries
-
-        AVOID THESE (UNRELIABLE OR LIMITED SUPPORT):
-        - Advanced math functions: SQRT, MOD, CEIL, FLOOR, POWER, EXP, LN, LOG
-        - REGEXP for pattern matching (use LIKE instead)
-        - Complex CAST operations
-        - LEFT/RIGHT string functions (limited support)
-        - CASE WHEN expressions inside aggregate functions (COUNT, SUM, etc.)
-        - @between macros inside CASE WHEN expressions
 
         CRITICAL JPQL PARSER LIMITATIONS:
         ✗ INCORRECT: COUNT(CASE WHEN o.date >= '2025-01-01' THEN 1 END)
         ✗ INCORRECT: SUM(CASE WHEN @between(o.date, now-90, now, day) THEN o.total ELSE 0 END)
-        ✗ INCORRECT: COUNT(CASE WHEN @between(o.date, now-90, now, day) THEN o ELSE NULL END)
 
-        ✓ CORRECT: Use separate queries with simple WHERE clauses:
-        - Query 1: WHERE o.date >= '2025-01-01' - then COUNT(o), SUM(o.total)
-        - Query 2: WHERE @between(o.date, now-90, now, day) - then COUNT(o), SUM(o.total)
-        - Query 3: WHERE @between(o.date, now-180, now-91, day) - then COUNT(o), SUM(o.total)
-
-        For period comparisons, ALWAYS use multiple simple queries instead of CASE expressions.
-        The application can then combine results from multiple queries to create comparisons.
+        ✓ CORRECT: Use separate queries with simple WHERE clauses for period comparisons.
 
         Without domain model tools first, queries may fail due to incorrect entity/attribute names.
         For date ranges, prefer Jmix macros over parameters for better handling.
@@ -241,24 +194,11 @@ public class JpqlQueryTool {
             @ToolParam(description = "Named parameters for the query (empty map if none)") Map<String, Object> parameters,
             @ToolParam(description = "List of aliases used in SELECT clause, in order (e.g., ['clientName', 'orderCount'])") List<String> selectAliases) {
         try {
-            log.info("LLM Tool Call: executeQuery() - JPQL: {}", jpqlQuery);
-
-            QueryExecutionResult result = aiJpqlQueryService.executeJpqlQuery(jpqlQuery, parameters, selectAliases);
-
-            if (result.success()) {
-                log.info("Query Result: {} rows returned", result.rowCount());
-                log.debug("Query Data returned to LLM: {}", result.data());
-            } else {
-                log.warn("Query Failed: {}", result.errorMessage());
-            }
-
-            return result;
-
+            log.info("LLM Tool Call: executeQuery()");
+            return aiJpqlQueryService.executeJpqlQuery(jpqlQuery, parameters, selectAliases);
         } catch (Exception e) {
             log.error("Query Error: {} - {}", jpqlQuery, e.getMessage());
             return QueryExecutionResult.failed("Error executing query: " + e.getMessage());
         }
     }
-
-
 }

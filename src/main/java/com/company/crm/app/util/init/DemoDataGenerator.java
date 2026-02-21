@@ -434,7 +434,13 @@ public class DemoDataGenerator implements Ordered {
             userActivity.setClient(client);
             userActivity.setUser(users.get(random.nextInt(users.size())));
             userActivity.setActionDescription("%s profile updated".formatted(client.getName()));
-            userActivity.setCreatedDate(random.nextBoolean() ? now.minusDays(1) : now);
+            dataManager.saveWithoutReload(userActivity);
+
+            // Set random past date after saving to override @CreatedDate
+            OffsetDateTime randomDate = now.minusDays(random.nextInt(30))
+                    .minusHours(random.nextInt(24))
+                    .minusMinutes(random.nextInt(60));
+            userActivity.setCreatedDate(randomDate);
             dataManager.saveWithoutReload(userActivity);
         });
 
@@ -443,7 +449,13 @@ public class DemoDataGenerator implements Ordered {
             userActivity.setClient(order.getClient());
             userActivity.setUser(users.get(random.nextInt(users.size())));
             userActivity.setActionDescription("Update order " + order.getNumber());
-            userActivity.setCreatedDate(random.nextBoolean() ? now.minusDays(1) : now);
+            dataManager.saveWithoutReload(userActivity);
+
+            // Set random past date after saving to override @CreatedDate
+            OffsetDateTime randomDate = now.minusDays(random.nextInt(14))
+                    .minusHours(random.nextInt(24))
+                    .minusMinutes(random.nextInt(60));
+            userActivity.setCreatedDate(randomDate);
             dataManager.saveWithoutReload(userActivity);
         });
     }
