@@ -83,6 +83,8 @@
                 <button id="downloadButton" action="invoicesDataGrid.downloadAction"/>
                 <button id="emailButton" action="invoicesDataGrid.emailAction"/>
                 <button id="excelExport" action="invoicesDataGrid.excelExport"/>
+                <button id="runCategoryCashflowRiskReportButton"
+                        text="msg:///runCategoryCashflowRiskReport"/>
             </startSlot>
             <endSlot>
                 <simplePagination id="invoices_pagination" dataLoader="invoicesDl" itemsPerPageVisible="true"/>

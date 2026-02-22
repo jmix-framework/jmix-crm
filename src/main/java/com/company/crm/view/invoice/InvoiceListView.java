@@ -13,8 +13,10 @@ import com.company.crm.model.invoice.Invoice;
 import com.company.crm.model.invoice.InvoiceRepository;
 import com.company.crm.model.invoice.InvoiceStatus;
 import com.company.crm.model.order.Order;
+import com.company.crm.report.CategoryCashflowRiskReport;
 import com.company.crm.view.main.MainView;
 import com.vaadin.flow.component.AttachEvent;
+import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasValue;
 import com.vaadin.flow.component.Unit;
@@ -39,6 +41,7 @@ import io.jmix.flowui.component.datepicker.TypedDatePicker;
 import io.jmix.flowui.component.grid.DataGrid;
 import io.jmix.flowui.component.select.JmixSelect;
 import io.jmix.flowui.kit.action.ActionPerformedEvent;
+import io.jmix.flowui.kit.component.button.JmixButton;
 import io.jmix.flowui.model.CollectionContainer;
 import io.jmix.flowui.model.CollectionLoader;
 import io.jmix.flowui.view.DialogMode;
@@ -52,11 +55,14 @@ import io.jmix.flowui.view.Target;
 import io.jmix.flowui.view.ViewComponent;
 import io.jmix.flowui.view.ViewController;
 import io.jmix.flowui.view.ViewDescriptor;
+import io.jmix.reportsflowui.runner.UiReportRunner;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
@@ -89,6 +95,8 @@ public class InvoiceListView extends StandardListView<Invoice> {
     private InvoiceService invoiceService;
     @Autowired
     private InvoiceRepository invoiceRepository;
+    @Autowired
+    private UiReportRunner uiReportRunner;
 
     @ViewComponent
     private CollectionContainer<Order> ordersDc;
@@ -196,6 +204,25 @@ public class InvoiceListView extends StandardListView<Invoice> {
 
         List<String> emails = contacts.stream().map(Contact::getEmail).toList();
         CrmUiUtils.showEmailSendingDialog(emails, false);
+    }
+
+    @Subscribe(id = "runCategoryCashflowRiskReportButton", subject = "clickListener")
+    private void onRunCategoryCashflowRiskReportButtonClick(final ClickEvent<JmixButton> event) {
+        var runner = uiReportRunner.byReportCode(CategoryCashflowRiskReport.CODE);
+
+        Date fromDate = toDate(invoices_FromDatePicker.getValue());
+        if (fromDate != null) {
+            runner.addParam("fromDate", fromDate);
+        }
+
+        Date toDate = toDate(invoices_ToDatePicker.getValue());
+        if (toDate != null) {
+            runner.addParam("toDate", toDate);
+        }
+
+        invoices_ClientComboBox.getOptionalValue().ifPresent(client -> runner.addParam("client", client));
+        runner.addParam("asOfDate", toDate(LocalDate.now()));
+        runner.runAndShow();
     }
 
     private void initialize() {
@@ -324,5 +351,12 @@ public class InvoiceListView extends StandardListView<Invoice> {
         });
 
         return block;
+    }
+
+    private Date toDate(LocalDate date) {
+        if (date == null) {
+            return null;
+        }
+        return Date.from(date.atStartOfDay(ZoneId.systemDefault()).toInstant());
     }
 }

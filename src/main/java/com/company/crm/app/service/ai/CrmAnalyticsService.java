@@ -34,7 +34,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 
 /**
  * AI-powered analytics service that processes natural language business questions against CRM data.
@@ -51,7 +50,11 @@ public class CrmAnalyticsService {
     );
 
     // Whitelist for reports allowed in this service
-    private static final List<String> CRM_REPORTS = List.of("client-360-report", "invoice-report");
+    private static final List<String> CRM_REPORTS = List.of(
+            "client-360-report",
+            "invoice-report",
+            "category-cashflow-risk-report"
+    );
 
     private final ChatClient chatClient;
     
@@ -97,18 +100,11 @@ public class CrmAnalyticsService {
     public String processBusinessQuestion(String userQuestion, String conversationId) {
         log.debug("Processing business question: {} (conversation: {})", userQuestion, conversationId);
 
-        try {
-            return chatClient.prompt()
-                    .user(userQuestion)
-                    .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
-                    .tools(jpqlQueryTool, jmixJpaEntityDiscoveryTool, jmixReportDiscoveryTool, runReportTool)
-                    .call()
-                    .content();
-
-        } catch (Exception e) {
-            String errorId = UUID.randomUUID().toString().substring(0, 8);
-            log.error("Error processing business question [Error ID: {}]", errorId, e);
-            return "I encountered an error while analyzing your question. Please contact support and provide this Error ID: " + errorId;
-        }
+        return chatClient.prompt()
+                .user(userQuestion)
+                .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
+                .tools(jpqlQueryTool, jmixJpaEntityDiscoveryTool, jmixReportDiscoveryTool, runReportTool)
+                .call()
+                .content();
     }
 }

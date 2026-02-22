@@ -32,7 +32,7 @@ class JmixReportIntrospectorTest extends AbstractTest {
 
         assertThat(descriptor.code()).isEqualTo("client-360-report");
         assertThat(descriptor.name()).isEqualTo("Client 360 Report");
-        assertThat(descriptor.description()).contains("Comprehensive client report");
+        assertThat(descriptor.description()).contains("Comprehensive 360-degree view of a client including financial risk assessment, business indicators (VIP, Frequent, etc.), orders, invoices, payment history, contacts, and recent activities. Use this for a holistic overview of a specific client's status and history.");
         
         // Templates
         assertThat(descriptor.templates()).isNotEmpty();

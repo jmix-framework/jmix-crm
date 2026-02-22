@@ -35,7 +35,8 @@ import java.util.Map;
 @ReportDef(
         code = InvoiceReport.CODE,
         uuid = InvoiceReport.ID,
-        name = InvoiceReport.REPORT_NAME
+        name = InvoiceReport.REPORT_NAME,
+        description = "Detailed invoice document for a specific invoice, including order details, client information, line items (price, quantity, discount, VAT), and payment history. Use this when a printable or formal invoice document is needed for a single invoice entity."
 )
 @AvailableForRoles(roleClasses = {AdministratorRole.class, SupervisorRole.class, ManagerRole.class})
 @AvailableInViews(viewClasses = {InvoiceDetailView.class, InvoiceListView.class})

@@ -23,7 +23,7 @@ import java.util.Map;
 @ReportDef(
         code = "client-360-report",
         name = "Client 360 Report",
-        description = "Comprehensive client report including financial risk assessment, business indicators (VIP, Frequent, etc.), orders, invoices, and payment history"
+        description = "Comprehensive 360-degree view of a client including financial risk assessment, business indicators (VIP, Frequent, etc.), orders, invoices, payment history, contacts, and recent activities. Use this for a holistic overview of a specific client's status and history."
 )
 
 @TemplateDef(
