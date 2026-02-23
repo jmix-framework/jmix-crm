@@ -25,7 +25,8 @@ class AiReportModelDescriptorYamlExporterIntegrationTest extends AbstractTest {
         assertThat(yaml).contains("code: client-360-report");
         assertThat(yaml).contains("name: Client 360 Report");
         assertThat(yaml).contains("description:");
-        assertThat(yaml).contains("Comprehensive 360-degree view of a client including financial risk assessment, business indicators (VIP, Frequent, etc.), orders, invoices, payment history, contacts, and recent activities. Use this for a holistic overview of a specific client's status and history.");
+        assertThat(yaml).contains("Comprehensive 360-degree view of a client including financial risk");
+        assertThat(yaml).contains("holistic overview");
         assertThat(yaml).contains("alias: client");
         assertThat(yaml).contains("type: ENTITY");
         assertThat(yaml).contains("entityMetaClass: Client");

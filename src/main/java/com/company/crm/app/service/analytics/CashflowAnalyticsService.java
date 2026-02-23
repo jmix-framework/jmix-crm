@@ -26,7 +26,6 @@ import java.util.stream.Collectors;
 public class CashflowAnalyticsService {
 
     private static final String UNASSIGNED = CategoryAllocationPolicy.UNASSIGNED;
-    private static final int MAX_CRITICAL_INVOICES = 10;
 
     private final DataManager dataManager;
     private final FetchPlans fetchPlans;
@@ -74,16 +73,7 @@ public class CashflowAnalyticsService {
                                 Comparator.nullsLast(Comparator.reverseOrder()))))
                 .toList();
 
-        List<CriticalInvoiceMetrics> criticalInvoices = invoiceAssessments.stream()
-                .flatMap(assessment -> assessment.criticalInvoices().stream())
-                .sorted(Comparator
-                        .comparing(CriticalInvoiceMetrics::categoryOpenAmount, Comparator.nullsLast(Comparator.reverseOrder()))
-                        .thenComparing(Comparator.comparingLong(CriticalInvoiceMetrics::daysOverdue).reversed())
-                        .thenComparing(CriticalInvoiceMetrics::invoiceNumber, Comparator.nullsLast(Comparator.naturalOrder())))
-                .limit(MAX_CRITICAL_INVOICES)
-                .toList();
-
-        return new CategoryCashflowRiskAssessmentResult(riskByCategory, criticalInvoices);
+        return new CategoryCashflowRiskAssessmentResult(riskByCategory);
     }
 
     private InvoiceRiskAssessmentService.InvoiceRiskAssessmentResult assessInvoice(

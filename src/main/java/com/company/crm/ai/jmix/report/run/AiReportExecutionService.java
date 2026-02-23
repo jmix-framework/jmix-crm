@@ -1,5 +1,11 @@
 package com.company.crm.ai.jmix.report.run;
 
+import com.company.crm.ai.entity.AiAttachmentType;
+import com.company.crm.ai.entity.AiConversation;
+import com.company.crm.ai.entity.AiConversationAttachment;
+import io.jmix.core.DataManager;
+import io.jmix.core.FileRef;
+import io.jmix.core.FileStorage;
 import io.jmix.reports.ReportRepository;
 import io.jmix.reports.entity.Report;
 import io.jmix.reports.entity.ReportTemplate;
@@ -9,9 +15,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Service for executing Jmix reports on behalf of AI tools.
@@ -25,15 +36,21 @@ public class AiReportExecutionService {
     private final ReportRunner reportRunner;
     private final AiReportParameterConverter parameterConverter;
     private final ReportContentConverter contentConverter;
+    private final FileStorage fileStorage;
+    private final DataManager dataManager;
 
     public AiReportExecutionService(ReportRepository reportRepository,
                                    ReportRunner reportRunner,
                                    AiReportParameterConverter parameterConverter,
-                                   ReportContentConverter contentConverter) {
+                                   ReportContentConverter contentConverter,
+                                   FileStorage fileStorage,
+                                   DataManager dataManager) {
         this.reportRepository = reportRepository;
         this.reportRunner = reportRunner;
         this.parameterConverter = parameterConverter;
         this.contentConverter = contentConverter;
+        this.fileStorage = fileStorage;
+        this.dataManager = dataManager;
     }
 
     /**
@@ -47,10 +64,25 @@ public class AiReportExecutionService {
      * @return Execution result with content or error details
      */
     public ReportExecutionResult executeReport(String reportCode, Map<String, Object> parameters, String templateCode, String outputType, Collection<String> allowedReportCodes) {
+        return executeReport(reportCode, parameters, templateCode, outputType, allowedReportCodes, null);
+    }
+
+    /**
+     * Executes a report by its code with provided parameters and persists result if conversationId is provided.
+     *
+     * @param reportCode          Unique code of the report to run
+     * @param parameters          Input parameters provided by LLM
+     * @param templateCode        Optional template code. If null, default template is used.
+     * @param outputType          Optional output type override.
+     * @param allowedReportCodes Mandatory whitelist of allowed report codes.
+     * @param conversationId      Optional AI conversation ID to link the report to.
+     * @return Execution result with content or error details
+     */
+    public ReportExecutionResult executeReport(String reportCode, Map<String, Object> parameters, String templateCode, String outputType, Collection<String> allowedReportCodes, UUID conversationId) {
         try {
             // 0. Mandatory Whitelist Guard
             if (allowedReportCodes == null || !allowedReportCodes.contains(reportCode)) {
-                return ReportExecutionResult.failed(reportCode, "ACCESS_DENIED", "Report execution is not allowed for this report code. Ensure it is whitelisted.");
+                return ReportExecutionResult.failed(reportCode, ReportExecutionErrorCode.ACCESS_DENIED, "Report execution is not allowed for this report code. Ensure it is whitelisted.");
             }
 
             // 1. Load report
@@ -60,7 +92,7 @@ public class AiReportExecutionService {
                     .orElse(null);
 
             if (report == null) {
-                return ReportExecutionResult.failed(reportCode, "REPORT_NOT_FOUND", "Report with code '" + reportCode + "' not found.");
+                return ReportExecutionResult.failed(reportCode, ReportExecutionErrorCode.REPORT_NOT_FOUND, "Report with code '" + reportCode + "' not found.");
             }
 
             // Reload to get all details (parameters, templates)
@@ -69,7 +101,13 @@ public class AiReportExecutionService {
             // 3. Resolve Template
             ReportTemplate template = resolveTemplate(report, templateCode);
             if (templateCode != null && template == null) {
-                return ReportExecutionResult.failed(reportCode, "TEMPLATE_NOT_FOUND", "Template with code '" + templateCode + "' not found for this report.");
+                return ReportExecutionResult.failed(reportCode, ReportExecutionErrorCode.TEMPLATE_NOT_FOUND, "Template with code '" + templateCode + "' not found for this report.");
+            }
+            if (templateCode == null && outputType != null) {
+                ReportTemplate matchingOutputTemplate = resolveTemplateByOutputType(report, outputType);
+                if (matchingOutputTemplate != null) {
+                    template = matchingOutputTemplate;
+                }
             }
 
             String effectiveTemplateCode = template != null ? template.getCode() : null;
@@ -96,24 +134,81 @@ public class AiReportExecutionService {
                 try {
                     runner.withOutputType(io.jmix.reports.entity.ReportOutputType.valueOf(outputType.toUpperCase()));
                 } catch (IllegalArgumentException e) {
-                    return ReportExecutionResult.failed(reportCode, "INVALID_OUTPUT_TYPE", "Output type '" + outputType + "' is not supported.");
+                    return ReportExecutionResult.failed(reportCode, ReportExecutionErrorCode.INVALID_OUTPUT_TYPE, "Output type '" + outputType + "' is not supported.");
                 }
             }
 
             ReportOutputDocument document = runner.run();
 
             // 6. Convert Output to Text
-            String content = contentConverter.convert(document, effectiveOutputType);
+            ReportContentResult convertedContent = contentConverter.convert(document, effectiveOutputType);
+            if (convertedContent instanceof ReportContentResult.BinaryUnsupported) {
+                return ReportExecutionResult.failed(reportCode, ReportExecutionErrorCode.BINARY_OUTPUT_NOT_SUPPORTED_YET, "Binary output formats (like PDF, XLSX) are not yet supported for LLM analysis.");
+            }
+            String content = ((ReportContentResult.TextContent) convertedContent).content();
 
-            if ("BINARY_OUTPUT_NOT_SUPPORTED_YET".equals(content)) {
-                return ReportExecutionResult.failed(reportCode, "BINARY_OUTPUT_NOT_SUPPORTED_YET", "Binary output formats (like PDF, XLSX) are not yet supported for LLM analysis.");
+            ReportExecutionResult result = ReportExecutionResult.success(reportCode, effectiveTemplateCode, effectiveOutputType, content);
+
+            // 7. Optional Persistence
+            if (conversationId != null) {
+                return persistReportResult(result, conversationId, report.getName());
             }
 
-            return ReportExecutionResult.success(reportCode, effectiveTemplateCode, effectiveOutputType, content);
+            return result;
 
         } catch (Exception e) {
             log.error("Failed to execute report {}", reportCode, e);
-            return ReportExecutionResult.failed(reportCode, "EXECUTION_ERROR", "An unexpected error occurred during report execution: " + e.getMessage());
+            return ReportExecutionResult.failed(reportCode, ReportExecutionErrorCode.EXECUTION_ERROR, "An unexpected error occurred during report execution: " + e.getMessage());
+        }
+    }
+
+    private ReportExecutionResult persistReportResult(ReportExecutionResult result, UUID conversationId, String reportName) {
+        FileRef fileRef = null;
+        try {
+            AiConversation conversation = dataManager.load(AiConversation.class).id(conversationId).optional().orElse(null);
+            if (conversation == null) {
+                log.warn("Cannot persist report result: AiConversation with ID {} not found", conversationId);
+                return result;
+            }
+
+            String extension = "HTML".equalsIgnoreCase(result.outputType()) ? "html" : ("CSV".equalsIgnoreCase(result.outputType()) ? "csv" : "txt");
+            LocalDateTime now = LocalDateTime.now();
+            String timestamp = now.format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+            String fileName = String.format("report_%s_%s.%s", result.reportCode(), timestamp, extension);
+
+            String content = result.content() != null ? result.content() : "";
+            fileRef = fileStorage.saveStream(fileName, new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8)));
+
+            AiConversationAttachment attachment = dataManager.create(AiConversationAttachment.class);
+            attachment.setConversation(conversation);
+            attachment.setFile(fileRef);
+            attachment.setFileName(fileName);
+            String attachmentTitle = reportName != null && !reportName.isBlank() ? reportName : result.reportCode();
+            attachment.setTitle(attachmentTitle);
+            attachment.setType(AiAttachmentType.AI_GENERATED);
+            dataManager.save(attachment);
+
+            String citation = String.format("\n\n[View Report Attachments](/ai-conversations/%s)", conversation.getId());
+            return new ReportExecutionResult(
+                    result.success(),
+                    result.reportCode(),
+                    result.templateCodeUsed(),
+                    result.outputType(),
+                    result.content() + citation,
+                    result.errorCode(),
+                    result.errorMessage(),
+                    result.validationErrors()
+            );
+        } catch (Exception e) {
+            if (fileRef != null) {
+                try {
+                    fileStorage.removeFile(fileRef);
+                } catch (Exception cleanupError) {
+                    log.warn("Failed to cleanup report file {} after persistence error", fileRef, cleanupError);
+                }
+            }
+            log.error("Failed to persist report result for conversation {}", conversationId, e);
+            return result;
         }
     }
 
@@ -123,6 +218,17 @@ public class AiReportExecutionService {
         }
         return report.getTemplates().stream()
                 .filter(t -> templateCode.equals(t.getCode()))
+                .findFirst()
+                .orElse(null);
+    }
+
+    private ReportTemplate resolveTemplateByOutputType(Report report, String outputType) {
+        if (outputType == null) {
+            return null;
+        }
+        return report.getTemplates().stream()
+                .filter(template -> template.getReportOutputType() != null
+                        && template.getReportOutputType().name().equalsIgnoreCase(outputType))
                 .findFirst()
                 .orElse(null);
     }

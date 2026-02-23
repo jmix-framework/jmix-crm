@@ -12,15 +12,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 @ReportDef(
         code = CategoryCashflowRiskReport.CODE,
         name = "Category Cashflow Risk Allocation Report",
-        description = "Calculates and visualizes cashflow risk for business categories by analyzing outstanding invoices. It identifies critical invoices and provides a risk allocation breakdown by category, client, and time period."
+        description = "Calculates and visualizes cashflow risk allocation for business categories by analyzing invoices and payment behavior. Provides a category-level breakdown for risk-focused decision making."
 )
 @TemplateDef(
         isDefault = true,
-        code = "HTML",
-        filePath = "com/company/crm/report/category-cashflow-risk-report.html",
-        outputType = ReportOutputType.HTML,
-        outputNamePattern = "category-cashflow-risk-report.html",
-        templateEngine = TemplateMarkupEngine.FREEMARKER
+        code = "CSV",
+        filePath = "com/company/crm/reports/templates/category-cashflow-risk-report.xlsx",
+        outputType = ReportOutputType.CSV,
+        outputNamePattern = "category-cashflow-risk-report.csv"
+)
+@TemplateDef(
+        code = "XLSX",
+        filePath = "com/company/crm/reports/templates/category-cashflow-risk-report.xlsx",
+        outputType = ReportOutputType.XLSX,
+        outputNamePattern = "category-cashflow-risk-report.xlsx"
 )
 @InputParameterDef(
         alias = "fromDate",
@@ -53,14 +58,14 @@ import org.springframework.beans.factory.annotation.Autowired;
         root = true
 )
 @BandDef(
+        name = "Header",
+        parent = "Root",
+        dataSets = @DataSetDef(name = "header", type = DataSetType.DELEGATE)
+)
+@BandDef(
         name = "RiskByCategory",
         parent = "Root",
         dataSets = @DataSetDef(name = "riskByCategory", type = DataSetType.DELEGATE)
-)
-@BandDef(
-        name = "CriticalInvoices",
-        parent = "Root",
-        dataSets = @DataSetDef(name = "criticalInvoices", type = DataSetType.DELEGATE)
 )
 public class CategoryCashflowRiskReport {
 
@@ -69,13 +74,13 @@ public class CategoryCashflowRiskReport {
     @Autowired
     private CategoryCashflowDataLoader categoryCashflowDataLoader;
 
-    @DataSetDelegate(name = "riskByCategory")
-    public ReportDataLoader riskByCategoryDataLoader() {
+    @DataSetDelegate(name = "header")
+    public ReportDataLoader headerDataLoader() {
         return categoryCashflowDataLoader;
     }
 
-    @DataSetDelegate(name = "criticalInvoices")
-    public ReportDataLoader criticalInvoicesDataLoader() {
+    @DataSetDelegate(name = "riskByCategory")
+    public ReportDataLoader riskByCategoryDataLoader() {
         return categoryCashflowDataLoader;
     }
 }

@@ -1,10 +1,13 @@
 package com.company.crm.ai.jmix.report.run;
 
 import com.company.crm.AbstractTest;
+import com.company.crm.ai.entity.AiConversation;
 import com.company.crm.ai.jmix.report.introspection.AiReportModelDescriptorYamlExporter;
 import com.company.crm.ai.jmix.report.introspection.JmixReportDiscoveryTool;
+import com.company.crm.ai.service.AiConversationService;
 import com.company.crm.model.client.Client;
 import com.company.crm.service.ai.LLMJudgeTool;
+import io.jmix.core.FetchPlan;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
@@ -28,6 +31,9 @@ class RunReportToolLLMIntegrationTest extends AbstractTest {
 
     @Autowired
     private AiReportModelDescriptorYamlExporter reportYamlExporter;
+
+    @Autowired
+    private AiConversationService aiConversationService;
 
     @Autowired
     private ChatClient.Builder chatClientBuilder;
@@ -74,6 +80,7 @@ class RunReportToolLLMIntegrationTest extends AbstractTest {
 
             String response = chatClient.prompt()
                     .user(question)
+                    .toolContext(Map.of("conversationId", java.util.UUID.fromString("00000000-0000-0000-0000-000000000000"))) // Dummy UUID for this test
                     .tools(discoveryTool, runReportTool)
                     .call()
                     .content();
@@ -81,12 +88,50 @@ class RunReportToolLLMIntegrationTest extends AbstractTest {
             assertThat(response).containsIgnoringCase("Client 360");
             assertThat(response).containsIgnoringCase("LLM Test Client");
 
+
             LLMJudgeTool.JudgeResult evaluation = evaluateWithJudge(question, response, 
                     "The AI should have identified client-360-report and called runReport with correct parameters. " +
                     "The summary should reflect the content of the report. " +
                     "Verify that the AI reported calling both 'getAvailableReports' and 'runReport' in its technical summary.");
             
             assertThat(evaluation.correct()).isTrue();
+        });
+    }
+
+    @Test
+    void testRunReport_withCitation_inLLMResponse() {
+        systemAuthenticator.runWithSystem(() -> {
+            AiConversation conversation = aiConversationService.createNewConversation("LLM Citation Test");
+            String conversationId = conversation.getId().toString();
+            
+            Client client = entities.client("Citation Test Client");
+            String clientId = client.getId().toString();
+            String fromDate = LocalDate.now().minusDays(30).toString();
+            String toDate = LocalDate.now().toString();
+
+            String question = String.format(
+                    "Run the client-360-report for client ID %s from %s to %s. " +
+                    "In your response, you MUST include the download link for the report provided by the tool.",
+                    clientId, fromDate, toDate);
+
+            String response = chatClient.prompt()
+                    .user(question)
+                    .toolContext(Map.of("conversationId", java.util.UUID.fromString(conversationId)))
+                    .tools(discoveryTool, runReportTool)
+                    .call()
+                    .content();
+
+            assertThat(response).containsIgnoringCase("Citation Test Client");
+            assertThat(response).contains("/ai-conversations/" + conversationId);
+            assertThat(response).contains("[View Report Attachments]");
+
+
+            // Verify persistence
+            AiConversation reloadedConv = dataManager.load(AiConversation.class)
+                    .id(conversation.getId())
+                    .fetchPlan(fp -> fp.add("attachments", sub -> sub.addFetchPlan(FetchPlan.BASE)))
+                    .one();
+            assertThat(reloadedConv.getAttachments()).hasSize(1);
         });
     }
 

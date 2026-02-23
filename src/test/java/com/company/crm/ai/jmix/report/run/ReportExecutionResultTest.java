@@ -20,10 +20,10 @@ class ReportExecutionResultTest {
 
     @Test
     void testFailed() {
-        ReportExecutionResult result = ReportExecutionResult.failed("report-code", "ERROR_CODE", "error-message");
+        ReportExecutionResult result = ReportExecutionResult.failed("report-code", ReportExecutionErrorCode.EXECUTION_ERROR, "error-message");
         assertThat(result.success()).isFalse();
         assertThat(result.reportCode()).isEqualTo("report-code");
-        assertThat(result.errorCode()).isEqualTo("ERROR_CODE");
+        assertThat(result.errorCode()).isEqualTo(ReportExecutionErrorCode.EXECUTION_ERROR);
         assertThat(result.errorMessage()).isEqualTo("error-message");
     }
 
@@ -32,7 +32,7 @@ class ReportExecutionResultTest {
         List<ReportValidationError> errors = List.of(new ReportValidationError("param1", "error1"));
         ReportExecutionResult result = ReportExecutionResult.validationError("report-code", errors);
         assertThat(result.success()).isFalse();
-        assertThat(result.errorCode()).isEqualTo("PARAMETER_VALIDATION_ERROR");
+        assertThat(result.errorCode()).isEqualTo(ReportExecutionErrorCode.PARAMETER_VALIDATION_ERROR);
         assertThat(result.validationErrors()).hasSize(1);
     }
 }

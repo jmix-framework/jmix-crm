@@ -28,11 +28,15 @@ public class AiConversationListView extends StandardListView<AiConversation> {
 
     @Subscribe("aiConversationsDataGrid.createAction")
     public void onAiConversationsDataGridCreateAction(ActionPerformedEvent event) {
-        String welcomeMessage = messages.getMessage("aiConversation.welcomeMessage");
-        AiConversation savedConversation = aiConversationService.createNewConversation(welcomeMessage);
+        AiConversation savedConversation = createConversationWithWelcomeMessage();
 
         viewNavigators.detailView(this, AiConversation.class)
                 .editEntity(savedConversation)
                 .navigate();
+    }
+
+    private AiConversation createConversationWithWelcomeMessage() {
+        String welcomeMessage = messages.getMessage("aiConversation.welcomeMessage");
+        return aiConversationService.createNewConversation(welcomeMessage);
     }
 }

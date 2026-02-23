@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<fragment xmlns="http://jmix.io/schema/flowui/fragment">
+    <data readOnly="true">
+        <instance id="attachmentDc"
+                  class="com.company.crm.ai.entity.AiConversationAttachment"/>
+    </data>
+    <content>
+        <card id="attachmentCard" width="100%" themeNames="outlined">
+            <headerPrefix>
+                <icon id="attachmentIcon" icon="FILE_O" size="S"/>
+            </headerPrefix>
+            <header>
+                <h5 id="titleValue"
+                    dataContainer="attachmentDc"
+                    property="title"/>
+            </header>
+            <headerSuffix>
+                <button id="openButton"
+                        icon="EXTERNAL_LINK"
+                        themeNames="tertiary-inline small icon"/>
+            </headerSuffix>
+            <content>
+                <span id="timestampValue"
+                      dataContainer="attachmentDc"
+                      property="createdDate"
+                      classNames="text-secondary text-s"/>
+            </content>
+        </card>
+    </content>
+</fragment>

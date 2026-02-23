@@ -6,7 +6,6 @@ import java.util.List;
  * Aggregate result for the category cashflow risk report datasets.
  */
 public record CategoryCashflowRiskAssessmentResult(
-        List<CategoryRiskMetrics> riskByCategory,
-        List<CriticalInvoiceMetrics> criticalInvoices
+        List<CategoryRiskMetrics> riskByCategory
 ) {
 }

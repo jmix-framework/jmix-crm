@@ -1,6 +1,5 @@
 package com.company.crm.ai.jmix.report.run;
 
-import io.jmix.reports.entity.ReportOutputType;
 import io.jmix.reports.yarg.reporting.ReportOutputDocument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,23 +28,23 @@ public class ReportContentConverter {
      *
      * @param document   The generated report document
      * @param outputType The output type of the report
-     * @return Converted string content or error indication for binary formats
+     * @return Type-safe conversion result
      */
-    public String convert(ReportOutputDocument document, String outputType) {
+    public ReportContentResult convert(ReportOutputDocument document, String outputType) {
         if (document == null) {
-            return null;
+            return new ReportContentResult.TextContent(null);
         }
 
         if (isTextOutput(outputType)) {
             byte[] content = document.getContent();
             if (content == null) {
-                return "";
+                return new ReportContentResult.TextContent("");
             }
-            return new String(content, StandardCharsets.UTF_8);
+            return new ReportContentResult.TextContent(new String(content, StandardCharsets.UTF_8));
         }
 
         log.debug("Binary output format detected: {}. Full content not returned to LLM.", outputType);
-        return "BINARY_OUTPUT_NOT_SUPPORTED_YET";
+        return new ReportContentResult.BinaryUnsupported(outputType);
     }
 
     private boolean isTextOutput(String outputType) {

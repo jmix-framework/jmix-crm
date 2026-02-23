@@ -1,8 +1,12 @@
 package com.company.crm.ai.jmix.view.aiconversation;
 
+import com.company.crm.ai.entity.AiAttachmentType;
 import com.company.crm.AbstractUiTest;
 import com.company.crm.ai.entity.AiConversation;
+import com.company.crm.ai.entity.AiConversationAttachment;
 import com.company.crm.app.service.ai.CrmAnalyticsService;
+import io.jmix.core.DataManager;
+import io.jmix.core.FileRef;
 import io.jmix.flowui.ViewNavigators;
 import io.jmix.flowui.component.grid.DataGrid;
 import io.jmix.flowui.data.grid.DataGridItems;
@@ -27,6 +31,9 @@ public class AiConversationViewsUiIntegrationTest extends AbstractUiTest {
 
     @Autowired
     private ViewNavigators viewNavigators;
+
+    @Autowired
+    private DataManager dataManager;
 
     @MockitoBean
     private CrmAnalyticsService mockAnalyticsService;
@@ -76,10 +83,6 @@ public class AiConversationViewsUiIntegrationTest extends AbstractUiTest {
         viewNavigators.view(UiTestUtils.getCurrentView(), AiConversationListView.class).navigate();
 
         AiConversationListView listView = UiTestUtils.getCurrentView();
-
-        // Count initial conversations
-        DataGrid<AiConversation> dataGrid = UiTestUtils.getComponent(listView, "aiConversationsDataGrid");
-        int initialCount = dataGrid.getItems().getItems().size();
 
         // Click "New Chat" button
         JmixButton createButton = UiTestUtils.getComponent(listView, "createButton");
@@ -218,5 +221,65 @@ public class AiConversationViewsUiIntegrationTest extends AbstractUiTest {
             assertThat(detailView).isNotNull();
             assertThat(detailView.getEditedEntity().getId()).isEqualTo(testConversation.getId());
         }
+    }
+
+    @Test
+    void testDetailViewDisplaysAttachmentDownloadLink() {
+        AiConversation conversation = createAndSaveEntity(AiConversation.class, conv -> {
+            conv.setTitle("Attachment View Test");
+            conv.setCreatedDate(OffsetDateTime.now());
+        });
+
+        AiConversationAttachment attachment = createAndSaveEntity(AiConversationAttachment.class, att -> {
+            att.setConversation(conversation);
+            att.setFile(new FileRef("storage", "2026/02/22/report.html", "report.html"));
+            att.setFileName("report.html");
+            att.setType(AiAttachmentType.AI_GENERATED);
+            att.setCreatedDate(OffsetDateTime.now());
+        });
+
+        AiConversation conversationWithAttachments = dataManager.load(AiConversation.class)
+                .id(conversation.getId())
+                .fetchPlan(fp -> fp.add("attachments", sub -> sub.addFetchPlan("_base")))
+                .one();
+
+        viewNavigators.detailView(UiTestUtils.getCurrentView(), AiConversation.class)
+                .editEntity(conversationWithAttachments)
+                .navigate();
+
+        AiConversationDetailView detailView = UiTestUtils.getCurrentView();
+        assertThat(detailView).isNotNull();
+        assertThat(detailView.getRenderedAttachmentCount()).isGreaterThan(0);
+        assertThat(detailView.hasRenderedAttachment(attachment.getId())).isTrue();
+    }
+
+    @Test
+    void testDetailViewDisplaysAttachments() {
+        AiConversation conversation = createAndSaveEntity(AiConversation.class, conv -> {
+            conv.setTitle("Attachment View Test 2");
+            conv.setCreatedDate(OffsetDateTime.now());
+        });
+
+        createAndSaveEntity(AiConversationAttachment.class, att -> {
+            att.setConversation(conversation);
+            att.setFile(new FileRef("storage", "2026/02/22/report.csv", "report.csv"));
+            att.setFileName("report.csv");
+            att.setTitle("Risk Allocation CSV");
+            att.setType(AiAttachmentType.AI_GENERATED);
+            att.setCreatedDate(OffsetDateTime.now());
+        });
+
+        AiConversation conversationWithAttachments = dataManager.load(AiConversation.class)
+                .id(conversation.getId())
+                .fetchPlan(fp -> fp.add("attachments", sub -> sub.addFetchPlan("_base")))
+                .one();
+
+        viewNavigators.detailView(UiTestUtils.getCurrentView(), AiConversation.class)
+                .editEntity(conversationWithAttachments)
+                .navigate();
+
+        AiConversationDetailView detailView = UiTestUtils.getCurrentView();
+        assertThat(detailView).isNotNull();
+        assertThat(detailView.getRenderedAttachmentCount()).isGreaterThan(0);
     }
 }

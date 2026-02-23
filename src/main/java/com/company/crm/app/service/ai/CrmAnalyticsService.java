@@ -33,7 +33,9 @@ import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * AI-powered analytics service that processes natural language business questions against CRM data.
@@ -100,9 +102,22 @@ public class CrmAnalyticsService {
     public String processBusinessQuestion(String userQuestion, String conversationId) {
         log.debug("Processing business question: {} (conversation: {})", userQuestion, conversationId);
 
-        return chatClient.prompt()
+        UUID conversationUuid = null;
+        try {
+            conversationUuid = UUID.fromString(conversationId);
+        } catch (IllegalArgumentException e) {
+            log.warn("Invalid conversationId format for tool context: {}", conversationId);
+        }
+
+        var promptSpec = chatClient.prompt()
                 .user(userQuestion)
-                .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
+                .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId));
+
+        if (conversationUuid != null) {
+            promptSpec = promptSpec.toolContext(Map.of("conversationId", conversationUuid));
+        }
+
+        return promptSpec
                 .tools(jpqlQueryTool, jmixJpaEntityDiscoveryTool, jmixReportDiscoveryTool, runReportTool)
                 .call()
                 .content();

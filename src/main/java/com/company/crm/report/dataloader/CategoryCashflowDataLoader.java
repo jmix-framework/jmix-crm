@@ -3,7 +3,6 @@ package com.company.crm.report.dataloader;
 import com.company.crm.app.service.analytics.CashflowAnalyticsService;
 import com.company.crm.app.service.analytics.CategoryCashflowRiskAssessmentResult;
 import com.company.crm.app.service.analytics.CategoryRiskMetrics;
-import com.company.crm.app.service.analytics.CriticalInvoiceMetrics;
 import com.company.crm.model.client.Client;
 import io.jmix.reports.yarg.loaders.ReportDataLoader;
 import io.jmix.reports.yarg.structure.BandData;
@@ -16,12 +15,12 @@ import java.util.*;
 
 /**
  * DataLoader for Category Cashflow Risk report.
- * Provides data sets for RiskByCategory and CriticalInvoices.
+ * Provides data set for RiskByCategory.
  */
 @Component("crm_CategoryCashflowDataLoader")
 public class CategoryCashflowDataLoader implements ReportDataLoader {
 
-    private static final String DATASET_CRITICAL_INVOICES = "criticalInvoices";
+    private static final String DATASET_HEADER = "header";
     private static final String CACHE_KEY = "__categoryCashflowRiskAssessment";
 
     private final CashflowAnalyticsService cashflowAnalyticsService;
@@ -32,13 +31,11 @@ public class CategoryCashflowDataLoader implements ReportDataLoader {
 
     @Override
     public List<Map<String, Object>> loadData(ReportQuery reportQuery, BandData parentBand, Map<String, Object> params) {
-        CategoryCashflowRiskAssessmentResult assessment = getOrComputeAssessment(params);
-        if (reportQuery != null && DATASET_CRITICAL_INVOICES.equals(reportQuery.getName())) {
-            return assessment.criticalInvoices().stream()
-                    .map(this::toCriticalInvoiceMap)
-                    .toList();
+        if (reportQuery != null && DATASET_HEADER.equals(reportQuery.getName())) {
+            return List.of(Collections.emptyMap());
         }
 
+        CategoryCashflowRiskAssessmentResult assessment = getOrComputeAssessment(params);
         return assessment.riskByCategory().stream()
                 .map(this::toRiskByCategoryMap)
                 .toList();
@@ -74,20 +71,6 @@ public class CategoryCashflowDataLoader implements ReportDataLoader {
         map.put("paymentsCount", metric.paymentsCount());
         map.put("invoicesCount", metric.invoicesCount());
         map.put("overpaymentAmount", metric.overpaymentAmount());
-        return map;
-    }
-
-    private Map<String, Object> toCriticalInvoiceMap(CriticalInvoiceMetrics metric) {
-        Map<String, Object> map = new HashMap<>();
-        map.put("invoiceNumber", metric.invoiceNumber());
-        map.put("clientName", metric.clientName());
-        map.put("invoiceDate", metric.invoiceDate());
-        map.put("dueDate", metric.dueDate());
-        map.put("invoiceStatus", metric.invoiceStatus());
-        map.put("categoryCode", metric.categoryCode());
-        map.put("categoryName", metric.categoryName());
-        map.put("categoryOpenAmount", metric.categoryOpenAmount());
-        map.put("daysOverdue", metric.daysOverdue());
         return map;
     }
 

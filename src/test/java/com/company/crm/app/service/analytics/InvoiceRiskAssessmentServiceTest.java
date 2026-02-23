@@ -46,8 +46,6 @@ class InvoiceRiskAssessmentServiceTest {
         assertThat(cat1.openAmount()).isEqualByComparingTo("250.00");
         assertThat(cat1.dtcNumerator()).isEqualByComparingTo("2500.00");
         assertThat(cat1.dtcDenominator()).isEqualByComparingTo("250.00");
-        assertThat(result.criticalInvoices()).hasSize(2);
-        assertThat(result.criticalInvoices().getFirst().daysOverdue()).isEqualTo(1L);
     }
 
     @Test
@@ -64,7 +62,6 @@ class InvoiceRiskAssessmentServiceTest {
         assertThat(result.categories()).hasSize(1);
         assertThat(result.categories().getFirst().paidAmount()).isEqualByComparingTo("100.00");
         assertThat(result.categories().getFirst().openAmount()).isEqualByComparingTo("0.00");
-        assertThat(result.criticalInvoices()).isEmpty();
     }
 
     private Invoice invoice(String total, InvoiceStatus status, LocalDate invoiceDate, LocalDate dueDate, List<Payment> payments) {

@@ -34,7 +34,7 @@ public class InvoiceRiskAssessmentService {
     public InvoiceRiskAssessmentResult assessInvoiceRisk(Invoice invoice, List<OrderItem> orderItems, LocalDate asOfDate) {
         BigDecimal invoiceTotal = safeMoney(invoice.getTotal());
         if (invoiceTotal.compareTo(BigDecimal.ZERO) <= 0) {
-            return new InvoiceRiskAssessmentResult(List.of(), BigDecimal.ZERO, List.of());
+            return new InvoiceRiskAssessmentResult(List.of(), BigDecimal.ZERO);
         }
 
         Map<String, CategoryAllocationPolicy.CategoryAllocationShare> shares = categoryAllocationPolicy.defineAllocationShares(orderItems);
@@ -101,26 +101,7 @@ public class InvoiceRiskAssessmentService {
             ));
         }
 
-        List<CriticalInvoiceMetrics> criticalInvoices = List.of();
-        if (overdue) {
-            long daysOverdue = receivablesAgingPolicy.resolveDaysOverdue(invoice, asOfDate);
-            criticalInvoices = categories.stream()
-                    .filter(category -> category.openAmount().compareTo(BigDecimal.ZERO) > 0)
-                    .map(category -> new CriticalInvoiceMetrics(
-                            resolveInvoiceNumber(invoice),
-                            invoice.getClient() != null ? invoice.getClient().getName() : null,
-                            invoice.getDate(),
-                            invoice.getDueDate(),
-                            invoice.getStatus() != null ? invoice.getStatus().name() : null,
-                            category.categoryCode(),
-                            category.categoryName(),
-                            category.openAmount(),
-                            daysOverdue
-                    ))
-                    .toList();
-        }
-
-        return new InvoiceRiskAssessmentResult(categories, overpayment, criticalInvoices);
+        return new InvoiceRiskAssessmentResult(categories, overpayment);
     }
 
     private List<Payment> sortedPayments(Invoice invoice) {
@@ -149,14 +130,6 @@ public class InvoiceRiskAssessmentService {
         return value != null ? value : BigDecimal.ZERO;
     }
 
-    private String resolveInvoiceNumber(Invoice invoice) {
-        try {
-            return invoice.getNumber();
-        } catch (Exception ignored) {
-            return null;
-        }
-    }
-
     public record CategoryRiskPosition(
             String categoryCode,
             String categoryName,
@@ -172,8 +145,7 @@ public class InvoiceRiskAssessmentService {
 
     public record InvoiceRiskAssessmentResult(
             List<CategoryRiskPosition> categories,
-            BigDecimal overpaymentAmount,
-            List<CriticalInvoiceMetrics> criticalInvoices
+            BigDecimal overpaymentAmount
     ) {
     }
 }

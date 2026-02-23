@@ -157,7 +157,7 @@ class CashflowAnalyticsServiceIntegrationTest extends AbstractServiceTest<Cashfl
     }
 
     @Test
-    void testCriticalInvoices_areReturnedForOverdueOpenAmounts() {
+    void testOverdueOpenAmounts_areReflectedInRiskByCategory() {
         systemAuthenticator.runWithSystem(() -> {
             Category category = entities.category("Critical Cat", "CRIT");
             CategoryItem item = entities.categoryItem("Critical Item", "CI", category, BigDecimal.valueOf(1000), UomType.PIECES);
@@ -177,13 +177,13 @@ class CashflowAnalyticsServiceIntegrationTest extends AbstractServiceTest<Cashfl
             CategoryCashflowRiskAssessmentResult result = service.assessCategoryCashflowRiskReport(
                     null, null, client.getId(), true, LocalDate.now());
 
-            assertThat(result.criticalInvoices()).hasSize(1);
-            CriticalInvoiceMetrics critical = result.criticalInvoices().getFirst();
-            assertThat(critical.invoiceNumber()).isEqualTo(invoice.getNumber());
-            assertThat(critical.clientName()).isEqualTo(client.getName());
-            assertThat(critical.categoryCode()).isEqualTo("CRIT");
-            assertThat(critical.categoryOpenAmount()).isEqualByComparingTo("800.00");
-            assertThat(critical.daysOverdue()).isGreaterThanOrEqualTo(30L);
+            assertThat(result.riskByCategory()).hasSize(1);
+            CategoryRiskMetrics metric = result.riskByCategory().getFirst();
+            assertThat(metric.categoryCode()).isEqualTo("CRIT");
+            assertThat(metric.invoicedAmount()).isEqualByComparingTo("1000.00");
+            assertThat(metric.paidAmount()).isEqualByComparingTo("200.00");
+            assertThat(metric.openAmount()).isEqualByComparingTo("800.00");
+            assertThat(metric.overdueOpenAmount()).isEqualByComparingTo("800.00");
         });
     }
 }

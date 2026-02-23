@@ -18,8 +18,9 @@ class ReportContentConverterTest {
         String html = "<html><body>Test</body></html>";
         when(document.getContent()).thenReturn(html.getBytes(StandardCharsets.UTF_8));
 
-        String result = converter.convert(document, "HTML");
-        assertThat(result).isEqualTo(html);
+        ReportContentResult result = converter.convert(document, "HTML");
+        assertThat(result).isInstanceOf(ReportContentResult.TextContent.class);
+        assertThat(((ReportContentResult.TextContent) result).content()).isEqualTo(html);
     }
 
     @Test
@@ -28,20 +29,42 @@ class ReportContentConverterTest {
         String csv = "id,name\n1,Test";
         when(document.getContent()).thenReturn(csv.getBytes(StandardCharsets.UTF_8));
 
-        String result = converter.convert(document, "CSV");
-        assertThat(result).isEqualTo(csv);
+        ReportContentResult result = converter.convert(document, "CSV");
+        assertThat(result).isInstanceOf(ReportContentResult.TextContent.class);
+        assertThat(((ReportContentResult.TextContent) result).content()).isEqualTo(csv);
+    }
+
+    @Test
+    void testConvertHtml_caseInsensitiveOutputType() {
+        ReportOutputDocument document = mock(ReportOutputDocument.class);
+        String html = "<html><body>Case Test</body></html>";
+        when(document.getContent()).thenReturn(html.getBytes(StandardCharsets.UTF_8));
+
+        ReportContentResult result = converter.convert(document, "html");
+        assertThat(result).isInstanceOf(ReportContentResult.TextContent.class);
+        assertThat(((ReportContentResult.TextContent) result).content()).isEqualTo(html);
     }
 
     @Test
     void testConvertPdf() {
         ReportOutputDocument document = mock(ReportOutputDocument.class);
-        String result = converter.convert(document, "PDF");
-        assertThat(result).isEqualTo("BINARY_OUTPUT_NOT_SUPPORTED_YET");
+        ReportContentResult result = converter.convert(document, "PDF");
+        assertThat(result).isInstanceOf(ReportContentResult.BinaryUnsupported.class);
+        assertThat(((ReportContentResult.BinaryUnsupported) result).outputType()).isEqualTo("PDF");
+    }
+
+    @Test
+    void testConvertNullOutputType_returnsBinaryUnsupported() {
+        ReportOutputDocument document = mock(ReportOutputDocument.class);
+        ReportContentResult result = converter.convert(document, null);
+        assertThat(result).isInstanceOf(ReportContentResult.BinaryUnsupported.class);
+        assertThat(((ReportContentResult.BinaryUnsupported) result).outputType()).isNull();
     }
 
     @Test
     void testConvertNullDocument() {
-        String result = converter.convert(null, "HTML");
-        assertThat(result).isNull();
+        ReportContentResult result = converter.convert(null, "HTML");
+        assertThat(result).isInstanceOf(ReportContentResult.TextContent.class);
+        assertThat(((ReportContentResult.TextContent) result).content()).isNull();
     }
 }

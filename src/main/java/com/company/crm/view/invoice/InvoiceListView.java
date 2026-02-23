@@ -56,6 +56,7 @@ import io.jmix.flowui.view.ViewComponent;
 import io.jmix.flowui.view.ViewController;
 import io.jmix.flowui.view.ViewDescriptor;
 import io.jmix.reportsflowui.runner.UiReportRunner;
+import io.jmix.reports.entity.ReportOutputType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 
@@ -208,7 +209,9 @@ public class InvoiceListView extends StandardListView<Invoice> {
 
     @Subscribe(id = "runCategoryCashflowRiskReportButton", subject = "clickListener")
     private void onRunCategoryCashflowRiskReportButtonClick(final ClickEvent<JmixButton> event) {
-        var runner = uiReportRunner.byReportCode(CategoryCashflowRiskReport.CODE);
+        var runner = uiReportRunner.byReportCode(CategoryCashflowRiskReport.CODE)
+                .withTemplateCode("XLSX")
+                .withOutputType(ReportOutputType.XLSX);
 
         Date fromDate = toDate(invoices_FromDatePicker.getValue());
         if (fromDate != null) {
