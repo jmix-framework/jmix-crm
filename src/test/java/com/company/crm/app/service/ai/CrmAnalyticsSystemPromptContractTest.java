@@ -12,20 +12,24 @@ class CrmAnalyticsSystemPromptContractTest {
 
     @Test
     void promptContainsMarkdownHeadingConstraint() throws IOException {
+        // given
+
+        // when
         String prompt = loadPrompt();
 
-        assertThat(prompt).contains("Use only ## (H2) and ### (H3) headings in markdown - never use # (H1) headings");
+        // then
+        assertHeadingContract(prompt);
     }
 
     @Test
     void promptContainsBalancedFormattingGuidelines() throws IOException {
+        // given
+
+        // when
         String prompt = loadPrompt();
 
-        assertThat(prompt).contains("Prefer short prose paragraphs over bullet lists");
-        assertThat(prompt).contains("Use headings sparingly");
-        assertThat(prompt).contains("Do not produce heading/list skeletons");
-        assertThat(prompt).contains("prefer a compact markdown table");
-        assertThat(prompt).contains("Recommended response shape");
+        // then
+        assertFormattingContract(prompt);
     }
 
     private String loadPrompt() throws IOException {
@@ -33,5 +37,18 @@ class CrmAnalyticsSystemPromptContractTest {
         try (var inputStream = resource.getInputStream()) {
             return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
         }
+    }
+
+    private void assertHeadingContract(String prompt) {
+        assertThat(prompt).contains("Use only ## (H2) and ### (H3) headings in markdown - never use # (H1) headings");
+        assertThat(prompt).doesNotMatch("(?m)^#\\s");
+    }
+
+    private void assertFormattingContract(String prompt) {
+        assertThat(prompt).contains("Prefer short prose paragraphs over bullet lists");
+        assertThat(prompt).contains("Use headings sparingly");
+        assertThat(prompt).contains("Do not produce heading/list skeletons");
+        assertThat(prompt).contains("prefer a compact markdown table");
+        assertThat(prompt).contains("Recommended response shape");
     }
 }

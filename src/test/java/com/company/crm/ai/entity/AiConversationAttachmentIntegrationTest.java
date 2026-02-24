@@ -5,6 +5,7 @@ import com.company.crm.ai.service.AiConversationService;
 import io.jmix.core.DataManager;
 import io.jmix.core.FileRef;
 import io.jmix.core.FetchPlan;
+import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -21,23 +22,20 @@ class AiConversationAttachmentIntegrationTest extends AbstractTest {
 
     @Test
     void testSaveAndLoadAttachment() {
-        // 1. Create a conversation
+        // given
         AiConversation conversation = aiConversationService.createNewConversation("Test Conversation");
-
-        // 2. Create an attachment
-        AiConversationAttachment attachment = dataManager.create(AiConversationAttachment.class);
-        attachment.setConversation(conversation);
-        attachment.setFileName("test-report.html");
-        attachment.setTitle("Test Report Title");
-        attachment.setType(AiAttachmentType.AI_GENERATED);
-        
         FileRef fileRef = new FileRef("storage", "2026/02/22/test-report.html", "test-report.html");
-        attachment.setFile(fileRef);
+        AiConversationAttachment attachment = createAttachment(
+                conversation,
+                "test-report.html",
+                fileRef,
+                "Test Report Title",
+                AiAttachmentType.AI_GENERATED
+        );
 
-        // 3. Save
+        // when
         dataManager.save(attachment);
 
-        // 4. Verify persistence and relationship
         AiConversation reloadedConversation = dataManager.load(AiConversation.class)
                 .id(conversation.getId())
                 .fetchPlan(fp -> {
@@ -45,6 +43,7 @@ class AiConversationAttachmentIntegrationTest extends AbstractTest {
                 })
                 .one();
 
+        // then
         assertThat(reloadedConversation.getAttachments()).hasSize(1);
         AiConversationAttachment reloadedAttachment = reloadedConversation.getAttachments().get(0);
         
@@ -57,27 +56,53 @@ class AiConversationAttachmentIntegrationTest extends AbstractTest {
 
     @Test
     void testSaveAttachment_withoutFile_fails() {
+        // given
         AiConversation conversation = aiConversationService.createNewConversation("Attachment Validation File");
+        AiConversationAttachment attachment = createAttachment(
+                conversation,
+                "missing-file.html",
+                null,
+                "Missing File",
+                AiAttachmentType.AI_GENERATED
+        );
 
-        AiConversationAttachment attachment = dataManager.create(AiConversationAttachment.class);
-        attachment.setConversation(conversation);
-        attachment.setFileName("missing-file.html");
-        attachment.setType(AiAttachmentType.AI_GENERATED);
-
+        // when / then
         assertThatThrownBy(() -> dataManager.save(attachment))
-                .isInstanceOf(Exception.class);
+                .isInstanceOf(ConstraintViolationException.class)
+                .hasMessageContaining("constraints were violated")
+                .hasMessageContaining("AiConversationAttachment");
     }
 
     @Test
     void testSaveAttachment_withoutFileName_fails() {
+        // given
         AiConversation conversation = aiConversationService.createNewConversation("Attachment Validation FileName");
+        AiConversationAttachment attachment = createAttachment(
+                conversation,
+                null,
+                new FileRef("storage", "2026/02/22/file-only.html", "file-only.html"),
+                "Missing FileName",
+                AiAttachmentType.AI_GENERATED
+        );
 
+        // when / then
+        assertThatThrownBy(() -> dataManager.save(attachment))
+                .isInstanceOf(ConstraintViolationException.class)
+                .hasMessageContaining("constraints were violated")
+                .hasMessageContaining("AiConversationAttachment");
+    }
+
+    private AiConversationAttachment createAttachment(AiConversation conversation,
+                                                      String fileName,
+                                                      FileRef fileRef,
+                                                      String title,
+                                                      AiAttachmentType type) {
         AiConversationAttachment attachment = dataManager.create(AiConversationAttachment.class);
         attachment.setConversation(conversation);
-        attachment.setFile(new FileRef("storage", "2026/02/22/file-only.html", "file-only.html"));
-        attachment.setType(AiAttachmentType.AI_GENERATED);
-
-        assertThatThrownBy(() -> dataManager.save(attachment))
-                .isInstanceOf(Exception.class);
+        attachment.setFileName(fileName);
+        attachment.setFile(fileRef);
+        attachment.setTitle(title);
+        attachment.setType(type);
+        return attachment;
     }
 }

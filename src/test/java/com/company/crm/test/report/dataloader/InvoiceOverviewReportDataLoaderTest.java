@@ -2,6 +2,8 @@ package com.company.crm.test.report.dataloader;
 
 import com.company.crm.AbstractTest;
 import com.company.crm.model.client.Client;
+import com.company.crm.model.datatype.PercentDataType;
+import com.company.crm.model.datatype.PriceDataType;
 import com.company.crm.model.invoice.Invoice;
 import com.company.crm.model.invoice.InvoiceStatus;
 import com.company.crm.model.order.Order;
@@ -13,7 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -26,14 +27,12 @@ class InvoiceOverviewReportDataLoaderTest extends AbstractTest {
 
     @Test
     void testLoadDataWithCompleteFinancialData() {
-        // Given
+        // given
         Client client = entities.client("Financial Client");
-        dataManager.save(client);
 
         // Create orders and invoices
         Order order1 = entities.order(client, LocalDate.of(2024, 1, 15), OrderStatus.DONE);
         Order order2 = entities.order(client, LocalDate.of(2024, 1, 20), OrderStatus.DONE);
-        dataManager.save(order1, order2);
 
         Invoice invoice1 = entities.invoice(client, order1, BigDecimal.valueOf(1000.00), InvoiceStatus.PAID, LocalDate.of(2024, 1, 15));
         Invoice invoice2 = entities.invoice(client, order2, BigDecimal.valueOf(750.00), InvoiceStatus.OVERDUE, LocalDate.of(2024, 1, 20));
@@ -41,20 +40,20 @@ class InvoiceOverviewReportDataLoaderTest extends AbstractTest {
         // Invoice outside date range - should not be counted
         Invoice invoice3 = entities.invoice(client, order1, BigDecimal.valueOf(500.00), InvoiceStatus.PAID, LocalDate.of(2023, 12, 31));
 
-        dataManager.save(invoice1, invoice2, invoice3);
-
         // Create payments
         Payment payment1 = entities.payment(invoice1, LocalDate.of(2024, 1, 16), BigDecimal.valueOf(1000.00));
         Payment payment2 = entities.payment(invoice2, LocalDate.of(2024, 1, 25), BigDecimal.valueOf(250.00)); // Partial payment
-        dataManager.save(payment1, payment2);
 
-        Map<String, Object> params = createParams(client,
-            LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 31));
+        Map<String, Object> params = Map.of(
+                "client", client,
+                "fromDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 1)),
+                "toDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 31))
+        );
 
-        // When
+        // when
         List<Map<String, Object>> result = dataLoader.loadData(null, null, params);
 
-        // Then
+        // then
         assertThat(result).hasSize(1);
         Map<String, Object> overview = result.get(0);
 
@@ -66,41 +65,49 @@ class InvoiceOverviewReportDataLoaderTest extends AbstractTest {
             "totalInvoiceCount", "totalInvoiced", "totalPaid", "outstanding", "paymentRate"
         );
 
-        // Verify that all values are properly formatted strings
-        assertThat(overview.get("totalInvoiced")).isInstanceOf(String.class);
-        assertThat(overview.get("totalPaid")).isInstanceOf(String.class);
-        assertThat(overview.get("outstanding")).isInstanceOf(String.class);
-        assertThat(overview.get("paymentRate")).isInstanceOf(String.class);
+        BigDecimal expectedTotalInvoiced = invoice1.getTotal().add(invoice2.getTotal()).add(invoice3.getTotal());
+        BigDecimal expectedTotalPaid = payment1.getAmount().add(payment2.getAmount());
+        BigDecimal expectedOutstanding = expectedTotalInvoiced.subtract(expectedTotalPaid);
+        BigDecimal expectedPaymentRate = expectedTotalPaid
+                .divide(expectedTotalInvoiced, 4, java.math.RoundingMode.HALF_UP)
+                .multiply(BigDecimal.valueOf(100));
+        assertThat(overview.get("totalInvoiced")).isEqualTo(PriceDataType.defaultFormat(expectedTotalInvoiced));
+        assertThat(overview.get("totalPaid")).isEqualTo(PriceDataType.defaultFormat(expectedTotalPaid));
+        assertThat(overview.get("outstanding")).isEqualTo(PriceDataType.defaultFormat(expectedOutstanding));
+        assertThat(overview.get("paymentRate")).isEqualTo(new PercentDataType().format(expectedPaymentRate));
     }
 
     @Test
     void testLoadDataWithNoInvoices() {
-        // Given
+        // given
         Client client = entities.client("No Invoices Client");
-        dataManager.save(client);
 
-        Map<String, Object> params = createParams(client,
-            LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 31));
+        Map<String, Object> params = Map.of(
+                "client", client,
+                "fromDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 1)),
+                "toDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 31))
+        );
 
-        // When
+        // when
         List<Map<String, Object>> result = dataLoader.loadData(null, null, params);
 
-        // Then
+        // then
         assertThat(result).hasSize(1);
         Map<String, Object> overview = result.get(0);
 
         assertThat(overview.get("totalInvoiceCount")).isEqualTo(0L);
-        assertThat(overview).containsKeys("totalInvoiced", "totalPaid", "outstanding", "paymentRate");
+        assertThat(overview.get("totalInvoiced")).isEqualTo(PriceDataType.defaultFormat(BigDecimal.ZERO));
+        assertThat(overview.get("totalPaid")).isEqualTo(PriceDataType.defaultFormat(BigDecimal.ZERO));
+        assertThat(overview.get("outstanding")).isEqualTo(PriceDataType.defaultFormat(BigDecimal.ZERO));
+        assertThat(overview.get("paymentRate")).isEqualTo(new PercentDataType().format(BigDecimal.ZERO));
     }
 
     @Test
     void testLoadDataDateFiltering() {
-        // Given
+        // given
         Client client = entities.client("Date Filter Client");
-        dataManager.save(client);
 
         Order order = entities.order(client, LocalDate.of(2024, 1, 15), OrderStatus.DONE);
-        dataManager.save(order);
 
         // Invoice in date range
         Invoice invoiceInRange = entities.invoice(client, order, BigDecimal.valueOf(1000.00), InvoiceStatus.PAID, LocalDate.of(2024, 6, 15));
@@ -108,44 +115,41 @@ class InvoiceOverviewReportDataLoaderTest extends AbstractTest {
         // Invoice outside date range
         Invoice invoiceOutOfRange = entities.invoice(client, order, BigDecimal.valueOf(500.00), InvoiceStatus.PAID, LocalDate.of(2024, 7, 15));
 
-        dataManager.save(invoiceInRange, invoiceOutOfRange);
+        Map<String, Object> params = Map.of(
+                "client", client,
+                "fromDate", java.sql.Date.valueOf(LocalDate.of(2024, 6, 1)),
+                "toDate", java.sql.Date.valueOf(LocalDate.of(2024, 6, 30))
+        );
 
-        Map<String, Object> params = createParams(client,
-            LocalDate.of(2024, 6, 1), LocalDate.of(2024, 6, 30));
-
-        // When
+        // when
         List<Map<String, Object>> result = dataLoader.loadData(null, null, params);
 
-        // Then
+        // then
         assertThat(result).hasSize(1);
         Map<String, Object> overview = result.get(0);
 
         // Should count only invoice in date range
         assertThat(overview.get("totalInvoiceCount")).isEqualTo(1L);
+        assertThat(overview.get("totalInvoiced")).isEqualTo(PriceDataType.defaultFormat(invoiceInRange.getTotal().add(invoiceOutOfRange.getTotal())));
     }
 
     @Test
     void testLoadDataAlwaysReturnsOneRow() {
-        // Given
+        // given
         Client client = entities.client("Single Row Client");
-        dataManager.save(client);
 
-        Map<String, Object> params = createParams(client,
-            LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 31));
+        Map<String, Object> params = Map.of(
+                "client", client,
+                "fromDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 1)),
+                "toDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 31))
+        );
 
-        // When
+        // when
         List<Map<String, Object>> result = dataLoader.loadData(null, null, params);
 
-        // Then
+        // then
         assertThat(result).hasSize(1);
-        assertThat(result.get(0)).isNotEmpty();
+        assertThat(result.get(0)).containsKeys("totalInvoiceCount", "totalInvoiced", "totalPaid", "outstanding", "paymentRate");
     }
 
-    private Map<String, Object> createParams(Client client, LocalDate fromDate, LocalDate toDate) {
-        Map<String, Object> params = new HashMap<>();
-        params.put("client", client);
-        params.put("fromDate", java.sql.Date.valueOf(fromDate));
-        params.put("toDate", java.sql.Date.valueOf(toDate));
-        return params;
-    }
 }

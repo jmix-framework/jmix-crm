@@ -22,64 +22,86 @@ class ReportOrderMapperTest extends AbstractTest {
 
     @Test
     void testToReportMapWithCompleteOrder() {
-        // Given
+        // given
         Client client = entities.client("Test Client");
         Order order = entities.order(client, LocalDate.of(2024, 1, 15), OrderStatus.DONE);
         order.setNumber("ORD-001");
         order.setTotal(BigDecimal.valueOf(1250.75));
         order.setComment("Complete order with all fields");
 
-        // When
+        // when
         Map<String, Object> result = mapper.toReportMap(order);
 
-        // Then
+        // then
         assertThat(result).hasSize(6);
         assertThat(result.get("number")).isEqualTo("ORD-001");
         assertThat(result.get("date")).isEqualTo(LocalDate.of(2024, 1, 15));
         assertThat(result.get("dateFormatted")).isInstanceOf(String.class);
+        assertThat((String) result.get("dateFormatted")).isNotBlank();
         assertThat(result.get("status")).isInstanceOf(String.class);
+        assertThat((String) result.get("status")).isNotBlank();
         assertThat(result.get("total")).isEqualTo(PriceDataType.defaultFormat(BigDecimal.valueOf(1250.75)));
         assertThat(result.get("comment")).isEqualTo("Complete order with all fields");
     }
 
     @Test
     void testToReportMapWithEmptyStrings() {
-        // Given
+        // given
         Client client = entities.client("Test Client");
         Order order = entities.order(client, LocalDate.of(2024, 2, 1), OrderStatus.NEW);
         order.setNumber("");
         order.setTotal(BigDecimal.ZERO);
         order.setComment("");
 
-        // When
+        // when
         Map<String, Object> result = mapper.toReportMap(order);
 
-        // Then
+        // then
         assertThat(result).hasSize(6);
         assertThat(result.get("number")).isEqualTo("");
         assertThat(result.get("date")).isEqualTo(LocalDate.of(2024, 2, 1));
         assertThat(result.get("dateFormatted")).isInstanceOf(String.class);
+        assertThat((String) result.get("dateFormatted")).isNotBlank();
         assertThat(result.get("status")).isInstanceOf(String.class);
+        assertThat((String) result.get("status")).isNotBlank();
         assertThat(result.get("total")).isEqualTo(PriceDataType.defaultFormat(BigDecimal.ZERO));
         assertThat(result.get("comment")).isEqualTo("");
     }
 
     @Test
     void testToReportMapConsistency() {
-        // Given - Same order mapped twice
+        // given - Same order mapped twice
         Client client = entities.client("Test Client");
         Order order = entities.order(client, LocalDate.of(2024, 3, 10), OrderStatus.DONE);
         order.setNumber("ORD-002");
         order.setTotal(BigDecimal.valueOf(500.00));
         order.setComment("Test consistency");
 
-        // When
+        // when
         Map<String, Object> result1 = mapper.toReportMap(order);
         Map<String, Object> result2 = mapper.toReportMap(order);
 
-        // Then
+        // then
         assertThat(result1).isEqualTo(result2);
         assertThat(result1.get("number")).isEqualTo("ORD-002");
         assertThat(result1.get("total")).isEqualTo(PriceDataType.defaultFormat(BigDecimal.valueOf(500.00)));
+    }
+
+    @Test
+    void testToReportMapWithNullNumberAndComment_usesEntityDefaults() {
+        // given
+        Client client = entities.client("Null Fields Client");
+        Order order = entities.order(client, LocalDate.of(2024, 4, 1), OrderStatus.NEW);
+        order.setNumber(null);
+        order.setTotal(BigDecimal.valueOf(100));
+        order.setComment(null);
+
+        // when
+        Map<String, Object> result = mapper.toReportMap(order);
+
+        // then
+        assertThat(result.get("number")).isEqualTo("Will be generated");
+        assertThat(result.get("comment")).isEqualTo("");
+        assertThat(result.get("total")).isEqualTo(PriceDataType.defaultFormat(BigDecimal.valueOf(100)));
     }
 }

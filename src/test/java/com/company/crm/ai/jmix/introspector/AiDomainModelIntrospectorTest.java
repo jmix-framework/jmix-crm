@@ -37,13 +37,14 @@ class AiDomainModelIntrospectorTest extends AbstractTest {
 
     @Test
     void shouldIntrospectClientWithCorrectProperties() {
-        // Get Client MetaClass
+        // given
         MetaClass clientMetaClass = metadata.getClass(Client.class);
         List<MetaClass> metaClasses = List.of(clientMetaClass);
 
+        // when
         AiDomainModelDescriptor domainModel = introspector.introspect(metaClasses);
 
-        // Verify single entity
+        // then
         assertThat(domainModel.entities()).hasSize(1);
         assertThat(domainModel.entities()).containsKey("Client");
 
@@ -64,8 +65,8 @@ class AiDomainModelIntrospectorTest extends AbstractTest {
         AiPropertyDescriptor typeProperty = properties.get("type");
         assertThat(typeProperty.type()).isEqualTo("enum");
         assertThat(typeProperty.javaType()).isEqualTo("ClientType");
-        assertThat(typeProperty.enumValues()).isNotNull();
         assertThat(typeProperty.enumValues()).containsKeys("BUSINESS", "INDIVIDUAL");
+        assertThat(typeProperty.enumValues()).containsEntry("BUSINESS", "BUSINESS");
 
         // Check relation property
         assertThat(properties).containsKey("accountManager");
@@ -82,19 +83,23 @@ class AiDomainModelIntrospectorTest extends AbstractTest {
 
     @Test
     void shouldIntrospectEmptyCollectionCorrectly() {
+        // when
         AiDomainModelDescriptor domainModel = introspector.introspect(List.of());
 
+        // then
         assertThat(domainModel.entities()).isEmpty();
     }
 
     @Test
     void shouldIntrospectTestEntityWithComments() {
-        // Test our test model entities which have explicit @Comment annotations
+        // given
         MetaClass customerTestMetaClass = metadata.getClass(CustomerTestEntity.class);
         List<MetaClass> metaClasses = List.of(customerTestMetaClass);
 
+        // when
         AiDomainModelDescriptor domainModel = introspector.introspect(metaClasses);
 
+        // then
         assertThat(domainModel.entities()).hasSize(1);
         assertThat(domainModel.entities()).containsKey("CustomerTestEntity");
 
@@ -140,11 +145,14 @@ class AiDomainModelIntrospectorTest extends AbstractTest {
 
     @Test
     void shouldIntrospectOrderTestEntityWithRelations() {
+        // given
         MetaClass orderTestMetaClass = metadata.getClass(OrderTestEntity.class);
         List<MetaClass> metaClasses = List.of(orderTestMetaClass);
 
+        // when
         AiDomainModelDescriptor domainModel = introspector.introspect(metaClasses);
 
+        // then
         AiEntityDescriptor orderEntity = domainModel.entities().get("OrderTestEntity");
         Map<String, AiPropertyDescriptor> properties = orderEntity.properties();
 
@@ -167,19 +175,21 @@ class AiDomainModelIntrospectorTest extends AbstractTest {
         AiPropertyDescriptor statusProperty = properties.get("status");
         assertThat(statusProperty.type()).isEqualTo("enum");
         assertThat(statusProperty.javaType()).isEqualTo("TestOrderStatus");
-        assertThat(statusProperty.enumValues()).isNotNull();
         assertThat(statusProperty.enumValues()).containsKeys("DRAFT", "SUBMITTED", "APPROVED", "SHIPPED", "DELIVERED", "CANCELLED");
+        assertThat(statusProperty.enumValues()).containsEntry("CANCELLED", 99);
     }
 
     @Test
     void shouldIntrospectMultipleEntitiesCorrectly() {
-        // Test multiple entities at once
+        // given
         MetaClass clientMetaClass = metadata.getClass(Client.class);
         MetaClass invoiceMetaClass = metadata.getClass(Invoice.class);
         List<MetaClass> metaClasses = List.of(clientMetaClass, invoiceMetaClass);
 
+        // when
         AiDomainModelDescriptor domainModel = introspector.introspect(metaClasses);
 
+        // then
         assertThat(domainModel.entities()).hasSize(2);
         assertThat(domainModel.entities()).containsKeys("Client", "Invoice");
 
@@ -196,17 +206,19 @@ class AiDomainModelIntrospectorTest extends AbstractTest {
 
     @Test
     void shouldHandleEnumDescriptionsCorrectly() {
+        // given
         MetaClass invoiceMetaClass = metadata.getClass(Invoice.class);
         List<MetaClass> metaClasses = List.of(invoiceMetaClass);
 
+        // when
         AiDomainModelDescriptor domainModel = introspector.introspect(metaClasses);
 
         AiEntityDescriptor invoiceEntity = domainModel.entities().get("Invoice");
         AiPropertyDescriptor statusProperty = invoiceEntity.properties().get("status");
 
-        // Check enum values and descriptions
-        assertThat(statusProperty.enumValues()).isNotNull();
-        assertThat(statusProperty.enumDescriptions()).isNotNull();
+        // then
+        assertThat(statusProperty.enumValues()).isNotEmpty();
+        assertThat(statusProperty.enumDescriptions()).isNotEmpty();
 
         // InvoiceStatus should have localized descriptions
         Map<String, String> descriptions = statusProperty.enumDescriptions();
@@ -218,11 +230,14 @@ class AiDomainModelIntrospectorTest extends AbstractTest {
 
     @Test
     void shouldHandleAllPropertyTypesCorrectly() {
+        // given
         MetaClass customerTestMetaClass = metadata.getClass(CustomerTestEntity.class);
         List<MetaClass> metaClasses = List.of(customerTestMetaClass);
 
+        // when
         AiDomainModelDescriptor domainModel = introspector.introspect(metaClasses);
 
+        // then
         Map<String, AiPropertyDescriptor> properties = domainModel.entities().get("CustomerTestEntity").properties();
 
         // Datatype properties
@@ -251,7 +266,7 @@ class AiDomainModelIntrospectorTest extends AbstractTest {
 
     @Test
     void shouldExcludeJmixDtoEntitiesFromIntrospection() {
-        // NotAnEntityTestDto is a Jmix DTO entity (non-JPA) and should be excluded
+        // given
         MetaClass customerTestMetaClass = metadata.getClass(CustomerTestEntity.class);
         MetaClass dtoMetaClass = metadata.getClass(NotAnEntityTestDto.class);
 
@@ -263,28 +278,30 @@ class AiDomainModelIntrospectorTest extends AbstractTest {
         assertThat(metadataTools.isJpaEntity(customerTestMetaClass)).isTrue();
         assertThat(metadataTools.isJpaEntity(dtoMetaClass)).isFalse();
 
-        // Introspect both classes together
         List<MetaClass> metaClasses = List.of(customerTestMetaClass, dtoMetaClass);
+
+        // when
         AiDomainModelDescriptor domainModel = introspector.introspect(metaClasses);
 
-        // Verify only the JPA entity is included
+        // then
         assertThat(domainModel.entities()).hasSize(1);
         assertThat(domainModel.entities()).containsKey("CustomerTestEntity");
         assertThat(domainModel.entities()).doesNotContainKey("NotAnEntityTestDto");
 
         // Verify the DTO entity is properly a Jmix entity but excluded from domain model
         AiEntityDescriptor customerEntity = domainModel.entities().get("CustomerTestEntity");
-        assertThat(customerEntity).isNotNull();
         assertThat(customerEntity.caption()).isEqualTo("CustomerTestEntity");
+        assertThat(customerEntity.properties()).containsKeys("id", "name", "email");
     }
 
     @Test
     void shouldIntrospectAllJpaEntitiesButExcludeDtoEntities() {
-        // Test the main introspect() method that gets all JPA entities
+        // when
         AiDomainModelDescriptor domainModel = introspector.introspect();
 
-        // Verify that NotAnEntityTestDto is not included in the full introspection
+        // then
         assertThat(domainModel.entities()).doesNotContainKey("NotAnEntityTestDto");
+        assertThat(domainModel.entities().keySet()).noneMatch("NotAnEntityTestDto"::equals);
 
         // But verify that real JPA entities are included
         assertThat(domainModel.entities()).containsKey("Client");

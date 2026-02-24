@@ -4,7 +4,6 @@ import com.company.crm.AbstractTest;
 import com.company.crm.ai.jmix.report.introspection.model.AiReportDescriptor;
 import com.company.crm.ai.jmix.report.introspection.model.AiReportModelDescriptor;
 import com.company.crm.ai.jmix.report.introspection.model.AiReportParameterDescriptor;
-import io.jmix.reports.ReportRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -18,28 +17,37 @@ class JmixReportIntrospectorTest extends AbstractTest {
     @Autowired
     private JmixReportIntrospector introspector;
 
-    @Autowired
-    private ReportRepository reportRepository;
-
     @Test
     void shouldIntrospectClient360Report() {
-        // Act
+        // given
+
+        // when
         AiReportModelDescriptor model = introspector.introspect();
 
-        // Assert
+        // then
         assertThat(model.reports()).containsKey("client-360-report");
         AiReportDescriptor descriptor = model.reports().get("client-360-report");
 
         assertThat(descriptor.code()).isEqualTo("client-360-report");
         assertThat(descriptor.name()).isEqualTo("Client 360 Report");
-        assertThat(descriptor.description()).contains("Comprehensive 360-degree view of a client including financial risk assessment, business indicators (VIP, Frequent, etc.), orders, invoices, payment history, contacts, and recent activities. Use this for a holistic overview of a specific client's status and history.");
+        assertThat(descriptor.description())
+                .contains("Comprehensive 360-degree view of a client")
+                .contains("financial risk assessment")
+                .contains("business indicators")
+                .contains("holistic overview");
         
         // Templates
         assertThat(descriptor.templates()).isNotEmpty();
         assertThat(descriptor.templates().stream().anyMatch(t -> t.isDefault())).isTrue();
 
         // Parameters
-        assertThat(descriptor.parameters()).hasSizeGreaterThanOrEqualTo(3);
+        assertThat(descriptor.parameters())
+                .hasSize(4)
+                .extracting(AiReportParameterDescriptor::alias)
+                .containsExactlyInAnyOrder("client", "fromDate", "toDate", "audience");
+        assertThat(descriptor.parameters())
+                .extracting(AiReportParameterDescriptor::alias)
+                .doesNotHaveDuplicates();
         
         // Check Client Parameter (ENTITY)
         Optional<AiReportParameterDescriptor> clientParam = descriptor.parameters().stream()
@@ -56,14 +64,23 @@ class JmixReportIntrospectorTest extends AbstractTest {
                 .findFirst();
         assertThat(fromDateParam).isPresent();
         assertThat(fromDateParam.get().type()).isEqualTo("DATE");
+
+        Optional<AiReportParameterDescriptor> audienceParam = descriptor.parameters().stream()
+                .filter(p -> p.alias().equals("audience"))
+                .findFirst();
+        assertThat(audienceParam).isPresent();
+        assertThat(audienceParam.get().type()).isNotBlank();
     }
 
     @Test
     void shouldIntrospectOnlyRequestedReports() {
-        // Act
-        AiReportModelDescriptor model = introspector.introspect(List.of("client-360-report"));
+        // given
+        List<String> requestedCodes = List.of("client-360-report");
 
-        // Assert
+        // when
+        AiReportModelDescriptor model = introspector.introspect(requestedCodes);
+
+        // then
         assertThat(model.reports()).hasSize(1);
         assertThat(model.reports()).containsKey("client-360-report");
         assertThat(model.reports()).doesNotContainKey("invoice-report");

@@ -23,6 +23,10 @@ import static org.assertj.core.api.Assertions.*;
 @AuthenticatedAs(AuthenticatedAs.ADMIN_USERNAME)
 class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
 
+    private static final BigDecimal EXPECTED_TOTAL_REVENUE = new BigDecimal("96702.00");
+    private static final BigDecimal EXPECTED_AVERAGE_ORDER = new BigDecimal("12087.75");
+    private static final LocalDate REFERENCE_DATE = LocalDate.of(2024, 2, 20);
+
     private JpqlQueryTool jpqlQueryTool;
 
     @Autowired
@@ -36,7 +40,7 @@ class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
 
     @Test
     void testDateTimeFunctions() {
-        // Test EXTRACT functions
+        // given
         QueryExecutionResult result = jpqlQueryTool.executeQuery(
             "SELECT EXTRACT(YEAR FROM o.date) AS orderYear, EXTRACT(MONTH FROM o.date) AS orderMonth, COUNT(o) AS orderCount " +
             "FROM Order_ o GROUP BY EXTRACT(YEAR FROM o.date), EXTRACT(MONTH FROM o.date) ORDER BY orderYear, orderMonth",
@@ -44,39 +48,52 @@ class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
             List.of("orderYear", "orderMonth", "orderCount"), null, null
         );
 
-        assertThat(result.success()).isTrue();
-        assertThat(result.data()).isNotEmpty();
+        // when
+        List<Map<String, Object>> rows = result.data();
 
-        // Verify we have year data - can be current or previous year depending on existing test data
-        Map<String, Object> firstRow = result.data().getFirst();
+        // then
+        assertThat(result.success()).isTrue();
+        assertThat(rows).isNotEmpty();
+
+        Map<String, Object> firstRow = rows.getFirst();
         Integer year = (Integer) firstRow.get("orderYear");
-        assertThat(year).isBetween(LocalDate.now().getYear() - 1, LocalDate.now().getYear());
+        assertThat(year).isEqualTo(REFERENCE_DATE.getYear());
         assertThat(firstRow.get("orderMonth")).isInstanceOf(Integer.class);
         assertThat(firstRow.get("orderCount")).isInstanceOf(Long.class);
+        long totalOrders = rows.stream()
+                .mapToLong(row -> ((Number) row.get("orderCount")).longValue())
+                .sum();
+        assertThat(totalOrders).isEqualTo(8L);
     }
 
     @Test
     void testMathematicalFunctions() {
-        // Test simpler mathematical operations first
+        // given
         QueryExecutionResult result = jpqlQueryTool.executeQuery(
             "SELECT o.total AS originalTotal, (o.total * 2) AS doubledTotal FROM Order_ o WHERE o.total > 0 ORDER BY o.total",
             Map.of(),
             List.of("originalTotal", "doubledTotal"), null, null
         );
 
-        if (result.success()) {
-            assertThat(result.data()).isNotEmpty();
-            Map<String, Object> firstRow = result.data().getFirst();
-            assertThat(firstRow.get("originalTotal")).isInstanceOf(Number.class);
-            assertThat(firstRow.get("doubledTotal")).isInstanceOf(Number.class);
-        } else {
-            // Just verify the query was attempted
-            assertThat(result.errorMessage()).isNotNull();
-        }
+        // when
+        List<Map<String, Object>> rows = result.data();
+
+        // then
+        assertThat(result.success()).isTrue();
+        assertThat(rows).hasSize(8);
+
+        Map<String, Object> firstRow = rows.getFirst();
+        assertThat(firstRow.get("originalTotal")).isInstanceOf(Number.class);
+        assertThat(firstRow.get("doubledTotal")).isInstanceOf(Number.class);
+
+        BigDecimal originalTotal = toBigDecimal(firstRow.get("originalTotal"));
+        BigDecimal doubledTotal = toBigDecimal(firstRow.get("doubledTotal"));
+        assertThat(doubledTotal).isEqualByComparingTo(originalTotal.multiply(BigDecimal.valueOf(2)));
     }
 
     @Test
     void testStringFunctions() {
+        // given
         QueryExecutionResult result = jpqlQueryTool.executeQuery(
             "SELECT " +
             "UPPER(c.name) AS upperName, " +
@@ -89,10 +106,13 @@ class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
             List.of("upperName", "lowerName", "nameLength", "nameSubstring", "concatName"), null, null
         );
 
-        assertThat(result.success()).isTrue();
-        assertThat(result.data()).isNotEmpty();
-
+        // when
         Map<String, Object> firstRow = result.data().getFirst();
+
+        // then
+        assertThat(result.success()).isTrue();
+        assertThat(result.data()).hasSize(4);
+
         assertThat(firstRow.get("upperName")).isInstanceOf(String.class);
         assertThat(firstRow.get("lowerName")).isInstanceOf(String.class);
         assertThat(firstRow.get("nameLength")).isInstanceOf(Integer.class);
@@ -102,6 +122,7 @@ class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
 
     @Test
     void testConditionalFunctions() {
+        // given
         QueryExecutionResult result = jpqlQueryTool.executeQuery(
             "SELECT " +
             "c.name AS clientName, " +
@@ -112,35 +133,52 @@ class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
             List.of("clientName", "clientCategory", "totalRevenue"), null, null
         );
 
-        assertThat(result.success()).isTrue();
-        assertThat(result.data()).isNotEmpty();
+        // when
+        List<Map<String, Object>> rows = result.data();
+        Map<String, Object> firstRow = rows.getFirst();
+        long highVolumeCount = rows.stream()
+                .filter(row -> "High Volume".equals(row.get("clientCategory")))
+                .count();
+        long regularCount = rows.stream()
+                .filter(row -> "Regular".equals(row.get("clientCategory")))
+                .count();
 
-        Map<String, Object> firstRow = result.data().getFirst();
+        // then
+        assertThat(result.success()).isTrue();
+        assertThat(rows).hasSize(4);
+        assertThat(highVolumeCount).isEqualTo(1L);
+        assertThat(regularCount).isEqualTo(3L);
+
         assertThat(firstRow.get("clientName")).isInstanceOf(String.class);
         assertThat(firstRow.get("clientCategory")).isIn("High Volume", "Regular", "No Orders");
         assertThat(firstRow.get("totalRevenue")).isInstanceOf(BigDecimal.class);
+        assertThat((BigDecimal) firstRow.get("totalRevenue")).isEqualByComparingTo("55001.25");
     }
 
     @Test
     void testTypeConversion() {
+        // given
         QueryExecutionResult result = jpqlQueryTool.executeQuery(
             "SELECT c.name AS clientName, o.total AS orderTotal FROM Client c JOIN c.orders o ORDER BY o.total DESC",
             Map.of(),
             List.of("clientName", "orderTotal"), null, null
         );
 
-        if (result.success()) {
-            assertThat(result.data()).isNotEmpty();
-            Map<String, Object> firstRow = result.data().getFirst();
-            assertThat(firstRow.get("clientName")).isInstanceOf(String.class);
-            assertThat(firstRow.get("orderTotal")).isInstanceOf(Number.class);
-        } else {
-            assertThat(result.errorMessage()).isNotNull();
-        }
+        // when
+        List<Map<String, Object>> rows = result.data();
+        Map<String, Object> firstRow = rows.getFirst();
+
+        // then
+        assertThat(result.success()).isTrue();
+        assertThat(rows).hasSize(8);
+        assertThat(firstRow.get("clientName")).isEqualTo("TechCorp Enterprise Solutions");
+        assertThat(firstRow.get("orderTotal")).isInstanceOf(Number.class);
+        assertThat(toBigDecimal(firstRow.get("orderTotal"))).isEqualByComparingTo("22000.00");
     }
 
     @Test
     void testAggregateFunctions() {
+        // given
         QueryExecutionResult result = jpqlQueryTool.executeQuery(
             "SELECT " +
             "COUNT(o) AS orderCount, " +
@@ -153,30 +191,35 @@ class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
             List.of("orderCount", "totalRevenue", "averageOrder", "maxOrder", "minOrder"), null, null
         );
 
+        // when
+        Map<String, Object> row = result.data().getFirst();
+
+        // then
         assertThat(result.success()).isTrue();
         assertThat(result.data()).hasSize(1);
 
-        Map<String, Object> row = result.data().getFirst();
         assertThat(row.get("orderCount")).isInstanceOf(Long.class);
-        // Note: Aggregate functions may return Double for calculated values
         assertThat(row.get("totalRevenue")).isInstanceOf(Number.class);
         assertThat(row.get("averageOrder")).isInstanceOf(Number.class);
         assertThat(row.get("maxOrder")).isInstanceOf(Number.class);
         assertThat(row.get("minOrder")).isInstanceOf(Number.class);
 
-        // Verify logical constraints
         Long count = (Long) row.get("orderCount");
-        assertThat(count).isGreaterThan(0);
+        assertThat(count).isEqualTo(8L);
+        assertThat(toBigDecimal(row.get("totalRevenue"))).isEqualByComparingTo(EXPECTED_TOTAL_REVENUE);
+        assertThat(toBigDecimal(row.get("averageOrder"))).isEqualByComparingTo(EXPECTED_AVERAGE_ORDER);
+        assertThat(toBigDecimal(row.get("maxOrder"))).isEqualByComparingTo("22000.00");
+        assertThat(toBigDecimal(row.get("minOrder"))).isEqualByComparingTo("1200.00");
     }
 
     @Test
     void testDateMacros() {
-        // Test @between macro for recent orders
+        // given
         QueryExecutionResult recentResult = jpqlQueryTool.executeQuery(
-            "SELECT o.number AS orderNumber, o.date AS orderDate " +
-            "FROM Order_ o WHERE @between(o.date, now-90, now, day) ORDER BY o.date DESC",
+            "SELECT o.number AS orderNumber, o.date AS orderDate, o.total AS orderTotal " +
+            "FROM Order_ o WHERE @between(o.date, now-10000, now+1, day) ORDER BY o.date DESC",
             Map.of(),
-            List.of("orderNumber", "orderDate"), null, null
+            List.of("orderNumber", "orderDate", "orderTotal"), null, null
         );
 
         assertThat(recentResult.success()).isTrue();
@@ -189,26 +232,46 @@ class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
             List.of("todayOrderCount"), null, null
         );
 
-        assertThat(todayResult.success()).isTrue();
+        // when
+        List<Map<String, Object>> recentRows = recentResult.data();
         Long todayCount = (Long) todayResult.data().getFirst().get("todayOrderCount");
-        assertThat(todayCount).isNotNull();
+
+        // then
+        assertThat(todayResult.success()).isTrue();
+        assertThat(recentResult.success()).isTrue();
+        assertThat(recentRows).hasSize(8);
+        assertThat(recentRows.stream().map(row -> toBigDecimal(row.get("orderTotal"))).toList())
+                .containsExactly(
+                        new BigDecimal("15000.50"),
+                        new BigDecimal("12000.25"),
+                        new BigDecimal("5000.00"),
+                        new BigDecimal("22000.00"),
+                        new BigDecimal("16000.00"),
+                        new BigDecimal("18000.75"),
+                        new BigDecimal("7500.50"),
+                        new BigDecimal("1200.00")
+                );
+        assertThat(todayCount).isZero();
     }
 
     @Test
     void testRegexpFunction() {
+        // given
         QueryExecutionResult result = jpqlQueryTool.executeQuery(
             "SELECT c.name AS clientName FROM Client c WHERE UPPER(c.name) LIKE '%CORP%' OR UPPER(c.name) LIKE '%ENTERPRISE%'",
             Map.of(),
             List.of("clientName"), null, null
         );
 
-        if (result.success()) {
-            for (Map<String, Object> row : result.data()) {
-                String name = (String) row.get("clientName");
-                assertThat(name.toLowerCase()).containsAnyOf("corp", "enterprise");
-            }
-        } else {
-            assertThat(result.errorMessage()).isNotNull();
+        // when
+        List<Map<String, Object>> rows = result.data();
+
+        // then
+        assertThat(result.success()).isTrue();
+        assertThat(rows).hasSize(2);
+        for (Map<String, Object> row : rows) {
+            String name = (String) row.get("clientName");
+            assertThat(name.toLowerCase()).containsAnyOf("corp", "enterprise");
         }
     }
 
@@ -222,17 +285,21 @@ class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
         var regularClient = entities.client("MidSize Manufacturing");
         var smallClient = entities.client("StartupXYZ");
 
-        // Create orders with different values and dates for testing
-        entities.order(enterpriseClient, "ENT-001", LocalDate.now().minusDays(5), com.company.crm.model.order.OrderStatus.DONE, new BigDecimal("15000.50"));
-        entities.order(enterpriseClient, "ENT-002", LocalDate.now().minusDays(15), com.company.crm.model.order.OrderStatus.DONE, new BigDecimal("22000.00"));
-        entities.order(enterpriseClient, "ENT-003", LocalDate.now().minusDays(25), com.company.crm.model.order.OrderStatus.DONE, new BigDecimal("18000.75"));
+        // Create orders with fixed dates for deterministic assertions
+        entities.order(enterpriseClient, "ENT-001", LocalDate.of(2024, 2, 15), com.company.crm.model.order.OrderStatus.DONE, new BigDecimal("15000.50"));
+        entities.order(enterpriseClient, "ENT-002", LocalDate.of(2024, 2, 5), com.company.crm.model.order.OrderStatus.DONE, new BigDecimal("22000.00"));
+        entities.order(enterpriseClient, "ENT-003", LocalDate.of(2024, 1, 26), com.company.crm.model.order.OrderStatus.DONE, new BigDecimal("18000.75"));
 
-        entities.order(corporateClient, "CORP-001", LocalDate.now().minusDays(8), com.company.crm.model.order.OrderStatus.DONE, new BigDecimal("12000.25"));
-        entities.order(corporateClient, "CORP-002", LocalDate.now().minusDays(18), com.company.crm.model.order.OrderStatus.DONE, new BigDecimal("16000.00"));
+        entities.order(corporateClient, "CORP-001", LocalDate.of(2024, 2, 12), com.company.crm.model.order.OrderStatus.DONE, new BigDecimal("12000.25"));
+        entities.order(corporateClient, "CORP-002", LocalDate.of(2024, 2, 2), com.company.crm.model.order.OrderStatus.DONE, new BigDecimal("16000.00"));
 
-        entities.order(regularClient, "REG-001", LocalDate.now().minusDays(10), com.company.crm.model.order.OrderStatus.DONE, new BigDecimal("5000.00"));
-        entities.order(regularClient, "REG-002", LocalDate.now().minusDays(30), com.company.crm.model.order.OrderStatus.DONE, new BigDecimal("7500.50"));
+        entities.order(regularClient, "REG-001", LocalDate.of(2024, 2, 10), com.company.crm.model.order.OrderStatus.DONE, new BigDecimal("5000.00"));
+        entities.order(regularClient, "REG-002", LocalDate.of(2024, 1, 21), com.company.crm.model.order.OrderStatus.DONE, new BigDecimal("7500.50"));
 
-        entities.order(smallClient, "START-001", LocalDate.now().minusDays(45), com.company.crm.model.order.OrderStatus.DONE, new BigDecimal("1200.00"));
+        entities.order(smallClient, "START-001", LocalDate.of(2024, 1, 6), com.company.crm.model.order.OrderStatus.DONE, new BigDecimal("1200.00"));
+    }
+
+    private BigDecimal toBigDecimal(Object value) {
+        return new BigDecimal(value.toString());
     }
 }

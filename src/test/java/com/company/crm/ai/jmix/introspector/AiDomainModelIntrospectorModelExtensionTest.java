@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -30,16 +31,16 @@ class AiDomainModelIntrospectorModelExtensionTest extends AbstractTest {
 
     @Test
     void shouldIntrospectOnlyReplacementEntity() {
-        // Get both MetaClasses - the original and the replacement
+        // given
         MetaClass originalMetaClass = metadata.getClass(OriginalTestEntity.class);
         MetaClass replacementMetaClass = metadata.getClass(ReplacedTestEntity.class);
 
         List<MetaClass> metaClasses = List.of(originalMetaClass, replacementMetaClass);
 
+        // when
         AiDomainModelDescriptor domainModel = introspector.introspect(metaClasses);
 
-        // Verify that only the replacement entity is present in the domain model
-        // The @ReplaceEntity annotation should cause the original entity to be replaced
+        // then
         assertThat(domainModel.entities()).hasSize(1);
         assertThat(domainModel.entities()).containsKey("ReplacedTestEntity");
         assertThat(domainModel.entities()).doesNotContainKey("OriginalTestEntity");
@@ -51,6 +52,7 @@ class AiDomainModelIntrospectorModelExtensionTest extends AbstractTest {
         assertThat(replacedEntity.comment()).isEqualTo("Replacement entity that extends the original with additional fields");
 
         Map<String, AiPropertyDescriptor> properties = replacedEntity.properties();
+        assertThat(properties.keySet()).containsExactlyInAnyOrder("id", "originalName", "originalValue", "additionalField");
 
         // Check that replacement entity has inherited properties from original
         assertThat(properties).containsKey("originalName");
@@ -65,26 +67,26 @@ class AiDomainModelIntrospectorModelExtensionTest extends AbstractTest {
         assertThat(properties).containsKey("additionalField");
         AiPropertyDescriptor additionalFieldProperty = properties.get("additionalField");
         assertThat(additionalFieldProperty.comment()).isEqualTo("Additional field only available in replacement");
+        assertThat(properties).doesNotContainKey("OriginalTestEntity");
     }
 
     @Test
     void shouldHandleReplacementInMixedEntitySet() {
-        // Test with a mix of normal entities and replaced entities
+        // given
         MetaClass originalMetaClass = metadata.getClass(OriginalTestEntity.class);
         MetaClass replacementMetaClass = metadata.getClass(ReplacedTestEntity.class);
-
-        // Include other test entities as well
         MetaClass customerMetaClass = metadata.getClass(com.company.crm.ai.jmix.testmodel.CustomerTestEntity.class);
 
         List<MetaClass> metaClasses = List.of(originalMetaClass, replacementMetaClass, customerMetaClass);
 
+        // when
         AiDomainModelDescriptor domainModel = introspector.introspect(metaClasses);
 
-        // Should have 2 entities: ReplacedTestEntity and CustomerTestEntity
-        // OriginalTestEntity should be replaced by ReplacedTestEntity
+        // then
         assertThat(domainModel.entities()).hasSize(2);
         assertThat(domainModel.entities()).containsKeys("ReplacedTestEntity", "CustomerTestEntity");
         assertThat(domainModel.entities()).doesNotContainKey("OriginalTestEntity");
+        assertThat(domainModel.entities().keySet()).isEqualTo(Set.of("ReplacedTestEntity", "CustomerTestEntity"));
 
         // Verify both entities are properly introspected
         AiEntityDescriptor replacedEntity = domainModel.entities().get("ReplacedTestEntity");
@@ -96,13 +98,14 @@ class AiDomainModelIntrospectorModelExtensionTest extends AbstractTest {
 
     @Test
     void shouldIntrospectReplacementEntityDirectly() {
-        // Test introspecting only the replacement entity (without the original)
+        // given
         MetaClass replacementMetaClass = metadata.getClass(ReplacedTestEntity.class);
         List<MetaClass> metaClasses = List.of(replacementMetaClass);
 
+        // when
         AiDomainModelDescriptor domainModel = introspector.introspect(metaClasses);
 
-        // Should have only the replacement entity
+        // then
         assertThat(domainModel.entities()).hasSize(1);
         assertThat(domainModel.entities()).containsKey("ReplacedTestEntity");
 

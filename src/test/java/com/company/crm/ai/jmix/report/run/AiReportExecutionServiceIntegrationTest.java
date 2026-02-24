@@ -39,23 +39,18 @@ class AiReportExecutionServiceIntegrationTest extends AbstractTest {
     @Test
     void testExecuteClient360Report() {
         systemAuthenticator.runWithSystem(() -> {
+            // given
             Client client = entities.client("Integration Test Client");
-            
             Map<String, Object> parameters = Map.of(
                     "client", client.getId().toString(),
                     "fromDate", LocalDate.now().minusDays(30).toString(),
                     "toDate", LocalDate.now().toString()
             );
 
+            // when
             ReportExecutionResult result = executionService.executeReport("client-360-report", parameters, null, "HTML", List.of("client-360-report"));
 
-            if (!result.success()) {
-                System.out.println("DEBUG: Report failed. Code: " + result.errorCode() + ", Message: " + result.errorMessage());
-                if (result.validationErrors() != null) {
-                    result.validationErrors().forEach(e -> System.out.println("DEBUG: Validation error: " + e.parameterAlias() + " - " + e.errorMessage()));
-                }
-            }
-
+            // then
             assertThat(result.success())
                     .withFailMessage("Report execution failed: " + result.errorMessage() + " (Error code: " + result.errorCode() + ")")
                     .isTrue();
@@ -69,14 +64,16 @@ class AiReportExecutionServiceIntegrationTest extends AbstractTest {
     @Test
     void testExecuteReport_withConversationId_persistsAttachment() {
         systemAuthenticator.runWithSystem(() -> {
-            // 1. Setup conversation
+            // given
             AiConversation conversation = aiConversationService.createNewConversation("Test Persistence");
-            
-            // 2. Setup client
             Client client = entities.client("Persistence Test Client");
-            Map<String, Object> parameters = validClientReportParameters(client);
+            Map<String, Object> parameters = Map.of(
+                    "client", client.getId().toString(),
+                    "fromDate", LocalDate.now().minusDays(30).toString(),
+                    "toDate", LocalDate.now().toString()
+            );
 
-            // 3. Execute report with conversationId
+            // when
             ReportExecutionResult result = executionService.executeReport(
                     "client-360-report", 
                     parameters, 
@@ -86,13 +83,12 @@ class AiReportExecutionServiceIntegrationTest extends AbstractTest {
                     conversation.getId()
             );
 
-            // 4. Verify result
+            // then
             assertThat(result.success()).isTrue();
             assertThat(result.content()).contains(
                     String.format("[View Report Attachments](/ai-conversations/%s)", conversation.getId())
             );
 
-            // 5. Verify persistence in DB
             AiConversation reloadedConv = dataManager.load(AiConversation.class)
                     .id(conversation.getId())
                     .fetchPlan(fp -> fp.add("attachments", sub -> sub.addFetchPlan(FetchPlan.BASE)))
@@ -105,7 +101,6 @@ class AiReportExecutionServiceIntegrationTest extends AbstractTest {
             assertThat(attachment.getTitle()).isEqualTo("Client 360 Report");
             assertThat(attachment.getType()).isEqualTo(AiAttachmentType.AI_GENERATED);
             
-            // 6. Verify file existence in storage
             assertThat(attachment.getFile()).isNotNull();
             assertThat(fileStorage.fileExists(attachment.getFile())).isTrue();
         });
@@ -114,13 +109,19 @@ class AiReportExecutionServiceIntegrationTest extends AbstractTest {
     @Test
     void testExecuteReport_withUnknownConversationId_doesNotPersistAttachment() {
         systemAuthenticator.runWithSystem(() -> {
+            // given
             long attachmentsBefore = dataManager
                     .loadValue("select count(a) from AiConversationAttachment a", Long.class)
                     .one();
 
             Client client = entities.client("Unknown Conversation Client");
-            Map<String, Object> parameters = validClientReportParameters(client);
+            Map<String, Object> parameters = Map.of(
+                    "client", client.getId().toString(),
+                    "fromDate", LocalDate.now().minusDays(30).toString(),
+                    "toDate", LocalDate.now().toString()
+            );
 
+            // when
             ReportExecutionResult result = executionService.executeReport(
                     "client-360-report",
                     parameters,
@@ -130,6 +131,7 @@ class AiReportExecutionServiceIntegrationTest extends AbstractTest {
                     UUID.randomUUID()
             );
 
+            // then
             assertThat(result.success()).isTrue();
             assertThat(result.content()).doesNotContain("[View Report Attachments](/ai-conversations/");
 
@@ -143,7 +145,12 @@ class AiReportExecutionServiceIntegrationTest extends AbstractTest {
     @Test
     void testReportNotFound() {
         systemAuthenticator.runWithSystem(() -> {
+            // given
+
+            // when
             ReportExecutionResult result = executionService.executeReport("non-existent-report", Map.of(), null, null, List.of("non-existent-report"));
+
+            // then
             assertThat(result.success()).isFalse();
             assertThat(result.errorCode()).isEqualTo(ReportExecutionErrorCode.REPORT_NOT_FOUND);
         });
@@ -152,8 +159,12 @@ class AiReportExecutionServiceIntegrationTest extends AbstractTest {
     @Test
     void testAccessDenied() {
         systemAuthenticator.runWithSystem(() -> {
-            // Report is NOT in the whitelist
+            // given
+
+            // when
             ReportExecutionResult result = executionService.executeReport("client-360-report", Map.of(), null, null, List.of("some-other-report"));
+
+            // then
             assertThat(result.success()).isFalse();
             assertThat(result.errorCode()).isEqualTo(ReportExecutionErrorCode.ACCESS_DENIED);
             assertThat(result.errorMessage()).contains("Ensure it is whitelisted");
@@ -163,16 +174,24 @@ class AiReportExecutionServiceIntegrationTest extends AbstractTest {
     @Test
     void testTemplateNotFound_returnsTemplateNotFound() {
         systemAuthenticator.runWithSystem(() -> {
+            // given
             Client client = entities.client("Template Not Found Client");
+            Map<String, Object> parameters = Map.of(
+                    "client", client.getId().toString(),
+                    "fromDate", LocalDate.now().minusDays(30).toString(),
+                    "toDate", LocalDate.now().toString()
+            );
 
+            // when
             ReportExecutionResult result = executionService.executeReport(
                     "client-360-report",
-                    validClientReportParameters(client),
+                    parameters,
                     "does-not-exist",
                     "HTML",
                     List.of("client-360-report")
             );
 
+            // then
             assertThat(result.success()).isFalse();
             assertThat(result.errorCode()).isEqualTo(ReportExecutionErrorCode.TEMPLATE_NOT_FOUND);
             assertThat(result.errorMessage()).contains("does-not-exist");
@@ -183,16 +202,24 @@ class AiReportExecutionServiceIntegrationTest extends AbstractTest {
     @Test
     void testInvalidOutputType_returnsInvalidOutputType() {
         systemAuthenticator.runWithSystem(() -> {
+            // given
             Client client = entities.client("Invalid Output Type Client");
+            Map<String, Object> parameters = Map.of(
+                    "client", client.getId().toString(),
+                    "fromDate", LocalDate.now().minusDays(30).toString(),
+                    "toDate", LocalDate.now().toString()
+            );
 
+            // when
             ReportExecutionResult result = executionService.executeReport(
                     "client-360-report",
-                    validClientReportParameters(client),
+                    parameters,
                     null,
                     "FOO",
                     List.of("client-360-report")
             );
 
+            // then
             assertThat(result.success()).isFalse();
             assertThat(result.errorCode()).isEqualTo(ReportExecutionErrorCode.INVALID_OUTPUT_TYPE);
             assertThat(result.errorMessage()).contains("FOO");
@@ -202,11 +229,13 @@ class AiReportExecutionServiceIntegrationTest extends AbstractTest {
     @Test
     void testMissingRequiredParameter_returnsValidationError() {
         systemAuthenticator.runWithSystem(() -> {
+            // given
             Map<String, Object> parameters = Map.of(
                     "fromDate", LocalDate.now().minusDays(30).toString(),
                     "toDate", LocalDate.now().toString()
             );
 
+            // when
             ReportExecutionResult result = executionService.executeReport(
                     "client-360-report",
                     parameters,
@@ -215,6 +244,7 @@ class AiReportExecutionServiceIntegrationTest extends AbstractTest {
                     List.of("client-360-report")
             );
 
+            // then
             assertThat(result.success()).isFalse();
             assertThat(result.errorCode()).isEqualTo(ReportExecutionErrorCode.PARAMETER_VALIDATION_ERROR);
             assertThat(result.validationErrors())
@@ -226,14 +256,23 @@ class AiReportExecutionServiceIntegrationTest extends AbstractTest {
     @Test
     void testInvalidEntityId_returnsParameterConversionError() {
         systemAuthenticator.runWithSystem(() -> {
+            // given
+            Map<String, Object> parameters = Map.of(
+                    "client", "not-a-uuid",
+                    "fromDate", LocalDate.now().minusDays(30).toString(),
+                    "toDate", LocalDate.now().toString()
+            );
+
+            // when
             ReportExecutionResult result = executionService.executeReport(
                     "client-360-report",
-                    validClientReportParametersWithClientId("not-a-uuid"),
+                    parameters,
                     null,
                     "HTML",
                     List.of("client-360-report")
             );
 
+            // then
             assertThat(result.success()).isFalse();
             assertThat(result.errorCode()).isEqualTo(ReportExecutionErrorCode.PARAMETER_CONVERSION_ERROR);
             assertThat(result.validationErrors())
@@ -245,6 +284,7 @@ class AiReportExecutionServiceIntegrationTest extends AbstractTest {
     @Test
     void testInvalidDateFormat_returnsParameterConversionError() {
         systemAuthenticator.runWithSystem(() -> {
+            // given
             Client client = entities.client("Invalid Date Format Client");
             Map<String, Object> parameters = Map.of(
                     "client", client.getId().toString(),
@@ -252,6 +292,7 @@ class AiReportExecutionServiceIntegrationTest extends AbstractTest {
                     "toDate", LocalDate.now().toString()
             );
 
+            // when
             ReportExecutionResult result = executionService.executeReport(
                     "client-360-report",
                     parameters,
@@ -260,6 +301,7 @@ class AiReportExecutionServiceIntegrationTest extends AbstractTest {
                     List.of("client-360-report")
             );
 
+            // then
             assertThat(result.success()).isFalse();
             assertThat(result.errorCode()).isEqualTo(ReportExecutionErrorCode.PARAMETER_CONVERSION_ERROR);
             assertThat(result.validationErrors())
@@ -271,12 +313,14 @@ class AiReportExecutionServiceIntegrationTest extends AbstractTest {
     @Test
     void testUnknownAliasInService_returnsValidationError() {
         systemAuthenticator.runWithSystem(() -> {
+            // given
             Map<String, Object> parameters = Map.of(
                     "clientX", UUID.randomUUID().toString(),
                     "fromDate", LocalDate.now().minusDays(30).toString(),
                     "toDate", LocalDate.now().toString()
             );
 
+            // when
             ReportExecutionResult result = executionService.executeReport(
                     "client-360-report",
                     parameters,
@@ -285,6 +329,7 @@ class AiReportExecutionServiceIntegrationTest extends AbstractTest {
                     List.of("client-360-report")
             );
 
+            // then
             assertThat(result.success()).isFalse();
             assertThat(result.errorCode()).isEqualTo(ReportExecutionErrorCode.PARAMETER_VALIDATION_ERROR);
             assertThat(result.validationErrors())
@@ -296,10 +341,12 @@ class AiReportExecutionServiceIntegrationTest extends AbstractTest {
     @Test
     void testBinaryOutput_returnsBinaryNotSupported() {
         systemAuthenticator.runWithSystem(() -> {
+            // given
             Client client = entities.client("Binary Output Client");
             Order order = entities.order(client, LocalDate.now(), OrderStatus.NEW);
             Invoice invoice = entities.invoice(client, order);
 
+            // when
             ReportExecutionResult result = executionService.executeReport(
                     "invoice-report",
                     Map.of("invoice", invoice.getId().toString()),
@@ -308,6 +355,7 @@ class AiReportExecutionServiceIntegrationTest extends AbstractTest {
                     List.of("invoice-report")
             );
 
+            // then
             assertThat(result.success()).isFalse();
             assertThat(result.errorCode()).isEqualTo(ReportExecutionErrorCode.BINARY_OUTPUT_NOT_SUPPORTED_YET);
             assertThat(result.content()).isNull();
@@ -317,6 +365,9 @@ class AiReportExecutionServiceIntegrationTest extends AbstractTest {
     @Test
     void testNullWhitelist_returnsAccessDenied() {
         systemAuthenticator.runWithSystem(() -> {
+            // given
+
+            // when
             ReportExecutionResult result = executionService.executeReport(
                     "client-360-report",
                     Map.of(),
@@ -325,6 +376,7 @@ class AiReportExecutionServiceIntegrationTest extends AbstractTest {
                     null
             );
 
+            // then
             assertThat(result.success()).isFalse();
             assertThat(result.errorCode()).isEqualTo(ReportExecutionErrorCode.ACCESS_DENIED);
         });
@@ -333,6 +385,7 @@ class AiReportExecutionServiceIntegrationTest extends AbstractTest {
     @Test
     void testExecuteCategoryCashflowRiskReport_withCsvOutput() {
         systemAuthenticator.runWithSystem(() -> {
+            // given
             Client client = entities.client("Risk CSV Client");
             Category category = entities.category("Risk CSV Category", "RCSV");
             CategoryItem item = entities.categoryItem("Risk CSV Item", "RCSV-I", category, java.math.BigDecimal.valueOf(1000), UomType.PIECES);
@@ -343,6 +396,7 @@ class AiReportExecutionServiceIntegrationTest extends AbstractTest {
             order = dataManager.save(order);
             entities.invoice(client, order, java.math.BigDecimal.valueOf(1000), InvoiceStatus.PENDING, LocalDate.now().minusDays(10));
 
+            // when
             ReportExecutionResult result = executionService.executeReport(
                     "category-cashflow-risk-report",
                     validCategoryCashflowReportParameters(client),
@@ -351,6 +405,7 @@ class AiReportExecutionServiceIntegrationTest extends AbstractTest {
                     List.of("category-cashflow-risk-report")
             );
 
+            // then
             assertThat(result.success()).isTrue();
             assertThat(result.outputType()).isEqualTo("CSV");
             assertThat(result.content()).contains("Category");
@@ -361,8 +416,10 @@ class AiReportExecutionServiceIntegrationTest extends AbstractTest {
     @Test
     void testExecuteCategoryCashflowRiskReport_withXlsxOutput_returnsBinaryNotSupported() {
         systemAuthenticator.runWithSystem(() -> {
+            // given
             Client client = entities.client("Risk XLSX Client");
 
+            // when
             ReportExecutionResult result = executionService.executeReport(
                     "category-cashflow-risk-report",
                     validCategoryCashflowReportParameters(client),
@@ -371,22 +428,11 @@ class AiReportExecutionServiceIntegrationTest extends AbstractTest {
                     List.of("category-cashflow-risk-report")
             );
 
+            // then
             assertThat(result.success()).isFalse();
             assertThat(result.errorCode()).isEqualTo(ReportExecutionErrorCode.BINARY_OUTPUT_NOT_SUPPORTED_YET);
             assertThat(result.content()).isNull();
         });
-    }
-
-    private Map<String, Object> validClientReportParameters(Client client) {
-        return validClientReportParametersWithClientId(client.getId().toString());
-    }
-
-    private Map<String, Object> validClientReportParametersWithClientId(String clientId) {
-        return Map.of(
-                "client", clientId,
-                "fromDate", LocalDate.now().minusDays(30).toString(),
-                "toDate", LocalDate.now().toString()
-        );
     }
 
     private Map<String, Object> validCategoryCashflowReportParameters(Client client) {

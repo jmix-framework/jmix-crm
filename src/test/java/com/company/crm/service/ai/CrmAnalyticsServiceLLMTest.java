@@ -41,7 +41,6 @@ class CrmAnalyticsServiceLLMTest extends AbstractTest {
 
     @BeforeEach
     void setUp() {
-        setupKnownTestData();
         setupTestConversation();
         setupJudge();
     }
@@ -81,15 +80,19 @@ class CrmAnalyticsServiceLLMTest extends AbstractTest {
 
     @Test
     void testClientCountQuestion() {
+        // given
+        setupKnownTestData();
         // Given: 3 clients in database
         long actualClientCount = dataManager.loadValue("SELECT COUNT(c) FROM Client c", Long.class).one();
         assertThat(actualClientCount).isEqualTo(3L);
 
-        // When: Ask about client count
+        // when
         String question = "How many clients do we have in total?";
         String response = analyticsService.processBusinessQuestion(question, conversationId);
 
-        // Then: Judge should verify correct answer
+        // then
+        assertThat(response).isNotBlank();
+        assertThat(response).contains("3");
         LLMJudgeTool.JudgeResult evaluation = evaluateWithJudge(question, response, actualClientCount + " clients");
 
         assertThat(evaluation.correct())
@@ -99,15 +102,19 @@ class CrmAnalyticsServiceLLMTest extends AbstractTest {
 
     @Test
     void testTotalRevenueQuestion() {
+        // given
+        setupKnownTestData();
         // Given: Total revenue of 15000 from all orders
         BigDecimal actualTotalRevenue = dataManager.loadValue("SELECT COALESCE(SUM(o.total), 0) FROM Order_ o", BigDecimal.class).one();
         assertThat(actualTotalRevenue).isEqualTo(new BigDecimal("15000.00"));
 
-        // When: Ask about total revenue
+        // when
         String question = "What is our total revenue from all clients?";
         String response = analyticsService.processBusinessQuestion(question, conversationId);
 
-        // Then: Judge should verify correct amount
+        // then
+        assertThat(response).isNotBlank();
+        assertThat(response).containsAnyOf("15000", "15,000");
         LLMJudgeTool.JudgeResult evaluation = evaluateWithJudge(question, response, actualTotalRevenue.toString());
 
         assertThat(evaluation.correct())
@@ -117,6 +124,8 @@ class CrmAnalyticsServiceLLMTest extends AbstractTest {
 
     @Test
     void testTopClientQuestion() {
+        // given
+        setupKnownTestData();
         // Given: TestClient_Charlie should be the top client with 6000 revenue
         String topClientName = dataManager.loadValue(
             "SELECT c.name FROM Client c LEFT JOIN c.orders o GROUP BY c ORDER BY COALESCE(SUM(o.total), 0) DESC",
@@ -131,11 +140,13 @@ class CrmAnalyticsServiceLLMTest extends AbstractTest {
         assertThat(topClientName).isEqualTo("TestClient_Charlie");
         assertThat(topClientRevenue).isEqualTo(new BigDecimal("6000.00"));
 
-        // When: Ask about top client
+        // when
         String question = "Which client has the highest total revenue?";
         String response = analyticsService.processBusinessQuestion(question, conversationId);
 
-        // Then: Judge should verify correct client
+        // then
+        assertThat(response).isNotBlank();
+        assertThat(response).containsIgnoringCase(topClientName);
         LLMJudgeTool.JudgeResult evaluation = evaluateWithJudge(question, response, topClientName + " with " + topClientRevenue + " revenue");
 
         assertThat(evaluation.correct())
@@ -145,15 +156,19 @@ class CrmAnalyticsServiceLLMTest extends AbstractTest {
 
     @Test
     void testOrderCountQuestion() {
+        // given
+        setupKnownTestData();
         // Given: 6 orders in database
         long actualOrderCount = dataManager.loadValue("SELECT COUNT(o) FROM Order_ o", Long.class).one();
         assertThat(actualOrderCount).isEqualTo(6L);
 
-        // When: Ask about order count
+        // when
         String question = "How many orders do we have in total?";
         String response = analyticsService.processBusinessQuestion(question, conversationId);
 
-        // Then: Judge should verify correct count
+        // then
+        assertThat(response).isNotBlank();
+        assertThat(response).contains("6");
         LLMJudgeTool.JudgeResult evaluation = evaluateWithJudge(question, response, actualOrderCount + " orders");
 
         assertThat(evaluation.correct())
@@ -163,15 +178,19 @@ class CrmAnalyticsServiceLLMTest extends AbstractTest {
 
     @Test
     void testAverageOrderValueQuestion() {
+        // given
+        setupKnownTestData();
         // Given: Average order value of 2500
         BigDecimal actualAverageOrderValue = dataManager.loadValue("SELECT COALESCE(AVG(o.total), 0) FROM Order_ o", BigDecimal.class).one();
         assertThat(actualAverageOrderValue).isEqualTo(new BigDecimal("2500.00"));
 
-        // When: Ask about average order value
+        // when
         String question = "What is our average order value?";
         String response = analyticsService.processBusinessQuestion(question, conversationId);
 
-        // Then: Judge should verify correct average
+        // then
+        assertThat(response).isNotBlank();
+        assertThat(response).containsAnyOf("2500", "2,500");
         LLMJudgeTool.JudgeResult evaluation = evaluateWithJudge(question, response, actualAverageOrderValue.toString());
 
         assertThat(evaluation.correct())
@@ -181,8 +200,10 @@ class CrmAnalyticsServiceLLMTest extends AbstractTest {
 
     @Test
     void testClient360ReportQuestion() {
+        // given
+        setupKnownTestData();
         systemAuthenticator.runWithSystem(() -> {
-            // Setup a High Risk Customer
+            // given: Setup a High Risk Customer
             // Risk Level criteria in Client360ReportService for HIGH: 
             // - overdueCount >= 3 OR overdueAmount > 5000 OR avgPaymentDuration > 45 days
             Client client = entities.client("Risk_Gamma");
@@ -201,24 +222,27 @@ class CrmAnalyticsServiceLLMTest extends AbstractTest {
 
             UUID clientId = client.getId();
             
-            // Ask a natural business question that should trigger report discovery and execution.
+            // when: Ask a natural business question that should trigger report discovery and execution.
             // The instruction forces the AI to look for authoritative pre-calculated data (Reports)
             // instead of trying to derive it manually via JPQL.
-            String question = String.format(
-                "Retrieve the internal business risk assessment and indicators for client %s. " +
-                "Important: You must find the authoritative pre-calculated data for this in the system tools. " +
-                "Do not try to derive or calculate these metrics yourself via ad-hoc combination of multiple queries, " +
-                "as this could lead to incorrect results based on wrong business assumptions.", clientId);
+            String question = """
+                Retrieve the internal business risk assessment and indicators for client %s. \
+                Important: You must find the authoritative pre-calculated data for this in the system tools. \
+                Do not try to derive or calculate these metrics yourself via ad-hoc combination of multiple queries, \
+                as this could lead to incorrect results based on wrong business assumptions.\
+                """.formatted(clientId);
             String response = analyticsService.processBusinessQuestion(question, conversationId);
 
-            assertThat(response).isNotNull();
+            // then
+            assertThat(response).isNotBlank();
             assertThat(response).containsIgnoringCase("Risk_Gamma");
             
             // The judge verifies if the LLM correctly identified the 'HIGH' risk level.
-            LLMJudgeTool.JudgeResult evaluation = evaluateWithJudge(question, response, 
-                "The response MUST explicitly identify the 'Risk Level' as 'HIGH'. " +
-                "It should also mention the overdue invoices as the reason. " +
-                "The AI must have used the reporting tool autonomously to find this authoritative classification.");
+            LLMJudgeTool.JudgeResult evaluation = evaluateWithJudge(question, response, """
+                The response MUST explicitly identify the 'Risk Level' as 'HIGH'. \
+                It should also mention the overdue invoices as the reason. \
+                The AI must have used the reporting tool autonomously to find this authoritative classification.\
+                """);
 
             assertThat(evaluation.correct())
                 .as("LLM should identify the client as 'HIGH' risk based on the report's risk assessment logic")
@@ -228,7 +252,7 @@ class CrmAnalyticsServiceLLMTest extends AbstractTest {
 
     private LLMJudgeTool.JudgeResult evaluateWithJudge(String question, String aiResponse, String expectedAnswer) {
         try {
-            String judgePrompt = String.format("""
+            String judgePrompt = """
                 Evaluate if the AI response provides a reasonable answer to the business question.
 
                 Question: %s
@@ -251,7 +275,7 @@ class CrmAnalyticsServiceLLMTest extends AbstractTest {
                 For business analysis questions, focus on whether the response demonstrates competent analytical thinking rather than perfect precision.
 
                 Use submitJudgement(correct, reasoning) to submit your evaluation.
-                """, question, aiResponse, expectedAnswer);
+                """.formatted(question, aiResponse, expectedAnswer);
 
             judgeClient.prompt(judgePrompt).call().content();
 
@@ -270,6 +294,8 @@ class CrmAnalyticsServiceLLMTest extends AbstractTest {
 
     @Test
     void testClientSegmentationQuestion() {
+        // given
+        setupKnownTestData();
         // Given: Client revenue data - Charlie (6000), Alpha (5000), Beta (4000)
         BigDecimal charlieRevenue = dataManager.loadValue(
             "SELECT COALESCE(SUM(o.total), 0) FROM Client c LEFT JOIN c.orders o WHERE c.name = :clientName GROUP BY c",
@@ -290,11 +316,15 @@ class CrmAnalyticsServiceLLMTest extends AbstractTest {
         assertThat(alphaRevenue).isEqualTo(new BigDecimal("5000.00"));
         assertThat(betaRevenue).isEqualTo(new BigDecimal("4000.00"));
 
-        // When: Ask about client segmentation
+        // when
         String question = "Can you segment our clients into high-value, medium-value, and low-value based on their order history?";
         String response = analyticsService.processBusinessQuestion(question, conversationId);
 
-        // Then: Judge should verify segmentation using the verified revenue data
+        // then
+        assertThat(response).isNotBlank();
+        assertThat(response).containsIgnoringCase("TestClient_Charlie");
+        assertThat(response).containsIgnoringCase("TestClient_Alpha");
+        assertThat(response).containsIgnoringCase("TestClient_Beta");
         String expectedAnswer = String.format("Client segmentation based on revenue totals: TestClient_Charlie %s (high-value), TestClient_Alpha %s (medium-value), TestClient_Beta %s (low-value)",
             charlieRevenue, alphaRevenue, betaRevenue);
         LLMJudgeTool.JudgeResult evaluation = evaluateWithJudge(question, response, expectedAnswer);
@@ -306,6 +336,8 @@ class CrmAnalyticsServiceLLMTest extends AbstractTest {
 
     @Test
     void testTrendAnalysisQuestion() {
+        // given
+        setupKnownTestData();
         // Given: 6 orders total with dates distributed over recent months
         long actualOrderCount = dataManager.loadValue("SELECT COUNT(o) FROM Order_ o", Long.class).one();
         assertThat(actualOrderCount).isEqualTo(6L);
@@ -318,11 +350,13 @@ class CrmAnalyticsServiceLLMTest extends AbstractTest {
 
         assertThat(recentOrdersLast30Days).isEqualTo(6L); // All orders are within last 30 days
 
-        // When: Ask about order trends
+        // when
         String question = "What are the trends in our order volumes over the past few months? Are we growing or declining?";
         String response = analyticsService.processBusinessQuestion(question, conversationId);
 
-        // Then: Judge should verify trend analysis using the verified data
+        // then
+        assertThat(response).isNotBlank();
+        assertThat(response).containsAnyOf("trend", "growing", "declining", "orders");
         String expectedAnswer = String.format("%d orders total: %d orders within last 30 days, showing recent order activity",
             actualOrderCount, recentOrdersLast30Days);
         LLMJudgeTool.JudgeResult evaluation = evaluateWithJudge(question, response, expectedAnswer);
@@ -334,6 +368,8 @@ class CrmAnalyticsServiceLLMTest extends AbstractTest {
 
     @Test
     void testInteractiveLinksGeneration() {
+        // given
+        setupKnownTestData();
         // Given: Get actual client IDs and names from database
         UUID alphaClientUuid = dataManager.loadValue("SELECT c.id FROM Client c WHERE c.name = :name", UUID.class)
             .parameter("name", "TestClient_Alpha").one();
@@ -346,16 +382,16 @@ class CrmAnalyticsServiceLLMTest extends AbstractTest {
         String betaClientId = betaClientUuid.toString();
         String charlieClientId = charlieClientUuid.toString();
 
-        assertThat(alphaClientId).isNotNull();
-        assertThat(betaClientId).isNotNull();
-        assertThat(charlieClientId).isNotNull();
+        assertThat(alphaClientId).isNotBlank();
+        assertThat(betaClientId).isNotBlank();
+        assertThat(charlieClientId).isNotBlank();
 
-        // When: Ask about clients (should generate markdown links with real IDs)
+        // when: Ask about clients (should generate markdown links with real IDs)
         String question = "Show me all our clients with their details";
         String response = analyticsService.processBusinessQuestion(question, conversationId);
 
-        // Then: Response should contain markdown links with the actual client IDs
-        assertThat(response).isNotNull();
+        // then: Response should contain markdown links with the actual client IDs
+        assertThat(response).isNotBlank();
 
         // Check that response contains links to the correct client IDs (flexible link text)
         assertThat(response).contains("clients/" + alphaClientId + ")");
@@ -373,6 +409,8 @@ class CrmAnalyticsServiceLLMTest extends AbstractTest {
 
     @Test
     void testComparisonQuestion() {
+        // given
+        setupKnownTestData();
         // Given: All clients have 2 orders each, but different total values
         // Verify each client has exactly 2 orders
         long alphaOrderCount = dataManager.loadValue(
@@ -414,11 +452,13 @@ class CrmAnalyticsServiceLLMTest extends AbstractTest {
         assertThat(alphaRevenue).isEqualTo(new BigDecimal("5000.00"));  // Medium
         assertThat(charlieRevenue).isEqualTo(new BigDecimal("6000.00")); // Maximum
 
-        // When: Ask about client comparison
+        // when
         String question = "Compare the performance of our enterprise clients versus our smaller clients. Which segment is more profitable?";
         String response = analyticsService.processBusinessQuestion(question, conversationId);
 
-        // Then: Judge should verify comparison analysis using verified data
+        // then
+        assertThat(response).isNotBlank();
+        assertThat(response).containsAnyOf("TestClient_Beta", "TestClient_Alpha", "TestClient_Charlie");
         String expectedAnswer = String.format("Each client has 2 orders with total revenues: TestClient_Beta %s, TestClient_Alpha %s, TestClient_Charlie %s",
             betaRevenue, alphaRevenue, charlieRevenue);
         LLMJudgeTool.JudgeResult evaluation = evaluateWithJudge(question, response, expectedAnswer);
@@ -430,6 +470,8 @@ class CrmAnalyticsServiceLLMTest extends AbstractTest {
 
     @Test
     void testChurnRiskAnalysisQuestion() {
+        // given
+        setupKnownTestData();
         // Given: Create specific test data to simulate churn risk scenarios
         setupChurnRiskTestData();
 
@@ -462,11 +504,11 @@ class CrmAnalyticsServiceLLMTest extends AbstractTest {
         assertThat(echoHistoricalOrders).isGreaterThan(0L); // Had historical activity
         assertThat(echoRecentOrders).isEqualTo(0L); // No recent activity
 
-        // When: Ask the specific churn risk question
+        // when: Ask the specific churn risk question
         String question = "Which key accounts show elevated churn or revenue-decline risk over the last 90 days? For each account, explain the top signals, the revenue at risk, and 2–3 recommended actions.";
         String response = analyticsService.processBusinessQuestion(question, conversationId);
 
-        // Then: Judge should verify the AI identifies the risk accounts and provides actionable insights
+        // then: Judge should verify the AI identifies the risk accounts and provides actionable insights
         String expectedAnswer = String.format(
             "Should identify TestClient_Delta (revenue decline: %d recent vs %d historical orders) and TestClient_Echo (complete drop-off: 0 recent vs %d historical orders) as at-risk accounts with specific recommendations",
             deltaRecentOrders, deltaHistoricalOrders, echoHistoricalOrders
@@ -475,7 +517,7 @@ class CrmAnalyticsServiceLLMTest extends AbstractTest {
         LLMJudgeTool.JudgeResult evaluation = evaluateWithJudge(question, response, expectedAnswer);
 
         // Verify response contains key elements expected in churn risk analysis
-        assertThat(response).isNotNull();
+        assertThat(response).isNotBlank();
         assertThat(response.length()).isGreaterThan(500); // Should be substantial analysis
 
         // Should mention the at-risk clients by name

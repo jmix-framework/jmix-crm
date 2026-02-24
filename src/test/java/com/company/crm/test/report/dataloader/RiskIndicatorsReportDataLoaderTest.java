@@ -2,6 +2,7 @@ package com.company.crm.test.report.dataloader;
 
 import com.company.crm.AbstractTest;
 import com.company.crm.model.client.Client;
+import com.company.crm.model.client.RiskLevel;
 import com.company.crm.model.invoice.Invoice;
 import com.company.crm.model.invoice.InvoiceStatus;
 import com.company.crm.model.order.Order;
@@ -12,7 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -44,8 +44,11 @@ class RiskIndicatorsReportDataLoaderTest extends AbstractTest {
 
         dataManager.save(overdueInvoice1, overdueInvoice2, paidInvoice, overdueOutOfRange);
 
-        Map<String, Object> params = createParams(client,
-            LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 31));
+        Map<String, Object> params = Map.of(
+                "client", client,
+                "fromDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 1)),
+                "toDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 31))
+        );
 
         // When
         List<Map<String, Object>> result = dataLoader.loadData(null, null, params);
@@ -67,11 +70,14 @@ class RiskIndicatorsReportDataLoaderTest extends AbstractTest {
         // Check data types
         assertThat(riskData.get("avgPaymentDuration")).isInstanceOf(Double.class);
         assertThat(riskData.get("avgPaymentDurationFormatted")).isInstanceOf(String.class);
+        assertThat(riskData.get("riskLevel")).isInstanceOf(RiskLevel.class);
         assertThat(riskData.get("riskLevelClass")).isInstanceOf(String.class);
 
         // Check that avgPaymentDurationFormatted has proper format
         String durationFormatted = (String) riskData.get("avgPaymentDurationFormatted");
         assertThat(durationFormatted).endsWith(" days");
+        assertThat((RiskLevel) riskData.get("riskLevel")).isIn(RiskLevel.LOW, RiskLevel.MEDIUM, RiskLevel.HIGH);
+        assertThat((String) riskData.get("riskLevelClass")).isIn("risk-low", "risk-medium", "risk-high");
     }
 
     @Test
@@ -89,8 +95,11 @@ class RiskIndicatorsReportDataLoaderTest extends AbstractTest {
 
         dataManager.save(paidInvoice1, paidInvoice2);
 
-        Map<String, Object> params = createParams(client,
-            LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 31));
+        Map<String, Object> params = Map.of(
+                "client", client,
+                "fromDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 1)),
+                "toDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 31))
+        );
 
         // When
         List<Map<String, Object>> result = dataLoader.loadData(null, null, params);
@@ -101,6 +110,7 @@ class RiskIndicatorsReportDataLoaderTest extends AbstractTest {
 
         assertThat(riskData.get("overdueCount")).isEqualTo(0L);
         assertThat(riskData.get("overdueAmount")).isInstanceOf(String.class);
+        assertThat((String) riskData.get("riskLevelClass")).isIn("risk-low", "risk-medium", "risk-high");
     }
 
     @Test
@@ -120,8 +130,11 @@ class RiskIndicatorsReportDataLoaderTest extends AbstractTest {
 
         dataManager.save(overdueInRange, overdueOutOfRange);
 
-        Map<String, Object> params = createParams(client,
-            LocalDate.of(2024, 6, 1), LocalDate.of(2024, 6, 30));
+        Map<String, Object> params = Map.of(
+                "client", client,
+                "fromDate", java.sql.Date.valueOf(LocalDate.of(2024, 6, 1)),
+                "toDate", java.sql.Date.valueOf(LocalDate.of(2024, 6, 30))
+        );
 
         // When
         List<Map<String, Object>> result = dataLoader.loadData(null, null, params);
@@ -140,8 +153,11 @@ class RiskIndicatorsReportDataLoaderTest extends AbstractTest {
         Client client = entities.client("Risk Mapping Client");
         dataManager.save(client);
 
-        Map<String, Object> params = createParams(client,
-            LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 31));
+        Map<String, Object> params = Map.of(
+                "client", client,
+                "fromDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 1)),
+                "toDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 31))
+        );
 
         // When
         List<Map<String, Object>> result = dataLoader.loadData(null, null, params);
@@ -162,8 +178,11 @@ class RiskIndicatorsReportDataLoaderTest extends AbstractTest {
         Client client = entities.client("Single Row Client");
         dataManager.save(client);
 
-        Map<String, Object> params = createParams(client,
-            LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 31));
+        Map<String, Object> params = Map.of(
+                "client", client,
+                "fromDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 1)),
+                "toDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 31))
+        );
 
         // When
         List<Map<String, Object>> result = dataLoader.loadData(null, null, params);
@@ -173,11 +192,4 @@ class RiskIndicatorsReportDataLoaderTest extends AbstractTest {
         assertThat(result.get(0)).isNotEmpty();
     }
 
-    private Map<String, Object> createParams(Client client, LocalDate fromDate, LocalDate toDate) {
-        Map<String, Object> params = new HashMap<>();
-        params.put("client", client);
-        params.put("fromDate", java.sql.Date.valueOf(fromDate));
-        params.put("toDate", java.sql.Date.valueOf(toDate));
-        return params;
-    }
 }

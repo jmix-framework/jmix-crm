@@ -10,35 +10,42 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class JmixReportDiscoveryToolTest extends AbstractTest {
 
-    private JmixReportDiscoveryTool discoveryTool;
-
     @Autowired
     private AiReportModelDescriptorYamlExporter yamlExporter;
 
-    @org.junit.jupiter.api.BeforeEach
-    void setUp() {
-        discoveryTool = new JmixReportDiscoveryTool(yamlExporter, List.of());
-    }
-
     @Test
     void shouldReturnAvailableReportsYaml() {
-        // Act
+        // given
+        // Empty whitelist means "all reports" in this test profile
+        JmixReportDiscoveryTool discoveryTool = new JmixReportDiscoveryTool(yamlExporter, List.of());
+
+        // when
         String yaml = discoveryTool.getAvailableReports();
 
-        // Assert
+        // then
         assertThat(yaml).isNotEmpty();
+        assertThat(yaml).contains("reports:");
         assertThat(yaml).contains("client-360-report:");
         assertThat(yaml).contains("name: Client 360 Report");
+        assertThat(yaml).contains("templates:");
+        assertThat(yaml).contains("outputType: HTML");
+        assertThat(yaml).contains("parameters:");
         assertThat(yaml).contains("alias: client");
+        assertThat(yaml).contains("type: ENTITY");
     }
 
     @Test
     void shouldReturnRequestedReportsYaml() {
-        // Act
-        String yaml = discoveryTool.getReportsByCodes(List.of("client-360-report"));
+        // given
+        // Empty whitelist means request filter is solely driven by requestedCodes
+        JmixReportDiscoveryTool discoveryTool = new JmixReportDiscoveryTool(yamlExporter, List.of());
+        List<String> requestedCodes = List.of("client-360-report");
 
-        // Assert
+        // when
+        String yaml = discoveryTool.getReportsByCodes(requestedCodes);
+
+        // then
         assertThat(yaml).contains("client-360-report:");
-        assertThat(yaml).doesNotContain("invoice-report:");
+        assertThat(yaml).doesNotContain("\n  invoice-");
     }
 }

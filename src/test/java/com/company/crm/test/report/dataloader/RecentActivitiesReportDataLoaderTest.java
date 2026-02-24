@@ -2,12 +2,14 @@ package com.company.crm.test.report.dataloader;
 
 import com.company.crm.AbstractTest;
 import com.company.crm.model.client.Client;
+import com.company.crm.model.user.activity.client.ClientUserActivity;
+import com.company.crm.report.config.ClientReportThresholds;
 import com.company.crm.report.dataloader.RecentActivitiesReportDataLoader;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDate;
-import java.util.HashMap;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -20,139 +22,140 @@ class RecentActivitiesReportDataLoaderTest extends AbstractTest {
 
     @Test
     void testLoadDataWithValidClient() {
-        // Given
+        // given
         Client client = entities.client("Activity Client");
-        dataManager.save(client);
+        ClientUserActivity first = dataManager.create(ClientUserActivity.class);
+        first.setClient(client);
+        first.setActionDescription("Called customer to discuss renewal");
+        first.setCreatedDate(OffsetDateTime.now().minusHours(1));
 
-        Map<String, Object> params = createParams(client);
+        ClientUserActivity second = dataManager.create(ClientUserActivity.class);
+        second.setClient(client);
+        second.setActionDescription("Sent updated proposal");
+        second.setCreatedDate(OffsetDateTime.now().minusHours(2));
+        dataManager.save(first, second);
 
-        // When
+        Map<String, Object> params = Map.of("client", client);
+
+        // when
         List<Map<String, Object>> result = dataLoader.loadData(null, null, params);
 
-        // Then
-        // The result size depends on actual UserActivityService behavior
-        // We just verify the basic structure and that it doesn't crash
-        assertThat(result).isNotNull();
-
-        // If there are activities, check the structure
-        if (!result.isEmpty()) {
-            Map<String, Object> activity = result.get(0);
-            // The exact fields depend on ReportActivityMapper implementation
-            // We just verify it's a non-empty map
-            assertThat(activity).isNotEmpty();
-
-            // Activities should have descriptions (filtered out if empty)
-            if (activity.containsKey("description")) {
-                Object description = activity.get("description");
-                if (description != null) {
-                    assertThat(description.toString().trim()).isNotEmpty();
-                }
-            }
-        }
+        // then
+        assertThat(result).hasSize(2);
+        assertThat(result)
+                .allSatisfy(activity -> assertThat(activity).containsKeys("description", "createdDate", "createdDateFormatted", "user"));
+        assertThat(result.stream().map(row -> row.get("description")).toList())
+                .containsExactlyInAnyOrder("Called customer to discuss renewal", "Sent updated proposal");
     }
 
     @Test
     void testLoadDataWithNullClient() {
-        // Given
-        Map<String, Object> params = createParams(null);
+        // given
+        Map<String, Object> params = new java.util.HashMap<>();
+        params.put("client", null);
 
-        // When
+        // when
         List<Map<String, Object>> result = dataLoader.loadData(null, null, params);
 
-        // Then
+        // then
         assertThat(result).isEmpty();
     }
 
     @Test
     void testLoadDataReturnsEmptyListForNewClient() {
-        // Given - A very new client that likely has no activities
+        // given
         Client client = entities.client("New Client");
-        dataManager.save(client);
+        Map<String, Object> params = Map.of("client", client);
 
-        Map<String, Object> params = createParams(client);
-
-        // When
+        // when
         List<Map<String, Object>> result = dataLoader.loadData(null, null, params);
 
-        // Then
-        // For a new client, we expect no activities
-        assertThat(result).isNotNull();
-
-        // We don't assert on size since UserActivityService might create activities
-        // during client creation or have some test data
+        // then
+        assertThat(result).isEmpty();
     }
 
     @Test
     void testLoadDataUsesThresholds() {
-        // Given
+        // given
         Client client = entities.client("Threshold Client");
-        dataManager.save(client);
+        for (int day = 0; day < 5; day++) {
+            for (int index = 0; index < ClientReportThresholds.ACTIVITIES_PER_DAY; index++) {
+                ClientUserActivity activity = dataManager.create(ClientUserActivity.class);
+                activity.setClient(client);
+                activity.setActionDescription("Threshold Activity d" + day + "-" + index);
+                activity.setCreatedDate(OffsetDateTime.now().minusDays(day).minusMinutes(index));
+                dataManager.save(activity);
+            }
+        }
 
-        Map<String, Object> params = createParams(client);
+        Map<String, Object> params = Map.of("client", client);
 
-        // When
+        // when
         List<Map<String, Object>> result = dataLoader.loadData(null, null, params);
 
-        // Then
-        assertThat(result).isNotNull();
-
-        // The result should respect ClientReportThresholds.MAX_RECENT_ACTIVITIES
-        // We can't easily test this without creating many activities,
-        // but we can verify the list is reasonable in size
-        assertThat(result).hasSizeLessThanOrEqualTo(100); // Reasonable upper bound
+        // then
+        assertThat(result).hasSize(ClientReportThresholds.ACTIVITIES_PER_DAY);
+        assertThat(result.stream().map(row -> row.get("description")).toList())
+                .allSatisfy(description -> assertThat(description.toString()).startsWith("Threshold Activity d4-"));
     }
 
     @Test
     void testLoadDataFiltersEmptyDescriptions() {
-        // Given
+        // given
         Client client = entities.client("Filter Client");
-        dataManager.save(client);
+        ClientUserActivity emptyDescription = dataManager.create(ClientUserActivity.class);
+        emptyDescription.setClient(client);
+        emptyDescription.setActionDescription("   ");
+        emptyDescription.setCreatedDate(OffsetDateTime.now().minusHours(1));
 
-        Map<String, Object> params = createParams(client);
+        ClientUserActivity emptyStringDescription = dataManager.create(ClientUserActivity.class);
+        emptyStringDescription.setClient(client);
+        emptyStringDescription.setActionDescription("");
+        emptyStringDescription.setCreatedDate(OffsetDateTime.now().minusHours(2));
+        dataManager.save(emptyDescription, emptyStringDescription);
 
-        // When
+        Map<String, Object> params = Map.of("client", client);
+
+        // when
         List<Map<String, Object>> result = dataLoader.loadData(null, null, params);
 
-        // Then
-        // Verify that activities with empty descriptions are filtered out
-        for (Map<String, Object> activity : result) {
-            if (activity.containsKey("description")) {
-                Object description = activity.get("description");
-                if (description != null) {
-                    // Should not be empty or just whitespace
-                    assertThat(description.toString().trim()).isNotEmpty();
-                }
-            }
-        }
+        // then
+        assertThat(result).hasSize(2);
+        assertThat(result.stream().map(row -> row.get("description")).toList())
+                .contains("Customer interaction recorded");
+        assertThat(result)
+                .allSatisfy(activity -> assertThat(activity.get("description").toString().trim()).isNotEmpty());
     }
 
     @Test
     void testLoadDataStructureConsistency() {
-        // Given
+        // given
         Client client1 = entities.client("Client 1");
         Client client2 = entities.client("Client 2");
-        dataManager.save(client1, client2);
 
-        Map<String, Object> params1 = createParams(client1);
-        Map<String, Object> params2 = createParams(client2);
+        ClientUserActivity client1Activity = dataManager.create(ClientUserActivity.class);
+        client1Activity.setClient(client1);
+        client1Activity.setActionDescription("Client 1 Activity");
+        client1Activity.setCreatedDate(OffsetDateTime.now().minusHours(1));
 
-        // When
+        ClientUserActivity client2Activity = dataManager.create(ClientUserActivity.class);
+        client2Activity.setClient(client2);
+        client2Activity.setActionDescription("Client 2 Activity");
+        client2Activity.setCreatedDate(OffsetDateTime.now().minusHours(1));
+        dataManager.save(client1Activity, client2Activity);
+
+        Map<String, Object> params1 = Map.of("client", client1);
+        Map<String, Object> params2 = Map.of("client", client2);
+
+        // when
         List<Map<String, Object>> result1 = dataLoader.loadData(null, null, params1);
         List<Map<String, Object>> result2 = dataLoader.loadData(null, null, params2);
 
-        // Then
-        assertThat(result1).isNotNull();
-        assertThat(result2).isNotNull();
-
-        // If both have activities, they should have the same structure
-        if (!result1.isEmpty() && !result2.isEmpty()) {
-            assertThat(result1.get(0).keySet()).isEqualTo(result2.get(0).keySet());
-        }
-    }
-
-    private Map<String, Object> createParams(Client client) {
-        Map<String, Object> params = new HashMap<>();
-        params.put("client", client);
-        return params;
+        // then
+        assertThat(result1).hasSize(1);
+        assertThat(result2).hasSize(1);
+        assertThat(result1.getFirst().keySet()).isEqualTo(result2.getFirst().keySet());
+        assertThat(result1.getFirst().get("description")).isEqualTo("Client 1 Activity");
+        assertThat(result2.getFirst().get("description")).isEqualTo("Client 2 Activity");
     }
 }

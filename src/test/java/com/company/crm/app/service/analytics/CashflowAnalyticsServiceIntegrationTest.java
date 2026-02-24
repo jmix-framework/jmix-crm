@@ -22,7 +22,7 @@ class CashflowAnalyticsServiceIntegrationTest extends AbstractServiceTest<Cashfl
     @Test
     void testSingleInvoice_twoCategories_partialPayment() {
         systemAuthenticator.runWithSystem(() -> {
-            // Setup: 2 categories
+            // given
             Category cat1 = entities.category("Cat 1", "CAT1");
             Category cat2 = entities.category("Cat 2", "CAT2");
             
@@ -44,30 +44,35 @@ class CashflowAnalyticsServiceIntegrationTest extends AbstractServiceTest<Cashfl
             
             // Partial payment of 500 (should be split 250/250)
             entities.payment(invoice, LocalDate.now().plusDays(10), BigDecimal.valueOf(500));
+            BigDecimal expectedInvoicedPerCategory = new BigDecimal("500.00");
+            BigDecimal expectedPaidPerCategory = new BigDecimal("250.00");
+            BigDecimal expectedOpenPerCategory = new BigDecimal("250.00");
+            double expectedWeightedDtc = 10.0; // (250*10)/250
 
-            // Execute
+            // when
             List<CategoryRiskMetrics> results = service.assessCategoryCashflowRisk(null, null, client.getId(), null);
             
-            // Verify
+            // then
             assertThat(results).hasSize(2);
             
             CategoryRiskMetrics m1 = results.stream().filter(r -> r.categoryCode().equals("CAT1")).findFirst().get();
-            assertThat(m1.invoicedAmount()).isEqualByComparingTo("500.00");
-            assertThat(m1.paidAmount()).isEqualByComparingTo("250.00");
-            assertThat(m1.openAmount()).isEqualByComparingTo("250.00");
-            assertThat(m1.dtcDaysWeighted()).isEqualTo(10.0);
+            assertThat(m1.invoicedAmount()).isEqualByComparingTo(expectedInvoicedPerCategory);
+            assertThat(m1.paidAmount()).isEqualByComparingTo(expectedPaidPerCategory);
+            assertThat(m1.openAmount()).isEqualByComparingTo(expectedOpenPerCategory);
+            assertThat(m1.dtcDaysWeighted()).isEqualTo(expectedWeightedDtc);
             
             CategoryRiskMetrics m2 = results.stream().filter(r -> r.categoryCode().equals("CAT2")).findFirst().get();
-            assertThat(m2.invoicedAmount()).isEqualByComparingTo("500.00");
-            assertThat(m2.paidAmount()).isEqualByComparingTo("250.00");
-            assertThat(m2.openAmount()).isEqualByComparingTo("250.00");
-            assertThat(m2.dtcDaysWeighted()).isEqualTo(10.0);
+            assertThat(m2.invoicedAmount()).isEqualByComparingTo(expectedInvoicedPerCategory);
+            assertThat(m2.paidAmount()).isEqualByComparingTo(expectedPaidPerCategory);
+            assertThat(m2.openAmount()).isEqualByComparingTo(expectedOpenPerCategory);
+            assertThat(m2.dtcDaysWeighted()).isEqualTo(expectedWeightedDtc);
         });
     }
 
     @Test
     void testSingleInvoice_twoPayments_weightedDtc() {
         systemAuthenticator.runWithSystem(() -> {
+            // given
             Category cat1 = entities.category("Cat 1", "CAT1");
             CategoryItem item1 = entities.categoryItem("Item 1", "I1", cat1, BigDecimal.valueOf(100), UomType.PIECES);
             Client client = entities.client("Test Client");
@@ -84,19 +89,28 @@ class CashflowAnalyticsServiceIntegrationTest extends AbstractServiceTest<Cashfl
             // Weighted DTC = (300*5 + 700*25) / 1000 = (1500 + 17500) / 1000 = 19000 / 1000 = 19.0
             entities.payment(invoice, LocalDate.now().plusDays(5), BigDecimal.valueOf(300));
             entities.payment(invoice, LocalDate.now().plusDays(25), BigDecimal.valueOf(700));
+            BigDecimal expectedInvoiced = new BigDecimal("1000.00");
+            BigDecimal expectedPaid = new BigDecimal("1000.00");
+            BigDecimal expectedOpen = new BigDecimal("0.00");
+            double expectedWeightedDtc = 19.0;
             
+            // when
             List<CategoryRiskMetrics> results = service.assessCategoryCashflowRisk(null, null, client.getId(), null);
             
+            // then
             assertThat(results).hasSize(1);
             CategoryRiskMetrics m = results.get(0);
-            assertThat(m.paidAmount()).isEqualByComparingTo("1000.00");
-            assertThat(m.dtcDaysWeighted()).isEqualTo(19.0);
+            assertThat(m.invoicedAmount()).isEqualByComparingTo(expectedInvoiced);
+            assertThat(m.paidAmount()).isEqualByComparingTo(expectedPaid);
+            assertThat(m.openAmount()).isEqualByComparingTo(expectedOpen);
+            assertThat(m.dtcDaysWeighted()).isEqualTo(expectedWeightedDtc);
         });
     }
 
     @Test
     void testOverdueRar_byDueDateFallback() {
         systemAuthenticator.runWithSystem(() -> {
+            // given
             Category cat1 = entities.category("Risk Cat", "RISK");
             CategoryItem item1 = entities.categoryItem("Item 1", "I1", cat1, BigDecimal.valueOf(1000), UomType.PIECES);
             Client client = entities.client("Risk Client");
@@ -112,9 +126,10 @@ class CashflowAnalyticsServiceIntegrationTest extends AbstractServiceTest<Cashfl
             invoice.setDueDate(LocalDate.now().minusDays(30));
             saveWithoutReload(invoice);
             
-            // Execute with asOfDate = today
+            // when
             List<CategoryRiskMetrics> results = service.assessCategoryCashflowRisk(null, null, client.getId(), LocalDate.now());
             
+            // then
             assertThat(results).hasSize(1);
             CategoryRiskMetrics m = results.get(0);
             assertThat(m.overdueOpenAmount()).isEqualByComparingTo("1000.00");
@@ -124,6 +139,7 @@ class CashflowAnalyticsServiceIntegrationTest extends AbstractServiceTest<Cashfl
     @Test
     void testIncludePaidFalse_excludesPaidInvoices() {
         systemAuthenticator.runWithSystem(() -> {
+            // given
             Category category = entities.category("Filter Cat", "FILTER");
             CategoryItem item = entities.categoryItem("Filter Item", "FI", category, BigDecimal.valueOf(100), UomType.PIECES);
             Client client = entities.client("Filter Client");
@@ -140,25 +156,33 @@ class CashflowAnalyticsServiceIntegrationTest extends AbstractServiceTest<Cashfl
             Invoice pendingInvoice = entities.invoice(client, order, BigDecimal.valueOf(300), InvoiceStatus.PENDING, LocalDate.now().minusDays(8));
             entities.payment(pendingInvoice, LocalDate.now().minusDays(4), BigDecimal.valueOf(100));
 
+            // when
             CategoryCashflowRiskAssessmentResult withPaid = service.assessCategoryCashflowRiskReport(
                     null, null, client.getId(), true, LocalDate.now());
             CategoryCashflowRiskAssessmentResult withoutPaid = service.assessCategoryCashflowRiskReport(
                     null, null, client.getId(), false, LocalDate.now());
 
+            // then
             assertThat(withPaid.riskByCategory()).hasSize(1);
-            assertThat(withPaid.riskByCategory().getFirst().invoicedAmount()).isEqualByComparingTo("800.00");
+            CategoryRiskMetrics withPaidMetric = withPaid.riskByCategory().getFirst();
+            assertThat(withPaidMetric.invoicedAmount()).isEqualByComparingTo("800.00");
+            assertThat(withPaidMetric.paidAmount()).isEqualByComparingTo("600.00");
+            assertThat(withPaidMetric.openAmount()).isEqualByComparingTo("200.00");
 
             assertThat(withoutPaid.riskByCategory()).hasSize(1);
             CategoryRiskMetrics filteredMetric = withoutPaid.riskByCategory().getFirst();
             assertThat(filteredMetric.invoicedAmount()).isEqualByComparingTo("300.00");
             assertThat(filteredMetric.paidAmount()).isEqualByComparingTo("100.00");
             assertThat(filteredMetric.openAmount()).isEqualByComparingTo("200.00");
+            assertThat(filteredMetric.invoicedAmount()).isNotEqualByComparingTo(withPaidMetric.invoicedAmount());
+            assertThat(filteredMetric.paidAmount()).isNotEqualByComparingTo(withPaidMetric.paidAmount());
         });
     }
 
     @Test
     void testOverdueOpenAmounts_areReflectedInRiskByCategory() {
         systemAuthenticator.runWithSystem(() -> {
+            // given
             Category category = entities.category("Critical Cat", "CRIT");
             CategoryItem item = entities.categoryItem("Critical Item", "CI", category, BigDecimal.valueOf(1000), UomType.PIECES);
             Client client = entities.client("Critical Client");
@@ -174,9 +198,11 @@ class CashflowAnalyticsServiceIntegrationTest extends AbstractServiceTest<Cashfl
             saveWithoutReload(invoice);
             entities.payment(invoice, LocalDate.now().minusDays(20), BigDecimal.valueOf(200));
 
+            // when
             CategoryCashflowRiskAssessmentResult result = service.assessCategoryCashflowRiskReport(
                     null, null, client.getId(), true, LocalDate.now());
 
+            // then
             assertThat(result.riskByCategory()).hasSize(1);
             CategoryRiskMetrics metric = result.riskByCategory().getFirst();
             assertThat(metric.categoryCode()).isEqualTo("CRIT");

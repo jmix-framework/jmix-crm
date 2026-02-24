@@ -1,0 +1,94 @@
+.ai-conversation-message-list vaadin-message.attachment-event {
+  position: relative;
+  margin: var(--lumo-space-s) 0;
+}
+
+.ai-conversation-message-list vaadin-message.attachment-event::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  border-top: 1px solid var(--lumo-contrast-20pct);
+  transform: translateY(-50%);
+}
+
+.ai-conversation-message-list vaadin-message.attachment-event > vaadin-avatar {
+  display: none;
+}
+
+.ai-conversation-message-list vaadin-message.attachment-event::part(content) {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  max-width: 100%;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.ai-conversation-message-list vaadin-message.attachment-event::part(header) {
+  display: none;
+}
+
+.ai-conversation-message-list vaadin-message.attachment-event::part(message) {
+  position: relative;
+  display: inline-block;
+  background: var(--lumo-base-color);
+  color: var(--lumo-secondary-text-color);
+  font-size: var(--lumo-font-size-xs);
+  font-weight: 500;
+  line-height: 1.3;
+  text-align: center;
+  margin: 0;
+  padding: 0 calc(var(--lumo-space-m) + 0.95rem + var(--lumo-space-xs))
+    0 calc(var(--lumo-space-m) + 0.95rem + var(--lumo-space-xs));
+  border: 0;
+}
+
+.ai-conversation-message-list vaadin-message.attachment-event::part(message)::before {
+  content: var(--lumo-icons-upload);
+  font-family: lumo-icons;
+  font-size: 0.95rem;
+  line-height: 1;
+  color: var(--lumo-secondary-text-color);
+  position: absolute;
+  left: var(--lumo-space-m);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+vaadin-upload.attachments-dropzone {
+  margin-top: auto;
+  min-height: 8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed var(--lumo-contrast-30pct);
+  border-radius: var(--lumo-border-radius-m);
+  background: var(--lumo-contrast-5pct);
+  padding: var(--lumo-space-s);
+}
+
+vaadin-upload.attachments-dropzone::part(drop-label) {
+  color: var(--lumo-secondary-text-color);
+  font-size: var(--lumo-font-size-xs);
+}
+
+.attachment-card-meta {
+  gap: var(--lumo-space-xs);
+}
+
+.attachment-card-source-icon {
+  width: 0.75rem;
+  height: 0.75rem;
+  color: var(--lumo-secondary-text-color);
+}
+
+.attachment-card-source-text {
+  font-size: 0.7rem;
+}

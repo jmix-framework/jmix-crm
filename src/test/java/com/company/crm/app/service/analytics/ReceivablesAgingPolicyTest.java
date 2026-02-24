@@ -16,61 +16,87 @@ class ReceivablesAgingPolicyTest {
 
     @Test
     void resolveDaysToCash_returnsNullIfDatesMissing() {
+        // given
         Invoice invoice = new Invoice();
         Payment payment = new Payment();
 
+        // when / then
         assertThat(policy.resolveDaysToCash(invoice, payment)).isNull();
     }
 
     @Test
     void resolveDaysToCash_clampsNegativeToZero() {
+        // given
+        LocalDate invoiceDate = LocalDate.of(2026, 2, 10);
+        LocalDate paymentDate = LocalDate.of(2026, 2, 5);
         Invoice invoice = new Invoice();
-        invoice.setDate(LocalDate.of(2026, 2, 10));
+        invoice.setDate(invoiceDate);
         Payment payment = new Payment();
-        payment.setDate(LocalDate.of(2026, 2, 5));
+        payment.setDate(paymentDate);
 
+        // when / then
         assertThat(policy.resolveDaysToCash(invoice, payment)).isEqualTo(0L);
     }
 
     @Test
     void isReceivableAtRisk_byStatusOverdue() {
+        // given
+        LocalDate asOfDate = LocalDate.of(2026, 2, 21);
         Invoice invoice = new Invoice();
         invoice.setStatus(InvoiceStatus.OVERDUE);
 
-        assertThat(policy.isReceivableAtRisk(invoice, LocalDate.of(2026, 2, 21), new BigDecimal("10.00"))).isTrue();
+        // when / then
+        assertThat(policy.isReceivableAtRisk(invoice, asOfDate, new BigDecimal("10.00"))).isTrue();
     }
 
     @Test
     void isReceivableAtRisk_byDueDateAndOpenAmount() {
+        // given
+        LocalDate dueDate = LocalDate.of(2026, 2, 1);
+        LocalDate asOfDate = LocalDate.of(2026, 2, 21);
         Invoice invoice = new Invoice();
         invoice.setStatus(InvoiceStatus.PENDING);
-        invoice.setDueDate(LocalDate.of(2026, 2, 1));
+        invoice.setDueDate(dueDate);
 
-        assertThat(policy.isReceivableAtRisk(invoice, LocalDate.of(2026, 2, 21), new BigDecimal("1.00"))).isTrue();
+        // when / then
+        assertThat(policy.isReceivableAtRisk(invoice, asOfDate, new BigDecimal("1.00"))).isTrue();
+        assertThat(policy.isReceivableAtRisk(invoice, asOfDate, BigDecimal.ZERO)).isFalse();
     }
 
     @Test
     void isReceivableAtRisk_paidInvoiceIsNeverOverdue() {
+        // given
+        LocalDate dueDate = LocalDate.of(2026, 2, 1);
+        LocalDate asOfDate = LocalDate.of(2026, 2, 21);
         Invoice invoice = new Invoice();
         invoice.setStatus(InvoiceStatus.PAID);
-        invoice.setDueDate(LocalDate.of(2026, 2, 1));
+        invoice.setDueDate(dueDate);
 
-        assertThat(policy.isReceivableAtRisk(invoice, LocalDate.of(2026, 2, 21), new BigDecimal("100.00"))).isFalse();
+        // when / then
+        assertThat(policy.isReceivableAtRisk(invoice, asOfDate, new BigDecimal("100.00"))).isFalse();
     }
 
     @Test
     void resolveDaysOverdue_clampsNegativeToZero() {
+        // given
+        LocalDate dueDate = LocalDate.of(2026, 2, 25);
+        LocalDate asOfDate = LocalDate.of(2026, 2, 21);
         Invoice invoice = new Invoice();
-        invoice.setDueDate(LocalDate.of(2026, 2, 25));
+        invoice.setDueDate(dueDate);
 
-        assertThat(policy.resolveDaysOverdue(invoice, LocalDate.of(2026, 2, 21))).isEqualTo(0L);
+        // when / then
+        assertThat(policy.resolveDaysOverdue(invoice, asOfDate)).isEqualTo(0L);
     }
 
     @Test
     void resolveDaysOverdue_returnsDifference() {
+        // given
+        LocalDate dueDate = LocalDate.of(2026, 2, 1);
+        LocalDate asOfDate = LocalDate.of(2026, 2, 21);
         Invoice invoice = new Invoice();
-        invoice.setDueDate(LocalDate.of(2026, 2, 1));
+        invoice.setDueDate(dueDate);
 
-        assertThat(policy.resolveDaysOverdue(invoice, LocalDate.of(2026, 2, 21))).isEqualTo(20L);
+        // when / then
+        assertThat(policy.resolveDaysOverdue(invoice, asOfDate)).isEqualTo(20L);
     }
 }

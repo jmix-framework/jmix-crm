@@ -27,40 +27,53 @@ class AiJpqlParameterConverterTest {
     private ConversionService conversionService;
 
     @Test
-    void testParameterConverterCreation() {
+    void testBooleanStringConversion() {
+        // given
         var converter = new AiJpqlParameterConverter(conversionService);
-        assertThat(converter).isNotNull();
+
+        // when
+        Object result = converter.convertParameterValue("true");
+
+        // then
+        assertThat(result).isEqualTo(true);
     }
 
     @Test
     void testLocalDateConversion() {
+        // given
         var converter = new AiJpqlParameterConverter(conversionService);
 
+        // when
         Object result = converter.convertParameterValue("2024-01-15");
 
+        // then
         assertThat(result).isInstanceOf(LocalDate.class);
         assertThat(result).isEqualTo(LocalDate.of(2024, 1, 15));
     }
 
     @Test
     void testLocalDateTimeConversion() {
+        // given
         var converter = new AiJpqlParameterConverter(conversionService);
 
+        // when
         Object result = converter.convertParameterValue("2024-01-15T10:30:00");
 
+        // then
         assertThat(result).isInstanceOf(LocalDateTime.class);
         assertThat(result).isEqualTo(LocalDateTime.of(2024, 1, 15, 10, 30, 0));
     }
 
     @Test
     void testNumericStringsConvertedToBigDecimal() {
+        // given
         var converter = new AiJpqlParameterConverter(conversionService);
 
-        // Numbers should be converted to BigDecimal to help JPQL engine
+        // when
         Object result42 = converter.convertParameterValue("42");
         Object resultDecimal = converter.convertParameterValue("1500.50");
 
-        // Should be converted to BigDecimal - JPQL engine is strict about types
+        // then
         assertThat(result42).isInstanceOf(java.math.BigDecimal.class);
         assertThat(result42).isEqualTo(new java.math.BigDecimal("42"));
         assertThat(resultDecimal).isInstanceOf(java.math.BigDecimal.class);
@@ -69,25 +82,32 @@ class AiJpqlParameterConverterTest {
 
     @Test
     void testStringRemainsString() {
+        // given
         var converter = new AiJpqlParameterConverter(conversionService);
 
+        // when
         Object result = converter.convertParameterValue("%Test%");
 
+        // then
         assertThat(result).isInstanceOf(String.class);
         assertThat(result).isEqualTo("%Test%");
     }
 
     @Test
     void testNullValue() {
+        // given
         var converter = new AiJpqlParameterConverter(conversionService);
 
+        // when
         Object result = converter.convertParameterValue(null);
 
+        // then
         assertThat(result).isNull();
     }
 
     @Test
     void testAlreadyCorrectlyTypedParameters() {
+        // given
         var converter = new AiJpqlParameterConverter(conversionService);
 
         // Test various already-typed parameters that Spring AI/Jackson might provide
@@ -95,6 +115,7 @@ class AiJpqlParameterConverterTest {
         Boolean existingBool = true;
         LocalDate existingDate = LocalDate.of(2024, 1, 15);
 
+        // when / then
         assertThat(converter.convertParameterValue(existingInt)).isSameAs(existingInt);
         assertThat(converter.convertParameterValue(existingBool)).isSameAs(existingBool);
         assertThat(converter.convertParameterValue(existingDate)).isSameAs(existingDate);
@@ -102,6 +123,7 @@ class AiJpqlParameterConverterTest {
 
     @Test
     void testMixedParameterMapWithCorrectTypes() {
+        // given
         var converter = new AiJpqlParameterConverter(conversionService);
 
         Map<String, Object> parameters = new HashMap<>();
@@ -112,8 +134,10 @@ class AiJpqlParameterConverterTest {
         parameters.put("alreadyTypedBool", true); // Already typed -> unchanged
         parameters.put("pattern", "%Test%"); // String pattern -> unchanged
 
+        // when
         Map<String, Object> result = converter.convertParameters(parameters);
 
+        // then
         assertThat(result).hasSize(6);
         assertThat(result.get("stringDate")).isInstanceOf(LocalDate.class); // Converted
         assertThat(result.get("alreadyTypedDate")).isSameAs(parameters.get("alreadyTypedDate")); // Unchanged
@@ -126,31 +150,80 @@ class AiJpqlParameterConverterTest {
 
     @Test
     void testEmptyParameterMap() {
+        // given
         var converter = new AiJpqlParameterConverter(conversionService);
 
         Map<String, Object> empty = new HashMap<>();
+
+        // when
         Map<String, Object> result = converter.convertParameters(empty);
 
+        // then
         assertThat(result).isEmpty();
     }
 
     @Test
     void testNullParameterMap() {
+        // given
         var converter = new AiJpqlParameterConverter(conversionService);
 
+        // when
         Map<String, Object> result = converter.convertParameters(null);
 
+        // then
         assertThat(result).isNull();
     }
 
     @Test
     void testInvalidDateString() {
+        // given
         var converter = new AiJpqlParameterConverter(conversionService);
 
-        // Invalid date strings should remain as strings
+        // when
         Object result = converter.convertParameterValue("not-a-date");
 
+        // then
         assertThat(result).isInstanceOf(String.class);
         assertThat(result).isEqualTo("not-a-date");
+    }
+
+    @Test
+    void testLocaleSensitiveNumericString_staysString() {
+        // given
+        var converter = new AiJpqlParameterConverter(conversionService);
+
+        // when
+        Object result = converter.convertParameterValue("1,50");
+
+        // then
+        assertThat(result).isInstanceOf(String.class);
+        assertThat(result).isEqualTo("1,50");
+    }
+
+    @Test
+    void testVeryLongNumericId_staysString() {
+        // given
+        var converter = new AiJpqlParameterConverter(conversionService);
+        String longNumericId = "1234567890123456789012345";
+
+        // when
+        Object result = converter.convertParameterValue(longNumericId);
+
+        // then
+        assertThat(result).isInstanceOf(String.class);
+        assertThat(result).isEqualTo(longNumericId);
+    }
+
+    @Test
+    void testSignedNumericString_convertedToBigDecimal() {
+        // given
+        var converter = new AiJpqlParameterConverter(conversionService);
+
+        // when
+        Object result = converter.convertParameterValue("-42.25");
+
+        // then
+        assertThat(result).isInstanceOf(java.math.BigDecimal.class);
+        assertThat(result).isEqualTo(new java.math.BigDecimal("-42.25"));
     }
 }

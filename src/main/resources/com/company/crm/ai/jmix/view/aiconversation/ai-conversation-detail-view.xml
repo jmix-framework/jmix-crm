@@ -40,6 +40,15 @@
                       text="msg://com.company.crm.ai.jmix.view.aiconversation/attachmentsEmptyState"
                       classNames="text-secondary text-s"
                       visible="false"/>
+                <upload id="attachmentUpload"
+                        width="100%"
+                        classNames="attachments-dropzone"
+                        acceptedFileTypes=".pdf,.csv,.doc,.docx,.xls,.xlsx,.html,.htm,.txt,.md,.png,.jpg,.jpeg,.gif,.webp"
+                        uploadText="msg://com.company.crm.ai.jmix.view.aiconversation/attachmentUploadField.uploadText"
+                        dropLabel="msg://com.company.crm.ai.jmix.view.aiconversation/attachmentUpload.dropLabel"
+                        dropAllowed="true"
+                        receiverType="FILE_TEMPORARY_STORAGE_BUFFER"
+                        maxFiles="1"/>
             </vbox>
         </split>
     </layout>

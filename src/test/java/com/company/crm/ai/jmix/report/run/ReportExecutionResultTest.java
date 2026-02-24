@@ -8,7 +8,10 @@ class ReportExecutionResultTest {
 
     @Test
     void testSuccess() {
+        // when
         ReportExecutionResult result = ReportExecutionResult.success("report-code", "template-code", "HTML", "content");
+
+        // then
         assertThat(result.success()).isTrue();
         assertThat(result.reportCode()).isEqualTo("report-code");
         assertThat(result.templateCodeUsed()).isEqualTo("template-code");
@@ -16,11 +19,15 @@ class ReportExecutionResultTest {
         assertThat(result.content()).isEqualTo("content");
         assertThat(result.errorCode()).isNull();
         assertThat(result.errorMessage()).isNull();
+        assertThat(result.validationErrors()).isNull();
     }
 
     @Test
     void testFailed() {
+        // when
         ReportExecutionResult result = ReportExecutionResult.failed("report-code", ReportExecutionErrorCode.EXECUTION_ERROR, "error-message");
+
+        // then
         assertThat(result.success()).isFalse();
         assertThat(result.reportCode()).isEqualTo("report-code");
         assertThat(result.errorCode()).isEqualTo(ReportExecutionErrorCode.EXECUTION_ERROR);
@@ -29,10 +36,17 @@ class ReportExecutionResultTest {
 
     @Test
     void testValidationError() {
+        // given
         List<ReportValidationError> errors = List.of(new ReportValidationError("param1", "error1"));
+
+        // when
         ReportExecutionResult result = ReportExecutionResult.validationError("report-code", errors);
+
+        // then
         assertThat(result.success()).isFalse();
         assertThat(result.errorCode()).isEqualTo(ReportExecutionErrorCode.PARAMETER_VALIDATION_ERROR);
         assertThat(result.validationErrors()).hasSize(1);
+        assertThat(result.validationErrors().get(0).parameterAlias()).isEqualTo("param1");
+        assertThat(result.validationErrors().get(0).errorMessage()).isEqualTo("error1");
     }
 }

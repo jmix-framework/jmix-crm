@@ -2,10 +2,12 @@ package com.company.crm.test.report.dataloader;
 
 import com.company.crm.AbstractTest;
 import com.company.crm.model.client.Client;
+import com.company.crm.model.datatype.PriceDataType;
 import com.company.crm.report.dataloader.FlagsAndIndicatorsReportDataLoader;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
@@ -20,17 +22,19 @@ class FlagsAndIndicatorsReportDataLoaderTest extends AbstractTest {
 
     @Test
     void testLoadDataWithValidClient() {
-        // Given
-        Client client = entities.client("Flags Client");
-        dataManager.save(client);
+        // given
+        Client client = entities.client("Flags Client", 400);
 
-        Map<String, Object> params = createParams(client,
-            LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 31));
+        Map<String, Object> params = Map.of(
+                "client", client,
+                "fromDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 1)),
+                "toDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 31))
+        );
 
-        // When
+        // when
         List<Map<String, Object>> result = dataLoader.loadData(null, null, params);
 
-        // Then
+        // then
         assertThat(result).hasSize(1);
         Map<String, Object> flags = result.get(0);
 
@@ -52,37 +56,37 @@ class FlagsAndIndicatorsReportDataLoaderTest extends AbstractTest {
             "hasSalesOpportunity", "isCreditRisk"
         );
 
-        // All boolean flags should be present
-        assertThat(flags.get("isHighValue")).isInstanceOf(Boolean.class);
-        assertThat(flags.get("isVIP")).isInstanceOf(Boolean.class);
-        assertThat(flags.get("isNew")).isInstanceOf(Boolean.class);
-        assertThat(flags.get("isFrequent")).isInstanceOf(Boolean.class);
-        assertThat(flags.get("isInactive")).isInstanceOf(Boolean.class);
-        assertThat(flags.get("hasPaymentIssues")).isInstanceOf(Boolean.class);
-        assertThat(flags.get("hasGoodPaymentHistory")).isInstanceOf(Boolean.class);
-        assertThat(flags.get("hasOutstandingBalance")).isInstanceOf(Boolean.class);
-        assertThat(flags.get("isBusiness")).isInstanceOf(Boolean.class);
-        assertThat(flags.get("hasAccountManager")).isInstanceOf(Boolean.class);
-        assertThat(flags.get("isLongTerm")).isInstanceOf(Boolean.class);
-        assertThat(flags.get("hasRecentActivity")).isInstanceOf(Boolean.class);
-        assertThat(flags.get("hasSalesOpportunity")).isInstanceOf(Boolean.class);
-        assertThat(flags.get("isCreditRisk")).isInstanceOf(Boolean.class);
-
-        // Special format fields
-        assertThat(flags.get("outstandingAmount")).isInstanceOf(String.class);
-        assertThat(flags.get("customerTenure")).isNotNull();
+        // Deterministic flag values for a client without transactions
+        assertThat(flags.get("isHighValue")).isEqualTo(false);
+        assertThat(flags.get("isVIP")).isEqualTo(false);
+        assertThat(flags.get("isNew")).isEqualTo(false);
+        assertThat(flags.get("isFrequent")).isEqualTo(false);
+        assertThat(flags.get("isInactive")).isEqualTo(true);
+        assertThat(flags.get("hasPaymentIssues")).isEqualTo(false);
+        assertThat(flags.get("hasGoodPaymentHistory")).isEqualTo(false);
+        assertThat(flags.get("hasOutstandingBalance")).isEqualTo(false);
+        assertThat(flags.get("isBusiness")).isEqualTo(false);
+        assertThat(flags.get("hasAccountManager")).isEqualTo(false);
+        assertThat(flags.get("isLongTerm")).isEqualTo(true);
+        assertThat(flags.get("hasRecentActivity")).isEqualTo(false);
+        assertThat(flags.get("hasSalesOpportunity")).isEqualTo(false);
+        assertThat(flags.get("isCreditRisk")).isEqualTo(false);
+        assertThat(flags.get("outstandingAmount")).isEqualTo(PriceDataType.defaultFormat(BigDecimal.ZERO));
+        assertThat((String) flags.get("customerTenure")).contains("year");
     }
 
     @Test
     void testLoadDataWithNullClient() {
-        // Given
-        Map<String, Object> params = createParams(null,
-            LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 31));
+        // given
+        Map<String, Object> params = new HashMap<>();
+        params.put("client", null);
+        params.put("fromDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 1)));
+        params.put("toDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 31)));
 
-        // When
+        // when
         List<Map<String, Object>> result = dataLoader.loadData(null, null, params);
 
-        // Then
+        // then
         assertThat(result).hasSize(1);
         Map<String, Object> flags = result.get(0);
         assertThat(flags).isEmpty();
@@ -90,38 +94,45 @@ class FlagsAndIndicatorsReportDataLoaderTest extends AbstractTest {
 
     @Test
     void testLoadDataAlwaysReturnsOneRow() {
-        // Given
+        // given
         Client client = entities.client("Single Row Client");
-        dataManager.save(client);
 
-        Map<String, Object> params = createParams(client,
-            LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 31));
+        Map<String, Object> params = Map.of(
+                "client", client,
+                "fromDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 1)),
+                "toDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 31))
+        );
 
-        // When
+        // when
         List<Map<String, Object>> result = dataLoader.loadData(null, null, params);
 
-        // Then
+        // then
         assertThat(result).hasSize(1);
     }
 
     @Test
     void testLoadDataUsesDateRangeParameter() {
-        // Given
+        // given
         Client client = entities.client("Date Range Client");
-        dataManager.save(client);
 
         // Different date ranges should potentially affect the flags
-        Map<String, Object> params1 = createParams(client,
-            LocalDate.of(2023, 1, 1), LocalDate.of(2023, 12, 31));
+        Map<String, Object> params1 = Map.of(
+                "client", client,
+                "fromDate", java.sql.Date.valueOf(LocalDate.of(2023, 1, 1)),
+                "toDate", java.sql.Date.valueOf(LocalDate.of(2023, 12, 31))
+        );
 
-        Map<String, Object> params2 = createParams(client,
-            LocalDate.of(2024, 1, 1), LocalDate.of(2024, 12, 31));
+        Map<String, Object> params2 = Map.of(
+                "client", client,
+                "fromDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 1)),
+                "toDate", java.sql.Date.valueOf(LocalDate.of(2024, 12, 31))
+        );
 
-        // When
+        // when
         List<Map<String, Object>> result1 = dataLoader.loadData(null, null, params1);
         List<Map<String, Object>> result2 = dataLoader.loadData(null, null, params2);
 
-        // Then
+        // then
         assertThat(result1).hasSize(1);
         assertThat(result2).hasSize(1);
 
@@ -132,11 +143,4 @@ class FlagsAndIndicatorsReportDataLoaderTest extends AbstractTest {
         assertThat(flags1.keySet()).isEqualTo(flags2.keySet());
     }
 
-    private Map<String, Object> createParams(Client client, LocalDate fromDate, LocalDate toDate) {
-        Map<String, Object> params = new HashMap<>();
-        params.put("client", client);
-        params.put("fromDate", java.sql.Date.valueOf(fromDate));
-        params.put("toDate", java.sql.Date.valueOf(toDate));
-        return params;
-    }
 }

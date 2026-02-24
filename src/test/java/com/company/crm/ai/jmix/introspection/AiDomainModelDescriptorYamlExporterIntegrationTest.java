@@ -6,7 +6,11 @@ import com.company.crm.model.invoice.Invoice;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -21,9 +25,10 @@ class AiDomainModelDescriptorYamlExporterIntegrationTest extends AbstractTest {
 
     @Test
     void shouldExportTestEntities() {
+        // when
         String yaml = exporter.export();
 
-        // Basic structure checks
+        // then
         assertThat(yaml).startsWith("entities:");
 
         // Should contain our test entities (but not BaseTestEntity - it's @MappedSuperclass)
@@ -40,9 +45,12 @@ class AiDomainModelDescriptorYamlExporterIntegrationTest extends AbstractTest {
 
     @Test
     void shouldIncludeProperties() {
+        // given
+
+        // when
         String yaml = exporter.export();
 
-        // CustomerTestEntity should have properties
+        // then
         assertThat(yaml).contains("properties:");
 
         // Should have id as identifier
@@ -52,20 +60,26 @@ class AiDomainModelDescriptorYamlExporterIntegrationTest extends AbstractTest {
         // Should have regular properties
         assertThat(yaml).contains("name:");
         assertThat(yaml).contains("email:");
+        assertThat(yaml).containsPattern("(?s)CustomerTestEntity:\\R\\s+caption:.*?\\R\\s+properties:.*?\\R\\s+id:.*?\\R\\s+identifier: true");
     }
 
     @Test
     void shouldExcludeTransientProperties() {
+        // when
         String yaml = exporter.export();
 
-        // Should NOT contain @Transient field
+        // then
         assertThat(yaml).doesNotContain("debugText:");
     }
 
     @Test
     void shouldIncludeRelationsInProperties() {
+        // given
+
+        // when
         String yaml = exporter.export();
 
+        // then
         assertThat(yaml).contains("properties:");
 
         // CustomerTestEntity should have orders relation
@@ -73,6 +87,7 @@ class AiDomainModelDescriptorYamlExporterIntegrationTest extends AbstractTest {
         assertThat(yaml).contains("type: ONE_TO_MANY");
         assertThat(yaml).contains("target: OrderTestEntity");
         assertThat(yaml).contains("mappedBy: customer");
+        assertThat(yaml).containsPattern("(?s)orders:\\R\\s+.*?type: ONE_TO_MANY\\R\\s+.*?target: OrderTestEntity\\R\\s+.*?mappedBy: customer");
 
         // OrderTestEntity should have customer relation
         assertThat(yaml).contains("customer:");
@@ -87,9 +102,12 @@ class AiDomainModelDescriptorYamlExporterIntegrationTest extends AbstractTest {
 
     @Test
     void shouldIncludeEmbeddedInProperties() {
+        // given
+
+        // when
         String yaml = exporter.export();
 
-        // CustomerTestEntity should have embedded address
+        // then
         assertThat(yaml).contains("address:");
         assertThat(yaml).contains("javaType: AddressTestEntity");
         assertThat(yaml).contains("embedded: true");
@@ -97,9 +115,12 @@ class AiDomainModelDescriptorYamlExporterIntegrationTest extends AbstractTest {
 
     @Test
     void shouldIncludeComments() {
+        // given
+
+        // when
         String yaml = exporter.export();
 
-        // Entity-level comments (SnakeYAML doesn't quote strings unless necessary)
+        // then
         assertThat(yaml).contains("comment: Test customer entity for domain model export testing");
 
         // Property-level comments
@@ -108,22 +129,26 @@ class AiDomainModelDescriptorYamlExporterIntegrationTest extends AbstractTest {
 
     @Test
     void shouldReturnEmptyEntitiesForNonExistentWhitelist() {
-        // Use a class that's not a JPA entity
+        // given
         Set<Class<?>> whitelist = Set.of(String.class);
+
+        // when
         String yaml = exporter.export(whitelist);
 
-        // Should return empty YAML object
+        // then
         String expectedYaml = "{}\n";
         assertThat(yaml).isEqualTo(expectedYaml);
     }
 
     @Test
     void shouldExportClientEntityWithExactYaml() {
-        // Export only Client - using a smaller, focused assertion
+        // given
         Set<Class<?>> whitelist = Set.of(Client.class);
+
+        // when
         String yaml = exporter.export(whitelist);
 
-        // Check that it starts correctly and has the essential Client structure
+        // then
         assertThat(yaml).startsWith("entities:\n  Client:\n    caption: Client\n    properties:");
 
         // Check specific Client properties exist
@@ -136,17 +161,28 @@ class AiDomainModelDescriptorYamlExporterIntegrationTest extends AbstractTest {
 
     @Test
     void shouldExportMultipleEntitiesInCorrectOrder() {
-        // Export Client and Invoice - they should appear in deterministic order
+        // given
         Set<Class<?>> whitelist = Set.of(Client.class, Invoice.class);
+
+        // when
         String yaml = exporter.export(whitelist);
 
-        // Check structure and order (Invoice appears first alphabetically)
-        assertThat(yaml).startsWith("entities:\n  Invoice:");
-        assertThat(yaml).contains("\n  Client:\n");
+        // then
+        List<String> exportedEntities = extractTopLevelEntityNames(yaml);
+        assertThat(exportedEntities).containsExactly("Invoice", "Client");
 
         // Verify both entities are present with their key properties
         assertThat(yaml).contains("Invoice:\n    caption: Invoice");
         assertThat(yaml).contains("Client:\n    caption: Client");
+    }
+
+    private List<String> extractTopLevelEntityNames(String yaml) {
+        List<String> names = new ArrayList<>();
+        Matcher matcher = Pattern.compile("(?m)^  ([^\\s:][^:]*):$").matcher(yaml);
+        while (matcher.find()) {
+            names.add(matcher.group(1));
+        }
+        return names;
     }
 
 }

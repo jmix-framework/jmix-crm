@@ -72,16 +72,32 @@ public class AbstractTest {
         runWithUser(testUsers.manager(), runnable);
     }
 
+    protected <T> T withManager(SystemAuthenticator.AuthenticatedOperation<T> operation) {
+        return withUser(testUsers.manager(), operation);
+    }
+
     protected void runWithSupervisor(Runnable runnable) {
         runWithUser(testUsers.supervisor(), runnable);
+    }
+
+    protected <T> T withSupervisor(SystemAuthenticator.AuthenticatedOperation<T> operation) {
+        return withUser(testUsers.supervisor(), operation);
     }
 
     protected void runWithUser(User user, Runnable runnable) {
         runWithUser(user.getUsername(), runnable);
     }
 
+    protected <T> T withUser(User user, SystemAuthenticator.AuthenticatedOperation<T> operation) {
+        return withUser(user.getUsername(), operation);
+    }
+
     protected void runWithUser(String username, Runnable runnable) {
         systemAuthenticator.runWithUser(username, runnable);
+    }
+
+    protected <T> T withUser(String username, SystemAuthenticator.AuthenticatedOperation<T> operation) {
+        return systemAuthenticator.withUser(username, operation);
     }
 
     protected boolean cleanDataAfterEach() {

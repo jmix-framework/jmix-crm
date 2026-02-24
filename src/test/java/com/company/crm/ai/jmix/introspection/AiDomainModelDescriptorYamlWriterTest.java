@@ -19,6 +19,7 @@ class AiDomainModelDescriptorYamlWriterTest {
 
     @Test
     void shouldWritePropertiesStructure() {
+        // given
         Map<String, AiPropertyDescriptor> properties = new LinkedHashMap<>();
 
         // Add a datatype property
@@ -34,11 +35,14 @@ class AiDomainModelDescriptorYamlWriterTest {
         AiEntityDescriptor entity = new AiEntityDescriptor("Test entity caption", "Test entity", properties);
         AiDomainModelDescriptor model = new AiDomainModelDescriptor(Map.of("TestEntity", entity));
 
+        // when
         String yaml = writer.writeToYaml(model);
 
-        // Check structure
+        // then
         assertThat(yaml).contains("TestEntity");
         assertThat(yaml).contains("properties:");
+        assertThat(yaml).containsPattern("(?s)entities:\\R\\s+TestEntity:\\R\\s+caption:.*?\\R\\s+properties:");
+        assertThat(yaml).containsOnlyOnce("properties:");
 
         // Check datatype property
         assertThat(yaml).contains("name:");
@@ -50,6 +54,8 @@ class AiDomainModelDescriptorYamlWriterTest {
         assertThat(yaml).contains("javaType: OrderStatus");
         assertThat(yaml).contains("type: enum");
         assertThat(yaml).contains("enumValues:");
+        assertThat(yaml).contains("NEW: 10");
+        assertThat(yaml).contains("DONE: 20");
 
         // Check relation property
         assertThat(yaml).contains("customer:");

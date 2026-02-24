@@ -2,6 +2,7 @@ package com.company.crm.test.report.dataloader;
 
 import com.company.crm.AbstractTest;
 import com.company.crm.model.client.Client;
+import com.company.crm.model.datatype.PriceDataType;
 import com.company.crm.model.order.Order;
 import com.company.crm.model.order.OrderStatus;
 import com.company.crm.report.dataloader.OrdersReportDataLoader;
@@ -10,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -23,122 +23,113 @@ class OrdersReportDataLoaderTest extends AbstractTest {
 
     @Test
     void testLoadDataWithMultipleOrders() {
-        // Given
+        // given
         Client client = entities.client("Test Client");
-        dataManager.save(client);
 
-        Order order1 = entities.order(client, LocalDate.of(2024, 1, 15), OrderStatus.DONE);
-        order1.setNumber("ORD-001");
-        order1.setTotal(BigDecimal.valueOf(1250.75));
+        Order order1 = entities.order(client, "ORD-001", LocalDate.of(2024, 1, 15), OrderStatus.DONE, BigDecimal.valueOf(1250.75));
         order1.setComment("First order");
+        saveWithoutReload(order1);
 
-        Order order2 = entities.order(client, LocalDate.of(2024, 1, 20), OrderStatus.NEW);
-        order2.setNumber("ORD-002");
-        order2.setTotal(BigDecimal.valueOf(750.50));
+        Order order2 = entities.order(client, "ORD-002", LocalDate.of(2024, 1, 20), OrderStatus.NEW, BigDecimal.valueOf(750.50));
         order2.setComment("Second order");
+        saveWithoutReload(order2);
 
         // Order outside date range - should not appear
-        Order order3 = entities.order(client, LocalDate.of(2023, 12, 31), OrderStatus.DONE);
-        order3.setNumber("ORD-003");
-        order3.setTotal(BigDecimal.valueOf(500.00));
+        entities.order(client, "ORD-003", LocalDate.of(2023, 12, 31), OrderStatus.DONE, BigDecimal.valueOf(500.00));
 
-        dataManager.save(order1, order2, order3);
+        Map<String, Object> params = Map.of(
+                "client", client,
+                "fromDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 1)),
+                "toDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 31))
+        );
 
-        Map<String, Object> params = createParams(client,
-            LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 31));
-
-        // When
+        // when
         List<Map<String, Object>> result = dataLoader.loadData(null, null, params);
 
-        // Then
+        // then
         assertThat(result).hasSize(2);
 
         // Orders should be ordered by date DESC (newest first)
         Map<String, Object> firstOrder = result.get(0);
         Map<String, Object> secondOrder = result.get(1);
 
-        assertThat(firstOrder.get("number")).isEqualTo("ORD-002");
-        assertThat(secondOrder.get("number")).isEqualTo("ORD-001");
+        assertThat(firstOrder.get("date")).isEqualTo(LocalDate.of(2024, 1, 20));
+        assertThat(secondOrder.get("date")).isEqualTo(LocalDate.of(2024, 1, 15));
+        assertThat(firstOrder.get("comment")).isEqualTo("Second order");
+        assertThat(secondOrder.get("comment")).isEqualTo("First order");
+        assertThat(firstOrder.get("total")).isNotEqualTo(secondOrder.get("total"));
 
         // Check all fields are present
         assertThat(firstOrder).containsKeys("number", "date", "dateFormatted", "status", "total", "comment");
+        assertThat(firstOrder.get("status")).isInstanceOf(String.class);
+        assertThat(((String) firstOrder.get("status"))).isNotBlank();
+        assertThat(secondOrder.get("status")).isInstanceOf(String.class);
+        assertThat(((String) secondOrder.get("status"))).isNotBlank();
+        assertThat(firstOrder.get("dateFormatted")).isInstanceOf(String.class);
+        assertThat(firstOrder.get("total")).isInstanceOf(String.class);
     }
 
     @Test
     void testLoadDataWithNoOrders() {
-        // Given
+        // given
         Client client = entities.client("Empty Client");
-        dataManager.save(client);
 
-        Map<String, Object> params = createParams(client,
-            LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 31));
+        Map<String, Object> params = Map.of(
+                "client", client,
+                "fromDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 1)),
+                "toDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 31))
+        );
 
-        // When
+        // when
         List<Map<String, Object>> result = dataLoader.loadData(null, null, params);
 
-        // Then
+        // then
         assertThat(result).isEmpty();
     }
 
     @Test
     void testLoadDataDateFiltering() {
-        // Given
+        // given
         Client client = entities.client("Date Filter Client");
-        dataManager.save(client);
+        entities.order(client, "IN-RANGE", LocalDate.of(2024, 6, 15), OrderStatus.DONE, BigDecimal.valueOf(100));
+        entities.order(client, "BEFORE-RANGE", LocalDate.of(2024, 5, 31), OrderStatus.DONE, BigDecimal.valueOf(100));
+        entities.order(client, "AFTER-RANGE", LocalDate.of(2024, 7, 1), OrderStatus.DONE, BigDecimal.valueOf(100));
 
-        Order orderInRange = entities.order(client, LocalDate.of(2024, 6, 15), OrderStatus.DONE);
-        orderInRange.setNumber("IN-RANGE");
+        Map<String, Object> params = Map.of(
+                "client", client,
+                "fromDate", java.sql.Date.valueOf(LocalDate.of(2024, 6, 1)),
+                "toDate", java.sql.Date.valueOf(LocalDate.of(2024, 6, 30))
+        );
 
-        Order orderBeforeRange = entities.order(client, LocalDate.of(2024, 5, 31), OrderStatus.DONE);
-        orderBeforeRange.setNumber("BEFORE-RANGE");
-
-        Order orderAfterRange = entities.order(client, LocalDate.of(2024, 7, 1), OrderStatus.DONE);
-        orderAfterRange.setNumber("AFTER-RANGE");
-
-        dataManager.save(orderInRange, orderBeforeRange, orderAfterRange);
-
-        Map<String, Object> params = createParams(client,
-            LocalDate.of(2024, 6, 1), LocalDate.of(2024, 6, 30));
-
-        // When
+        // when
         List<Map<String, Object>> result = dataLoader.loadData(null, null, params);
 
-        // Then
+        // then
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).get("number")).isEqualTo("IN-RANGE");
+        assertThat(result.get(0).get("date")).isEqualTo(LocalDate.of(2024, 6, 15));
     }
 
     @Test
     void testLoadDataMultipleClients() {
-        // Given
+        // given
         Client client1 = entities.client("Client 1");
         Client client2 = entities.client("Client 2");
-        dataManager.save(client1, client2);
+        entities.order(client1, "CLIENT1-ORDER", LocalDate.of(2024, 1, 15), OrderStatus.DONE, BigDecimal.valueOf(101));
+        entities.order(client2, "CLIENT2-ORDER", LocalDate.of(2024, 1, 16), OrderStatus.DONE, BigDecimal.valueOf(202));
 
-        Order orderClient1 = entities.order(client1, LocalDate.of(2024, 1, 15), OrderStatus.DONE);
-        orderClient1.setNumber("CLIENT1-ORDER");
+        Map<String, Object> params = Map.of(
+                "client", client1,
+                "fromDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 1)),
+                "toDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 31))
+        );
 
-        Order orderClient2 = entities.order(client2, LocalDate.of(2024, 1, 16), OrderStatus.DONE);
-        orderClient2.setNumber("CLIENT2-ORDER");
-
-        dataManager.save(orderClient1, orderClient2);
-
-        Map<String, Object> params = createParams(client1,
-            LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 31));
-
-        // When
+        // when
         List<Map<String, Object>> result = dataLoader.loadData(null, null, params);
 
-        // Then
+        // then
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).get("number")).isEqualTo("CLIENT1-ORDER");
+        assertThat(result.get(0).get("date")).isEqualTo(LocalDate.of(2024, 1, 15));
+        assertThat(result.get(0).get("total")).isEqualTo(PriceDataType.defaultFormat(BigDecimal.valueOf(101)));
     }
 
-    private Map<String, Object> createParams(Client client, LocalDate fromDate, LocalDate toDate) {
-        Map<String, Object> params = new HashMap<>();
-        params.put("client", client);
-        params.put("fromDate", java.sql.Date.valueOf(fromDate));
-        params.put("toDate", java.sql.Date.valueOf(toDate));
-        return params;
-    }
 }

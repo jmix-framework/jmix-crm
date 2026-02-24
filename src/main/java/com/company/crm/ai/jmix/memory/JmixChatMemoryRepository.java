@@ -46,6 +46,9 @@ public class JmixChatMemoryRepository implements ChatMemoryRepository {
 
     private static final Logger log = LoggerFactory.getLogger(JmixChatMemoryRepository.class);
     private static final String ENTITY_ID_METADATA_KEY = "jmixEntityId";
+    private static final String CRM_MESSAGE_TYPE_METADATA_KEY = "crmMessageType";
+    private static final String ATTACHMENT_METADATA_VALUE = "ATTACHMENT";
+    private static final String USER_UPLOAD_METADATA_VALUE = "USER_UPLOAD";
 
     private final DataManager dataManager;
 
@@ -154,6 +157,8 @@ public class JmixChatMemoryRepository implements ChatMemoryRepository {
 
     private ChatMessageType mapMessageToType(Message message) {
         return switch (message) {
+            case UserMessage userMessage when isAttachmentMessage(userMessage) -> ChatMessageType.ATTACHMENT;
+            case UserMessage userMessage when isUserUploadMessage(userMessage) -> ChatMessageType.USER_UPLOAD;
             case UserMessage ignored -> ChatMessageType.USER;
             case AssistantMessage ignored -> ChatMessageType.ASSISTANT;
             case SystemMessage ignored -> ChatMessageType.SYSTEM;
@@ -166,15 +171,40 @@ public class JmixChatMemoryRepository implements ChatMemoryRepository {
             return new SystemMessage(content != null ? content : "");
         }
 
-        final Map<String, Object> metadata = Map.of(ENTITY_ID_METADATA_KEY, entityId);
+        final Map<String, Object> metadata = switch (type) {
+            case ATTACHMENT -> Map.of(
+                    ENTITY_ID_METADATA_KEY, entityId,
+                    CRM_MESSAGE_TYPE_METADATA_KEY, ATTACHMENT_METADATA_VALUE
+            );
+            case USER_UPLOAD -> Map.of(
+                    ENTITY_ID_METADATA_KEY, entityId,
+                    CRM_MESSAGE_TYPE_METADATA_KEY, USER_UPLOAD_METADATA_VALUE
+            );
+            default -> Map.of(ENTITY_ID_METADATA_KEY, entityId);
+        };
         return switch (type) {
             case USER -> UserMessage.builder().text(content)
+                    .metadata(metadata).build();
+            case ATTACHMENT -> UserMessage.builder().text(content)
+                    .metadata(metadata).build();
+            case USER_UPLOAD -> UserMessage.builder().text(content)
                     .metadata(metadata).build();
             case ASSISTANT, TOOL -> AssistantMessage.builder()
                     .content(content)
                     .properties(metadata).build();
             case SYSTEM -> SystemMessage.builder().text(content).metadata(metadata).build();
+            case null -> SystemMessage.builder().text(content).build();
         };
+    }
+
+    private boolean isUserUploadMessage(UserMessage userMessage) {
+        Object rawMessageType = userMessage.getMetadata().get(CRM_MESSAGE_TYPE_METADATA_KEY);
+        return USER_UPLOAD_METADATA_VALUE.equals(rawMessageType);
+    }
+
+    private boolean isAttachmentMessage(UserMessage userMessage) {
+        Object rawMessageType = userMessage.getMetadata().get(CRM_MESSAGE_TYPE_METADATA_KEY);
+        return ATTACHMENT_METADATA_VALUE.equals(rawMessageType);
     }
 
     private UUID parseConversationId(String conversationId) {

@@ -3,9 +3,12 @@ package com.company.crm.ai.jmix.report.run;
 import com.company.crm.ai.entity.AiAttachmentType;
 import com.company.crm.ai.entity.AiConversation;
 import com.company.crm.ai.entity.AiConversationAttachment;
+import com.company.crm.ai.entity.ChatMessage;
+import com.company.crm.ai.entity.ChatMessageType;
 import io.jmix.core.DataManager;
 import io.jmix.core.FileRef;
 import io.jmix.core.FileStorage;
+import io.jmix.core.Messages;
 import io.jmix.reports.ReportRepository;
 import io.jmix.reports.entity.Report;
 import io.jmix.reports.entity.ReportTemplate;
@@ -31,6 +34,7 @@ import java.util.UUID;
 public class AiReportExecutionService {
 
     private static final Logger log = LoggerFactory.getLogger(AiReportExecutionService.class);
+    private static final String DEFAULT_ASSISTANT_NAME = "CRM AI";
 
     private final ReportRepository reportRepository;
     private final ReportRunner reportRunner;
@@ -38,19 +42,22 @@ public class AiReportExecutionService {
     private final ReportContentConverter contentConverter;
     private final FileStorage fileStorage;
     private final DataManager dataManager;
+    private final Messages messages;
 
     public AiReportExecutionService(ReportRepository reportRepository,
                                    ReportRunner reportRunner,
                                    AiReportParameterConverter parameterConverter,
                                    ReportContentConverter contentConverter,
                                    FileStorage fileStorage,
-                                   DataManager dataManager) {
+                                   DataManager dataManager,
+                                   Messages messages) {
         this.reportRepository = reportRepository;
         this.reportRunner = reportRunner;
         this.parameterConverter = parameterConverter;
         this.contentConverter = contentConverter;
         this.fileStorage = fileStorage;
         this.dataManager = dataManager;
+        this.messages = messages;
     }
 
     /**
@@ -187,6 +194,7 @@ public class AiReportExecutionService {
             attachment.setTitle(attachmentTitle);
             attachment.setType(AiAttachmentType.AI_GENERATED);
             dataManager.save(attachment);
+            saveAttachmentEventMessage(conversation, attachmentTitle);
 
             String citation = String.format("\n\n[View Report Attachments](/ai-conversations/%s)", conversation.getId());
             return new ReportExecutionResult(
@@ -209,6 +217,28 @@ public class AiReportExecutionService {
             }
             log.error("Failed to persist report result for conversation {}", conversationId, e);
             return result;
+        }
+    }
+
+    private void saveAttachmentEventMessage(AiConversation conversation, String attachmentTitle) {
+        try {
+            ChatMessage attachmentMessage = dataManager.create(ChatMessage.class);
+            attachmentMessage.setConversation(conversation);
+            attachmentMessage.setType(ChatMessageType.ATTACHMENT);
+            attachmentMessage.setContent(String.format("%s added attachment \"%s\"",
+                    assistantName(), attachmentTitle));
+            dataManager.save(attachmentMessage);
+        } catch (Exception e) {
+            log.warn("Failed to persist attachment event message for conversation {}", conversation.getId(), e);
+        }
+    }
+
+    private String assistantName() {
+        try {
+            String value = messages.getMessage("com.company.crm.ai.jmix.view.aiconversation/assistantName");
+            return value != null && !value.isBlank() ? value : DEFAULT_ASSISTANT_NAME;
+        } catch (Exception e) {
+            return DEFAULT_ASSISTANT_NAME;
         }
     }
 

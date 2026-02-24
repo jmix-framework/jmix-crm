@@ -18,22 +18,53 @@ class CategoryAllocationPolicyTest {
 
     @Test
     void defineAllocationShares_twoCategories() {
+        // given
+        Category firstCategory = new Category();
+        firstCategory.setCode("CAT1");
+        firstCategory.setName("Category 1");
+        CategoryItem firstCategoryItem = new CategoryItem();
+        firstCategoryItem.setCategory(firstCategory);
+        OrderItem firstItem = new OrderItem();
+        firstItem.setCategoryItem(firstCategoryItem);
+        firstItem.setGrossPrice(new BigDecimal("500.00"));
+        firstItem.setNetPrice(new BigDecimal("500.00"));
+        firstItem.setQuantity(BigDecimal.ONE);
+
+        Category secondCategory = new Category();
+        secondCategory.setCode("CAT2");
+        secondCategory.setName("Category 2");
+        CategoryItem secondCategoryItem = new CategoryItem();
+        secondCategoryItem.setCategory(secondCategory);
+        OrderItem secondItem = new OrderItem();
+        secondItem.setCategoryItem(secondCategoryItem);
+        secondItem.setGrossPrice(new BigDecimal("500.00"));
+        secondItem.setNetPrice(new BigDecimal("500.00"));
+        secondItem.setQuantity(BigDecimal.ONE);
+
         List<OrderItem> items = List.of(
-                orderItem("CAT1", "Category 1", "500.00"),
-                orderItem("CAT2", "Category 2", "500.00")
+                firstItem,
+                secondItem
         );
 
+        // when
         Map<String, CategoryAllocationPolicy.CategoryAllocationShare> shares = policy.defineAllocationShares(items);
 
+        // then
         assertThat(shares).hasSize(2);
         assertThat(shares.get("CAT1").percentage()).isEqualByComparingTo("0.50000000");
         assertThat(shares.get("CAT2").percentage()).isEqualByComparingTo("0.50000000");
+        assertThat(shares.values().stream()
+                .map(CategoryAllocationPolicy.CategoryAllocationShare::percentage)
+                .reduce(BigDecimal.ZERO, BigDecimal::add))
+                .isEqualByComparingTo("1.00000000");
     }
 
     @Test
     void defineAllocationShares_emptyItems_returnsUnassigned() {
+        // when
         Map<String, CategoryAllocationPolicy.CategoryAllocationShare> shares = policy.defineAllocationShares(List.of());
 
+        // then
         assertThat(shares).hasSize(1);
         assertThat(shares).containsKey(CategoryAllocationPolicy.UNASSIGNED);
         assertThat(shares.get(CategoryAllocationPolicy.UNASSIGNED).percentage()).isEqualByComparingTo("1");
@@ -41,13 +72,16 @@ class CategoryAllocationPolicyTest {
 
     @Test
     void allocateExposure_appliesRoundingResidualToLastCategory() {
+        // given
         Map<String, CategoryAllocationPolicy.CategoryAllocationShare> shares = new LinkedHashMap<>();
         shares.put("A", new CategoryAllocationPolicy.CategoryAllocationShare("A", "A", new BigDecimal("0.33333333")));
         shares.put("B", new CategoryAllocationPolicy.CategoryAllocationShare("B", "B", new BigDecimal("0.33333333")));
         shares.put("C", new CategoryAllocationPolicy.CategoryAllocationShare("C", "C", new BigDecimal("0.33333334")));
 
+        // when
         LinkedHashMap<String, BigDecimal> allocations = policy.allocateExposure(new BigDecimal("100.00"), shares);
 
+        // then
         assertThat(allocations.get("A")).isEqualByComparingTo("33.33");
         assertThat(allocations.get("B")).isEqualByComparingTo("33.33");
         assertThat(allocations.get("C")).isEqualByComparingTo("33.34");
@@ -55,19 +89,4 @@ class CategoryAllocationPolicyTest {
                 .isEqualByComparingTo("100.00");
     }
 
-    private OrderItem orderItem(String categoryCode, String categoryName, String total) {
-        Category category = new Category();
-        category.setCode(categoryCode);
-        category.setName(categoryName);
-
-        CategoryItem categoryItem = new CategoryItem();
-        categoryItem.setCategory(category);
-
-        OrderItem orderItem = new OrderItem();
-        orderItem.setCategoryItem(categoryItem);
-        orderItem.setGrossPrice(new BigDecimal(total));
-        orderItem.setNetPrice(new BigDecimal(total));
-        orderItem.setQuantity(BigDecimal.ONE);
-        return orderItem;
-    }
 }

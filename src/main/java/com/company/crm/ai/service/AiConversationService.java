@@ -27,7 +27,7 @@ public class AiConversationService {
      */
     public AiConversation createNewConversation(String welcomeMessage) {
         AiConversation conversation = dataManager.create(AiConversation.class);
-        conversation.setTitle("AI Chat Session");
+        conversation.setTitle("New Chat");
 
         ChatMessage welcomeMessageEntity = dataManager.create(ChatMessage.class);
         welcomeMessageEntity.setConversation(conversation);

@@ -34,6 +34,10 @@ public class AiAttachmentCardFragmentRenderer extends FragmentRenderer<JmixCard,
     @ViewComponent
     private Span timestampValue;
     @ViewComponent
+    private Icon sourceIcon;
+    @ViewComponent
+    private Span sourceValue;
+    @ViewComponent
     private JmixButton openButton;
     @ViewComponent
     private MessageBundle messageBundle;
@@ -66,6 +70,8 @@ public class AiAttachmentCardFragmentRenderer extends FragmentRenderer<JmixCard,
         if (attachment == null) {
             titleValue.setText(messageBundle.getMessage("attachmentsMissingFileName"));
             attachmentIcon.setIcon(VaadinIcon.FILE_O);
+            sourceIcon.setIcon(VaadinIcon.QUESTION_CIRCLE_O);
+            sourceValue.setText(messageBundle.getMessage("attachmentsSourceUnknown"));
             openButton.setEnabled(false);
             return;
         }
@@ -78,7 +84,27 @@ public class AiAttachmentCardFragmentRenderer extends FragmentRenderer<JmixCard,
         titleValue.setText(title);
 
         attachmentIcon.setIcon(resolveIcon(attachment));
+        applySourceState(attachment);
         openButton.setEnabled(attachment.getFile() != null);
+    }
+
+    private void applySourceState(AiConversationAttachment attachment) {
+        if (attachment.getType() == null) {
+            sourceIcon.setIcon(VaadinIcon.QUESTION_CIRCLE_O);
+            sourceValue.setText(messageBundle.getMessage("attachmentsSourceUnknown"));
+            return;
+        }
+
+        switch (attachment.getType()) {
+            case AI_GENERATED -> {
+                sourceIcon.setIcon(VaadinIcon.COG_O);
+                sourceValue.setText(messageBundle.getMessage("attachmentsSourceAi"));
+            }
+            case USER_UPLOADED -> {
+                sourceIcon.setIcon(VaadinIcon.USER);
+                sourceValue.setText(messageBundle.getMessage("attachmentsSourceUser"));
+            }
+        }
     }
 
     private VaadinIcon resolveIcon(AiConversationAttachment attachment) {

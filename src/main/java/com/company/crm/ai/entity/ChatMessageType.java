@@ -8,6 +8,8 @@ import org.springframework.lang.Nullable;
 public enum ChatMessageType implements EnumClass<String> {
 
     USER("USER"),
+    ATTACHMENT("ATTACHMENT"),
+    USER_UPLOAD("USER_UPLOAD"),
     ASSISTANT("ASSISTANT"),
     SYSTEM("SYSTEM"),
     TOOL("TOOL");

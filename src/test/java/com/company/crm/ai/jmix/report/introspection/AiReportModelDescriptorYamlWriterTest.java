@@ -18,15 +18,19 @@ class AiReportModelDescriptorYamlWriterTest {
 
     @Test
     void shouldWriteEmptyModel() {
+        // given
         AiReportModelDescriptor model = new AiReportModelDescriptor(Map.of());
+
+        // when
         String yaml = writer.writeToYaml(model);
-        // With NON_EMPTY inclusion, an empty map is omitted, leaving only the empty root object
+
+        // then
         assertThat(yaml).contains("{}");
     }
 
     @Test
     void shouldWriteComplexModelWithCorrectFormatting() {
-        // Arrange
+        // given
         AiReportParameterDescriptor parameter = new AiReportParameterDescriptor(
                 "client", "Client Parameter", "ENTITY", true, false,
                 "crm_Client", null, null);
@@ -42,10 +46,10 @@ class AiReportModelDescriptorYamlWriterTest {
 
         AiReportModelDescriptor model = new AiReportModelDescriptor(reports);
 
-        // Act
+        // when
         String yaml = writer.writeToYaml(model);
 
-        // Assert
+        // then
         assertThat(yaml).contains("reports:");
         assertThat(yaml).contains("rev_report:");
         assertThat(yaml).contains("code: rev_report");
@@ -62,11 +66,20 @@ class AiReportModelDescriptorYamlWriterTest {
         assertThat(yaml).contains("type: ENTITY");
         assertThat(yaml).contains("required: true");
         assertThat(yaml).contains("entityMetaClass: crm_Client");
+        assertThat(yaml).contains("""
+                    parameters:
+                      - alias: client
+                        name: Client Parameter
+                        type: ENTITY
+                        required: true
+                        hidden: false
+                        entityMetaClass: crm_Client
+                """);
     }
 
     @Test
     void shouldExcludeEmptyFields() {
-        // Arrange
+        // given
         AiReportParameterDescriptor parameter = new AiReportParameterDescriptor(
                 "simple", "Simple Param", "String", false, false,
                 null, null, null);
@@ -76,10 +89,16 @@ class AiReportModelDescriptorYamlWriterTest {
 
         AiReportModelDescriptor model = new AiReportModelDescriptor(Map.of("simple", report));
 
-        // Act
+        // when
         String yaml = writer.writeToYaml(model);
 
-        // Assert
+        // then
+        assertThat(yaml).contains("code: simple");
+        assertThat(yaml).contains("name: Simple Report");
+        assertThat(yaml).contains("parameters:");
+        assertThat(yaml).contains("- alias: simple");
+        assertThat(yaml).contains("type: String");
+        assertThat(yaml).contains("required: false");
         assertThat(yaml).doesNotContain("group:");
         assertThat(yaml).doesNotContain("templates:");
         assertThat(yaml).doesNotContain("entityMetaClass:");

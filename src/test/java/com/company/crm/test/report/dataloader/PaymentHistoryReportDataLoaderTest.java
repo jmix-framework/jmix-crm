@@ -13,7 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -52,8 +51,11 @@ class PaymentHistoryReportDataLoaderTest extends AbstractTest {
 
         dataManager.save(payment1, payment2, payment3);
 
-        Map<String, Object> params = createParams(client,
-            LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 31));
+        Map<String, Object> params = Map.of(
+                "client", client,
+                "fromDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 1)),
+                "toDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 31))
+        );
 
         // When
         List<Map<String, Object>> result = dataLoader.loadData(null, null, params);
@@ -68,6 +70,9 @@ class PaymentHistoryReportDataLoaderTest extends AbstractTest {
 
         // Check all fields are present
         assertThat(result.get(0)).containsKeys("number", "date", "dateFormatted", "amount", "invoiceNumber");
+        assertThat(result.get(0).get("amount")).isInstanceOf(String.class);
+        assertThat(((String) result.get(0).get("amount"))).contains("$");
+        assertThat(result.get(0).get("invoiceNumber")).isEqualTo("INV-001");
     }
 
     @Test
@@ -90,8 +95,11 @@ class PaymentHistoryReportDataLoaderTest extends AbstractTest {
             dataManager.save(payment);
         }
 
-        Map<String, Object> params = createParams(client,
-            LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 31));
+        Map<String, Object> params = Map.of(
+                "client", client,
+                "fromDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 1)),
+                "toDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 31))
+        );
 
         // When
         List<Map<String, Object>> result = dataLoader.loadData(null, null, params);
@@ -102,6 +110,7 @@ class PaymentHistoryReportDataLoaderTest extends AbstractTest {
         // Should get the latest 10 payments (15th to 6th)
         assertThat(result.get(0).get("number")).isEqualTo("PAY-015");
         assertThat(result.get(9).get("number")).isEqualTo("PAY-006");
+        assertThat(result.stream().map(row -> row.get("number")).distinct()).hasSize(10);
     }
 
     @Test
@@ -124,8 +133,11 @@ class PaymentHistoryReportDataLoaderTest extends AbstractTest {
 
         dataManager.save(paymentInRange, paymentOutOfRange);
 
-        Map<String, Object> params = createParams(client,
-            LocalDate.of(2024, 6, 1), LocalDate.of(2024, 6, 30));
+        Map<String, Object> params = Map.of(
+                "client", client,
+                "fromDate", java.sql.Date.valueOf(LocalDate.of(2024, 6, 1)),
+                "toDate", java.sql.Date.valueOf(LocalDate.of(2024, 6, 30))
+        );
 
         // When
         List<Map<String, Object>> result = dataLoader.loadData(null, null, params);
@@ -141,8 +153,11 @@ class PaymentHistoryReportDataLoaderTest extends AbstractTest {
         Client client = entities.client("No Payments Client");
         dataManager.save(client);
 
-        Map<String, Object> params = createParams(client,
-            LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 31));
+        Map<String, Object> params = Map.of(
+                "client", client,
+                "fromDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 1)),
+                "toDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 31))
+        );
 
         // When
         List<Map<String, Object>> result = dataLoader.loadData(null, null, params);
@@ -151,11 +166,4 @@ class PaymentHistoryReportDataLoaderTest extends AbstractTest {
         assertThat(result).isEmpty();
     }
 
-    private Map<String, Object> createParams(Client client, LocalDate fromDate, LocalDate toDate) {
-        Map<String, Object> params = new HashMap<>();
-        params.put("client", client);
-        params.put("fromDate", java.sql.Date.valueOf(fromDate));
-        params.put("toDate", java.sql.Date.valueOf(toDate));
-        return params;
-    }
 }

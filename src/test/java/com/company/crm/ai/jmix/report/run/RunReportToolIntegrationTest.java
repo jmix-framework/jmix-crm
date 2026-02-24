@@ -2,10 +2,12 @@ package com.company.crm.ai.jmix.report.run;
 
 import com.company.crm.AbstractTest;
 import com.company.crm.ai.entity.AiConversation;
+import com.company.crm.ai.entity.AiConversationAttachment;
 import com.company.crm.ai.service.AiConversationService;
 import com.company.crm.model.client.Client;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.jmix.core.FetchPlan;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.ai.chat.model.ToolContext;
@@ -39,6 +41,7 @@ class RunReportToolIntegrationTest extends AbstractTest {
     @Test
     void testRunReport() {
         systemAuthenticator.runWithSystem(() -> {
+            // given
             Client client = entities.client("Tool Test Client");
             
             Map<String, Object> parameters = Map.of(
@@ -47,8 +50,10 @@ class RunReportToolIntegrationTest extends AbstractTest {
                     "toDate", LocalDate.now().toString()
             );
 
+            // when
             ReportExecutionResult result = reportTool.runReport("client-360-report", parameters, null, "HTML", null);
 
+            // then
             assertThat(result.success()).isTrue();
             assertThat(result.reportCode()).isEqualTo("client-360-report");
             assertThat(result.content()).contains("Client 360° Report");
@@ -60,6 +65,7 @@ class RunReportToolIntegrationTest extends AbstractTest {
     @Test
     void testRunReport_withConversationId() {
         systemAuthenticator.runWithSystem(() -> {
+            // given
             AiConversation conversation = aiConversationService.createNewConversation("Tool Test Persistence");
             Client client = entities.client("Tool Persistence Client");
             
@@ -71,6 +77,7 @@ class RunReportToolIntegrationTest extends AbstractTest {
 
             ToolContext toolContext = new ToolContext(Map.of("conversationId", conversation.getId()));
 
+            // when
             ReportExecutionResult result = reportTool.runReport(
                     "client-360-report", 
                     parameters, 
@@ -79,16 +86,28 @@ class RunReportToolIntegrationTest extends AbstractTest {
                     toolContext
             );
 
+            // then
             assertThat(result.success()).isTrue();
             assertThat(result.content()).contains(
                     String.format("[View Report Attachments](/ai-conversations/%s)", conversation.getId())
             );
+
+            AiConversation reloadedConversation = dataManager.load(AiConversation.class)
+                    .id(conversation.getId())
+                    .fetchPlan(fp -> fp.add("attachments", sub -> sub.addFetchPlan(FetchPlan.BASE)))
+                    .one();
+            assertThat(reloadedConversation.getAttachments()).hasSize(1);
+            AiConversationAttachment attachment = reloadedConversation.getAttachments().getFirst();
+            assertThat(attachment.getFileName()).startsWith("report_client-360-report_");
+            assertThat(attachment.getFileName()).endsWith(".html");
+            assertThat(attachment.getFile()).isNotNull();
         });
     }
 
     @Test
     void testRunReport_withConversationIdAsString() {
         systemAuthenticator.runWithSystem(() -> {
+            // given
             AiConversation conversation = aiConversationService.createNewConversation("Tool String Conversation");
             Client client = entities.client("Tool String Context Client");
 
@@ -100,18 +119,31 @@ class RunReportToolIntegrationTest extends AbstractTest {
 
             ToolContext toolContext = new ToolContext(Map.of("conversationId", conversation.getId().toString()));
 
+            // when
             ReportExecutionResult result = reportTool.runReport("client-360-report", parameters, null, "HTML", toolContext);
 
+            // then
             assertThat(result.success()).isTrue();
             assertThat(result.content()).contains(
                     String.format("[View Report Attachments](/ai-conversations/%s)", conversation.getId())
             );
+
+            AiConversation reloadedConversation = dataManager.load(AiConversation.class)
+                    .id(conversation.getId())
+                    .fetchPlan(fp -> fp.add("attachments", sub -> sub.addFetchPlan(FetchPlan.BASE)))
+                    .one();
+            assertThat(reloadedConversation.getAttachments()).hasSize(1);
+            AiConversationAttachment attachment = reloadedConversation.getAttachments().getFirst();
+            assertThat(attachment.getFileName()).startsWith("report_client-360-report_");
+            assertThat(attachment.getFileName()).endsWith(".html");
+            assertThat(attachment.getFile()).isNotNull();
         });
     }
 
     @Test
     void testRunReport_withInvalidConversationIdString() {
         systemAuthenticator.runWithSystem(() -> {
+            // given
             Client client = entities.client("Tool Invalid Conversation Client");
 
             Map<String, Object> parameters = Map.of(
@@ -122,8 +154,10 @@ class RunReportToolIntegrationTest extends AbstractTest {
 
             ToolContext toolContext = new ToolContext(Map.of("conversationId", "not-a-uuid"));
 
+            // when
             ReportExecutionResult result = reportTool.runReport("client-360-report", parameters, null, "HTML", toolContext);
 
+            // then
             assertThat(result.success()).isTrue();
             assertThat(result.content()).doesNotContain("[View Report Attachments](/ai-conversations/");
         });
@@ -132,7 +166,10 @@ class RunReportToolIntegrationTest extends AbstractTest {
     @Test
     void testRunReportNotFound() {
         systemAuthenticator.runWithSystem(() -> {
+            // when
             ReportExecutionResult result = reportTool.runReport("unknown-report", Map.of(), null, null, null);
+
+            // then
             assertThat(result.success()).isFalse();
             assertThat(result.errorCode()).isEqualTo(ReportExecutionErrorCode.REPORT_NOT_FOUND);
         });
@@ -141,32 +178,32 @@ class RunReportToolIntegrationTest extends AbstractTest {
     @Test
     void testRunReportErrorCodeContract_serializedAsString() {
         systemAuthenticator.runWithSystem(() -> {
-            try {
-                Client client = entities.client("Tool Contract Client");
-                Map<String, Object> parameters = Map.of(
-                        "client", client.getId().toString(),
-                        "fromDate", LocalDate.now().minusDays(30).toString(),
-                        "toDate", LocalDate.now().toString()
-                );
+            // given
+            Client client = entities.client("Tool Contract Client");
+            Map<String, Object> parameters = Map.of(
+                    "client", client.getId().toString(),
+                    "fromDate", LocalDate.now().minusDays(30).toString(),
+                    "toDate", LocalDate.now().toString()
+            );
 
-                ReportExecutionResult result = reportTool.runReport("client-360-report", parameters, null, "FOO", null);
-                String serialized = objectMapper.writeValueAsString(result);
-                JsonNode json = objectMapper.readTree(serialized);
+            // when
+            ReportExecutionResult result = reportTool.runReport("client-360-report", parameters, null, "FOO", null);
+            JsonNode json = objectMapper.valueToTree(result);
+            String serialized = json.toString();
 
-                assertThat(result.success()).isFalse();
-                assertThat(result.errorCode()).isEqualTo(ReportExecutionErrorCode.INVALID_OUTPUT_TYPE);
-                assertThat(json.path("errorCode").isTextual()).isTrue();
-                assertThat(json.path("errorCode").asText()).isEqualTo("INVALID_OUTPUT_TYPE");
-                assertThat(serialized).contains("\"errorCode\":\"INVALID_OUTPUT_TYPE\"");
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+            // then
+            assertThat(result.success()).isFalse();
+            assertThat(result.errorCode()).isEqualTo(ReportExecutionErrorCode.INVALID_OUTPUT_TYPE);
+            assertThat(json.path("errorCode").isTextual()).isTrue();
+            assertThat(json.path("errorCode").asText()).isEqualTo("INVALID_OUTPUT_TYPE");
+            assertThat(serialized).contains("\"errorCode\":\"INVALID_OUTPUT_TYPE\"");
         });
     }
 
     @Test
     void testRunReport_rejectsBinaryOutputType() {
         systemAuthenticator.runWithSystem(() -> {
+            // given
             Client client = entities.client("Tool Binary Output Client");
             Map<String, Object> parameters = Map.of(
                     "client", client.getId().toString(),
@@ -174,8 +211,10 @@ class RunReportToolIntegrationTest extends AbstractTest {
                     "toDate", LocalDate.now().toString()
             );
 
+            // when
             ReportExecutionResult result = reportTool.runReport("client-360-report", parameters, null, "XLSX", null);
 
+            // then
             assertThat(result.success()).isFalse();
             assertThat(result.errorCode()).isEqualTo(ReportExecutionErrorCode.INVALID_OUTPUT_TYPE);
             assertThat(result.errorMessage()).contains("CSV");
@@ -186,6 +225,7 @@ class RunReportToolIntegrationTest extends AbstractTest {
     @Test
     void testRunReport_rejectsBinaryTemplateCode() {
         systemAuthenticator.runWithSystem(() -> {
+            // given
             Client client = entities.client("Tool Binary Template Client");
             Map<String, Object> parameters = Map.of(
                     "client", client.getId().toString(),
@@ -193,8 +233,10 @@ class RunReportToolIntegrationTest extends AbstractTest {
                     "toDate", LocalDate.now().toString()
             );
 
+            // when
             ReportExecutionResult result = reportTool.runReport("client-360-report", parameters, "XLSX", null, null);
 
+            // then
             assertThat(result.success()).isFalse();
             assertThat(result.errorCode()).isEqualTo(ReportExecutionErrorCode.INVALID_OUTPUT_TYPE);
             assertThat(result.errorMessage()).contains("Binary templates");

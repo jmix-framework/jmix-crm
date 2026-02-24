@@ -1,7 +1,13 @@
 package com.company.crm.ai.jmix.query;
 
 import io.jmix.core.DataManager;
+import io.jmix.core.AccessManager;
+import io.jmix.core.Metadata;
 import io.jmix.core.entity.KeyValueEntity;
+import io.jmix.core.security.AccessDeniedException;
+import io.jmix.core.security.EntityOp;
+import io.jmix.data.QueryTransformerFactory;
+import io.jmix.data.accesscontext.LoadValuesAccessContext;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service("ai_AiJpqlQueryService")
 public class AiJpqlQueryService {
@@ -21,13 +28,22 @@ public class AiJpqlQueryService {
     private final DataManager dataManager;
     private final AiJpqlParameterConverter parameterConverter;
     private final ResultConverter resultConverter;
+    private final AccessManager accessManager;
+    private final QueryTransformerFactory queryTransformerFactory;
+    private final Metadata metadata;
 
     public AiJpqlQueryService(DataManager dataManager,
                              AiJpqlParameterConverter parameterConverter,
-                             ResultConverter resultConverter) {
+                             ResultConverter resultConverter,
+                             AccessManager accessManager,
+                             QueryTransformerFactory queryTransformerFactory,
+                             Metadata metadata) {
         this.dataManager = dataManager;
         this.parameterConverter = parameterConverter;
         this.resultConverter = resultConverter;
+        this.accessManager = accessManager;
+        this.queryTransformerFactory = queryTransformerFactory;
+        this.metadata = metadata;
     }
 
 
@@ -44,6 +60,7 @@ public class AiJpqlQueryService {
     public QueryExecutionResult executeJpqlQuery(String jpqlQuery, Map<String, Object> parameters, List<String> selectAliases, Integer offset, Integer limit) {
         int effectiveOffset = (offset != null) ? Math.max(0, offset) : 0;
         int effectiveLimit = (limit != null) ? Math.min(MAX_LIMIT, Math.max(1, limit)) : DEFAULT_LIMIT;
+        ensureQueryIsPermitted(jpqlQuery);
 
         // First attempt: try with converted parameters
         QueryExecutionResult result = executeJpqlQueryWithParameters(jpqlQuery, parameterConverter.convertParameters(parameters), selectAliases, effectiveOffset, effectiveLimit, true);
@@ -101,6 +118,19 @@ public class AiJpqlQueryService {
         } catch (Exception e) {
             log.debug("Query failed with {} parameters: {}", converted ? "converted" : "original", e.getMessage());
             return QueryExecutionResult.failed(e.getMessage());
+        }
+    }
+
+    private void ensureQueryIsPermitted(String jpqlQuery) {
+        LoadValuesAccessContext queryContext = new LoadValuesAccessContext(jpqlQuery, queryTransformerFactory, metadata);
+        accessManager.applyRegisteredConstraints(queryContext);
+        if (!queryContext.isPermitted()) {
+            String entityNames = queryContext.getEntityClasses().stream()
+                    .map(metaClass -> metaClass.getName())
+                    .sorted()
+                    .collect(Collectors.joining(","));
+            String deniedResource = entityNames.isBlank() ? jpqlQuery : entityNames;
+            throw new AccessDeniedException("entity", deniedResource, EntityOp.READ.getId());
         }
     }
 

@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDate;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -21,9 +20,8 @@ class ContactsReportDataLoaderTest extends AbstractTest {
 
     @Test
     void testLoadDataWithActiveContacts() {
-        // Given
+        // given
         Client client = entities.client("Contact Client");
-        dataManager.save(client);
 
         Contact activeContact1 = entities.contact(client, "John Doe", "Manager");
         activeContact1.setPhone("+1234567890");
@@ -47,18 +45,21 @@ class ContactsReportDataLoaderTest extends AbstractTest {
 
         dataManager.save(activeContact1, activeContact2, futureEndContact, pastEndContact);
 
-        Map<String, Object> params = createParams(client);
+        Map<String, Object> params = Map.of("client", client);
 
-        // When
+        // when
         List<Map<String, Object>> result = dataLoader.loadData(null, null, params);
 
-        // Then
+        // then
         assertThat(result).hasSize(3);
 
         // Should be ordered by startDate DESC (newest first)
         assertThat(result.get(0).get("person")).isEqualTo("Jane Smith");
+        assertThat(result.get(0).get("startDate")).isEqualTo(LocalDate.of(2023, 6, 1));
         assertThat(result.get(1).get("person")).isEqualTo("Bob Wilson");
+        assertThat(result.get(1).get("startDate")).isEqualTo(LocalDate.of(2023, 3, 1));
         assertThat(result.get(2).get("person")).isEqualTo("John Doe");
+        assertThat(result.get(2).get("startDate")).isEqualTo(LocalDate.of(2023, 1, 15));
 
         // Check all fields are present
         assertThat(result.get(0)).containsKeys("person", "position", "phone", "email", "startDate", "endDate");
@@ -66,57 +67,55 @@ class ContactsReportDataLoaderTest extends AbstractTest {
 
     @Test
     void testLoadDataWithNoContacts() {
-        // Given
+        // given
         Client client = entities.client("No Contacts Client");
-        dataManager.save(client);
 
-        Map<String, Object> params = createParams(client);
+        Map<String, Object> params = Map.of("client", client);
 
-        // When
+        // when
         List<Map<String, Object>> result = dataLoader.loadData(null, null, params);
 
-        // Then
+        // then
         assertThat(result).isEmpty();
     }
 
     @Test
     void testLoadDataWithNullClient() {
-        // Given
-        Map<String, Object> params = createParams(null);
+        // given
+        Map<String, Object> params = new java.util.HashMap<>();
+        params.put("client", null);
 
-        // When
+        // when
         List<Map<String, Object>> result = dataLoader.loadData(null, null, params);
 
-        // Then
+        // then
         assertThat(result).isEmpty();
     }
 
     @Test
     void testLoadDataFiltersByClient() {
-        // Given
+        // given
         Client client1 = entities.client("Client 1");
         Client client2 = entities.client("Client 2");
-        dataManager.save(client1, client2);
 
         Contact contact1 = entities.contact(client1, "Contact 1", "Manager");
         Contact contact2 = entities.contact(client2, "Contact 2", "Director");
         dataManager.save(contact1, contact2);
 
-        Map<String, Object> params = createParams(client1);
+        Map<String, Object> params = Map.of("client", client1);
 
-        // When
+        // when
         List<Map<String, Object>> result = dataLoader.loadData(null, null, params);
 
-        // Then
+        // then
         assertThat(result).hasSize(1);
         assertThat(result.get(0).get("person")).isEqualTo("Contact 1");
     }
 
     @Test
     void testLoadDataWithNullValues() {
-        // Given
+        // given
         Client client = entities.client("Null Values Client");
-        dataManager.save(client);
 
         Contact contact = entities.contact(client, "Basic Contact", "Position");
         contact.setPhone(null);
@@ -124,12 +123,12 @@ class ContactsReportDataLoaderTest extends AbstractTest {
         contact.setEndDate(null);
         dataManager.save(contact);
 
-        Map<String, Object> params = createParams(client);
+        Map<String, Object> params = Map.of("client", client);
 
-        // When
+        // when
         List<Map<String, Object>> result = dataLoader.loadData(null, null, params);
 
-        // Then
+        // then
         assertThat(result).hasSize(1);
         Map<String, Object> contactData = result.get(0);
 
@@ -140,9 +139,4 @@ class ContactsReportDataLoaderTest extends AbstractTest {
         assertThat(contactData).containsKey("endDate");
     }
 
-    private Map<String, Object> createParams(Client client) {
-        Map<String, Object> params = new HashMap<>();
-        params.put("client", client);
-        return params;
-    }
 }

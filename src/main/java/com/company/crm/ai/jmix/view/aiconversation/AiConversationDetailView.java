@@ -1,10 +1,13 @@
 package com.company.crm.ai.jmix.view.aiconversation;
 
 import com.company.crm.ai.entity.AiConversation;
+import com.company.crm.ai.entity.AiAttachmentType;
 import com.company.crm.ai.entity.AiConversationAttachment;
 import com.company.crm.ai.entity.ChatMessage;
 import com.company.crm.ai.entity.ChatMessageType;
 import com.company.crm.app.service.ai.CrmAnalyticsService;
+import com.vaadin.flow.component.upload.FileRejectedEvent;
+import com.vaadin.flow.component.upload.SucceededEvent;
 import com.company.crm.view.main.MainView;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.messages.MessageInput;
@@ -13,14 +16,23 @@ import com.vaadin.flow.component.messages.MessageListItem;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.progressbar.ProgressBar;
 import com.vaadin.flow.router.Route;
+import io.jmix.core.DataManager;
+import io.jmix.core.FileRef;
+import io.jmix.core.FileStorage;
+import io.jmix.core.FileStorageLocator;
 import io.jmix.core.MetadataTools;
 import io.jmix.core.TimeSource;
 import io.jmix.core.security.CurrentAuthentication;
+import io.jmix.flowui.Notifications;
 import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.asynctask.UiAsyncTasks;
+import io.jmix.flowui.component.upload.JmixUpload;
+import io.jmix.flowui.component.upload.receiver.FileTemporaryStorageBuffer;
+import io.jmix.flowui.component.upload.receiver.TemporaryStorageFileData;
 import io.jmix.flowui.model.CollectionContainer;
 import io.jmix.flowui.model.CollectionLoader;
 import io.jmix.flowui.model.InstanceContainer;
+import io.jmix.flowui.upload.TemporaryStorage;
 import io.jmix.flowui.view.EditedEntityContainer;
 import io.jmix.flowui.view.MessageBundle;
 import io.jmix.flowui.view.StandardDetailView;
@@ -46,6 +58,7 @@ import java.util.UUID;
 public class AiConversationDetailView extends StandardDetailView<AiConversation> {
 
     private static final Logger log = LoggerFactory.getLogger(AiConversationDetailView.class);
+    private static final String CRM_FILE_STORAGE_NAME = "crm";
 
     @ViewComponent
     private InstanceContainer<AiConversation> aiConversationDc;
@@ -57,6 +70,8 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
     private VerticalLayout chatPanel;
     @ViewComponent
     private Span attachmentsEmptyState;
+    @ViewComponent
+    private JmixUpload attachmentUpload;
     @ViewComponent
     private MessageBundle messageBundle;
 
@@ -72,6 +87,14 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
     private TimeSource timeSource;
     @Autowired
     private MetadataTools metadataTools;
+    @Autowired
+    private DataManager dataManager;
+    @Autowired
+    private Notifications notifications;
+    @Autowired
+    private TemporaryStorage temporaryStorage;
+    @Autowired
+    private FileStorageLocator fileStorageLocator;
 
     private MessageList messageList;
     private MessageInput messageInput;
@@ -82,6 +105,7 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
         messageList = uiComponents.create(MessageList.class);
         messageList.setSizeFull();
         messageList.setMarkdown(true);
+        messageList.addClassName("ai-conversation-message-list");
 
         messageInput = uiComponents.create(MessageInput.class);
         messageInput.setWidthFull();
@@ -109,6 +133,66 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
     @Subscribe(id = "attachmentsDl", target = Target.DATA_LOADER)
     public void onAttachmentsDlPostLoad(final CollectionLoader.PostLoadEvent<AiConversationAttachment> event) {
         updateAttachmentsEmptyState();
+    }
+
+    @Subscribe("attachmentUpload")
+    public void onAttachmentUploadSucceeded(final SucceededEvent event) {
+        AiConversation conversation = aiConversationDc.getItemOrNull();
+        TemporaryStorageFileData uploadedFileData = resolveUploadedFileData(event);
+
+        if (conversation == null) {
+            removeTemporaryUpload(uploadedFileData);
+            attachmentUpload.clearFileList();
+            notifications.create(messageBundle.getMessage("attachmentUploadNoConversation"))
+                    .withType(Notifications.Type.ERROR)
+                    .show();
+            return;
+        }
+
+        String uploadedFileName = resolveUploadedFileName(
+                event.getFileName(),
+                uploadedFileData != null ? uploadedFileData.getFileName() : null
+        );
+        FileRef uploadedFileRef = moveUploadedFileToStorage(uploadedFileData, uploadedFileName);
+        if (uploadedFileRef == null) {
+            attachmentUpload.clearFileList();
+            notifications.create(messageBundle.getMessage("attachmentUploadMissingFile"))
+                    .withType(Notifications.Type.ERROR)
+                    .show();
+            return;
+        }
+
+        try {
+            AiConversationAttachment attachment = dataManager.create(AiConversationAttachment.class);
+            attachment.setConversation(conversation);
+            attachment.setFile(uploadedFileRef);
+            attachment.setFileName(uploadedFileName);
+            attachment.setTitle(uploadedFileName);
+            attachment.setType(AiAttachmentType.USER_UPLOADED);
+            attachment = dataManager.save(attachment);
+
+            attachmentUpload.clearFileList();
+            loadAttachments();
+
+            String actorName = resolveCurrentActorName();
+            String uploadEventText = buildUploadEventText(actorName, uploadedFileName);
+            messageList.addItem(userUploadMessageListItem(uploadEventText, now()));
+            submitUploadToAi(conversation, attachment, event.getMIMEType(), uploadedFileName, actorName);
+        } catch (Exception e) {
+            removeTemporaryUpload(uploadedFileData);
+            attachmentUpload.clearFileList();
+            log.error("Failed to persist uploaded attachment", e);
+            notifications.create(messageBundle.getMessage("attachmentUploadPersistError"))
+                    .withType(Notifications.Type.ERROR)
+                    .show();
+        }
+    }
+
+    @Subscribe("attachmentUpload")
+    public void onAttachmentUploadFileRejected(final FileRejectedEvent event) {
+        notifications.create(event.getErrorMessage())
+                .withType(Notifications.Type.WARNING)
+                .show();
     }
 
     private void onMessageSubmit(MessageInput.SubmitEvent event) {
@@ -149,6 +233,43 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
                 .supplyAsync();
     }
 
+    private void submitUploadToAi(
+            AiConversation conversation,
+            AiConversationAttachment attachment,
+            String mimeType,
+            String uploadedFileName,
+            String actorName
+    ) {
+        progressBar.setVisible(true);
+        messageInput.setEnabled(false);
+
+        uiAsyncTasks.supplierConfigurer(() ->
+                        crmAnalyticsService.processAttachmentUpload(
+                                conversation.getId().toString(),
+                                attachment.getId(),
+                                uploadedFileName,
+                                mimeType,
+                                actorName
+                        )
+                )
+                .withResultHandler(response -> {
+                    messageList.addItem(assistantMessageListItem(response, now()));
+                    getViewData().loadAll();
+                    loadAttachments();
+                    refreshMessages();
+                    focusInput();
+                })
+                .withExceptionHandler(e -> {
+                    String errorId = UUID.randomUUID().toString().substring(0, 8);
+                    log.error("Error processing attachment upload async [Error ID: {}]", errorId, e);
+                    String errorMessage = "I'm sorry, I couldn't analyze the uploaded file right now. "
+                            + "Please try again later or contact support with Error ID: " + errorId;
+                    messageList.addItem(assistantMessageListItem(errorMessage, now()));
+                    focusInput();
+                })
+                .supplyAsync();
+    }
+
     private void loadAttachments() {
         AiConversation conversation = aiConversationDc.getItemOrNull();
         if (conversation == null) {
@@ -177,10 +298,14 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
     }
 
     private MessageListItem createMessageListItem(ChatMessage message) {
-        boolean isAssistant = ChatMessageType.ASSISTANT.equals(message.getType());
-        return isAssistant
-                ? assistantMessageListItem(message.getContent(), message.getCreatedDate())
-                : userMessageListItem(message.getContent(), message.getCreatedDate());
+        ChatMessageType messageType = message.getType();
+        if (ChatMessageType.ASSISTANT.equals(messageType)) {
+            return assistantMessageListItem(message.getContent(), message.getCreatedDate());
+        }
+        if (ChatMessageType.USER_UPLOAD.equals(messageType) || ChatMessageType.ATTACHMENT.equals(messageType)) {
+            return userUploadMessageListItem(message.getContent(), message.getCreatedDate());
+        }
+        return userMessageListItem(message.getContent(), message.getCreatedDate());
     }
 
     private MessageListItem assistantMessageListItem(String content, OffsetDateTime createdAt) {
@@ -191,15 +316,81 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
 
     private MessageListItem userMessageListItem(String content, OffsetDateTime createdAt) {
         UserDetails user = currentAuthentication.getUser();
-        String userName = metadataTools.getInstanceName(user);
+        String userName = resolveCurrentActorName();
         MessageListItem item = new MessageListItem(content, createdAt.toInstant(), userName);
         item.setUserAbbreviation(user.getUsername().substring(0, 1));
         item.setUserColorIndex(1);
         return item;
     }
 
+    private MessageListItem userUploadMessageListItem(String content, OffsetDateTime createdAt) {
+        MessageListItem item = new MessageListItem(content, createdAt.toInstant(), messageBundle.getMessage("uploadEventName"));
+        item.setUserAbbreviation("AT");
+        item.addClassNames("attachment-event");
+        return item;
+    }
+
     private OffsetDateTime now() {
         return timeSource.now().toOffsetDateTime();
+    }
+
+    private String resolveUploadedFileName(String fileNameFromEvent, String fileNameFromBuffer) {
+        if (fileNameFromEvent != null && !fileNameFromEvent.isBlank()) {
+            return fileNameFromEvent;
+        }
+        if (fileNameFromBuffer != null && !fileNameFromBuffer.isBlank()) {
+            return fileNameFromBuffer;
+        }
+        return "uploaded-file";
+    }
+
+    private FileRef moveUploadedFileToStorage(TemporaryStorageFileData uploadedFileData, String uploadedFileName) {
+        if (uploadedFileData == null
+                || uploadedFileData.getFileInfo() == null
+                || uploadedFileData.getFileInfo().getId() == null) {
+            return null;
+        }
+        FileStorage fileStorage = fileStorageLocator.getByName(CRM_FILE_STORAGE_NAME);
+        return temporaryStorage.putFileIntoStorage(
+                uploadedFileData.getFileInfo().getId(),
+                uploadedFileName,
+                fileStorage
+        );
+    }
+
+    private TemporaryStorageFileData resolveUploadedFileData(SucceededEvent event) {
+        if (event.getUpload().getReceiver() instanceof FileTemporaryStorageBuffer storageBuffer) {
+            return storageBuffer.getFileData();
+        }
+        return null;
+    }
+
+    private void removeTemporaryUpload(TemporaryStorageFileData uploadedFileData) {
+        if (uploadedFileData == null
+                || uploadedFileData.getFileInfo() == null
+                || uploadedFileData.getFileInfo().getId() == null) {
+            return;
+        }
+        try {
+            temporaryStorage.deleteFile(uploadedFileData.getFileInfo().getId());
+        } catch (Exception e) {
+            log.warn("Failed to cleanup temporary upload {}", uploadedFileData.getFileInfo().getId(), e);
+        }
+    }
+
+    private String buildUploadEventText(String actorName, String uploadedFileName) {
+        return messageBundle.formatMessage("attachmentUploadEventMessage", actorName, uploadedFileName);
+    }
+
+    private String resolveCurrentActorName() {
+        UserDetails user = currentAuthentication.getUser();
+        String userName = metadataTools.getInstanceName(user);
+        if (userName != null && !userName.isBlank()) {
+            return userName;
+        }
+        return user != null && user.getUsername() != null && !user.getUsername().isBlank()
+                ? user.getUsername()
+                : "User";
     }
 
     private void focusInput() {

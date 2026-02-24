@@ -5,22 +5,35 @@ import com.company.crm.AbstractUiTest;
 import com.company.crm.ai.entity.AiConversation;
 import com.company.crm.ai.entity.AiConversationAttachment;
 import com.company.crm.app.service.ai.CrmAnalyticsService;
+import com.vaadin.flow.component.upload.SucceededEvent;
+import com.vaadin.flow.component.upload.Upload;
 import io.jmix.core.DataManager;
 import io.jmix.core.FileRef;
+import io.jmix.core.FileStorage;
+import io.jmix.core.FileStorageLocator;
 import io.jmix.flowui.ViewNavigators;
+import io.jmix.flowui.component.upload.receiver.FileTemporaryStorageBuffer;
+import io.jmix.flowui.component.upload.receiver.TemporaryStorageFileData;
 import io.jmix.flowui.component.grid.DataGrid;
 import io.jmix.flowui.data.grid.DataGridItems;
 import io.jmix.flowui.kit.component.button.JmixButton;
 import io.jmix.flowui.testassist.UiTestUtils;
+import io.jmix.flowui.upload.TemporaryStorage;
+import io.jmix.flowui.upload.TemporaryStorageImpl;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import java.io.File;
 import java.time.OffsetDateTime;
 import java.util.Collection;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -37,10 +50,14 @@ public class AiConversationViewsUiIntegrationTest extends AbstractUiTest {
 
     @MockitoBean
     private CrmAnalyticsService mockAnalyticsService;
+    @MockitoBean
+    private TemporaryStorageImpl temporaryStorage;
+    @MockitoBean
+    private FileStorageLocator fileStorageLocator;
 
     @Test
     void testListViewDisplaysConversations() {
-        // Create test data
+        // given
         AiConversation conversation1 = createAndSaveEntity(AiConversation.class, conv -> {
             conv.setTitle("Test Conversation 1");
             conv.setCreatedDate(OffsetDateTime.now().minusHours(1));
@@ -51,141 +68,99 @@ public class AiConversationViewsUiIntegrationTest extends AbstractUiTest {
             conv.setCreatedDate(OffsetDateTime.now());
         });
 
-        // Navigate to AI Conversation list view
+        // when
         viewNavigators.view(UiTestUtils.getCurrentView(), AiConversationListView.class).navigate();
 
         AiConversationListView listView = UiTestUtils.getCurrentView();
-        assertThat(listView).isNotNull();
-
-        // Get the data grid
         DataGrid<AiConversation> dataGrid = UiTestUtils.getComponent(listView, "aiConversationsDataGrid");
-        assertThat(dataGrid).isNotNull();
-
-        // Check that conversations are displayed
         DataGridItems<AiConversation> items = dataGrid.getItems();
-        assertThat(items).isNotNull();
-
         Collection<AiConversation> conversationList = items.getItems();
-        assertThat(conversationList).hasSizeGreaterThanOrEqualTo(2);
 
-        // Verify our test conversations are in the list
-        assertThat(conversationList)
-            .as("Test Conversation 1 should be in the list")
-            .anyMatch(conv -> conversation1.getTitle().equals(conv.getTitle()));
-        assertThat(conversationList)
-            .as("Test Conversation 2 should be in the list")
-            .anyMatch(conv -> conversation2.getTitle().equals(conv.getTitle()));
+        // then
+        assertThat(conversationList).hasSizeGreaterThanOrEqualTo(2);
+        assertThat(conversationList.stream().map(AiConversation::getTitle).toList())
+                .contains(conversation1.getTitle(), conversation2.getTitle());
     }
 
     @Test
     void testNewChatButtonCreatesAndNavigates() {
-        // Navigate to AI Conversation list view
+        // given
         viewNavigators.view(UiTestUtils.getCurrentView(), AiConversationListView.class).navigate();
 
+        // when
         AiConversationListView listView = UiTestUtils.getCurrentView();
-
-        // Click "New Chat" button
         JmixButton createButton = UiTestUtils.getComponent(listView, "createButton");
-        assertThat(createButton).isNotNull();
-        assertThat(createButton.getText()).isEqualTo("New Chat");
-
         createButton.click();
 
-        // Should navigate to detail view
+        // then
+        assertThat(createButton.getText()).isEqualTo("New Chat");
         AiConversationDetailView detailView = UiTestUtils.getCurrentView();
-        assertThat(detailView).isNotNull();
-
-        // Check that a new conversation was created
         AiConversation editedEntity = detailView.getEditedEntity();
-        assertThat(editedEntity).isNotNull();
         assertThat(editedEntity.getId()).isNotNull();
-        assertThat(editedEntity.getTitle()).contains("AI Chat Session");
+        assertThat(editedEntity.getTitle()).contains("New Chat");
     }
 
     @Test
     void testOpenExistingConversation() {
-        // Create test conversation
+        // given
         AiConversation testConversation = createAndSaveEntity(AiConversation.class, conv -> {
             conv.setTitle("Test Open Conversation");
             conv.setCreatedDate(OffsetDateTime.now());
         });
 
-        // Navigate to AI Conversation list view
         viewNavigators.view(UiTestUtils.getCurrentView(), AiConversationListView.class).navigate();
-
+        // when
         AiConversationListView listView = UiTestUtils.getCurrentView();
-
-        // Get the data grid and select our test conversation
         DataGrid<AiConversation> dataGrid = UiTestUtils.getComponent(listView, "aiConversationsDataGrid");
-
-        // Find and select the test conversation
         Collection<AiConversation> conversations = dataGrid.getItems().getItems();
         AiConversation foundConversation = conversations.stream()
             .filter(conv -> testConversation.getTitle().equals(conv.getTitle()))
             .findFirst()
-            .orElse(null);
-
-        assertThat(foundConversation)
-            .as("Test conversation should be found in the list")
-            .isNotNull();
-
-        // Select the conversation in the grid
+            .orElseThrow();
         dataGrid.select(foundConversation);
-
-        // Click "Open" button
         JmixButton editButton = UiTestUtils.getComponent(listView, "editButton");
-        assertThat(editButton).isNotNull();
-        assertThat(editButton.getText()).isEqualTo("Open");
-
         editButton.click();
 
-        // Should navigate to detail view with the selected conversation
+        // then
+        assertThat(editButton.getText()).isEqualTo("Open");
         AiConversationDetailView detailView = UiTestUtils.getCurrentView();
-        assertThat(detailView).isNotNull();
-
         AiConversation editedEntity = detailView.getEditedEntity();
-        assertThat(editedEntity).isNotNull();
         assertThat(editedEntity.getId()).isEqualTo(testConversation.getId());
         assertThat(editedEntity.getTitle()).isEqualTo(testConversation.getTitle());
     }
 
     @Test
     void testDetailViewContainsAiComponent() {
-        // Create test conversation
+        // given
         AiConversation testConversation = createAndSaveEntity(AiConversation.class, conv -> {
             conv.setTitle("Test Detail View");
             conv.setCreatedDate(OffsetDateTime.now());
         });
 
-        // Navigate directly to detail view
+        // when
         viewNavigators.detailView(UiTestUtils.getCurrentView(), AiConversation.class)
             .editEntity(testConversation)
             .navigate();
 
+        // then
         AiConversationDetailView detailView = UiTestUtils.getCurrentView();
-        assertThat(detailView).isNotNull();
-
-        // Verify the conversation is loaded
         assertThat(detailView.getEditedEntity().getId()).isEqualTo(testConversation.getId());
-
-        // Check that the detail view has the expected components
-        // (The AI conversation component should be added programmatically in setupAiConversationComponent)
-        assertThat(detailView.getEditedEntity()).isNotNull();
+        assertThat(detailView.getEditedEntity().getTitle()).isEqualTo("Test Detail View");
+        assertThat(detailView.getRenderedAttachmentCount()).isEqualTo(0);
     }
 
     @Test
     void testComponentIntegrationInViews() {
-        // Configure mock analytics service
+        // given
         when(mockAnalyticsService.processBusinessQuestion(anyString(), anyString()))
             .thenReturn("Test AI response from mock service");
 
-        // Create test conversation
         AiConversation testConversation = createAndSaveEntity(AiConversation.class, conv -> {
             conv.setTitle("Component Integration Test");
             conv.setCreatedDate(OffsetDateTime.now());
         });
 
-        // Test 1: Navigate to list view and create new chat
+        // when
         viewNavigators.view(UiTestUtils.getCurrentView(), AiConversationListView.class).navigate();
         AiConversationListView listView = UiTestUtils.getCurrentView();
 
@@ -194,8 +169,8 @@ public class AiConversationViewsUiIntegrationTest extends AbstractUiTest {
 
         // Should be in detail view now
         AiConversationDetailView detailView = UiTestUtils.getCurrentView();
-        assertThat(detailView).isNotNull();
-        assertThat(detailView.getEditedEntity()).isNotNull();
+        assertThat(createButton.getText()).isEqualTo("New Chat");
+        assertThat(detailView.getEditedEntity().getId()).isNotNull();
 
         // Test 2: Navigate back to list and open existing conversation
         viewNavigators.view(detailView, AiConversationListView.class).navigate();
@@ -208,23 +183,21 @@ public class AiConversationViewsUiIntegrationTest extends AbstractUiTest {
         AiConversation foundConversation = conversations.stream()
             .filter(conv -> testConversation.getTitle().equals(conv.getTitle()))
             .findFirst()
-            .orElse(null);
+            .orElseThrow();
+        dataGrid.select(foundConversation);
 
-        if (foundConversation != null) {
-            dataGrid.select(foundConversation);
+        JmixButton editButton = UiTestUtils.getComponent(listView, "editButton");
+        editButton.click();
 
-            JmixButton editButton = UiTestUtils.getComponent(listView, "editButton");
-            editButton.click();
-
-            // Should be in detail view with the selected conversation
-            detailView = UiTestUtils.getCurrentView();
-            assertThat(detailView).isNotNull();
-            assertThat(detailView.getEditedEntity().getId()).isEqualTo(testConversation.getId());
-        }
+        // then
+        detailView = UiTestUtils.getCurrentView();
+        assertThat(editButton.getText()).isEqualTo("Open");
+        assertThat(detailView.getEditedEntity().getId()).isEqualTo(testConversation.getId());
     }
 
     @Test
     void testDetailViewDisplaysAttachmentDownloadLink() {
+        // given
         AiConversation conversation = createAndSaveEntity(AiConversation.class, conv -> {
             conv.setTitle("Attachment View Test");
             conv.setCreatedDate(OffsetDateTime.now());
@@ -243,24 +216,26 @@ public class AiConversationViewsUiIntegrationTest extends AbstractUiTest {
                 .fetchPlan(fp -> fp.add("attachments", sub -> sub.addFetchPlan("_base")))
                 .one();
 
+        // when
         viewNavigators.detailView(UiTestUtils.getCurrentView(), AiConversation.class)
                 .editEntity(conversationWithAttachments)
                 .navigate();
 
+        // then
         AiConversationDetailView detailView = UiTestUtils.getCurrentView();
-        assertThat(detailView).isNotNull();
         assertThat(detailView.getRenderedAttachmentCount()).isGreaterThan(0);
         assertThat(detailView.hasRenderedAttachment(attachment.getId())).isTrue();
     }
 
     @Test
     void testDetailViewDisplaysAttachments() {
+        // given
         AiConversation conversation = createAndSaveEntity(AiConversation.class, conv -> {
             conv.setTitle("Attachment View Test 2");
             conv.setCreatedDate(OffsetDateTime.now());
         });
 
-        createAndSaveEntity(AiConversationAttachment.class, att -> {
+        AiConversationAttachment attachment = createAndSaveEntity(AiConversationAttachment.class, att -> {
             att.setConversation(conversation);
             att.setFile(new FileRef("storage", "2026/02/22/report.csv", "report.csv"));
             att.setFileName("report.csv");
@@ -274,12 +249,62 @@ public class AiConversationViewsUiIntegrationTest extends AbstractUiTest {
                 .fetchPlan(fp -> fp.add("attachments", sub -> sub.addFetchPlan("_base")))
                 .one();
 
+        // when
         viewNavigators.detailView(UiTestUtils.getCurrentView(), AiConversation.class)
                 .editEntity(conversationWithAttachments)
                 .navigate();
 
+        // then
         AiConversationDetailView detailView = UiTestUtils.getCurrentView();
-        assertThat(detailView).isNotNull();
         assertThat(detailView.getRenderedAttachmentCount()).isGreaterThan(0);
+        assertThat(detailView.hasRenderedAttachment(attachment.getId())).isTrue();
+        assertThat(detailView.getEditedEntity().getTitle()).isEqualTo("Attachment View Test 2");
+    }
+
+    @Test
+    void testAttachmentUploadPersistsUserUploadedAttachment() {
+        // given
+        AiConversation conversation = createAndSaveEntity(AiConversation.class, conv -> {
+            conv.setTitle("Upload Integration Test");
+            conv.setCreatedDate(OffsetDateTime.now());
+        });
+
+        viewNavigators.detailView(UiTestUtils.getCurrentView(), AiConversation.class)
+                .editEntity(conversation)
+                .navigate();
+        AiConversationDetailView detailView = UiTestUtils.getCurrentView();
+
+        UUID tempFileId = UUID.randomUUID();
+        TemporaryStorage.FileInfo fileInfo = new TemporaryStorage.FileInfo(new File("test.tmp"), tempFileId);
+        TemporaryStorageFileData fileData = new TemporaryStorageFileData("analysis.csv", "text/csv", fileInfo);
+
+        FileTemporaryStorageBuffer receiver = mock(FileTemporaryStorageBuffer.class);
+        when(receiver.getFileData()).thenReturn(fileData);
+        Upload upload = mock(Upload.class);
+        when(upload.getReceiver()).thenReturn(receiver);
+        SucceededEvent event = new SucceededEvent(upload, "analysis.csv", "text/csv", 12);
+
+        FileStorage fileStorage = mock(FileStorage.class);
+        FileRef uploadedFileRef = new FileRef("crm", "2026/02/23/analysis.csv", "analysis.csv");
+        when(fileStorageLocator.getByName("crm")).thenReturn(fileStorage);
+        when(temporaryStorage.putFileIntoStorage(tempFileId, "analysis.csv", fileStorage))
+                .thenReturn(uploadedFileRef);
+        when(mockAnalyticsService.processAttachmentUpload(anyString(), any(UUID.class), anyString(), anyString(), anyString()))
+                .thenReturn("AI upload processed");
+
+        // when
+        detailView.onAttachmentUploadSucceeded(event);
+
+        // then
+        AiConversationAttachment savedAttachment = dataManager.load(AiConversationAttachment.class)
+                .query("select e from AiConversationAttachment e where e.conversation.id = :conversationId and e.fileName = :fileName")
+                .parameter("conversationId", conversation.getId())
+                .parameter("fileName", "analysis.csv")
+                .one();
+
+        assertThat(savedAttachment.getType()).isEqualTo(AiAttachmentType.USER_UPLOADED);
+        assertThat(savedAttachment.getFileName()).isEqualTo("analysis.csv");
+        assertThat(savedAttachment.getFile()).isEqualTo(uploadedFileRef);
+        verify(temporaryStorage).putFileIntoStorage(tempFileId, "analysis.csv", fileStorage);
     }
 }

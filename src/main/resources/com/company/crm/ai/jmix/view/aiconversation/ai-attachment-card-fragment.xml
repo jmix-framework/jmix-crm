@@ -20,10 +20,21 @@
                         themeNames="tertiary-inline small icon"/>
             </headerSuffix>
             <content>
-                <span id="timestampValue"
-                      dataContainer="attachmentDc"
-                      property="createdDate"
-                      classNames="text-secondary text-s"/>
+                <hbox id="metaLayout"
+                      spacing="true"
+                      alignItems="CENTER"
+                      classNames="attachment-card-meta">
+                    <span id="timestampValue"
+                          dataContainer="attachmentDc"
+                          property="createdDate"
+                          classNames="text-secondary text-s"/>
+                    <icon id="sourceIcon"
+                          icon="QUESTION_CIRCLE_O"
+                          size="S"
+                          classNames="attachment-card-source-icon"/>
+                    <span id="sourceValue"
+                          classNames="text-secondary text-s attachment-card-source-text"/>
+                </hbox>
             </content>
         </card>
     </content>
