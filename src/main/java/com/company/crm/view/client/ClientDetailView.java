@@ -87,6 +87,7 @@ import java.util.UUID;
 
 import static com.company.crm.app.feature.sortable.SortableFeature.makeSortable;
 import static com.company.crm.app.util.demo.DemoUtils.defaultSleepForStatisticsLoading;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 @Route(value = "clients/:id", layout = MainView.class)
 @ViewController(id = CrmConstants.ViewIds.CLIENT_DETAIL)
@@ -189,6 +190,19 @@ public class ClientDetailView extends StandardDetailView<Client> {
         }
     }
 
+    @Subscribe
+    private void onValidation(final ValidationEvent event) {
+        if (isAddressIncomplete(addressDc.getItemOrNull())) {
+            String errorMessage = messages.getMessage("com.company.crm.view.client/addressRequiredError");
+            addressField.setInvalid(true);
+            addressField.setErrorMessage(errorMessage);
+            event.getErrors().add(errorMessage);
+        } else {
+            addressField.setInvalid(false);
+            addressField.setErrorMessage(null);
+        }
+    }
+
     @Supply(to = "paymentsDataGrid.number", subject = "renderer")
     private Renderer<Payment> paymentsDataGridNumberRenderer() {
         return crmRenderers.uniqueNumber(Payment::getNumber);
@@ -264,6 +278,14 @@ public class ClientDetailView extends StandardDetailView<Client> {
     private void initializeRecentActivities() {
         recentActivities.setMaxWidth(27.5f, Unit.EM);
         recentActivities.setClient(getEditedEntity());
+    }
+
+    private static boolean isAddressIncomplete(Address address) {
+        return address == null
+                || isBlank(address.getCountry())
+                || isBlank(address.getCity())
+                || isBlank(address.getStreet())
+                || isBlank(address.getBuilding());
     }
 
     private void initializeSummaryBlock() {

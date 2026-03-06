@@ -10,11 +10,11 @@
                     <responsiveStep minWidth="0" columns="1"/>
                     <responsiveStep minWidth="20em" columns="2"/>
                 </responsiveSteps>
-                <textField property="country"/>
-                <textField property="building"/>
-                <textField property="city"/>
+                <textField property="country" required="true"/>
+                <textField property="building" required="true"/>
+                <textField property="city" required="true"/>
                 <textField property="apartment"/>
-                <textField property="street"/>
+                <textField property="street" required="true"/>
                 <textField property="postalCode"/>
             </formLayout>
         </vbox>

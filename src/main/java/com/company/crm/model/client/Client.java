@@ -26,6 +26,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
+import jakarta.validation.Valid;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -55,6 +56,7 @@ public class Client extends FullAuditEntity {
 
     @Embedded
     @EmbeddedParameters(nullAllowed = false)
+    @Valid
     private Address address;
 
     @Column(name = "TYPE_")

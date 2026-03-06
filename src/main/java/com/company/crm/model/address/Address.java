@@ -6,6 +6,7 @@ import io.jmix.core.metamodel.annotation.JmixEntity;
 import io.jmix.core.metamodel.annotation.JmixProperty;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+import jakarta.validation.constraints.NotBlank;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
@@ -17,15 +18,19 @@ public class Address {
     private String postalCode;
 
     @Column(name = "COUNTRY", nullable = false)
+    @NotBlank
     private String country;
 
     @Column(name = "CITY", nullable = false)
+    @NotBlank
     private String city;
 
     @Column(name = "STREET", nullable = false)
+    @NotBlank
     private String street;
 
     @Column(name = "HOUSE", nullable = false)
+    @NotBlank
     private String building;
 
     @Column(name = "APARTMENT")
