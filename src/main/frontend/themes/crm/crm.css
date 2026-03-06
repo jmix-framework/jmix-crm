@@ -1,11 +1,29 @@
 html {
     --lumo-clickable-cursor: pointer;
 
-    --lumo-line-height-m: 1.4;
-    --lumo-line-height-s: 1.2;
+    --lumo-line-height-m: 1.45;
+    --lumo-line-height-s: 1.25;
     --lumo-line-height-xs: 1.1;
 
-    --lumo-border-radius: 0.5em;
+    --lumo-border-radius: 0.75em;
+    --lumo-border-radius-s: 0.5em;
+    --lumo-border-radius-m: 0.75em;
+    --lumo-border-radius-l: 1em;
+
+    --lumo-font-family: Inter, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+    --lumo-space-xs: 0.375rem;
+    --lumo-space-s: 0.625rem;
+    --lumo-space-m: 1rem;
+    --lumo-space-l: 1.5rem;
+
+    --lumo-box-shadow-xs: 0 1px 2px hsla(220, 35%, 15%, 0.08);
+    --lumo-box-shadow-s: 0 3px 12px hsla(220, 35%, 15%, 0.1);
+    --lumo-box-shadow-m: var(--crm-elevation-shadow);
+}
+
+body {
+    background: linear-gradient(180deg, var(--lumo-tint-5pct) 0%, transparent 40%) var(--lumo-base-color);
 }
 
 .clickable {

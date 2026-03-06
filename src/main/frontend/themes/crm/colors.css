@@ -1,11 +1,28 @@
 /* custom theme colors*/
 html {
-    --lumo-primary-color: rgb(0, 106, 245);
+    --lumo-primary-color: hsl(217, 92%, 56%);
+    --lumo-primary-color-50pct: hsla(217, 92%, 56%, 0.5);
+    --lumo-primary-color-10pct: hsla(217, 92%, 56%, 0.12);
+    --lumo-primary-text-color: hsl(217, 90%, 46%);
+
+    --lumo-body-text-color: hsl(216, 27%, 18%);
+    --lumo-secondary-text-color: hsl(217, 12%, 40%);
+
+    --lumo-base-color: hsl(220, 20%, 99%);
+    --lumo-tint-5pct: hsla(220, 55%, 15%, 0.03);
+    --lumo-tint-10pct: hsla(220, 55%, 15%, 0.06);
+
+    --crm-surface-color: hsl(0, 0%, 100%);
+    --crm-soft-border-color: hsla(217, 28%, 22%, 0.11);
+    --crm-elevation-shadow: 0 8px 28px hsla(220, 40%, 2%, 0.08);
 }
 
 [theme~="dark"] {
-    --lumo-primary-color: rgb(0, 106, 245);
-    --lumo-base-color: hsl(214, 14%, 10%);
+    --lumo-primary-color: hsl(217, 100%, 68%);
+    --lumo-primary-color-50pct: hsla(217, 100%, 68%, 0.5);
+    --lumo-primary-color-10pct: hsla(217, 100%, 68%, 0.16);
+    --lumo-primary-text-color: hsl(217, 96%, 74%);
+    --lumo-base-color: hsl(215, 21%, 10%);
 
     --lumo-shade-5pct: rgba(27, 37, 50, 0.05);
     --lumo-shade-10pct: rgba(27, 37, 50, 0.1);
@@ -17,7 +34,11 @@ html {
     --lumo-shade-70pct: rgba(27, 37, 50, 0.7);
     --lumo-shade-80pct: rgba(27, 37, 50, 0.8);
     --lumo-shade-90pct: rgba(27, 37, 50, 0.9);
-    --lumo-shade: hsl(214, 30%, 15%);
+    --lumo-shade: hsl(214, 35%, 15%);
+
+    --crm-surface-color: hsl(216, 26%, 14%);
+    --crm-soft-border-color: hsla(216, 35%, 74%, 0.2);
+    --crm-elevation-shadow: 0 10px 30px hsla(220, 30%, 2%, 0.45);
 
     --lumo-success-text-color: rgb(49, 221, 121);
     --lumo-success-color-50pct: rgba(31, 193, 99, 0.5);
