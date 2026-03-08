@@ -1,7 +1,7 @@
 package com.company.crm.security.role;
 
-import com.company.crm.ai.entity.AiConversation;
-import com.company.crm.ai.entity.ChatMessage;
+import com.company.crm.ai.model.AiConversation;
+import com.company.crm.ai.model.ChatMessage;
 import io.jmix.security.role.annotation.JpqlRowLevelPolicy;
 import io.jmix.security.role.annotation.RowLevelRole;
 

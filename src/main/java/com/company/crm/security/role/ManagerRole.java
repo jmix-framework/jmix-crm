@@ -1,8 +1,8 @@
 package com.company.crm.security.role;
 
-import com.company.crm.ai.entity.AiConversation;
-import com.company.crm.ai.entity.AiConversationAttachment;
-import com.company.crm.ai.entity.ChatMessage;
+import com.company.crm.ai.model.AiConversation;
+import com.company.crm.ai.model.AiConversationAttachment;
+import com.company.crm.ai.model.ChatMessage;
 import com.company.crm.model.address.Address;
 import com.company.crm.model.catalog.category.Category;
 import com.company.crm.model.catalog.item.CategoryItem;

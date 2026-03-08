@@ -5,7 +5,7 @@
           title="msg:///menu_config.home.title" icon="vaadin:home"/>
 
     <item view="AiConversation.list"
-          title="msg://com.company.crm.ai.jmix.view.aiconversation/aiConversationListView.title" icon="vaadin:magic"/>
+          title="msg://com.company.crm.ai.view.aiconversation/aiConversationListView.title" icon="vaadin:magic"/>
     <separator />
     <item view="UserTask.list" id="tasks" title="msg:///menu_config.tasks.title" icon="vaadin:check-square"/>
     <menu opened="true" id="catalog" title="msg:///menu_config.catalog.title" icon="vaadin:open-book">

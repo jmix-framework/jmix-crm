@@ -1,5 +1,6 @@
 package com.company.crm.view.main;
 
+import com.company.crm.ai.view.aiconversation.AiConversationDetailView;
 import com.company.crm.app.online.OnlineDemoDataCreator;
 import com.company.crm.app.ui.component.CrmLoader;
 import com.company.crm.app.util.constant.CrmConstants;
@@ -8,8 +9,7 @@ import com.company.crm.model.client.ClientRepository;
 import com.company.crm.model.user.User;
 import com.company.crm.view.client.ClientListView;
 import com.company.crm.view.home.HomeView;
-import com.company.crm.ai.jmix.view.aiconversation.AiConversationDetailView;
-import com.company.crm.ai.entity.AiConversation;
+import com.company.crm.ai.model.AiConversation;
 import com.company.crm.ai.service.AiConversationService;
 import com.google.common.base.Strings;
 import com.vaadin.flow.component.ClickEvent;
@@ -47,21 +47,12 @@ import io.jmix.flowui.kit.action.ActionPerformedEvent;
 import io.jmix.flowui.kit.component.button.JmixButton;
 import io.jmix.flowui.kit.component.main.ListMenu.MenuBarItem;
 import io.jmix.flowui.kit.component.main.ListMenu.MenuItem;
-import io.jmix.flowui.view.Install;
-import io.jmix.flowui.view.Subscribe;
-import io.jmix.flowui.view.View;
-import io.jmix.flowui.view.ViewComponent;
-import io.jmix.flowui.view.ViewController;
-import io.jmix.flowui.view.ViewDescriptor;
 import io.jmix.flowui.view.*;
 import org.apache.commons.lang3.StringUtils;
 import org.jspecify.annotations.Nullable;
-// Note: AiConversationComponent removed - popover chat temporarily disabled
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -74,8 +65,6 @@ import static com.company.crm.app.util.demo.DemoUtils.defaultSleepForClientsSear
 @ViewController(id = CrmConstants.ViewIds.MAIN)
 @ViewDescriptor(path = "main-view.xml")
 public class MainView extends StandardMainView {
-
-    private static final Logger log = LoggerFactory.getLogger(MainView.class);
 
     @Autowired
     private Messages messages;
@@ -114,8 +103,6 @@ public class MainView extends StandardMainView {
 
     final Popover[] searchPopover = {null};
     final Popover[] notificationsPopover = {null};
-    @ViewComponent
-    private MessageBundle messageBundle;
 
     @Subscribe
     private void onReady(final ReadyEvent event) {
@@ -127,7 +114,7 @@ public class MainView extends StandardMainView {
     }
 
     private void checkChatButtonPermission() {
-        UiShowViewContext context = new UiShowViewContext("AiConversation.detail");
+        UiShowViewContext context = new UiShowViewContext(CrmConstants.ViewIds.AI_CONVERSATION_DETAIL);
         accessManager.applyRegisteredConstraints(context);
         chatButton.setVisible(context.isPermitted());
     }
@@ -299,7 +286,6 @@ public class MainView extends StandardMainView {
         notificationsPopover[0] = popover;
     }
 
-
     private void onSearchFieldValueChange(TypedValueChangeEvent<TypedTextField<String>, String> event) {
         Optional.ofNullable(searchPopover[0]).ifPresent(Popover::removeFromParent);
 
@@ -424,10 +410,6 @@ public class MainView extends StandardMainView {
             }
         }
     }
-
-    // Note: Popover-specific message processing methods removed
-    // Chat functionality now uses the Fragment-based detail view
-
     private record MenuItemStructure(Collection<MenuItemInfo> itemsInfo) {
 
         public MenuItemStructure() {
