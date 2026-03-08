@@ -65,8 +65,8 @@ class AiDomainModelIntrospectorTest extends AbstractTest {
         AiPropertyDescriptor typeProperty = properties.get("type");
         assertThat(typeProperty.type()).isEqualTo("enum");
         assertThat(typeProperty.javaType()).isEqualTo("ClientType");
-        assertThat(typeProperty.enumValues()).containsKeys("BUSINESS", "INDIVIDUAL");
-        assertThat(typeProperty.enumValues()).containsEntry("BUSINESS", "BUSINESS");
+        assertThat(typeProperty.enums()).containsKeys("BUSINESS", "INDIVIDUAL");
+        assertThat(typeProperty.enums().get("BUSINESS").id()).isEqualTo("BUSINESS");
 
         // Check relation property
         assertThat(properties).containsKey("accountManager");
@@ -175,8 +175,8 @@ class AiDomainModelIntrospectorTest extends AbstractTest {
         AiPropertyDescriptor statusProperty = properties.get("status");
         assertThat(statusProperty.type()).isEqualTo("enum");
         assertThat(statusProperty.javaType()).isEqualTo("TestOrderStatus");
-        assertThat(statusProperty.enumValues()).containsKeys("DRAFT", "SUBMITTED", "APPROVED", "SHIPPED", "DELIVERED", "CANCELLED");
-        assertThat(statusProperty.enumValues()).containsEntry("CANCELLED", 99);
+        assertThat(statusProperty.enums()).containsKeys("DRAFT", "SUBMITTED", "APPROVED", "SHIPPED", "DELIVERED", "CANCELLED");
+        assertThat(statusProperty.enums().get("CANCELLED").id()).isEqualTo(99);
     }
 
     @Test
@@ -217,15 +217,12 @@ class AiDomainModelIntrospectorTest extends AbstractTest {
         AiPropertyDescriptor statusProperty = invoiceEntity.properties().get("status");
 
         // then
-        assertThat(statusProperty.enumValues()).isNotEmpty();
-        assertThat(statusProperty.enumDescriptions()).isNotEmpty();
+        assertThat(statusProperty.enums()).isNotEmpty();
 
-        // InvoiceStatus should have localized descriptions
-        Map<String, String> descriptions = statusProperty.enumDescriptions();
-        assertThat(descriptions).containsKey("NEW");
-        assertThat(descriptions).containsKey("PENDING");
-        assertThat(descriptions.get("NEW")).isEqualTo("New");
-        assertThat(descriptions.get("PENDING")).isEqualTo("Pending");
+        // InvoiceStatus should expose localized descriptions in the same map
+        assertThat(statusProperty.enums()).containsKeys("NEW", "PENDING");
+        assertThat(statusProperty.enums().get("NEW").description()).isEqualTo("New");
+        assertThat(statusProperty.enums().get("PENDING").description()).isEqualTo("Pending");
     }
 
     @Test

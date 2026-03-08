@@ -28,6 +28,9 @@
                           dataContainer="attachmentDc"
                           property="createdDate"
                           classNames="text-secondary text-s"/>
+                    <span id="sourceSeparator"
+                          text="|"
+                          classNames="text-secondary text-s attachment-card-meta-separator"/>
                     <icon id="sourceIcon"
                           icon="QUESTION_CIRCLE_O"
                           size="S"

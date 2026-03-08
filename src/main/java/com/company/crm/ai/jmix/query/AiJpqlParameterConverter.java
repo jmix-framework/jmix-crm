@@ -52,19 +52,15 @@ public class AiJpqlParameterConverter {
     /**
      * Convert all parameters - only converts obvious cases
      */
-    public Map<String, Object> convertParameters(Map<String, Object> parameters) {
-        if (parameters == null) {
-            return null;
+    public Map<String, Object> convertParameters(List<JpqlParameter> parameters) {
+        if (parameters == null || parameters.isEmpty()) {
+            return Map.of();
         }
 
-        if (parameters.isEmpty()) {
-            return parameters; // Return empty map, not null
-        }
-
-        return parameters.entrySet().stream()
+        return parameters.stream()
                 .collect(java.util.stream.Collectors.toMap(
-                        Map.Entry::getKey,
-                        entry -> convertParameterValue(entry.getValue())
+                        JpqlParameter::parameterName,
+                        entry -> convertParameterValue(entry.parameterValue())
                 ));
     }
 

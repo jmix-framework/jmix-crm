@@ -6,7 +6,6 @@ import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * Spring AI Tool for executing JPQL queries against JPA databases in Jmix applications.
@@ -125,6 +124,14 @@ public class JpqlQueryTool {
         - Boolean strings → Boolean ("true", "false")
         - Other strings remain as strings (LIKE patterns, etc.)
 
+        ENUM PARAMETERS (CRITICAL):
+        - For enum properties, use id from domain model enums mapping (enums.<ENUM_NAME>.id).
+        - Do NOT pass enum constant names when enums provides numeric/string IDs.
+        - Example for Invoice.status: enums {NEW: {id: 10}, PENDING: {id: 20}, OVERDUE: {id: 30}, PAID: {id: 40}}
+          ✓ CORRECT: WHERE i.status = :status with parameters {"status": 40}
+          ✗ INCORRECT: WHERE i.status = :status with parameters {"status": "PAID"}
+        - For IN filters, also pass mapped values list (e.g., {"statuses": [20, 30]}).
+
         Examples:
         ✓ Parameters: {"startDate": "2024-01-15", "minValue": "1000.00", "pattern": "%Test%"}
         ✓ Macros: @between(o.date, now-30, now, day)
@@ -199,12 +206,13 @@ public class JpqlQueryTool {
         """)
     public QueryExecutionResult executeQuery(
             @ToolParam(description = "JPQL query with AS aliases for all SELECT fields") String jpqlQuery,
-            @ToolParam(description = "Named parameters for the query (empty map if none)") Map<String, Object> parameters,
+            @ToolParam(description = "Query parameters. Provide named parameters for :parameterName placeholders in the JPQL query. Leave empty if no parameters needed.") JpqlParameters parameters,
             @ToolParam(description = "List of aliases used in SELECT clause, in order (e.g., ['clientName', 'orderCount'])") List<String> selectAliases,
             @ToolParam(description = "Optional: Starting row index (default: 0)") Integer offset,
             @ToolParam(description = "Optional: Maximum number of rows to return (default: 50, max: 200)") Integer limit) {
         try {
             log.info("LLM Tool Call: executeQuery(offset={}, limit={})", offset, limit);
+
             return aiJpqlQueryService.executeJpqlQuery(jpqlQuery, parameters, selectAliases, offset, limit);
         } catch (Exception e) {
             log.error("Query Error: {} - {}", jpqlQuery, e.getMessage());

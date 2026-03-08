@@ -97,7 +97,7 @@ public class AiAttachmentCardFragmentRenderer extends FragmentRenderer<JmixCard,
 
         switch (attachment.getType()) {
             case AI_GENERATED -> {
-                sourceIcon.setIcon(VaadinIcon.COG_O);
+                sourceIcon.setIcon(VaadinIcon.MAGIC);
                 sourceValue.setText(messageBundle.getMessage("attachmentsSourceAi"));
             }
             case USER_UPLOADED -> {

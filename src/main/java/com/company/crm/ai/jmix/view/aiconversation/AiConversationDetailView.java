@@ -5,11 +5,13 @@ import com.company.crm.ai.entity.AiAttachmentType;
 import com.company.crm.ai.entity.AiConversationAttachment;
 import com.company.crm.ai.entity.ChatMessage;
 import com.company.crm.ai.entity.ChatMessageType;
+import com.company.crm.app.ui.component.GridEmptyStateComponent;
 import com.company.crm.app.service.ai.CrmAnalyticsService;
+import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.upload.FileRejectedEvent;
 import com.vaadin.flow.component.upload.SucceededEvent;
 import com.company.crm.view.main.MainView;
-import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.messages.MessageInput;
 import com.vaadin.flow.component.messages.MessageList;
 import com.vaadin.flow.component.messages.MessageListItem;
@@ -20,15 +22,21 @@ import io.jmix.core.DataManager;
 import io.jmix.core.FileRef;
 import io.jmix.core.FileStorage;
 import io.jmix.core.FileStorageLocator;
+import io.jmix.core.Messages;
 import io.jmix.core.MetadataTools;
 import io.jmix.core.TimeSource;
 import io.jmix.core.security.CurrentAuthentication;
+import io.jmix.flowui.Dialogs;
 import io.jmix.flowui.Notifications;
 import io.jmix.flowui.UiComponents;
+import io.jmix.flowui.app.inputdialog.DialogActions;
+import io.jmix.flowui.app.inputdialog.DialogOutcome;
+import io.jmix.flowui.app.inputdialog.InputParameter;
 import io.jmix.flowui.asynctask.UiAsyncTasks;
 import io.jmix.flowui.component.upload.JmixUpload;
 import io.jmix.flowui.component.upload.receiver.FileTemporaryStorageBuffer;
 import io.jmix.flowui.component.upload.receiver.TemporaryStorageFileData;
+import io.jmix.flowui.kit.component.button.JmixButton;
 import io.jmix.flowui.model.CollectionContainer;
 import io.jmix.flowui.model.CollectionLoader;
 import io.jmix.flowui.model.InstanceContainer;
@@ -69,7 +77,9 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
     @ViewComponent
     private VerticalLayout chatPanel;
     @ViewComponent
-    private Span attachmentsEmptyState;
+    private VerticalLayout attachmentsPanel;
+    @ViewComponent
+    private Component attachmentsGridLayout;
     @ViewComponent
     private JmixUpload attachmentUpload;
     @ViewComponent
@@ -88,6 +98,10 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
     @Autowired
     private MetadataTools metadataTools;
     @Autowired
+    private Dialogs dialogs;
+    @Autowired
+    private Messages messages;
+    @Autowired
     private DataManager dataManager;
     @Autowired
     private Notifications notifications;
@@ -99,25 +113,17 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
     private MessageList messageList;
     private MessageInput messageInput;
     private ProgressBar progressBar;
+    private GridEmptyStateComponent attachmentsEmptyState;
+
+    @Subscribe
+    public void onInit(final InitEvent event) {
+        initDynamicComponentsIfNeeded();
+    }
 
     @Subscribe
     public void onReady(final ReadyEvent event) {
-        messageList = uiComponents.create(MessageList.class);
-        messageList.setSizeFull();
-        messageList.setMarkdown(true);
-        messageList.addClassName("ai-conversation-message-list");
 
-        messageInput = uiComponents.create(MessageInput.class);
-        messageInput.setWidthFull();
-        messageInput.addSubmitListener(this::onMessageSubmit);
-
-        progressBar = uiComponents.create(ProgressBar.class);
-        progressBar.setWidthFull();
-        progressBar.setIndeterminate(true);
-        progressBar.setVisible(false);
-
-        chatPanel.add(messageList, progressBar, messageInput);
-        chatPanel.setFlexGrow(1, messageList);
+        setShowSaveNotification(false);
 
         loadAttachments();
         refreshMessages();
@@ -163,6 +169,8 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
         }
 
         try {
+            markConversationStartedIfNeeded(conversation);
+
             AiConversationAttachment attachment = dataManager.create(AiConversationAttachment.class);
             attachment.setConversation(conversation);
             attachment.setFile(uploadedFileRef);
@@ -195,6 +203,49 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
                 .show();
     }
 
+    @Subscribe("editConversationTitleBtn")
+    public void onEditConversationTitleBtnClick(final ClickEvent<JmixButton> event) {
+        AiConversation conversation = aiConversationDc.getItemOrNull();
+        if (conversation == null || conversation.getId() == null) {
+            return;
+        }
+
+        String currentTitle = conversation.getTitle() == null ? "" : conversation.getTitle();
+
+        dialogs.createInputDialog(this)
+                .withHeader(messageBundle.getMessage("editConversationTitleDialog.header"))
+                .withLabelsPosition(Dialogs.InputDialogBuilder.LabelsPosition.TOP)
+                .withParameters(
+                        InputParameter.stringParameter("title")
+                                .withLabel(messageBundle.getMessage("editConversationTitleDialog.titleField"))
+                                .withRequired(true)
+                                .withDefaultValue(currentTitle)
+                )
+                .withActions(DialogActions.OK_CANCEL)
+                .withCloseListener(closeEvent -> {
+                    if (!closeEvent.closedWith(DialogOutcome.OK)) {
+                        return;
+                    }
+
+                    String updatedTitle = closeEvent.getValue("title");
+                    if (updatedTitle == null || updatedTitle.isBlank()) {
+                        return;
+                    }
+
+                    String sanitizedTitle = updatedTitle.trim();
+                    AiConversation editableConversation = aiConversationDc.getItemOrNull();
+                    if (editableConversation == null) {
+                        return;
+                    }
+
+                    editableConversation.setTitle(sanitizedTitle);
+                    getViewData().getDataContext().save();
+
+                    reloadViewData();
+                })
+                .open();
+    }
+
     private void onMessageSubmit(MessageInput.SubmitEvent event) {
         String userMessage = event.getValue();
         if (userMessage == null || userMessage.trim().isEmpty()) {
@@ -202,8 +253,18 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
         }
 
         AiConversation conversation = aiConversationDc.getItemOrNull();
-        if (conversation == null) {
-            log.warn("Cannot submit message: AiConversation item is null");
+        if (conversation == null || conversation.getId() == null) {
+            log.warn("Cannot submit message: AiConversation item is null or has no ID");
+            return;
+        }
+
+        try {
+            markConversationStartedIfNeeded(conversation);
+        } catch (Exception e) {
+            log.error("Failed to mark conversation as started before message submit", e);
+            notifications.create("Failed to start conversation. Please try again.")
+                    .withType(Notifications.Type.ERROR)
+                    .show();
             return;
         }
 
@@ -217,9 +278,7 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
                 )
                 .withResultHandler(response -> {
                     messageList.addItem(assistantMessageListItem(response, now()));
-                    getViewData().loadAll();
-                    loadAttachments();
-                    refreshMessages();
+                    reloadViewData();
                     focusInput();
                 })
                 .withExceptionHandler(e -> {
@@ -254,9 +313,7 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
                 )
                 .withResultHandler(response -> {
                     messageList.addItem(assistantMessageListItem(response, now()));
-                    getViewData().loadAll();
-                    loadAttachments();
-                    refreshMessages();
+                    reloadViewData();
                     focusInput();
                 })
                 .withExceptionHandler(e -> {
@@ -272,29 +329,57 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
 
     private void loadAttachments() {
         AiConversation conversation = aiConversationDc.getItemOrNull();
-        if (conversation == null) {
+        if (conversation == null || conversation.getId() == null) {
+            attachmentsDl.setParameter("conversationId", null);
             attachmentsDc.setItems(List.of());
             updateAttachmentsEmptyState();
             return;
         }
-        attachmentsDl.setParameter("conversation", conversation);
+        attachmentsDl.setParameter("conversationId", conversation.getId());
         attachmentsDl.load();
     }
 
     private void updateAttachmentsEmptyState() {
-        attachmentsEmptyState.setVisible(attachmentsDc.getItems().isEmpty());
+        if (attachmentsEmptyState == null) {
+            return;
+        }
+        boolean empty = attachmentsDc.getItems().isEmpty();
+        attachmentsEmptyState.setVisible(empty);
+        attachmentsGridLayout.setVisible(!empty);
     }
 
     private void refreshMessages() {
-        if (messageList == null || aiConversationDc.getItemOrNull() == null) {
+        AiConversation conversation = aiConversationDc.getItemOrNull();
+        if (messageList == null || conversation == null) {
             return;
         }
 
-        List<ChatMessage> messages = Optional.ofNullable(aiConversationDc.getItem().getMessages()).orElse(List.of());
-        List<MessageListItem> messageListItems = messages.stream()
+        List<ChatMessage> chatMessages = Optional.ofNullable(conversation.getMessages()).orElse(List.of());
+        List<MessageListItem> messageListItems = chatMessages.stream()
                 .map(this::createMessageListItem)
                 .toList();
         messageList.setItems(messageListItems);
+    }
+
+    private void reloadViewData() {
+        prepareAttachmentsLoaderParameter();
+        getViewData().loadAll();
+        loadAttachments();
+        refreshMessages();
+    }
+
+    private void prepareAttachmentsLoaderParameter() {
+        AiConversation conversation = aiConversationDc.getItemOrNull();
+        UUID conversationId = conversation != null ? conversation.getId() : null;
+        attachmentsDl.setParameter("conversationId", conversationId);
+    }
+
+    private void markConversationStartedIfNeeded(AiConversation conversation) {
+        if (Boolean.TRUE.equals(conversation.getFirstMessageSent())) {
+            return;
+        }
+        conversation.setFirstMessageSent(true);
+        getViewData().getDataContext().save();
     }
 
     private MessageListItem createMessageListItem(ChatMessage message) {
@@ -397,6 +482,40 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
         progressBar.setVisible(false);
         messageInput.setEnabled(true);
         messageInput.focus();
+    }
+
+    private void initDynamicComponentsIfNeeded() {
+        if (messageList == null) {
+            messageList = uiComponents.create(MessageList.class);
+            messageList.setSizeFull();
+            messageList.setMarkdown(true);
+            messageList.addClassName("ai-conversation-message-list");
+        }
+        if (messageInput == null) {
+            messageInput = uiComponents.create(MessageInput.class);
+            messageInput.setWidthFull();
+            messageInput.addSubmitListener(this::onMessageSubmit);
+        }
+        if (progressBar == null) {
+            progressBar = uiComponents.create(ProgressBar.class);
+            progressBar.setWidthFull();
+            progressBar.setIndeterminate(true);
+            progressBar.setVisible(false);
+        }
+        if (attachmentsEmptyState == null) {
+            attachmentsEmptyState = new GridEmptyStateComponent(messages.getMessage("defaultGridEmptyStateText"));
+            attachmentsEmptyState.setSizeFull();
+            attachmentsEmptyState.setVisible(false);
+        }
+
+        if (chatPanel != null && messageList.getParent().isEmpty()) {
+            chatPanel.add(messageList, progressBar, messageInput);
+            chatPanel.setFlexGrow(1, messageList);
+        }
+        if (attachmentsPanel != null && attachmentsEmptyState.getParent().isEmpty()) {
+            attachmentsPanel.addComponentAtIndex(2, attachmentsEmptyState);
+            attachmentsPanel.setFlexGrow(1, attachmentsEmptyState);
+        }
     }
 
     int getRenderedAttachmentCount() {

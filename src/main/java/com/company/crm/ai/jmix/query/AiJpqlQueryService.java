@@ -15,6 +15,10 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service("ai_AiJpqlQueryService")
@@ -24,6 +28,7 @@ public class AiJpqlQueryService {
 
     public static final int DEFAULT_LIMIT = 50;
     public static final int MAX_LIMIT = 200;
+    private static final Pattern NAMED_PARAMETER_PATTERN = Pattern.compile("(?<!:):([A-Za-z_][A-Za-z0-9_]*)");
 
     private final DataManager dataManager;
     private final AiJpqlParameterConverter parameterConverter;
@@ -51,22 +56,22 @@ public class AiJpqlQueryService {
      * Execute JPQL query with parameters for LLM-based queries
      *
      * @param jpqlQuery The JPQL query to execute
-     * @param parameters Named parameters as key-value map
+     * @param parameters Named JPQL parameters
      * @param selectAliases List of aliases for SELECT fields in order
      * @param offset Starting row offset
      * @param limit Maximum number of rows to return
      * @return Query execution result
      */
-    public QueryExecutionResult executeJpqlQuery(String jpqlQuery, Map<String, Object> parameters, List<String> selectAliases, Integer offset, Integer limit) {
+    public QueryExecutionResult executeJpqlQuery(String jpqlQuery, JpqlParameters parameters, List<String> selectAliases, Integer offset, Integer limit) {
         int effectiveOffset = (offset != null) ? Math.max(0, offset) : 0;
         int effectiveLimit = (limit != null) ? Math.min(MAX_LIMIT, Math.max(1, limit)) : DEFAULT_LIMIT;
         ensureQueryIsPermitted(jpqlQuery);
 
         // First attempt: try with converted parameters
-        QueryExecutionResult result = executeJpqlQueryWithParameters(jpqlQuery, parameterConverter.convertParameters(parameters), selectAliases, effectiveOffset, effectiveLimit, true);
+        QueryExecutionResult result = executeJpqlQueryWithParameters(jpqlQuery, parameters, selectAliases, effectiveOffset, effectiveLimit, true);
 
         if (!result.success()) {
-            // Fallback: try with original parameters
+            // Fallback: try with original parameters (no conversion)
             log.info("Query failed with converted parameters, trying with original parameters. Error: {}", result.errorMessage());
             QueryExecutionResult fallbackResult = executeJpqlQueryWithParameters(jpqlQuery, parameters, selectAliases, effectiveOffset, effectiveLimit, false);
 
@@ -82,14 +87,43 @@ public class AiJpqlQueryService {
     /**
      * Internal method to execute JPQL query with given parameters
      */
-    private QueryExecutionResult executeJpqlQueryWithParameters(String jpqlQuery, Map<String, Object> parameters, List<String> selectAliases, int offset, int limit, boolean converted) {
+    private QueryExecutionResult executeJpqlQueryWithParameters(String jpqlQuery, JpqlParameters parameters, List<String> selectAliases, int offset, int limit, boolean converted) {
+        return executeJpqlQueryWithParameters(jpqlQuery, parameters, selectAliases, offset, limit, converted, true);
+    }
+
+    private QueryExecutionResult executeJpqlQueryWithParameters(String jpqlQuery,
+                                                                JpqlParameters parameters,
+                                                                List<String> selectAliases,
+                                                                int offset,
+                                                                int limit,
+                                                                boolean converted,
+                                                                boolean retryUnknownParameter) {
         try {
             long startTime = System.currentTimeMillis();
             var loadValuesBuilder = dataManager.loadValues(jpqlQuery);
+            Set<String> queryParameterNames = extractNamedParameters(jpqlQuery);
 
-            if (parameters != null) {
-                for (Map.Entry<String, Object> entry : parameters.entrySet()) {
-                    loadValuesBuilder.parameter(entry.getKey(), entry.getValue());
+            log.debug("JPQL Query: {}", jpqlQuery);
+            log.debug("Extracted parameter names: {}", queryParameterNames);
+            log.debug("Provided parameters: {}", parameters);
+
+            // Convert JpqlParameters to Map for processing
+            Map<String, Object> parameterMap = converted && parameters != null ?
+                parameterConverter.convertParameters(parameters.parameters()) :
+                convertJpqlParametersToMap(parameters);
+
+            if (parameterMap != null && !parameterMap.isEmpty()) {
+                for (Map.Entry<String, Object> entry : parameterMap.entrySet()) {
+                    log.debug("Processing parameter '{}' with value '{}' (type: {})",
+                             entry.getKey(), entry.getValue(),
+                             entry.getValue() != null ? entry.getValue().getClass().getSimpleName() : "null");
+                    // Ignore extra parameters that are not referenced in the JPQL.
+                    if (queryParameterNames.contains(entry.getKey())) {
+                        log.debug("Setting parameter '{}' to value '{}'", entry.getKey(), entry.getValue());
+                        loadValuesBuilder.parameter(entry.getKey(), entry.getValue());
+                    } else {
+                        log.debug("Ignoring parameter '{}' as it's not found in query parameter names", entry.getKey());
+                    }
                 }
             }
 
@@ -117,8 +151,74 @@ public class AiJpqlQueryService {
 
         } catch (Exception e) {
             log.debug("Query failed with {} parameters: {}", converted ? "converted" : "original", e.getMessage());
+            if (retryUnknownParameter && parameters != null) {
+                String unknownParameter = extractUnknownParameterName(e.getMessage());
+                if (unknownParameter != null && containsParameter(parameters, unknownParameter)) {
+                    JpqlParameters filteredParameters = filterOutParameter(parameters, unknownParameter);
+                    log.debug("Retrying query without unknown parameter '{}'", unknownParameter);
+                    return executeJpqlQueryWithParameters(jpqlQuery, filteredParameters, selectAliases, offset, limit, converted, false);
+                }
+            }
             return QueryExecutionResult.failed(e.getMessage());
         }
+    }
+
+    private Map<String, Object> convertJpqlParametersToMap(JpqlParameters parameters) {
+        if (parameters == null || parameters.parameters().isEmpty()) {
+            return Map.of();
+        }
+        return parameters.parameters().stream()
+            .collect(java.util.stream.Collectors.toMap(
+                JpqlParameter::parameterName,
+                JpqlParameter::parameterValue
+            ));
+    }
+
+    private boolean containsParameter(JpqlParameters parameters, String parameterName) {
+        if (parameters == null || parameters.parameters().isEmpty()) {
+            return false;
+        }
+        return parameters.parameters().stream()
+            .anyMatch(param -> param.parameterName().equals(parameterName));
+    }
+
+    private JpqlParameters filterOutParameter(JpqlParameters parameters, String parameterName) {
+        if (parameters == null) {
+            return JpqlParameters.empty();
+        }
+        List<JpqlParameter> filteredList = parameters.parameters().stream()
+            .filter(param -> !param.parameterName().equals(parameterName))
+            .toList();
+        return new JpqlParameters(filteredList);
+    }
+
+    private Set<String> extractNamedParameters(String jpqlQuery) {
+        Set<String> names = new HashSet<>();
+        if (jpqlQuery == null || jpqlQuery.isBlank()) {
+            return names;
+        }
+        Matcher matcher = NAMED_PARAMETER_PATTERN.matcher(jpqlQuery);
+        while (matcher.find()) {
+            names.add(matcher.group(1));
+        }
+        return names;
+    }
+
+    private String extractUnknownParameterName(String errorMessage) {
+        if (errorMessage == null) {
+            return null;
+        }
+        String marker = "Query argument ";
+        int start = errorMessage.indexOf(marker);
+        if (start < 0) {
+            return null;
+        }
+        int from = start + marker.length();
+        int to = errorMessage.indexOf(' ', from);
+        if (to < 0) {
+            return null;
+        }
+        return errorMessage.substring(from, to).trim();
     }
 
     private void ensureQueryIsPermitted(String jpqlQuery) {

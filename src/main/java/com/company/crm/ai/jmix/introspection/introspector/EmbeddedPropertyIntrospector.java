@@ -38,8 +38,7 @@ public class EmbeddedPropertyIntrospector implements MetaPropertyIntrospector {
         String comment = metadataTools.getMetaAnnotationValue(property, Comment.class);
         String caption = getPropertyCaption(property);
 
-        return new AiPropertyDescriptor(caption, comment, type, javaType, null, embedded, null, null,
-                null, null, null);
+        return new AiPropertyDescriptor(caption, comment, type, javaType, null, embedded, null, null, null, null);
     }
 
     private String getPropertyCaption(MetaProperty property) {

@@ -76,6 +76,20 @@
                      tableName="CLIENT_USER_ACITIVTY">
             <column name="CLIENT_ID"/>
         </createIndex>
+
+        <createIndex indexName="IDX_AI_CONV_ATTACH_CONV" tableName="AI_CONVERSATION_ATTACHMENT">
+            <column name="CONVERSATION_ID"/>
+        </createIndex>
+
+        <createIndex indexName="IDX_CHAT_MESSAGE" tableName="CHAT_MESSAGE">
+            <column name="CONVERSATION_ID"/>
+            <column name="CREATED_DATE"/>
+        </createIndex>
+
+        <createIndex indexName="IDX_CHAT_MESSAGE_CONVERSATION" tableName="CHAT_MESSAGE">
+            <column name="CONVERSATION_ID"/>
+        </createIndex>
+
     </changeSet>
 
     <changeSet author="crm" id="2">
@@ -174,5 +188,13 @@
                                  constraintName="FK_USER_PROFILE_USER_ACITIVTY_ON_USER"
                                  referencedColumnNames="ID"
                                  referencedTableName="USER_"/>
+
+        <addForeignKeyConstraint baseColumnNames="CONVERSATION_ID" baseTableName="AI_CONVERSATION_ATTACHMENT"
+                                 constraintName="FK_AI_CONVERSATION_ATTACHMENT_ON_CONVERSATION"
+                                 referencedColumnNames="ID" referencedTableName="AI_CONVERSATION"/>
+
+        <addForeignKeyConstraint baseColumnNames="CONVERSATION_ID" baseTableName="CHAT_MESSAGE"
+                                 constraintName="FK_CHAT_MESSAGE_ON_CONVERSATION" referencedColumnNames="ID"
+                                 referencedTableName="AI_CONVERSATION"/>
     </changeSet>
 </databaseChangeLog>

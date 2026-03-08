@@ -61,11 +61,13 @@ public class AiConversationViewsUiIntegrationTest extends AbstractUiTest {
         AiConversation conversation1 = createAndSaveEntity(AiConversation.class, conv -> {
             conv.setTitle("Test Conversation 1");
             conv.setCreatedDate(OffsetDateTime.now().minusHours(1));
+            conv.setFirstMessageSent(true);
         });
 
         AiConversation conversation2 = createAndSaveEntity(AiConversation.class, conv -> {
             conv.setTitle("Test Conversation 2");
             conv.setCreatedDate(OffsetDateTime.now());
+            conv.setFirstMessageSent(true);
         });
 
         // when
@@ -97,6 +99,7 @@ public class AiConversationViewsUiIntegrationTest extends AbstractUiTest {
         AiConversationDetailView detailView = UiTestUtils.getCurrentView();
         AiConversation editedEntity = detailView.getEditedEntity();
         assertThat(editedEntity.getId()).isNotNull();
+        assertThat(dataManager.load(AiConversation.class).id(editedEntity.getId()).optional()).isPresent();
         assertThat(editedEntity.getTitle()).contains("New Chat");
     }
 
@@ -106,6 +109,7 @@ public class AiConversationViewsUiIntegrationTest extends AbstractUiTest {
         AiConversation testConversation = createAndSaveEntity(AiConversation.class, conv -> {
             conv.setTitle("Test Open Conversation");
             conv.setCreatedDate(OffsetDateTime.now());
+            conv.setFirstMessageSent(true);
         });
 
         viewNavigators.view(UiTestUtils.getCurrentView(), AiConversationListView.class).navigate();
@@ -158,6 +162,7 @@ public class AiConversationViewsUiIntegrationTest extends AbstractUiTest {
         AiConversation testConversation = createAndSaveEntity(AiConversation.class, conv -> {
             conv.setTitle("Component Integration Test");
             conv.setCreatedDate(OffsetDateTime.now());
+            conv.setFirstMessageSent(true);
         });
 
         // when
@@ -170,7 +175,9 @@ public class AiConversationViewsUiIntegrationTest extends AbstractUiTest {
         // Should be in detail view now
         AiConversationDetailView detailView = UiTestUtils.getCurrentView();
         assertThat(createButton.getText()).isEqualTo("New Chat");
-        assertThat(detailView.getEditedEntity().getId()).isNotNull();
+        UUID draftConversationId = detailView.getEditedEntity().getId();
+        assertThat(draftConversationId).isNotNull();
+        assertThat(dataManager.load(AiConversation.class).id(draftConversationId).optional()).isPresent();
 
         // Test 2: Navigate back to list and open existing conversation
         viewNavigators.view(detailView, AiConversationListView.class).navigate();

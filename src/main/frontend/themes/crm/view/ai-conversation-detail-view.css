@@ -65,9 +65,6 @@
 vaadin-upload.attachments-dropzone {
   margin-top: auto;
   min-height: 8rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   border: 1px dashed var(--lumo-contrast-30pct);
   border-radius: var(--lumo-border-radius-m);
   background: var(--lumo-contrast-5pct);
@@ -77,10 +74,30 @@ vaadin-upload.attachments-dropzone {
 vaadin-upload.attachments-dropzone::part(drop-label) {
   color: var(--lumo-secondary-text-color);
   font-size: var(--lumo-font-size-xs);
+  display: block;
+  width: 100%;
+  text-align: center;
+  white-space: normal;
+  margin-top: var(--lumo-space-xs);
+}
+
+vaadin-upload.attachments-dropzone::part(primary-buttons) {
+  width: 100%;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  gap: var(--lumo-space-xs);
 }
 
 .attachment-card-meta {
-  gap: var(--lumo-space-xs);
+  gap: var(--lumo-space-s);
+}
+
+.attachment-card-meta-separator {
+  opacity: 0.8;
 }
 
 .attachment-card-source-icon {

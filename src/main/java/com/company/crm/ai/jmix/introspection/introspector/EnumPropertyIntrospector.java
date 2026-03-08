@@ -1,5 +1,6 @@
 package com.company.crm.ai.jmix.introspection.introspector;
 
+import com.company.crm.ai.jmix.introspection.model.AiEnumValueDescriptor;
 import com.company.crm.ai.jmix.introspection.model.AiPropertyDescriptor;
 import io.jmix.core.Messages;
 import io.jmix.core.MessageTools;
@@ -39,45 +40,33 @@ public class EnumPropertyIntrospector implements MetaPropertyIntrospector {
             return null;
         }
         String javaType = property.getJavaType().getSimpleName();
-        String comment = metadataTools.getMetaAnnotationValue(property, Comment.class);
         String caption = getPropertyCaption(property);
-        Map<String, Object> enumValues = null;
-        Map<String, String> enumDescriptions = null;
+        Map<String, AiEnumValueDescriptor> enums = null;
         Class<?> enumClass = property.getJavaType();
+        String comment = metadataTools.getMetaAnnotationValue(property, Comment.class);
 
         if (enumClass.isEnum()) {
-            enumValues = new LinkedHashMap<>();
-            enumDescriptions = new LinkedHashMap<>();
+            enums = new LinkedHashMap<>();
 
             if (EnumClass.class.isAssignableFrom(enumClass)) {
                 for (Object enumConstant : enumClass.getEnumConstants()) {
                     EnumClass<?> enumClassConstant = (EnumClass<?>) enumConstant;
                     String enumName = enumConstant.toString();
-                    enumValues.put(enumName, enumClassConstant.getId());
-
                     String enumDescription = messages.getMessage((Enum<?>) enumConstant);
-                    if (!enumDescription.equals(enumName)) {
-                        enumDescriptions.put(enumName, enumDescription);
-                    }
+                    String localizedDescription = !enumDescription.equals(enumName) ? enumDescription : null;
+                    enums.put(enumName, new AiEnumValueDescriptor(enumClassConstant.getId(), localizedDescription));
                 }
             } else {
                 for (Object enumConstant : enumClass.getEnumConstants()) {
                     String enumName = enumConstant.toString();
-                    enumValues.put(enumName, ((Enum<?>) enumConstant).ordinal());
-
                     String enumDescription = messages.getMessage((Enum<?>) enumConstant);
-                    if (!enumDescription.equals(enumName)) {
-                        enumDescriptions.put(enumName, enumDescription);
-                    }
+                    String localizedDescription = !enumDescription.equals(enumName) ? enumDescription : null;
+                    enums.put(enumName, new AiEnumValueDescriptor(((Enum<?>) enumConstant).ordinal(), localizedDescription));
                 }
-            }
-
-            if (enumDescriptions.isEmpty()) {
-                enumDescriptions = null;
             }
         }
 
-        return AiPropertyDescriptor.enumProperty(caption, comment, javaType, enumValues, enumDescriptions);
+        return AiPropertyDescriptor.enumProperty(caption, comment, javaType, enums);
     }
 
     private String getPropertyCaption(MetaProperty property) {

@@ -425,6 +425,53 @@
             <column name="NAVIGATION_BAR_TOUCH_OPTIMIZED" type="BOOLEAN"/>
             <column name="DEFAULT_VAT" type="DECIMAL(19, 2)"/>
         </createTable>
+
+
+        <createTable tableName="AI_CONVERSATION">
+            <column name="ID" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_AI_CONVERSATION"/>
+            </column>
+            <column name="TITLE" type="VARCHAR(255)"/>
+            <column name="FIRST_MESSAGE_SENT" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CREATED_BY" type="VARCHAR(255)"/>
+            <column name="CREATED_DATE" type="timestamp with time zone"/>
+        </createTable>
+        <createTable tableName="AI_CONVERSATION_ATTACHMENT">
+            <column name="ID" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_AI_CONVERSATION_ATTACHMENT"/>
+            </column>
+            <column name="CONVERSATION_ID" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="FILE_" type="VARCHAR(1024)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="FILE_NAME" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="TITLE" type="VARCHAR(255)"/>
+            <column name="TYPE_" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CREATED_BY" type="VARCHAR(255)"/>
+            <column name="CREATED_DATE" type="timestamp with time zone"/>
+        </createTable>
+        <createTable tableName="CHAT_MESSAGE">
+            <column name="ID" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_CHAT_MESSAGE"/>
+            </column>
+            <column name="CONVERSATION_ID" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CONTENT" type="CLOB"/>
+            <column name="CREATED_BY" type="VARCHAR(255)"/>
+            <column name="CREATED_DATE" type="timestamp with time zone"/>
+            <column name="TYPE_" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
     </changeSet>
 
 </databaseChangeLog>

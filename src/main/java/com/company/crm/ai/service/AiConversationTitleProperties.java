@@ -7,15 +7,7 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "crm.ai.title")
 public class AiConversationTitleProperties {
 
-    private String modelId = "arn:aws:bedrock:eu-central-1:279497544307:inference-profile/eu.anthropic.claude-3-5-haiku-20241022-v1:0";
-    private Double temperature = 0.0;
-    private Integer maxTokens = 32;
-    private String systemPrompt = """
-            You generate concise CRM conversation titles.
-            Return only the title text.
-            Do not use quotes, markdown, or punctuation at the end.
-            Keep it specific and under 8 words.
-            """;
+    private String modelId;
 
     public String getModelId() {
         return modelId;
@@ -23,29 +15,5 @@ public class AiConversationTitleProperties {
 
     public void setModelId(String modelId) {
         this.modelId = modelId;
-    }
-
-    public Double getTemperature() {
-        return temperature;
-    }
-
-    public void setTemperature(Double temperature) {
-        this.temperature = temperature;
-    }
-
-    public Integer getMaxTokens() {
-        return maxTokens;
-    }
-
-    public void setMaxTokens(Integer maxTokens) {
-        this.maxTokens = maxTokens;
-    }
-
-    public String getSystemPrompt() {
-        return systemPrompt;
-    }
-
-    public void setSystemPrompt(String systemPrompt) {
-        this.systemPrompt = systemPrompt;
     }
 }

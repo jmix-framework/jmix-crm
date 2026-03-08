@@ -88,7 +88,7 @@ dependencies {
 
     //              --- [ AI ] ---
     implementation platform("org.springframework.ai:spring-ai-bom:1.1.2")
-    implementation 'org.springframework.ai:spring-ai-starter-model-bedrock-converse'
+    implementation 'org.springframework.ai:spring-ai-starter-model-openai'
 
     //              --- [ YAML ] ---
     implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml'

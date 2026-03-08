@@ -32,6 +32,17 @@ class CrmAnalyticsSystemPromptContractTest {
         assertFormattingContract(prompt);
     }
 
+    @Test
+    void promptContainsEnumValueContract() throws IOException {
+        // given
+
+        // when
+        String prompt = loadPrompt();
+
+        // then
+        assertEnumContract(prompt);
+    }
+
     private String loadPrompt() throws IOException {
         ClassPathResource resource = new ClassPathResource("prompts/crm-analytics-system-prompt.st");
         try (var inputStream = resource.getInputStream()) {
@@ -50,5 +61,10 @@ class CrmAnalyticsSystemPromptContractTest {
         assertThat(prompt).contains("Do not produce heading/list skeletons");
         assertThat(prompt).contains("prefer a compact markdown table");
         assertThat(prompt).contains("Recommended response shape");
+    }
+
+    private void assertEnumContract(String prompt) {
+        assertThat(prompt).contains("use `enums.<ENUM_NAME>.id`");
+        assertThat(prompt).contains("enums.PAID.id");
     }
 }

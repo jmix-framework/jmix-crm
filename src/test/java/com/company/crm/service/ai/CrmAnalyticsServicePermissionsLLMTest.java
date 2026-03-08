@@ -38,6 +38,11 @@ class CrmAnalyticsServicePermissionsLLMTest extends AbstractTest {
                 .defaultSystem("""
                         You are a deterministic integration-test assistant.
                         You must call executeQuery exactly once with the arguments provided by the user.
+                        Do not rewrite or normalize jpqlQuery.
+                        Do not rename, remove, or add parameter keys.
+                        Use the provided parameters map exactly as-is.
+                        Never pass parameters as null.
+                        If the provided map contains clientId, you MUST pass clientId in executeQuery parameters.
                         Then return only one valid JSON object with keys:
                         success, errorMessage, firstValue.
                         Do not return markdown and do not add extra text.
@@ -110,15 +115,23 @@ class CrmAnalyticsServicePermissionsLLMTest extends AbstractTest {
     private QueryProbeResult executeQueryWithLlm(String jpqlQuery, Map<String, Object> parameters, List<String> selectAliases) {
         try {
             String prompt = """
-                    Run executeQuery with the following arguments:
-                    jpqlQuery: %s
-                    parameters: %s
-                    selectAliases: %s
-                    offset: 0
-                    limit: 5
+                    Run executeQuery exactly once with this exact payload (no modifications):
+                    {
+                      "jpqlQuery": %s,
+                      "parameters": %s,
+                      "selectAliases": %s,
+                      "offset": 0,
+                      "limit": 5
+                    }
+                    Rules:
+                    - Keep jpqlQuery byte-for-byte unchanged.
+                    - Keep parameter keys unchanged (e.g. clientId stays clientId).
+                    - Do not add/remove parameters.
+                    - parameters must NOT be null.
+                    - parameters must include clientId exactly when provided.
                     Return JSON only with keys success,errorMessage,firstValue.
                     """.formatted(
-                    jpqlQuery,
+                    objectMapper.writeValueAsString(jpqlQuery),
                     objectMapper.writeValueAsString(parameters),
                     objectMapper.writeValueAsString(selectAliases)
             );

@@ -1,6 +1,7 @@
 package com.company.crm.app.service.query;
 
 import com.company.crm.ai.jmix.query.AiJpqlParameterConverter;
+import com.company.crm.ai.jmix.query.JpqlParameters;
 import com.company.crm.app.annotation.TestProfile;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -135,7 +136,7 @@ class AiJpqlParameterConverterTest {
         parameters.put("pattern", "%Test%"); // String pattern -> unchanged
 
         // when
-        Map<String, Object> result = converter.convertParameters(parameters);
+        Map<String, Object> result = converter.convertParameters(JpqlParameters.fromMap(parameters).parameters());
 
         // then
         assertThat(result).hasSize(6);
@@ -156,7 +157,7 @@ class AiJpqlParameterConverterTest {
         Map<String, Object> empty = new HashMap<>();
 
         // when
-        Map<String, Object> result = converter.convertParameters(empty);
+        Map<String, Object> result = converter.convertParameters(JpqlParameters.fromMap(empty).parameters());
 
         // then
         assertThat(result).isEmpty();
@@ -171,7 +172,7 @@ class AiJpqlParameterConverterTest {
         Map<String, Object> result = converter.convertParameters(null);
 
         // then
-        assertThat(result).isNull();
+        assertThat(result).isEmpty();
     }
 
     @Test

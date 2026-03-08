@@ -15,7 +15,7 @@
             <fetchPlan extends="_base"/>
             <loader id="attachmentsDl">
                 <query>
-                    <![CDATA[select e from AiConversationAttachment e where e.conversation = :conversation order by e.createdDate desc]]>
+                    <![CDATA[select e from AiConversationAttachment e where e.conversation.id = :conversationId order by e.createdDate desc]]>
                 </query>
             </loader>
         </collection>
@@ -24,22 +24,30 @@
         <dataLoadCoordinator auto="true"/>
     </facets>
     <layout>
-        <split id="conversationSplit" orientation="HORIZONTAL" width="100%" height="100%" splitterPosition="74">
-            <vbox id="chatPanel" width="100%" height="100%" spacing="true" padding="true"/>
-            <vbox id="attachmentsPanel" width="20rem" height="100%" spacing="false" padding="true">
-                <span id="attachmentsTitle"
-                      text="msg://com.company.crm.ai.jmix.view.aiconversation/attachmentsPanelTitle"
-                      classNames="text-secondary"/>
+        <split id="conversationSplit" orientation="HORIZONTAL" width="100%" height="100%" splitterPosition="68">
+            <vbox id="chatPanel" width="100%" height="100%" spacing="true" padding="true">
+                <hbox id="conversationTitleLayout" spacing="false" alignItems="CENTER">
+                    <h3 id="conversationTitle"
+                        dataContainer="aiConversationDc"
+                        property="title"
+                        classNames="m-0"/>
+                    <button id="editConversationTitleBtn"
+                            icon="PENCIL"
+                            themeNames="tertiary-inline small icon"
+                            classNames="ms-xs"
+                            ariaLabel="msg://com.company.crm.ai.jmix.view.aiconversation/editConversationTitleAction"/>
+                </hbox>
+            </vbox>
+            <vbox id="attachmentsPanel" width="100%" height="100%" spacing="false" padding="true">
+                <h3 id="attachmentsTitle"
+                    text="msg://com.company.crm.ai.jmix.view.aiconversation/attachmentsPanelTitle"
+                    classNames="m-0"/>
                 <gridLayout id="attachmentsGridLayout"
                             itemsContainer="attachmentsDc"
                             width="100%"
                             gap="var(--lumo-space-xs)">
                     <fragmentRenderer class="com.company.crm.ai.jmix.view.aiconversation.AiAttachmentCardFragmentRenderer"/>
                 </gridLayout>
-                <span id="attachmentsEmptyState"
-                      text="msg://com.company.crm.ai.jmix.view.aiconversation/attachmentsEmptyState"
-                      classNames="text-secondary text-s"
-                      visible="false"/>
                 <upload id="attachmentUpload"
                         width="100%"
                         classNames="attachments-dropzone"

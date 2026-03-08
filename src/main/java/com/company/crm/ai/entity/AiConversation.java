@@ -25,6 +25,9 @@ public class AiConversation {
     @Column(name = "TITLE")
     private String title;
 
+    @Column(name = "FIRST_MESSAGE_SENT", nullable = false)
+    private Boolean firstMessageSent = false;
+
     @CreatedBy
     @Column(name = "CREATED_BY")
     private String createdBy;
@@ -71,6 +74,14 @@ public class AiConversation {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public Boolean getFirstMessageSent() {
+        return firstMessageSent;
+    }
+
+    public void setFirstMessageSent(Boolean firstMessageSent) {
+        this.firstMessageSent = firstMessageSent;
     }
 
     public OffsetDateTime getCreatedDate() {

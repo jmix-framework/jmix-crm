@@ -1,6 +1,7 @@
 package com.company.crm.util;
 
 import com.company.crm.model.user.User;
+import com.company.crm.security.role.AiChatUserRole;
 import com.company.crm.security.role.ManagerRole;
 import com.company.crm.security.role.SupervisorRole;
 import io.jmix.core.UnconstrainedDataManager;
@@ -40,6 +41,7 @@ public class TestUsers {
 
     public void assignRole(String username, String roleCode) {
         assignRole(username, roleCode, RoleAssignmentRoleType.RESOURCE);
+        assignRole(username, AiChatUserRole.CODE, RoleAssignmentRoleType.ROW_LEVEL);
     }
 
     public void assignRowLevelRole(String username, String roleCode) {

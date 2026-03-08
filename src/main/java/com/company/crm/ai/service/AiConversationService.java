@@ -4,6 +4,7 @@ import com.company.crm.ai.entity.AiConversation;
 import com.company.crm.ai.entity.ChatMessage;
 import com.company.crm.ai.entity.ChatMessageType;
 import io.jmix.core.DataManager;
+import io.jmix.core.Messages;
 import io.jmix.core.SaveContext;
 import org.springframework.stereotype.Service;
 
@@ -14,9 +15,11 @@ import org.springframework.stereotype.Service;
 public class AiConversationService {
 
     private final DataManager dataManager;
+    private final Messages messages;
 
-    public AiConversationService(DataManager dataManager) {
+    public AiConversationService(DataManager dataManager, Messages messages) {
         this.dataManager = dataManager;
+        this.messages = messages;
     }
 
     /**
@@ -27,7 +30,8 @@ public class AiConversationService {
      */
     public AiConversation createNewConversation(String welcomeMessage) {
         AiConversation conversation = dataManager.create(AiConversation.class);
-        conversation.setTitle("New Chat");
+        conversation.setTitle(messages.formatMessage(AiConversation.class, "defaultTitle"));
+        conversation.setFirstMessageSent(false);
 
         ChatMessage welcomeMessageEntity = dataManager.create(ChatMessage.class);
         welcomeMessageEntity.setConversation(conversation);

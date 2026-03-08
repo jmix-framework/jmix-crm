@@ -44,7 +44,7 @@ class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
         QueryExecutionResult result = jpqlQueryTool.executeQuery(
             "SELECT EXTRACT(YEAR FROM o.date) AS orderYear, EXTRACT(MONTH FROM o.date) AS orderMonth, COUNT(o) AS orderCount " +
             "FROM Order_ o GROUP BY EXTRACT(YEAR FROM o.date), EXTRACT(MONTH FROM o.date) ORDER BY orderYear, orderMonth",
-            Map.of(),
+            JpqlParameters.empty(),
             List.of("orderYear", "orderMonth", "orderCount"), null, null
         );
 
@@ -71,7 +71,7 @@ class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
         // given
         QueryExecutionResult result = jpqlQueryTool.executeQuery(
             "SELECT o.total AS originalTotal, (o.total * 2) AS doubledTotal FROM Order_ o WHERE o.total > 0 ORDER BY o.total",
-            Map.of(),
+            JpqlParameters.empty(),
             List.of("originalTotal", "doubledTotal"), null, null
         );
 
@@ -102,7 +102,7 @@ class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
             "SUBSTRING(c.name, 1, 5) AS nameSubstring, " +
             "CONCAT(c.name, ' - Client') AS concatName " +
             "FROM Client c ORDER BY c.name",
-            Map.of(),
+            JpqlParameters.empty(),
             List.of("upperName", "lowerName", "nameLength", "nameSubstring", "concatName"), null, null
         );
 
@@ -129,7 +129,7 @@ class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
             "CASE WHEN COUNT(o) > 2 THEN 'High Volume' WHEN COUNT(o) > 0 THEN 'Regular' ELSE 'No Orders' END AS clientCategory, " +
             "COALESCE(SUM(o.total), 0) AS totalRevenue " +
             "FROM Client c LEFT JOIN c.orders o GROUP BY c ORDER BY totalRevenue DESC",
-            Map.of(),
+            JpqlParameters.empty(),
             List.of("clientName", "clientCategory", "totalRevenue"), null, null
         );
 
@@ -160,7 +160,7 @@ class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
         // given
         QueryExecutionResult result = jpqlQueryTool.executeQuery(
             "SELECT c.name AS clientName, o.total AS orderTotal FROM Client c JOIN c.orders o ORDER BY o.total DESC",
-            Map.of(),
+            JpqlParameters.empty(),
             List.of("clientName", "orderTotal"), null, null
         );
 
@@ -187,7 +187,7 @@ class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
             "MAX(o.total) AS maxOrder, " +
             "MIN(o.total) AS minOrder " +
             "FROM Order_ o",
-            Map.of(),
+            JpqlParameters.empty(),
             List.of("orderCount", "totalRevenue", "averageOrder", "maxOrder", "minOrder"), null, null
         );
 
@@ -218,7 +218,7 @@ class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
         QueryExecutionResult recentResult = jpqlQueryTool.executeQuery(
             "SELECT o.number AS orderNumber, o.date AS orderDate, o.total AS orderTotal " +
             "FROM Order_ o WHERE @between(o.date, now-10000, now+1, day) ORDER BY o.date DESC",
-            Map.of(),
+            JpqlParameters.empty(),
             List.of("orderNumber", "orderDate", "orderTotal"), null, null
         );
 
@@ -228,7 +228,7 @@ class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
         // Test @today macro
         QueryExecutionResult todayResult = jpqlQueryTool.executeQuery(
             "SELECT COUNT(o) AS todayOrderCount FROM Order_ o WHERE @today(o.date)",
-            Map.of(),
+            JpqlParameters.empty(),
             List.of("todayOrderCount"), null, null
         );
 
@@ -259,7 +259,7 @@ class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
         // given
         QueryExecutionResult result = jpqlQueryTool.executeQuery(
             "SELECT c.name AS clientName FROM Client c WHERE UPPER(c.name) LIKE '%CORP%' OR UPPER(c.name) LIKE '%ENTERPRISE%'",
-            Map.of(),
+            JpqlParameters.empty(),
             List.of("clientName"), null, null
         );
 

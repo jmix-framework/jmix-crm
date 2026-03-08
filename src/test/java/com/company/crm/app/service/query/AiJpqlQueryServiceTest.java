@@ -2,6 +2,7 @@ package com.company.crm.app.service.query;
 
 import com.company.crm.AbstractTest;
 import com.company.crm.ai.jmix.query.AiJpqlQueryService;
+import com.company.crm.ai.jmix.query.JpqlParameters;
 import com.company.crm.model.client.Client;
 import com.company.crm.util.extenstion.AuthenticatedAs;
 import org.junit.jupiter.api.BeforeEach;
@@ -52,7 +53,7 @@ class AiJpqlQueryServiceTest extends AbstractTest {
         parameters.put("startDate", REFERENCE_DATE.minusDays(15).toString());
 
         // when
-        var result = aiJpqlQueryService.executeJpqlQuery(jpql, parameters, Arrays.asList("orderNumber", "orderTotal"), 0, 10);
+        var result = aiJpqlQueryService.executeJpqlQuery(jpql, JpqlParameters.fromMap(parameters), Arrays.asList("orderNumber", "orderTotal"), 0, 10);
 
         // then
         assertThat(result.success()).as("Query should succeed with LocalDate string parameter").isTrue();
@@ -75,7 +76,7 @@ class AiJpqlQueryServiceTest extends AbstractTest {
         parameters.put("minValue", "2000.00");
 
         // when
-        var result = aiJpqlQueryService.executeJpqlQuery(jpql, parameters, Arrays.asList("orderNumber", "orderTotal"), 0, 10);
+        var result = aiJpqlQueryService.executeJpqlQuery(jpql, JpqlParameters.fromMap(parameters), Arrays.asList("orderNumber", "orderTotal"), 0, 10);
 
         // then
         assertThat(result.success()).as("Query should succeed with numeric string parameter").isTrue();
@@ -94,7 +95,7 @@ class AiJpqlQueryServiceTest extends AbstractTest {
         parameters.put("minOrders", "0");
 
         // when
-        var result = aiJpqlQueryService.executeJpqlQuery(jpql, parameters, Arrays.asList("clientName"), 0, 10);
+        var result = aiJpqlQueryService.executeJpqlQuery(jpql, JpqlParameters.fromMap(parameters), Arrays.asList("clientName"), 0, 10);
 
         // then
         assertThat(result.success()).as("Query should succeed with integer string parameter").isTrue();
@@ -111,7 +112,7 @@ class AiJpqlQueryServiceTest extends AbstractTest {
         parameters.put("pattern", "%Test%");
 
         // when
-        var result = aiJpqlQueryService.executeJpqlQuery(jpql, parameters, Arrays.asList("clientName"), 0, 10);
+        var result = aiJpqlQueryService.executeJpqlQuery(jpql, JpqlParameters.fromMap(parameters), Arrays.asList("clientName"), 0, 10);
 
         // then
         assertThat(result.success()).as("Query should succeed with string LIKE parameter").isTrue();
@@ -136,7 +137,7 @@ class AiJpqlQueryServiceTest extends AbstractTest {
         parameters.put("minValue", "1000.00");
 
         // when
-        var result = aiJpqlQueryService.executeJpqlQuery(jpql, parameters, Arrays.asList("orderNumber", "orderTotal"), 0, 10);
+        var result = aiJpqlQueryService.executeJpqlQuery(jpql, JpqlParameters.fromMap(parameters), Arrays.asList("orderNumber", "orderTotal"), 0, 10);
 
         // then
         assertThat(result.success()).as("Query should succeed with mixed parameter types").isTrue();
@@ -163,7 +164,7 @@ class AiJpqlQueryServiceTest extends AbstractTest {
         String jpql = "SELECT o.number AS orderNumber FROM Order_ o WHERE o.number LIKE 'PAG-TEST-%' ORDER BY o.number ASC";
         
         // Request limit 1, we have 2 orders with this prefix
-        var result = aiJpqlQueryService.executeJpqlQuery(jpql, Map.of(), Arrays.asList("orderNumber"), 0, 1);
+        var result = aiJpqlQueryService.executeJpqlQuery(jpql, JpqlParameters.empty(), Arrays.asList("orderNumber"), 0, 1);
         
         assertThat(result.success()).isTrue();
         assertThat(result.rowCount()).isEqualTo(1);
@@ -173,7 +174,7 @@ class AiJpqlQueryServiceTest extends AbstractTest {
         assertThat(result.data().get(0).get("orderNumber")).isEqualTo("PAG-TEST-001");
 
         // Request next page
-        var secondPageResult = aiJpqlQueryService.executeJpqlQuery(jpql, Map.of(), Arrays.asList("orderNumber"), 1, 1);
+        var secondPageResult = aiJpqlQueryService.executeJpqlQuery(jpql, JpqlParameters.empty(), Arrays.asList("orderNumber"), 1, 1);
         
         assertThat(secondPageResult.success()).isTrue();
         assertThat(secondPageResult.rowCount()).isEqualTo(1);

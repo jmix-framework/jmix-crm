@@ -4,11 +4,14 @@ import com.company.crm.ai.entity.AiConversation;
 import com.company.crm.ai.entity.ChatMessage;
 import com.company.crm.ai.entity.ChatMessageType;
 import io.jmix.core.DataManager;
+import io.jmix.core.Messages;
+import io.jmix.core.security.Authenticated;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.ai.bedrock.converse.BedrockChatOptions;
 import org.springframework.ai.chat.client.ChatClient;
-import io.jmix.core.security.Authenticated;
+import org.springframework.ai.openai.OpenAiChatOptions;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -16,6 +19,7 @@ import org.springframework.util.StringUtils;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -23,27 +27,29 @@ public class AiConversationTitleService {
 
     private static final Logger log = LoggerFactory.getLogger(AiConversationTitleService.class);
 
-    private static final String DEFAULT_TITLE = "New Chat";
-    private static final String LEGACY_DEFAULT_TITLE = "AI Chat Session";
     private static final int TITLE_MAX_LENGTH = 80;
+    private static final int MESSAGE_SNIPPET_MAX_LENGTH = 240;
     private static final int TITLE_MIN_USER_MESSAGES = 1;
     private static final int TITLE_MAX_CONTEXT_MESSAGES = 6;
+    private static final double TITLE_TEMPERATURE = 0.0;
+    private static final int TITLE_MAX_TOKENS = 32;
 
     private final DataManager dataManager;
     private final ChatClient chatClient;
-    private final AiConversationTitleProperties properties;
+    private final Messages messages;
 
     public AiConversationTitleService(
             DataManager dataManager,
             ChatClient.Builder chatClientBuilder,
-            AiConversationTitleProperties properties
-    ) {
+            @Value("classpath:prompts/ai-conversation-title-system-prompt.st") Resource systemPrompt,
+            AiConversationTitleProperties properties,
+            Messages messages) {
         this.dataManager = dataManager;
-        this.properties = properties;
         this.chatClient = chatClientBuilder.clone()
-                .defaultSystem(properties.getSystemPrompt())
-                .defaultOptions(buildOptions(properties))
+                .defaultSystem(systemPrompt)
+                .defaultOptions(buildOptions(properties.getModelId()))
                 .build();
+        this.messages = messages;
     }
 
     @Async
@@ -58,7 +64,7 @@ public class AiConversationTitleService {
                     .optional()
                     .orElse(null);
 
-            if (conversation == null || !isUntitled(conversation.getTitle())) {
+            if (conversation == null || hasAiTitle(conversation.getTitle())) {
                 return;
             }
 
@@ -90,7 +96,7 @@ public class AiConversationTitleService {
                     .id(conversationId)
                     .optional()
                     .orElse(null);
-            if (latestConversation == null || !isUntitled(latestConversation.getTitle())) {
+            if (latestConversation == null || hasAiTitle(latestConversation.getTitle())) {
                 return;
             }
 
@@ -138,43 +144,36 @@ public class AiConversationTitleService {
                 .content();
     }
 
-    private BedrockChatOptions buildOptions(AiConversationTitleProperties properties) {
-        return BedrockChatOptions.builder()
-                .model(properties.getModelId())
-                .temperature(properties.getTemperature())
-                .maxTokens(properties.getMaxTokens())
-                .build();
+    private OpenAiChatOptions buildOptions(String modelId) {
+        OpenAiChatOptions.Builder optionsBuilder = OpenAiChatOptions.builder()
+                .temperature(TITLE_TEMPERATURE)
+                .maxCompletionTokens(TITLE_MAX_TOKENS);
+        if (StringUtils.hasText(modelId)) {
+            optionsBuilder.model(modelId);
+        }
+        return optionsBuilder.build();
     }
 
-    private boolean isUntitled(String title) {
-        return !StringUtils.hasText(title)
-                || DEFAULT_TITLE.equals(title)
-                || LEGACY_DEFAULT_TITLE.equals(title);
+    private boolean hasAiTitle(String title) {
+        return StringUtils.hasText(title)
+                && !messages.formatMessage(AiConversation.class, "defaultTitle").equals(title);
     }
 
     private String sanitizeTitle(String title) {
-        if (!StringUtils.hasText(title)) {
-            return "";
-        }
-        String sanitized = title
-                .replace("\n", " ")
-                .replace("\r", " ")
-                .replace("\"", "")
-                .trim();
-        if (sanitized.endsWith(".")) {
-            sanitized = sanitized.substring(0, sanitized.length() - 1).trim();
-        }
-        if (sanitized.length() > TITLE_MAX_LENGTH) {
-            sanitized = sanitized.substring(0, TITLE_MAX_LENGTH).trim();
-        }
-        return sanitized;
+        return normalize(title, TITLE_MAX_LENGTH)
+                .map(t -> t.replaceAll("\"", ""))
+                .map(t -> t.endsWith(".") ? t.substring(0, t.length() - 1).trim() : t)
+                .orElse("");
     }
 
     private String safeContent(String content) {
-        if (!StringUtils.hasText(content)) {
-            return "";
-        }
-        String normalized = content.replace("\n", " ").trim();
-        return normalized.length() > 240 ? normalized.substring(0, 240) : normalized;
+        return normalize(content, MESSAGE_SNIPPET_MAX_LENGTH).orElse("");
+    }
+
+    private Optional<String> normalize(String text, int maxLength) {
+        return Optional.ofNullable(text)
+                .filter(StringUtils::hasText)
+                .map(t -> t.replaceAll("[\\n\\r]+", " ").trim())
+                .map(t -> t.length() > maxLength ? t.substring(0, maxLength).trim() : t);
     }
 }

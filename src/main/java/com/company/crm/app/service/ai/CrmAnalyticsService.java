@@ -27,7 +27,6 @@ import io.jmix.core.FileStorageLocator;
 import io.jmix.core.MetadataTools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.ai.bedrock.converse.api.BedrockMediaFormat;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
@@ -68,16 +67,28 @@ public class CrmAnalyticsService {
     // Whitelist for reports allowed in this service
     private static final List<String> CRM_REPORTS = List.of(
             "client-360-report",
-            "invoice-report",
             "category-cashflow-risk-report"
     );
 
     private static final String CRM_MESSAGE_TYPE_METADATA_KEY = "crmMessageType";
     private static final String ATTACHMENT_MESSAGE_TYPE = "ATTACHMENT";
+    private static final Set<MimeType> SUPPORTED_MEDIA_TYPES = Set.of(
+            Media.Format.DOC_PDF,
+            Media.Format.DOC_CSV,
+            Media.Format.DOC_DOC,
+            Media.Format.DOC_DOCX,
+            Media.Format.DOC_XLS,
+            Media.Format.DOC_XLSX,
+            Media.Format.DOC_HTML,
+            Media.Format.DOC_TXT,
+            Media.Format.DOC_MD,
+            Media.Format.IMAGE_PNG,
+            Media.Format.IMAGE_JPEG,
+            Media.Format.IMAGE_GIF,
+            Media.Format.IMAGE_WEBP
+    );
 
     private final ChatClient chatClient;
-
-    // Tools are manually instantiated POJOs
     private final JpqlQueryTool jpqlQueryTool;
     private final JmixJpaEntityDiscoveryTool jmixJpaEntityDiscoveryTool;
     private final JmixReportDiscoveryTool jmixReportDiscoveryTool;
@@ -249,12 +260,12 @@ public class CrmAnalyticsService {
 
     private MimeType resolveSupportedMimeType(String rawMimeType, String fileName) {
         MimeType parsedMimeType = tryParseMimeType(rawMimeType);
-        if (parsedMimeType != null && isSupportedByBedrock(parsedMimeType)) {
+        if (parsedMimeType != null && isSupportedMediaType(parsedMimeType)) {
             return parsedMimeType;
         }
 
         MimeType extensionMimeType = mimeTypeFromExtension(fileName);
-        if (extensionMimeType != null && isSupportedByBedrock(extensionMimeType)) {
+        if (extensionMimeType != null && isSupportedMediaType(extensionMimeType)) {
             return extensionMimeType;
         }
 
@@ -294,10 +305,8 @@ public class CrmAnalyticsService {
         return null;
     }
 
-    private boolean isSupportedByBedrock(MimeType mimeType) {
-        return BedrockMediaFormat.isSupportedDocumentFormat(mimeType)
-                || BedrockMediaFormat.isSupportedImageFormat(mimeType)
-                || BedrockMediaFormat.isSupportedVideoFormat(mimeType);
+    private boolean isSupportedMediaType(MimeType mimeType) {
+        return SUPPORTED_MEDIA_TYPES.contains(mimeType);
     }
 
     private String sanitizeMediaName(String fileName) {

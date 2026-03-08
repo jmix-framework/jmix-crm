@@ -78,6 +78,11 @@ public class JmixJpaEntityDiscoveryTool {
         - Exact attribute names (Java property names)
         - Entity relationships for JPQL joins
         - Property types and constraints
+        - Enum properties in one map: enums.<ENUM_NAME>.id (+ optional enums.<ENUM_NAME>.description)
+
+        ENUM RULE (CRITICAL):
+        - When filtering enum properties in executeQuery(), use enums.<ENUM_NAME>.id, not enum constant names.
+        - Example: if enums.PAID.id is 40, then pass parameter 40 (not "PAID").
         """)
     public String getDomainModelForEntities(
             @ToolParam(description = "List of entity names to include (e.g., [\"Client\", \"Order\"])")
