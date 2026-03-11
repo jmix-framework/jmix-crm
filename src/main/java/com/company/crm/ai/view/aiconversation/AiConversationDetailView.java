@@ -1,10 +1,6 @@
 package com.company.crm.ai.view.aiconversation;
 
-import com.company.crm.ai.model.AiAttachmentType;
-import com.company.crm.ai.model.AiConversation;
-import com.company.crm.ai.model.AiConversationAttachment;
-import com.company.crm.ai.model.ChatMessage;
-import com.company.crm.ai.model.ChatMessageType;
+import com.company.crm.ai.model.*;
 import com.company.crm.ai.service.CrmAnalyticsService;
 import com.company.crm.app.ui.component.GridEmptyStateComponent;
 import com.company.crm.app.util.constant.CrmConstants;
@@ -19,13 +15,7 @@ import com.vaadin.flow.component.progressbar.ProgressBar;
 import com.vaadin.flow.component.upload.FileRejectedEvent;
 import com.vaadin.flow.component.upload.SucceededEvent;
 import com.vaadin.flow.router.Route;
-import io.jmix.core.DataManager;
-import io.jmix.core.FileRef;
-import io.jmix.core.FileStorage;
-import io.jmix.core.FileStorageLocator;
-import io.jmix.core.Messages;
-import io.jmix.core.MetadataTools;
-import io.jmix.core.TimeSource;
+import io.jmix.core.*;
 import io.jmix.core.security.CurrentAuthentication;
 import io.jmix.flowui.Dialogs;
 import io.jmix.flowui.Notifications;
@@ -42,14 +32,7 @@ import io.jmix.flowui.model.CollectionContainer;
 import io.jmix.flowui.model.CollectionLoader;
 import io.jmix.flowui.model.InstanceContainer;
 import io.jmix.flowui.upload.TemporaryStorage;
-import io.jmix.flowui.view.EditedEntityContainer;
-import io.jmix.flowui.view.MessageBundle;
-import io.jmix.flowui.view.StandardDetailView;
-import io.jmix.flowui.view.Subscribe;
-import io.jmix.flowui.view.Target;
-import io.jmix.flowui.view.ViewComponent;
-import io.jmix.flowui.view.ViewController;
-import io.jmix.flowui.view.ViewDescriptor;
+import io.jmix.flowui.view.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -283,11 +266,8 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
                     focusInput();
                 })
                 .withExceptionHandler(e -> {
-                    String errorId = UUID.randomUUID().toString().substring(0, 8);
-                    log.error("Error processing message async [Error ID: {}]", errorId, e);
-                    String errorMessage = "I'm sorry, I encountered a technical error while processing your request. "
-                            + "Please try again later or contact support with Error ID: " + errorId;
-                    messageList.addItem(assistantMessageListItem(errorMessage, now()));
+                    log.error("Error processing message async", e);
+                    messageList.addItem(assistantMessageListItem(messageBundle.getMessage("errorProcessingMessage"), now()));
                     focusInput();
                 })
                 .supplyAsync();
@@ -318,11 +298,8 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
                     focusInput();
                 })
                 .withExceptionHandler(e -> {
-                    String errorId = UUID.randomUUID().toString().substring(0, 8);
-                    log.error("Error processing attachment upload async [Error ID: {}]", errorId, e);
-                    String errorMessage = "I'm sorry, I couldn't analyze the uploaded file right now. "
-                            + "Please try again later or contact support with Error ID: " + errorId;
-                    messageList.addItem(assistantMessageListItem(errorMessage, now()));
+                    log.error("Error processing attachment upload async", e);
+                    messageList.addItem(assistantMessageListItem(messageBundle.getMessage("errorProcessingAttachment"), now()));
                     focusInput();
                 })
                 .supplyAsync();

@@ -224,8 +224,8 @@ public class AiReportExecutionService {
             ChatMessage attachmentMessage = dataManager.create(ChatMessage.class);
             attachmentMessage.setConversation(conversation);
             attachmentMessage.setType(ChatMessageType.ATTACHMENT);
-            attachmentMessage.setContent(String.format("%s added attachment \"%s\"",
-                    assistantName(), attachmentTitle));
+            attachmentMessage.setContent(messages.formatMessage(AiReportExecutionService.class,
+                    "attachmentEventMessage", assistantName(), attachmentTitle));
             dataManager.save(attachmentMessage);
         } catch (Exception e) {
             log.warn("Failed to persist attachment event message for conversation {}", conversation.getId(), e);

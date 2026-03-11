@@ -1,5 +1,7 @@
 package com.company.crm.ai.model;
 
+import com.company.crm.model.base.CreateAuditEntity;
+import com.company.crm.model.base.FullAuditEntity;
 import io.jmix.core.entity.annotation.JmixGeneratedValue;
 import io.jmix.core.metamodel.annotation.Composition;
 import io.jmix.core.metamodel.annotation.DependsOnProperties;
@@ -16,25 +18,13 @@ import java.util.UUID;
 @JmixEntity
 @Table(name = "AI_CONVERSATION")
 @Entity
-public class AiConversation {
-    @JmixGeneratedValue
-    @Column(name = "ID", nullable = false)
-    @Id
-    private UUID id;
+public class AiConversation extends CreateAuditEntity {
 
     @Column(name = "TITLE")
     private String title;
 
     @Column(name = "FIRST_MESSAGE_SENT", nullable = false)
     private Boolean firstMessageSent = false;
-
-    @CreatedBy
-    @Column(name = "CREATED_BY")
-    private String createdBy;
-
-    @CreatedDate
-    @Column(name = "CREATED_DATE")
-    private OffsetDateTime createdDate;
 
     @Composition
     @OneToMany(mappedBy = "conversation")
@@ -65,7 +55,7 @@ public class AiConversation {
     @InstanceName
     @DependsOnProperties({"title", "id"})
     public String getInstanceName() {
-        return title != null ? title : "Conversation " + id;
+        return title != null ? title : "Conversation " + getId();
     }
 
     public String getTitle() {
@@ -82,30 +72,6 @@ public class AiConversation {
 
     public void setFirstMessageSent(Boolean firstMessageSent) {
         this.firstMessageSent = firstMessageSent;
-    }
-
-    public OffsetDateTime getCreatedDate() {
-        return createdDate;
-    }
-
-    public void setCreatedDate(OffsetDateTime createdDate) {
-        this.createdDate = createdDate;
-    }
-
-    public String getCreatedBy() {
-        return createdBy;
-    }
-
-    public void setCreatedBy(String createdBy) {
-        this.createdBy = createdBy;
-    }
-
-    public UUID getId() {
-        return id;
-    }
-
-    public void setId(UUID id) {
-        this.id = id;
     }
 
 }

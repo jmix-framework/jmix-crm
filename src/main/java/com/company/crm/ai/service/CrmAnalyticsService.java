@@ -1,6 +1,5 @@
 package com.company.crm.ai.service;
 
-import com.company.crm.ai.model.AiConversationAttachment;
 import com.company.crm.ai.jpql.introspection.exporter.AiDomainModelDescriptorYamlExporter;
 import com.company.crm.ai.jpql.introspection.JmixJpaEntityDiscoveryTool;
 import com.company.crm.ai.jpql.query.AiJpqlQueryService;
@@ -9,6 +8,7 @@ import com.company.crm.ai.report.introspection.AiReportModelDescriptorYamlExport
 import com.company.crm.ai.report.introspection.JmixReportDiscoveryTool;
 import com.company.crm.ai.report.run.AiReportExecutionService;
 import com.company.crm.ai.report.run.RunReportTool;
+import com.company.crm.ai.service.AiAttachmentMediaResolver.AttachmentRef;
 import com.company.crm.model.catalog.category.Category;
 import com.company.crm.model.catalog.item.CategoryItem;
 import com.company.crm.model.catalog.item.CategoryItemComment;
@@ -19,10 +19,7 @@ import com.company.crm.model.order.Order;
 import com.company.crm.model.order.OrderItem;
 import com.company.crm.model.payment.Payment;
 import com.company.crm.model.user.User;
-import io.jmix.core.DataManager;
-import io.jmix.core.FileRef;
-import io.jmix.core.FileStorage;
-import io.jmix.core.FileStorageLocator;
+import io.jmix.core.Messages;
 import io.jmix.core.MetadataTools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,13 +34,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
-import org.springframework.util.MimeType;
-import org.springframework.util.MimeTypeUtils;
 import org.springframework.util.StringUtils;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -71,30 +63,15 @@ public class CrmAnalyticsService {
 
     private static final String CRM_MESSAGE_TYPE_METADATA_KEY = "crmMessageType";
     private static final String ATTACHMENT_MESSAGE_TYPE = "ATTACHMENT";
-    private static final Set<MimeType> SUPPORTED_MEDIA_TYPES = Set.of(
-            Media.Format.DOC_PDF,
-            Media.Format.DOC_CSV,
-            Media.Format.DOC_DOC,
-            Media.Format.DOC_DOCX,
-            Media.Format.DOC_XLS,
-            Media.Format.DOC_XLSX,
-            Media.Format.DOC_HTML,
-            Media.Format.DOC_TXT,
-            Media.Format.DOC_MD,
-            Media.Format.IMAGE_PNG,
-            Media.Format.IMAGE_JPEG,
-            Media.Format.IMAGE_GIF,
-            Media.Format.IMAGE_WEBP
-    );
 
     private final ChatClient chatClient;
     private final JpqlQueryTool jpqlQueryTool;
     private final JmixJpaEntityDiscoveryTool jmixJpaEntityDiscoveryTool;
     private final JmixReportDiscoveryTool jmixReportDiscoveryTool;
     private final RunReportTool runReportTool;
-    private final DataManager dataManager;
-    private final FileStorageLocator fileStorageLocator;
+    private final AiAttachmentMediaResolver attachmentMediaResolver;
     private final AiConversationTitleService aiConversationTitleService;
+    private final Messages messages;
 
     @Autowired
     public CrmAnalyticsService(
@@ -106,9 +83,9 @@ public class CrmAnalyticsService {
             AiReportExecutionService aiReportExecutionService,
             MetadataTools metadataTools,
             ChatMemoryRepository chatMemoryRepository,
-            DataManager dataManager,
-            FileStorageLocator fileStorageLocator,
-            AiConversationTitleService aiConversationTitleService
+            AiAttachmentMediaResolver attachmentMediaResolver,
+            AiConversationTitleService aiConversationTitleService,
+            Messages messages
     ) {
         ChatMemory chatMemory = MessageWindowChatMemory.builder()
                 .chatMemoryRepository(chatMemoryRepository)
@@ -122,14 +99,13 @@ public class CrmAnalyticsService {
                 )
                 .build();
 
-        // Instantiate tools with specific whitelists
         this.jpqlQueryTool = new JpqlQueryTool(aiJpqlQueryService);
         this.jmixJpaEntityDiscoveryTool = new JmixJpaEntityDiscoveryTool(metadataTools, entityYamlExporter, CRM_ENTITIES);
         this.jmixReportDiscoveryTool = new JmixReportDiscoveryTool(reportYamlExporter, CRM_REPORTS);
         this.runReportTool = new RunReportTool(aiReportExecutionService, CRM_REPORTS);
-        this.dataManager = dataManager;
-        this.fileStorageLocator = fileStorageLocator;
+        this.attachmentMediaResolver = attachmentMediaResolver;
         this.aiConversationTitleService = aiConversationTitleService;
+        this.messages = messages;
     }
 
     /**
@@ -144,13 +120,13 @@ public class CrmAnalyticsService {
      * attachment as model media input.
      */
     public String processAttachmentUpload(String conversationId, UUID attachmentId, String fileName, String mimeType, String actorName) {
-        String safeFileName = StringUtils.hasText(fileName) ? fileName : "file";
-        String safeActorName = StringUtils.hasText(actorName) ? actorName : "User";
-        String uploadEventPrompt = String.format("%s added attachment \"%s\"", safeActorName, safeFileName);
+        String safeFileName = StringUtils.hasText(fileName) ? fileName : messages.formatMessage(CrmAnalyticsService.class, "defaultFileName");
+        String safeActorName = StringUtils.hasText(actorName) ? actorName : messages.formatMessage(CrmAnalyticsService.class, "defaultActorName");
+        String uploadEventPrompt = messages.formatMessage(CrmAnalyticsService.class, "attachmentUploadPrompt", safeActorName, safeFileName);
         return processBusinessQuestionInternal(
                 uploadEventPrompt,
                 conversationId,
-                List.of(new AttachmentPromptReference(attachmentId, mimeType)),
+                List.of(new AttachmentRef(attachmentId, mimeType)),
                 Map.of(CRM_MESSAGE_TYPE_METADATA_KEY, ATTACHMENT_MESSAGE_TYPE)
         );
     }
@@ -158,14 +134,14 @@ public class CrmAnalyticsService {
     private String processBusinessQuestionInternal(
             String userQuestion,
             String conversationId,
-            List<AttachmentPromptReference> attachmentRefs,
+            List<AttachmentRef> attachmentRefs,
             Map<String, Object> userMetadata
     ) {
         log.debug("Processing business question: {} (conversation: {}, attachmentCount: {})",
                 userQuestion, conversationId, attachmentRefs.size());
 
         UUID conversationUuid = tryParseConversationId(conversationId);
-        List<Media> mediaAttachments = resolveMediaAttachments(conversationUuid, attachmentRefs);
+        List<Media> mediaAttachments = attachmentMediaResolver.resolve(conversationUuid, attachmentRefs);
 
         var promptSpec = chatClient.prompt()
                 .user(user -> {
@@ -201,127 +177,5 @@ public class CrmAnalyticsService {
             log.warn("Invalid conversationId format for tool context: {}", conversationId);
             return null;
         }
-    }
-
-    private List<Media> resolveMediaAttachments(UUID conversationUuid, List<AttachmentPromptReference> attachmentRefs) {
-        if (attachmentRefs.isEmpty()) {
-            return List.of();
-        }
-        if (conversationUuid == null) {
-            throw new IllegalArgumentException("Attachment media input requires a valid conversation UUID.");
-        }
-
-        List<Media> mediaList = new ArrayList<>();
-        for (AttachmentPromptReference ref : attachmentRefs) {
-            AiConversationAttachment attachment = dataManager.load(AiConversationAttachment.class)
-                    .query("select e from AiConversationAttachment e where e.id = :id and e.conversation.id = :conversationId")
-                    .parameter("id", ref.attachmentId())
-                    .parameter("conversationId", conversationUuid)
-                    .optional()
-                    .orElseThrow(() -> new IllegalArgumentException(
-                            "Attachment not found in conversation: " + ref.attachmentId()));
-
-            FileRef fileRef = attachment.getFile();
-            if (fileRef == null) {
-                throw new IllegalArgumentException("Attachment has no file payload: " + ref.attachmentId());
-            }
-
-            MimeType mimeType = resolveSupportedMimeType(ref.mimeType(), attachment.getFileName());
-            byte[] fileBytes = readFileBytes(fileRef);
-            String mediaName = sanitizeMediaName(attachment.getFileName());
-
-            Media media = Media.builder()
-                    .mimeType(mimeType)
-                    .data(fileBytes)
-                    .name(mediaName)
-                    .build();
-            mediaList.add(media);
-        }
-
-        return mediaList;
-    }
-
-    private byte[] readFileBytes(FileRef fileRef) {
-        try (InputStream inputStream = resolveFileStorage(fileRef).openStream(fileRef)) {
-            return inputStream.readAllBytes();
-        } catch (IOException e) {
-            throw new IllegalStateException("Failed to read attachment from file storage: " + fileRef.getFileName(), e);
-        }
-    }
-
-    private FileStorage resolveFileStorage(FileRef fileRef) {
-        String storageName = fileRef.getStorageName();
-        if (!StringUtils.hasText(storageName)) {
-            throw new IllegalStateException("Attachment FileRef has no storage name: " + fileRef.getFileName());
-        }
-        return fileStorageLocator.getByName(storageName);
-    }
-
-    private MimeType resolveSupportedMimeType(String rawMimeType, String fileName) {
-        MimeType parsedMimeType = tryParseMimeType(rawMimeType);
-        if (parsedMimeType != null && isSupportedMediaType(parsedMimeType)) {
-            return parsedMimeType;
-        }
-
-        MimeType extensionMimeType = mimeTypeFromExtension(fileName);
-        if (extensionMimeType != null && isSupportedMediaType(extensionMimeType)) {
-            return extensionMimeType;
-        }
-
-        throw new IllegalArgumentException("Unsupported attachment media type for model input: " + fileName);
-    }
-
-    private MimeType tryParseMimeType(String rawMimeType) {
-        if (!StringUtils.hasText(rawMimeType)) {
-            return null;
-        }
-        try {
-            return MimeTypeUtils.parseMimeType(rawMimeType);
-        } catch (IllegalArgumentException e) {
-            return null;
-        }
-    }
-
-    private MimeType mimeTypeFromExtension(String fileName) {
-        if (!StringUtils.hasText(fileName)) {
-            return null;
-        }
-
-        String normalized = fileName.toLowerCase();
-        if (normalized.endsWith(".pdf")) return Media.Format.DOC_PDF;
-        if (normalized.endsWith(".csv")) return Media.Format.DOC_CSV;
-        if (normalized.endsWith(".doc")) return Media.Format.DOC_DOC;
-        if (normalized.endsWith(".docx")) return Media.Format.DOC_DOCX;
-        if (normalized.endsWith(".xls")) return Media.Format.DOC_XLS;
-        if (normalized.endsWith(".xlsx")) return Media.Format.DOC_XLSX;
-        if (normalized.endsWith(".html") || normalized.endsWith(".htm")) return Media.Format.DOC_HTML;
-        if (normalized.endsWith(".txt")) return Media.Format.DOC_TXT;
-        if (normalized.endsWith(".md")) return Media.Format.DOC_MD;
-        if (normalized.endsWith(".png")) return Media.Format.IMAGE_PNG;
-        if (normalized.endsWith(".jpg") || normalized.endsWith(".jpeg")) return Media.Format.IMAGE_JPEG;
-        if (normalized.endsWith(".gif")) return Media.Format.IMAGE_GIF;
-        if (normalized.endsWith(".webp")) return Media.Format.IMAGE_WEBP;
-        return null;
-    }
-
-    private boolean isSupportedMediaType(MimeType mimeType) {
-        return SUPPORTED_MEDIA_TYPES.contains(mimeType);
-    }
-
-    private String sanitizeMediaName(String fileName) {
-        String candidate = StringUtils.hasText(fileName) ? fileName : "uploaded-file";
-        String sanitized = candidate
-                .replaceAll("[^A-Za-z0-9\\s\\-()\\[\\]]", "_")
-                .replaceAll("\\s+", " ")
-                .trim();
-
-        if (!StringUtils.hasText(sanitized)) {
-            sanitized = "uploaded-file";
-        }
-
-        return sanitized.length() > 96 ? sanitized.substring(0, 96) : sanitized;
-    }
-
-    private record AttachmentPromptReference(UUID attachmentId, String mimeType) {
     }
 }

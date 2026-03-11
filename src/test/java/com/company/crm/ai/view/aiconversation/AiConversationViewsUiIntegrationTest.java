@@ -100,7 +100,7 @@ public class AiConversationViewsUiIntegrationTest extends AbstractUiTest {
         AiConversation editedEntity = detailView.getEditedEntity();
         assertThat(editedEntity.getId()).isNotNull();
         assertThat(dataManager.load(AiConversation.class).id(editedEntity.getId()).optional()).isPresent();
-        assertThat(editedEntity.getTitle()).contains("New Chat");
+        assertThat(editedEntity.getTitle()).contains("New AI Conversation");
     }
 
     @Test

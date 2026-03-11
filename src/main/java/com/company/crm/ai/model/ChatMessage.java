@@ -1,5 +1,6 @@
 package com.company.crm.ai.model;
 
+import com.company.crm.model.base.CreateAuditEntity;
 import io.jmix.core.entity.annotation.JmixGeneratedValue;
 import io.jmix.core.metamodel.annotation.JmixEntity;
 import jakarta.persistence.*;
@@ -16,12 +17,8 @@ import java.util.UUID;
         @Index(name = "IDX_CHAT_MESSAGE", columnList = "CONVERSATION_ID, CREATED_DATE")
 })
 @Entity
-public class ChatMessage {
+public class ChatMessage extends CreateAuditEntity {
 
-    @JmixGeneratedValue
-    @Column(name = "ID", nullable = false)
-    @Id
-    private UUID id;
 
     @JoinColumn(name = "CONVERSATION_ID", nullable = false)
     @NotNull
@@ -31,14 +28,6 @@ public class ChatMessage {
     @Column(name = "CONTENT")
     @Lob
     private String content;
-
-    @CreatedBy
-    @Column(name = "CREATED_BY")
-    private String createdBy;
-
-    @CreatedDate
-    @Column(name = "CREATED_DATE")
-    private OffsetDateTime createdDate;
 
     @NotNull
     @Column(name = "TYPE_", nullable = false)
@@ -66,30 +55,6 @@ public class ChatMessage {
 
     public void setConversation(AiConversation conversation) {
         this.conversation = conversation;
-    }
-
-    public OffsetDateTime getCreatedDate() {
-        return createdDate;
-    }
-
-    public void setCreatedDate(OffsetDateTime createdDate) {
-        this.createdDate = createdDate;
-    }
-
-    public String getCreatedBy() {
-        return createdBy;
-    }
-
-    public void setCreatedBy(String createdBy) {
-        this.createdBy = createdBy;
-    }
-
-    public UUID getId() {
-        return id;
-    }
-
-    public void setId(UUID id) {
-        this.id = id;
     }
 
 

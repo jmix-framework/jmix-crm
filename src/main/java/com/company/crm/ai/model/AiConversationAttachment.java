@@ -1,5 +1,6 @@
 package com.company.crm.ai.model;
 
+import com.company.crm.model.base.CreateAuditEntity;
 import io.jmix.core.FileRef;
 import io.jmix.core.entity.annotation.JmixGeneratedValue;
 import io.jmix.core.metamodel.annotation.JmixEntity;
@@ -17,12 +18,7 @@ import java.util.UUID;
         @Index(name = "IDX_AI_CONV_ATTACH_CONV", columnList = "CONVERSATION_ID")
 })
 @Entity
-public class AiConversationAttachment {
-
-    @JmixGeneratedValue
-    @Column(name = "ID", nullable = false)
-    @Id
-    private UUID id;
+public class AiConversationAttachment extends CreateAuditEntity {
 
     @NotNull
     @JoinColumn(name = "CONVERSATION_ID", nullable = false)
@@ -44,14 +40,6 @@ public class AiConversationAttachment {
     @NotNull
     @Column(name = "TYPE_", nullable = false)
     private String type;
-
-    @CreatedBy
-    @Column(name = "CREATED_BY")
-    private String createdBy;
-
-    @CreatedDate
-    @Column(name = "CREATED_DATE")
-    private OffsetDateTime createdDate;
 
     public AiAttachmentType getType() {
         return type == null ? null : AiAttachmentType.fromId(type);
@@ -93,27 +81,4 @@ public class AiConversationAttachment {
         this.conversation = conversation;
     }
 
-    public OffsetDateTime getCreatedDate() {
-        return createdDate;
-    }
-
-    public void setCreatedDate(OffsetDateTime createdDate) {
-        this.createdDate = createdDate;
-    }
-
-    public String getCreatedBy() {
-        return createdBy;
-    }
-
-    public void setCreatedBy(String createdBy) {
-        this.createdBy = createdBy;
-    }
-
-    public UUID getId() {
-        return id;
-    }
-
-    public void setId(UUID id) {
-        this.id = id;
-    }
 }

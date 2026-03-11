@@ -13,7 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 @Route(value = "ai-conversations", layout = MainView.class)
 @ViewController(id = CrmConstants.ViewIds.AI_CONVERSATION_LIST)
-@ViewDescriptor(path = "/com/company/crm/ai/view/aiconversation/ai-conversation-list-view.xml")
+@ViewDescriptor(path = "ai-conversation-list-view.xml")
 @LookupComponent("aiConversationsDataGrid")
 @DialogMode(width = "64em")
 public class AiConversationListView extends StandardListView<AiConversation> {

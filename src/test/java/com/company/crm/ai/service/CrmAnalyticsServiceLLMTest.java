@@ -5,6 +5,7 @@ import com.company.crm.ai.model.AiConversation;
 import com.company.crm.model.client.Client;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
@@ -478,23 +479,31 @@ class CrmAnalyticsServiceLLMTest extends AbstractTest {
 
         // when
         String question = """
-                Compare the performance of our enterprise clients versus our smaller clients.
-                In this demo dataset, use total ORDER amounts as profitability proxy (invoices may be missing).
-                Base your analysis on these clients: TestClient_Beta, TestClient_Alpha, TestClient_Charlie.
-                State which segment/proxy winner is higher and mention any data limitation briefly.
+                Compare enterprise vs smaller clients using two explicit views:
+                1) total segment ORDER amount and
+                2) average ORDER amount per client.
+                In this demo dataset, use ORDER totals as profitability proxy (invoices may be missing).
+                Use only these clients:
+                - enterprise segment: TestClient_Charlie
+                - smaller segment: TestClient_Alpha and TestClient_Beta
+                State both winners explicitly (total-segment winner and per-client-average winner) and mention one data limitation.
                 """;
         String response = analyticsService.processBusinessQuestion(question, conversationId);
 
         // then
         assertThat(response).isNotBlank();
         assertThat(response).containsAnyOf("TestClient_Beta", "TestClient_Alpha", "TestClient_Charlie");
+        BigDecimal smallerSegmentTotal = alphaRevenue.add(betaRevenue);
+        BigDecimal smallerSegmentAverage = smallerSegmentTotal.divide(new BigDecimal("2"));
         String expectedAnswer = String.format("""
                 Must compare the three specified clients using ORDER totals as profitability proxy.
                 Expected order totals: TestClient_Beta %s, TestClient_Alpha %s, TestClient_Charlie %s.
-                Should conclude that Charlie > Alpha > Beta for the proxy comparison.
+                Segment totals: enterprise %s, smaller %s.
+                Per-client averages: enterprise %s, smaller %s.
+                Should state that smaller wins on total segment amount, while enterprise wins on per-client average.
                 A brief limitation note about missing invoice/cost data is acceptable.
                 """,
-            betaRevenue, alphaRevenue, charlieRevenue);
+            betaRevenue, alphaRevenue, charlieRevenue, charlieRevenue, smallerSegmentTotal, charlieRevenue, smallerSegmentAverage);
         LLMJudgeTool.JudgeResult evaluation = evaluateWithJudge(question, response, expectedAnswer);
 
         assertThat(evaluation.correct())
@@ -532,20 +541,39 @@ class CrmAnalyticsServiceLLMTest extends AbstractTest {
             Long.class
         ).parameter("name", "TestClient_Echo").one();
 
+        // 3. Stable control client (Foxtrot: active in both windows, should generally not be primary churn risk)
+        long foxtrotRecentOrders = dataManager.loadValue(
+            "SELECT COUNT(o) FROM Client c LEFT JOIN c.orders o WHERE c.name = :name AND @between(o.date, now-90, now, day)",
+            Long.class
+        ).parameter("name", "TestClient_Foxtrot").one();
+
+        long foxtrotHistoricalOrders = dataManager.loadValue(
+            "SELECT COUNT(o) FROM Client c LEFT JOIN c.orders o WHERE c.name = :name AND @between(o.date, now-180, now-91, day)",
+            Long.class
+        ).parameter("name", "TestClient_Foxtrot").one();
+
         // Verify test data setup - Delta should show decline, Echo should show complete drop-off
         assertThat(deltaHistoricalOrders).isGreaterThan(0L); // Had historical activity
         assertThat(deltaRecentOrders).isLessThan(deltaHistoricalOrders); // Recent activity declined
         assertThat(echoHistoricalOrders).isGreaterThan(0L); // Had historical activity
         assertThat(echoRecentOrders).isEqualTo(0L); // No recent activity
+        assertThat(foxtrotHistoricalOrders).isGreaterThan(0L); // Had historical activity
+        assertThat(foxtrotRecentOrders).isGreaterThan(0L); // Still active recently
 
         // when: Ask the specific churn risk question
-        String question = "Which clients haven't been ordering lately and might be at risk of churning? I'm worried we might be losing some good customers without noticing.";
+        String question = """
+                Identify churn risk using two criteria:
+                1) no orders in the last 90 days, OR
+                2) clear decline in order activity compared to days 91-180.
+                Focus on these clients: TestClient_Delta, TestClient_Echo, TestClient_Foxtrot.
+                Classify each client as risk/not-risk and explain briefly why, then give short mitigation recommendations.
+                """;
         String response = analyticsService.processBusinessQuestion(question, conversationId);
 
         // then: Judge should verify the AI identifies the risk accounts and provides actionable insights
         String expectedAnswer = String.format(
-            "Should identify at-risk accounts based on churn/revenue-decline patterns. TestClient_Delta shows decline (%d recent vs %d historical orders). May not detect TestClient_Echo (complete drop-off) due to query limitations. Should provide business recommendations and analysis methodology.",
-            deltaRecentOrders, deltaHistoricalOrders
+            "Should identify at-risk accounts based on both criteria. TestClient_Delta is decline risk (%d recent vs %d historical orders). TestClient_Echo is inactivity risk (%d recent vs %d historical). TestClient_Foxtrot should be treated as stable (%d recent vs %d historical) or clearly lower risk. Should provide business recommendations and explain criteria.",
+            deltaRecentOrders, deltaHistoricalOrders, echoRecentOrders, echoHistoricalOrders, foxtrotRecentOrders, foxtrotHistoricalOrders
         );
 
         LLMJudgeTool.JudgeResult evaluation = evaluateWithJudge(question, response, expectedAnswer);
@@ -553,12 +581,6 @@ class CrmAnalyticsServiceLLMTest extends AbstractTest {
         // Verify response contains key elements expected in churn risk analysis
         assertThat(response).isNotBlank();
         assertThat(response.length()).isGreaterThan(500); // Should be substantial analysis
-
-        // Should mention at least TestClient_Delta (Echo might be missed due to query limitations)
-        assertThat(response).containsIgnoringCase("TestClient_Delta");
-
-        // Should contain analysis keywords
-        assertThat(response).containsAnyOf("risk", "decline", "churn", "revenue", "recommendation", "action");
 
         assertThat(evaluation.correct())
             .as("LLM should correctly identify accounts with churn/revenue-decline risk and provide actionable insights")

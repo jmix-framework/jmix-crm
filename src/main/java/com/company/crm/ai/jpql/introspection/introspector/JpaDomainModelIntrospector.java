@@ -35,24 +35,6 @@ public class JpaDomainModelIntrospector {
     }
 
     /**
-     * Introspect only specified entities by their names.
-     *
-     * @param entityNames collection of entity names to introspect
-     * @return AiDomainModelDescriptor containing only the requested entities
-     */
-    public AiDomainModelDescriptor introspectByNames(Collection<String> entityNames) {
-        if (entityNames == null || entityNames.isEmpty()) {
-            return new AiDomainModelDescriptor(Map.of());
-        }
-
-        List<MetaClass> filteredMetaClasses = metadataTools.getAllJpaEntityMetaClasses().stream()
-                .filter(mc -> entityNames.contains(mc.getName()))
-                .toList();
-
-        return introspect(filteredMetaClasses);
-    }
-
-    /**
      * Introspect only specified MetaClasses.
      * More efficient than introspecting all entities and then filtering.
      *

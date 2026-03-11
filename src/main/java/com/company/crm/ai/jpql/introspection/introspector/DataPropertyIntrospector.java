@@ -32,29 +32,11 @@ public class DataPropertyIntrospector implements MetaPropertyIntrospector {
             return null;
         }
 
-        String javaType = getPropertyType(property);
-        String type = property.getType().name().toLowerCase();
-        Boolean identifier = isIdProperty(property) ? true : null;
-        String comment = metadataTools.getMetaAnnotationValue(property, Comment.class);
-        String caption = getPropertyCaption(property);
-
-        return AiPropertyDescriptor.dataProperty(caption, comment, javaType, identifier);
-    }
-
-    private String getPropertyType(MetaProperty property) {
-        return property.getJavaType().getSimpleName();
-    }
-
-    private boolean isIdProperty(MetaProperty property) {
-        if (property.getAnnotatedElement().isAnnotationPresent(jakarta.persistence.Id.class) ||
-            property.getAnnotatedElement().isAnnotationPresent(jakarta.persistence.EmbeddedId.class)) {
-            return true;
-        }
-
-        return "id".equals(property.getName());
-    }
-
-    private String getPropertyCaption(MetaProperty property) {
-        return messageTools.getPropertyCaption(property.getDomain(), property.getName());
+        return AiPropertyDescriptor.dataProperty(
+                messageTools.getPropertyCaption(property.getDomain(), property.getName()),
+                metadataTools.getMetaAnnotationValue(property, Comment.class),
+                property.getJavaType().getSimpleName(),
+                property.equals(metadataTools.getPrimaryKeyProperty(property.getDomain())) ? true : null
+        );
     }
 }

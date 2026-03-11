@@ -25,7 +25,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class AiReportExecutionServiceIntegrationTest extends AbstractTest {
+class AiReportExecutionServiceTest extends AbstractTest {
 
     @Autowired
     private AiReportExecutionService executionService;
