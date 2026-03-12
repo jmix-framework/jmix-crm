@@ -2,6 +2,7 @@ package com.company.crm.test.user;
 
 import com.company.crm.AbstractTest;
 import com.company.crm.model.client.Client;
+import com.company.crm.model.client.ClientType;
 import com.company.crm.model.user.User;
 import com.company.crm.model.user.activity.client.ClientUserActivity;
 import com.company.crm.security.role.ManagerRole;
@@ -29,6 +30,7 @@ class UserActivityRecorderTest extends AbstractTest {
 
         Client client = dataManager.create(Client.class);
         client.setName("Recorder Client");
+        client.setType(ClientType.BUSINESS);
         client.setAddress(entities.address());
 
         systemAuthenticator.runWithUser(user.getUsername(), () -> dataManager.save(client));

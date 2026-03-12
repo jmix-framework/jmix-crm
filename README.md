@@ -1,6 +1,6 @@
 # ![CRM](src/main/resources/META-INF/resources/images/logo.svg) B2B CRM
 
-### Is a [Jmix](https://jmix.io) application for managing client relationships
+`B2B CRM` is an enterprise demo application built with Jmix that showcases how to develop **production-ready** business systems including `customers`, `orders`, `invoicing`, `finance` and `analytics`. <br>It reflects real **ERP/CRM** scenarios and demonstrates best practices in domain modeling, UI, security and business logic implementation.
 
 ## 📑 Table of Contents
 
@@ -48,13 +48,13 @@ Prerequisites: Java 21+
 
 ### Run Project
 
-1. Run [B2B CRM](.run/b2b-app.run.xml) Jmix run configuration or execute
+1. Run [B2B CRM](.run/crm-app.run.xml) Jmix run configuration or execute
 
    ```bash
    ./gradlew bootRun
    ```
 
-2. [Open application URL](http://localhost:8080/crm)
+2. [Open application URL](http://localhost:8080/b2b-crm)
 
 ### Run via JAR:
 

@@ -1,11 +1,12 @@
 package com.company.crm.app.ui.component;
 
-import com.company.crm.app.util.context.AppContext;
 import com.company.crm.app.util.date.Period;
 import com.company.crm.app.util.date.range.LocalDateRange;
+import com.company.crm.app.util.ui.CrmUiUtils;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasStyle;
 import com.vaadin.flow.component.HasText;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.card.CardVariant;
@@ -16,6 +17,7 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.di.Instantiator;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import io.jmix.core.Messages;
 import io.jmix.core.security.CurrentAuthentication;
@@ -133,7 +135,7 @@ public class CrmCard extends JmixCard implements ApplicationContextAware {
                 horizontalLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
                 contentComponent.add(horizontalLayout);
 
-                Locale currentLocale = AppContext.getBean(CurrentAuthentication.class).getLocale();
+                Locale currentLocale = Instantiator.get(UI.getCurrent()).getOrCreate(CurrentAuthentication.class).getLocale();
 
                 String dateRangeString = "%s - %s".formatted(
                         DATE_WITHOUT_YEAR.withLocale(currentLocale).format(range.startDate()),
@@ -266,15 +268,15 @@ public class CrmCard extends JmixCard implements ApplicationContextAware {
             delta = hasText.getText();
         }
 
-        String spanThemeName = "badge";
+        String spanThemeName = CrmUiUtils.BADGE_THEME_NAME;
         if (delta.startsWith("↑")) {
-            spanThemeName += " success";
+            spanThemeName += " " + CrmUiUtils.SUCCESS_BADGE;
             setLinearGradient("var(--lumo-primary-color-10pct)");
         } else if (delta.startsWith("↓")) {
-            spanThemeName += " error";
+            spanThemeName += " " + CrmUiUtils.ERROR_BADGE;
             setLinearGradient("var(--lumo-error-color-10pct)");
         } else {
-            spanThemeName += " default";
+            spanThemeName += " " + CrmUiUtils.DEFAULT_BADGE;
             setLinearGradient("var(--lumo-contrast-10pct)");
         }
 

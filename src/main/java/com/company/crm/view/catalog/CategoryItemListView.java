@@ -44,6 +44,7 @@ import java.util.function.Function;
 import static com.company.crm.app.util.ui.CrmUiUtils.addRowSelectionInMultiSelectMode;
 import static com.company.crm.app.util.ui.CrmUiUtils.setSearchHintPopover;
 import static com.company.crm.app.util.ui.datacontext.DataContextUtils.addCondition;
+import static com.company.crm.app.util.ui.datacontext.DataContextUtils.installSortByCreatedDate;
 import static io.jmix.core.querycondition.PropertyCondition.contains;
 import static io.jmix.core.querycondition.PropertyCondition.equal;
 
@@ -71,10 +72,15 @@ public class CategoryItemListView extends StandardListView<CategoryItem> {
     private CollectionLoader<CategoryItem> categoryItemsDl;
     @ViewComponent
     private FileUploadField updateCatalogField;
-
-    private final LogicalCondition filtersCondition = LogicalCondition.and();
     @ViewComponent
     private DataGrid<CategoryItem> categoryItemsDataGrid;
+
+    private final LogicalCondition filtersCondition = LogicalCondition.and();
+
+    @Subscribe
+    private void onInit(final InitEvent event) {
+        installSortByCreatedDate(categoryItemsDl);
+    }
 
     @Override
     protected void onAttach(AttachEvent attachEvent) {

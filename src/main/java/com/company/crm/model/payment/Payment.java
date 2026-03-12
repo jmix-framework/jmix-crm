@@ -19,7 +19,6 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.PositiveOrZero;
 import org.apache.commons.lang3.StringUtils;
@@ -109,8 +108,8 @@ public class Payment extends FullAuditEntity implements HasUniqueNumber {
         this.number = number;
     }
 
-    @PrePersist
-    public void prePersist() {
-        setNumber(generateNextNumber());
+    @Override
+    public void applyNumber(String number) {
+        setNumber(number);
     }
 }

@@ -1,14 +1,15 @@
 package com.company.crm.app.feature.queryparameters.filters;
 
 import com.company.crm.app.feature.queryparameters.SimpleUrlQueryParametersBinder;
-import com.company.crm.app.util.context.AppContext;
 import com.company.crm.app.util.ui.CrmUiUtils;
 import com.company.crm.model.base.UuidEntity;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasValue;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.combobox.ComboBoxBase;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.select.Select;
+import com.vaadin.flow.di.Instantiator;
 import com.vaadin.flow.router.QueryParameters;
 import io.jmix.core.metamodel.datatype.EnumClass;
 import io.jmix.flowui.facet.UrlQueryParametersFacet;
@@ -144,7 +145,7 @@ public class FieldValueQueryParameterBinder extends AbstractUrlQueryParametersBi
 
         private final View<?> view;
         private final List<ComponentValueBinder> binders = new ArrayList<>();
-        private final UrlParamSerializer urlParamSerializer = AppContext.getBean(UrlParamSerializer.class);
+        private final UrlParamSerializer urlParamSerializer = Instantiator.get(UI.getCurrent()).getOrCreate(UrlParamSerializer.class);
 
         private Builder(View<?> view) {
             this.view = view;

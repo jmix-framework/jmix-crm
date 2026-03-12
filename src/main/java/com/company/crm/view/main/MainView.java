@@ -14,19 +14,17 @@ import com.company.crm.ai.service.AiConversationService;
 import com.google.common.base.Strings;
 import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.Component;
-import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.avatar.AvatarVariant;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.popover.Popover;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
-import com.vaadin.flow.router.Route;
+import com.vaadin.flow.theme.lumo.LumoUtility;
 import io.jmix.core.Messages;
 import io.jmix.core.Metadata;
 import io.jmix.core.AccessManager;
@@ -39,8 +37,6 @@ import io.jmix.flowui.ViewNavigators;
 import io.jmix.flowui.accesscontext.UiShowViewContext;
 import io.jmix.flowui.app.main.StandardMainView;
 import io.jmix.flowui.component.SupportsTypedValue.TypedValueChangeEvent;
-import io.jmix.flowui.component.main.JmixListMenu;
-import io.jmix.flowui.component.main.JmixListMenu.ViewMenuItem;
 import io.jmix.flowui.component.textfield.TypedTextField;
 import io.jmix.flowui.component.virtuallist.JmixVirtualList;
 import io.jmix.flowui.kit.action.ActionPerformedEvent;
@@ -49,19 +45,15 @@ import io.jmix.flowui.kit.component.main.ListMenu.MenuBarItem;
 import io.jmix.flowui.kit.component.main.ListMenu.MenuItem;
 import io.jmix.flowui.view.*;
 import org.apache.commons.lang3.StringUtils;
-import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
 import static com.company.crm.app.util.demo.DemoUtils.defaultSleepForClientsSearching;
 
-@Route("")
 @ViewController(id = CrmConstants.ViewIds.MAIN)
 @ViewDescriptor(path = "main-view.xml")
 public class MainView extends StandardMainView {
@@ -93,7 +85,7 @@ public class MainView extends StandardMainView {
     private OnlineDemoDataCreator onlineDemoDataCreator;
 
     @ViewComponent
-    private JmixListMenu menu;
+    private MessageBundle messageBundle;
     @ViewComponent
     private TypedTextField<String> searchField;
     @ViewComponent
@@ -196,11 +188,6 @@ public class MainView extends StandardMainView {
         onSearchFieldValueChange(event);
     }
 
-    @Subscribe(id = "notificationsButton", subject = "doubleClickListener")
-    public void onNotificationsButtonDoubleClick(final ClickEvent<JmixButton> event) {
-        onNotificationButtonClick();
-    }
-
     @Subscribe(id = "notificationsButton", subject = "clickListener")
     private void onNotificationsButtonSingleClick(final ClickEvent<JmixButton> event) {
         onNotificationButtonClick();
@@ -272,13 +259,12 @@ public class MainView extends StandardMainView {
 
         HorizontalLayout layout = new HorizontalLayout(VaadinIcon.CHECK.create(), new Span("Notifications not found"));
         layout.setSizeFull();
+        layout.setPadding(true);
         layout.setJustifyContentMode(FlexComponent.JustifyContentMode.CENTER);
         layout.setAlignItems(FlexComponent.Alignment.CENTER);
 
         Popover popover = new Popover(layout);
         popover.setTarget(notificationsButton);
-        popover.setWidth("16em");
-        popover.setHeight("4em");
         popover.setCloseOnEsc(true);
         popover.setCloseOnOutsideClick(true);
         popover.open();
@@ -314,7 +300,7 @@ public class MainView extends StandardMainView {
                 .withResultHandler(clients -> updateSearchPopover(clients, clientsSize, popover))
                 .withExceptionHandler(e -> {
                     popover.removeAll();
-                    popover.add(new Span("Something went wrong"));
+                    popover.add(new Span(messages.getMessage("something.went.wrong")));
                 })
                 .supplyAsync();
 
@@ -323,20 +309,19 @@ public class MainView extends StandardMainView {
 
     private void updateSearchPopover(List<Client> clients, int clientsSize, Popover popover) {
         Client showAll = metadata.create(Client.class);
-        showAll.setName("Show all...");
+        showAll.setName(messageBundle.getMessage("show.all"));
         if (clients.size() <= clientsSize) {
             clients.add(showAll);
         }
 
         JmixVirtualList<Client> virtualList = uiComponents.create(JmixVirtualList.class);
         virtualList.setItems(clients);
+        virtualList.setRenderer(createClientsListRenderer(showAll, popover));
+        virtualList.addClassNames(LumoUtility.Padding.MEDIUM);
 
         popover.removeAll();
         popover.add(virtualList);
-        popover.setWidth("25em");
-        popover.setHeight(Math.min(clients.size() * 1.8, 25) + "em");
-
-        virtualList.setRenderer(createClientsListRenderer(showAll, popover));
+        popover.setHeight(Math.min(clients.size() * 3, 20) + "em");
     }
 
     private ComponentRenderer<Component, Client> createClientsListRenderer(Client showAll, Popover popover) {
@@ -345,6 +330,7 @@ public class MainView extends StandardMainView {
 
             JmixButton button = uiComponents.create(JmixButton.class);
             button.setText(client.getName());
+            button.addClassNames(LumoUtility.TextOverflow.ELLIPSIS, LumoUtility.Whitespace.NOWRAP);
             button.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE, ButtonVariant.LUMO_CONTRAST);
             button.setIcon(isShowAll ? VaadinIcon.EXTERNAL_LINK.create() : VaadinIcon.USER.create());
 

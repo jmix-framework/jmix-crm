@@ -4,8 +4,6 @@ import com.company.crm.AbstractUiTest;
 import com.company.crm.model.catalog.category.Category;
 import com.company.crm.model.catalog.item.CategoryItem;
 import com.company.crm.model.catalog.item.UomType;
-import com.company.crm.security.role.ManagerRole;
-import com.company.crm.security.role.SupervisorRole;
 import com.company.crm.util.UniqueValues;
 import com.company.crm.util.extenstion.AuthenticatedAs;
 import com.company.crm.view.catalog.CategoryItemDetailView;
@@ -15,6 +13,8 @@ import com.company.crm.view.category.CategoryDetailView;
 import io.jmix.flowui.view.DetailView;
 import org.junit.jupiter.api.Test;
 
+import static com.company.crm.util.extenstion.AuthenticatedAs.MANAGER_USERNAME;
+import static com.company.crm.util.extenstion.AuthenticatedAs.SUPERVISOR_USERNAME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -34,7 +34,7 @@ class CatalogViewsTest extends AbstractUiTest {
     }
 
     @Test
-    @AuthenticatedAs(ManagerRole.CODE)
+    @AuthenticatedAs(MANAGER_USERNAME)
     void managerCannotSaveCategory() {
         viewTestSupport.navigateToNewEntityDetail(Category.class);
         viewTestSupport.<CategoryDetailView>withCurrentView(view ->
@@ -42,7 +42,7 @@ class CatalogViewsTest extends AbstractUiTest {
     }
 
     @Test
-    @AuthenticatedAs(SupervisorRole.CODE)
+    @AuthenticatedAs(SUPERVISOR_USERNAME)
     void supervisorCanSaveCategory() {
         viewTestSupport.navigateToNewEntityDetail(Category.class);
         viewTestSupport.<CategoryDetailView>withCurrentView(view ->
@@ -62,7 +62,7 @@ class CatalogViewsTest extends AbstractUiTest {
     }
 
     @Test
-    @AuthenticatedAs(ManagerRole.CODE)
+    @AuthenticatedAs(MANAGER_USERNAME)
     void managerCannotSaveCategoryItem() {
         viewTestSupport.navigateToNewEntityDetail(CategoryItem.class);
         viewTestSupport.<CategoryItemDetailView>withCurrentView(view ->
@@ -70,7 +70,7 @@ class CatalogViewsTest extends AbstractUiTest {
     }
 
     @Test
-    @AuthenticatedAs(SupervisorRole.CODE)
+    @AuthenticatedAs(SUPERVISOR_USERNAME)
     void supervisorCanSaveCategoryItem() {
         viewTestSupport.navigateToNewEntityDetail(CategoryItem.class);
         viewTestSupport.<CategoryItemDetailView>withCurrentView(view ->

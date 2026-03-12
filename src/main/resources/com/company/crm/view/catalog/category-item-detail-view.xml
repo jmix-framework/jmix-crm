@@ -20,15 +20,15 @@
         <action id="closeAction" type="detail_close"/>
     </actions>
     <layout>
-        <split id="split" width="100%" height="100%">
-            <vbox>
-                <formLayout id="form" dataContainer="categoryItemDc" maxWidth="30em" minWidth="20em">
+        <scroller width="100%" height="100%">
+            <gridLayout width="100%" height="100%">
+                <formLayout id="form" dataContainer="categoryItemDc">
                     <responsiveSteps>
                         <responsiveStep minWidth="0" columns="1"/>
-                        <responsiveStep minWidth="40em" columns="2"/>
                     </responsiveSteps>
                     <textField id="codeField" property="code"/>
                     <textField id="nameField" property="name"/>
+                    <select id="uomField" property="uom"/>
                     <entityComboBox id="categoriesComboBox" property="category"
                                     dataContainer="categoryItemDc">
                         <actions>
@@ -43,24 +43,22 @@
                             </query>
                         </itemsQuery>
                     </entityComboBox>
-                    <select id="uomField" property="uom"/>
                     <textField id="priceField" property="price" required="true"/>
                     <formLayout id="dynamicAttributes" dataContainer="categoryItemDc" colspan="2">
                         <responsiveSteps>
                             <responsiveStep minWidth="0" columns="1"/>
-                            <responsiveStep minWidth="40em" columns="2"/>
                         </responsiveSteps>
                     </formLayout>
                     <textArea property="description" height="15em"/>
                 </formLayout>
-            </vbox>
-            <vbox alignItems="CENTER" maxWidth="40em" minWidth="30em" classNames="pt-xl">
-                <image id="image" resource="images/no_image.svg"
-                       classNames="border rounded-l" width="20em" height="20em"/>
-                <fileStorageUploadField id="imageUpload" dataContainer="categoryItemDc" property="image"
-                                        dropAllowed="true" clearButtonVisible="true" fileNameVisible="true"/>
-            </vbox>
-        </split>
+                <vbox alignItems="CENTER" justifyContent="CENTER" height="100%">
+                    <image id="image" resource="images/no_image.svg"
+                           classNames="border rounded-l" width="20em" height="20em"/>
+                    <fileStorageUploadField id="imageUpload" dataContainer="categoryItemDc" property="image"
+                                            dropAllowed="true" clearButtonVisible="true" fileNameVisible="true"/>
+                </vbox>
+            </gridLayout>
+        </scroller>
         <hbox id="detailActions">
             <button id="saveAndCloseButton" action="saveCloseAction"/>
             <button id="closeButton" action="closeAction"/>

@@ -122,10 +122,10 @@
     pointer-events: none;
     position: relative;
     z-index: 2;
-    margin-left: clamp(-60px, -6vw, -120px);
+    margin-left: clamp(-2vw, -4vw, -200px);
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1100px) {
     .login-shell {
         flex-direction: column;
     }

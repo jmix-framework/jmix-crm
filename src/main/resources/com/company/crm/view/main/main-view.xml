@@ -13,10 +13,10 @@
             <section id="section" classNames="jmix-main-view-section">
                 <h2 id="applicationTitle" classNames="jmix-main-view-application-title">
                     <svgIcon id="logo" size="40px" resource="icons/icon.svg" classNames="pr-m" css="cursor: pointer"/>
-                    <h3 id="baseLink"
-                        css="cursor: pointer"
-                        text="msg://applicationTitle.text"
-                        classNames="jmix-main-view-application-title-base-link font-black"/>
+                    <anchor id="baseLink"
+                            href="."
+                            text="msg://applicationTitle.text"
+                            classNames="jmix-main-view-application-title-base-link font-black text-xl"/>
                 </h2>
                 <hr/>
                 <nav id="navigation"
@@ -35,17 +35,20 @@
                               ariaLabel="msg://drawerToggle.ariaLabel"/>
                 <h1 id="viewTitle" classNames="jmix-main-view-title"/>
 
-                <textField id="searchField" valueChangeMode="EAGER" valueChangeTimeout="500"
-                           placeholder="msg://searchFieldPlaceholder" clearButtonVisible="true"
-                           classNames="ms-auto me-l" minWidth="6em" width="14vw">
-                    <suffix>
-                        <icon icon="SEARCH"/>
-                    </suffix>
-                </textField>
+                <div classNames="ms-auto me-xl" minWidth="2em" maxWidth="20em">
+                    <textField id="searchField" valueChangeMode="EAGER" valueChangeTimeout="500"
+                               placeholder="msg://searchFieldPlaceholder" clearButtonVisible="true"
+                               classNames="ms-m" width="100%">
+                        <suffix>
+                            <icon icon="SEARCH"/>
+                        </suffix>
+                    </textField>
+                </div>
                 <button id="chatButton" icon="MAGIC" themeNames="tertiary" classNames="me-l"
                         text="msg://crmAiButton"/>
                 <button id="notificationsButton" icon="BELL_O" themeNames="tertiary" classNames="me-l"
                         css="background-color: var(--lumo-shade-5pct);"/>
+
                 <userMenu id="userMenu" themeNames="tertiary" classNames="me-l">
                     <items>
                         <separator/>
@@ -69,8 +72,6 @@
             </header>
         </navigationBar>
 
-        <initialLayout padding="false">
-            <component class="com.company.crm.view.home.HomeView"/>
-        </initialLayout>
+        <initialLayout padding="false"/>
     </appLayout>
 </mainView>

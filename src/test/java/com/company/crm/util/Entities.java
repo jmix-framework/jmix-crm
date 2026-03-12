@@ -5,6 +5,7 @@ import com.company.crm.model.catalog.category.Category;
 import com.company.crm.model.catalog.item.CategoryItem;
 import com.company.crm.model.catalog.item.UomType;
 import com.company.crm.model.client.Client;
+import com.company.crm.model.client.ClientType;
 import com.company.crm.model.contact.Contact;
 import com.company.crm.model.invoice.Invoice;
 import com.company.crm.model.invoice.InvoiceStatus;
@@ -50,12 +51,17 @@ public class Entities {
     }
 
     public Client client() {
-        return client(UniqueValues.string());
+        return client(UniqueValues.string(), randomClientType());
     }
 
     public Client client(String name) {
+        return client(name, randomClientType());
+    }
+
+    public Client client(String name, ClientType type) {
         return createAndSaveEntity(Client.class, client -> {
             client.setName(name);
+            client.setType(type);
             client.setAddress(address());
         });
     }
@@ -195,5 +201,9 @@ public class Entities {
     public <E> E saveWithoutReload(E entity) {
         dataManager.save(entity);
         return entity;
+    }
+
+    private static ClientType randomClientType() {
+        return ClientType.values()[RANDOM.nextInt(ClientType.values().length)];
     }
 }

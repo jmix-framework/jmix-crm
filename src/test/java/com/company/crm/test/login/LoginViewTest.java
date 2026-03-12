@@ -1,8 +1,8 @@
 package com.company.crm.test.login;
 
 import com.company.crm.AbstractUiTest;
+import com.company.crm.view.home.HomeView;
 import com.company.crm.view.login.LoginView;
-import com.company.crm.view.main.MainView;
 import com.vaadin.flow.component.button.Button;
 import org.junit.jupiter.api.Test;
 
@@ -20,7 +20,7 @@ class LoginViewTest extends AbstractUiTest {
     void successLogin() {
         viewTestSupport.navigateToAnd(LoginView.class, loginView -> {
             fillFormAndLogin("admin", "admin");
-            assertCurrentView(MainView.class);
+            assertCurrentView(HomeView.class);
         });
     }
 

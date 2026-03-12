@@ -41,6 +41,7 @@ import java.util.List;
 
 import static com.company.crm.app.util.ui.CrmUiUtils.addRowSelectionInMultiSelectMode;
 import static com.company.crm.app.util.ui.datacontext.DataContextUtils.addCondition;
+import static com.company.crm.app.util.ui.datacontext.DataContextUtils.installSortByCreatedDate;
 import static io.jmix.core.querycondition.PropertyCondition.equal;
 import static io.jmix.core.querycondition.PropertyCondition.greaterOrEqual;
 import static io.jmix.core.querycondition.PropertyCondition.lessOrEqual;
@@ -87,15 +88,16 @@ public class PaymentListView extends StandardListView<Payment> {
 
     private final LogicalCondition filtersCondition = LogicalCondition.and();
 
+    @Subscribe
+    private void onInit(final InitEvent event) {
+        installSortByCreatedDate(paymentsDl);
+        installGridDefaultSorting();
+    }
+
     @Override
     protected void onAttach(AttachEvent attachEvent) {
         super.onAttach(attachEvent);
         initialize();
-    }
-
-    @Subscribe
-    private void onInit(final InitEvent event) {
-        installGridDefaultSorting();
     }
 
     @Install(to = "paymentsDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")

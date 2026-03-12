@@ -5,6 +5,7 @@ import com.company.crm.app.ui.component.OrderStatusPipeline;
 import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.app.util.ui.CrmUiUtils;
 import com.company.crm.app.util.ui.renderer.CrmRenderers;
+import com.company.crm.model.client.Client;
 import com.company.crm.model.order.Order;
 import com.company.crm.model.order.OrderItem;
 import com.company.crm.model.order.OrderRepository;
@@ -24,11 +25,12 @@ import io.jmix.core.EntityStates;
 import io.jmix.core.FetchPlan;
 import io.jmix.core.Messages;
 import io.jmix.core.SaveContext;
+import io.jmix.core.metamodel.datatype.DatatypeFormatter;
 import io.jmix.flowui.Dialogs;
 import io.jmix.flowui.Notifications;
-import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.action.DialogAction;
 import io.jmix.flowui.action.view.DetailSaveCloseAction;
+import io.jmix.flowui.component.combobox.EntityComboBox;
 import io.jmix.flowui.component.grid.DataGrid;
 import io.jmix.flowui.component.select.JmixSelect;
 import io.jmix.flowui.component.textfield.JmixBigDecimalField;
@@ -81,7 +83,7 @@ public class OrderDetailView extends StandardDetailView<Order> {
     @Autowired
     private Downloader downloader;
     @Autowired
-    private UiComponents uiComponents;
+    private EntityStates entityStates;
     @Autowired
     private CrmRenderers crmRenderers;
     @Autowired
@@ -92,11 +94,15 @@ public class OrderDetailView extends StandardDetailView<Order> {
     private OrderRepository orderRepository;
     @Autowired
     private DateTimeService dateTimeService;
+    @Autowired
+    private DatatypeFormatter datatypeFormatter;
 
     @ViewComponent
     private MessageBundle messageBundle;
     @ViewComponent
     private OrderStatusPipeline statusPipeline;
+    @ViewComponent
+    private EntityComboBox<Client> clientPicker;
     @ViewComponent
     private TypedTextField<BigDecimal> discountValueField;
     @ViewComponent
@@ -109,8 +115,6 @@ public class OrderDetailView extends StandardDetailView<Order> {
     private DetailSaveCloseAction<Order> saveCloseAction;
     @ViewComponent
     private H2 orderNumberTitle;
-    @Autowired
-    private EntityStates entityStates;
 
     @Override
     public void setReadOnly(boolean readOnly) {
@@ -123,6 +127,7 @@ public class OrderDetailView extends StandardDetailView<Order> {
         Order order = event.getEntity();
         order.setStatus(OrderStatus.NEW);
         order.setDate(dateTimeService.now().toLocalDate());
+        clientPicker.setReadOnly(order.getClient() != null);
     }
 
     @Subscribe
@@ -183,27 +188,27 @@ public class OrderDetailView extends StandardDetailView<Order> {
 
     @Supply(to = "orderItemsGrid.vat", subject = "renderer")
     private Renderer<OrderItem> orderItemsGridVatRenderer() {
-        return crmRenderers.badgeRenderer(item -> defaultFormat(item.getVat()), DEFAULT_BADGE);
+        return crmRenderers.badgeRenderer(item -> defaultFormat(item.getVat(), datatypeFormatter), DEFAULT_BADGE);
     }
 
     @Supply(to = "orderItemsGrid.netPrice", subject = "renderer")
     private Renderer<OrderItem> orderItemsGridNetPriceRenderer() {
-        return crmRenderers.badgeRenderer(item -> defaultFormat(item.getNetPrice()), DEFAULT_BADGE);
+        return crmRenderers.badgeRenderer(item -> defaultFormat(item.getNetPrice(), datatypeFormatter), DEFAULT_BADGE);
     }
 
     @Supply(to = "orderItemsGrid.grossPrice", subject = "renderer")
     private Renderer<OrderItem> orderItemsGridGrossPriceRenderer() {
-        return crmRenderers.badgeRenderer(item -> defaultFormat(item.getGrossPrice()), DEFAULT_BADGE);
+        return crmRenderers.badgeRenderer(item -> defaultFormat(item.getGrossPrice(), datatypeFormatter), DEFAULT_BADGE);
     }
 
     @Supply(to = "orderItemsGrid.discount", subject = "renderer")
     private Renderer<OrderItem> orderItemsGridDiscountRenderer() {
-        return crmRenderers.badgeRenderer(item -> defaultFormat(item.getDiscount()), WARNING_BADGE);
+        return crmRenderers.badgeRenderer(item -> defaultFormat(item.getDiscount(), datatypeFormatter), WARNING_BADGE);
     }
 
     @Supply(to = "orderItemsGrid.total", subject = "renderer")
     private Renderer<OrderItem> orderItemsGridTotalRenderer() {
-        return crmRenderers.badgeRenderer(item -> defaultFormat(item.getTotal()), SUCCESS_BADGE);
+        return crmRenderers.badgeRenderer(item -> defaultFormat(item.getTotal(), datatypeFormatter), SUCCESS_BADGE);
     }
 
     @Supply(to = "statusSelect", subject = "renderer")

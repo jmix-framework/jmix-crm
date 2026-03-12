@@ -45,6 +45,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
+import static com.company.crm.app.util.ui.datacontext.DataContextUtils.installSortByCreatedDate;
+
 @Route(value = "categories", layout = MainView.class)
 @ViewController(id = CrmConstants.ViewIds.CATEGORY_LIST)
 @ViewDescriptor(path = "category-list-view.xml")
@@ -74,15 +76,16 @@ public class CategoryListView extends StandardListView<Category> {
 
     private Category draggedCategory;
 
+    @Subscribe
+    public void onInit(InitEvent event) {
+        installSortByCreatedDate(categoriesDl);
+        configureInlineEdit();
+    }
+
     @Override
     protected void onAttach(AttachEvent attachEvent) {
         super.onAttach(attachEvent);
         categoriesDl.load();
-    }
-
-    @Subscribe
-    public void onInit(InitEvent event) {
-        configureInlineEdit();
     }
 
     @Install(to = "categoriesDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")

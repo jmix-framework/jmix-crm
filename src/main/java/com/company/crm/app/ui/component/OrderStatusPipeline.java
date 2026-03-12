@@ -27,7 +27,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-import static com.company.crm.app.util.ui.CrmUiUtils.setCursorPointer;
+import static com.company.crm.app.util.ui.CrmUiUtils.setClickableCursor;
 import static com.company.crm.app.util.ui.color.EnumClassColors.getBackgroundClass;
 import static java.lang.Math.divideExact;
 
@@ -205,7 +205,7 @@ public class OrderStatusPipeline extends FormLayout implements ApplicationContex
 
         private void installDefaultStyles() {
             addClassNames("order-status-arrow", "order-status-" + status.getId());
-            setCursorPointer(this);
+            setClickableCursor(this);
         }
 
         private void installItemPositioning() {

@@ -4,15 +4,15 @@
     <facets>
         <settings id="settingsFacet" auto="true"/>
     </facets>
-    <layout padding="false">
-        <split id="split" themeNames="minimal" orientation="HORIZONTAL" width="100%" height="100%">
-            <vbox id="leftBox" minHeight="40em" minWidth="10em">
+    <layout padding="false" classNames="dashboard-grid-container">
+        <gridLayout width="100%" maxWidth="90em" classNames="dashboard-grid">
+            <vbox id="leftBox" classNames="dashboard-grid-main-content">
                 <formLayout id="leftContent"/>
             </vbox>
 
-            <vbox id="rightBox" minHeight="40em" minWidth="10em">
+            <vbox id="rightBox" classNames="dashboard-grid-secondary-content">
                 <formLayout id="rightContent"/>
             </vbox>
-        </split>
+        </gridLayout>
     </layout>
 </view>

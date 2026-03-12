@@ -1,6 +1,7 @@
 package com.company.crm;
 
 import com.company.crm.util.ViewTestSupport;
+import com.company.crm.view.home.HomeView;
 import io.jmix.flowui.testassist.FlowuiTestAssistConfiguration;
 import io.jmix.flowui.testassist.UiTest;
 import io.jmix.flowui.view.View;
@@ -8,7 +9,7 @@ import org.junit.jupiter.api.Assertions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
 
-@UiTest
+@UiTest(initialView = HomeView.class)
 @Import({FlowuiTestAssistConfiguration.class, ViewTestSupport.class})
 public class AbstractUiTest extends AbstractTest {
 

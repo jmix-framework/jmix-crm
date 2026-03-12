@@ -10,7 +10,6 @@ import com.company.crm.app.ui.component.RecentActivitiesBlock;
 import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.app.util.date.Period;
 import com.company.crm.app.util.ui.chart.ChartsUtils;
-import com.company.crm.app.util.ui.listener.resize.WidthResizeListener;
 import com.company.crm.app.util.ui.renderer.CrmRenderers;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.datatype.PriceDataType;
@@ -26,7 +25,6 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.card.CardVariant;
 import com.vaadin.flow.component.grid.GridVariant;
-import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H4;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
@@ -49,6 +47,7 @@ import io.jmix.chartsflowui.kit.component.model.toolbox.Toolbox;
 import io.jmix.chartsflowui.kit.data.chart.ListChartItems;
 import io.jmix.core.Messages;
 import io.jmix.core.Metadata;
+import io.jmix.core.metamodel.datatype.DatatypeFormatter;
 import io.jmix.flowui.DialogWindows;
 import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.Views;
@@ -56,7 +55,6 @@ import io.jmix.flowui.component.card.JmixCard;
 import io.jmix.flowui.component.formatter.DateFormatter;
 import io.jmix.flowui.component.formlayout.JmixFormLayout;
 import io.jmix.flowui.component.grid.DataGrid;
-import io.jmix.flowui.component.splitlayout.JmixSplitLayout;
 import io.jmix.flowui.data.grid.ContainerDataGridItems;
 import io.jmix.flowui.model.CollectionContainer;
 import io.jmix.flowui.model.CollectionLoader;
@@ -81,13 +79,12 @@ import java.util.Map;
 import static com.company.crm.app.feature.sortable.SortableFeature.makeSortable;
 import static com.company.crm.app.util.ui.CrmUiUtils.setBackgroundTransparent;
 import static com.company.crm.app.util.ui.CrmUiUtils.setDefaultEmptyStateComponent;
-import static com.company.crm.app.util.ui.listener.resize.WidthResizeListener.isWidthChanged;
 import static io.jmix.flowui.component.UiComponentUtils.traverseComponents;
 
-@Route(value = "home", layout = MainView.class)
+@Route(value = "", layout = MainView.class)
 @ViewController(id = CrmConstants.ViewIds.HOME)
 @ViewDescriptor(path = "home-view.xml")
-public class HomeView extends StandardView implements WidthResizeListener {
+public class HomeView extends StandardView {
 
     @Autowired
     private Metadata metadata;
@@ -103,6 +100,8 @@ public class HomeView extends StandardView implements WidthResizeListener {
     private InvoiceService invoiceService;
     @Autowired
     private DateTimeService dateTimeService;
+    @Autowired
+    private DatatypeFormatter datatypeFormatter;
 
     @Autowired
     private Views views;
@@ -118,46 +117,11 @@ public class HomeView extends StandardView implements WidthResizeListener {
     private DateFormatter<LocalDate> localDateFormatter;
 
     @ViewComponent
-    private JmixSplitLayout split;
-    @ViewComponent
-    private VerticalLayout leftBox;
-    @ViewComponent
-    private VerticalLayout rightBox;
-    @ViewComponent
     private JmixFormLayout rightContent;
     @ViewComponent
     private JmixFormLayout leftContent;
     @ViewComponent
     private MessageBundle messageBundle;
-
-    private volatile int lastWidth = -1;
-    private static final int widthBreakpoint = 1000;
-
-    @Override
-    public void configureUiForWidth(int width) {
-        if (isWidthChanged(width, lastWidth, widthBreakpoint)) {
-            lastWidth = width;
-
-            var breakpoint = 1200;
-            if (width < breakpoint) {
-                configureUiForSmallWidth();
-            } else {
-                configureUiForNormalWidth();
-            }
-        }
-    }
-
-    private void configureUiForNormalWidth() {
-        split.setOrientation(JmixSplitLayout.Orientation.HORIZONTAL);
-        leftBox.setWidth(65, Unit.PERCENTAGE);
-        rightBox.setWidth(35, Unit.PERCENTAGE);
-    }
-
-    private void configureUiForSmallWidth() {
-        split.setOrientation(JmixSplitLayout.Orientation.VERTICAL);
-        leftBox.setWidthFull();
-        rightBox.setWidthFull();
-    }
 
     @Subscribe
     private void onInit(final InitEvent event) {
@@ -288,7 +252,7 @@ public class HomeView extends StandardView implements WidthResizeListener {
 
         return new RangeStatCardInfo(
                 range,
-                PriceDataType.defaultFormat(sum),
+                PriceDataType.defaultFormat(sum, datatypeFormatter),
                 getDeltaString(sum, previousSum));
     }
 
@@ -307,7 +271,7 @@ public class HomeView extends StandardView implements WidthResizeListener {
 
         return new RangeStatCardInfo(
                 range,
-                PriceDataType.defaultFormat(sum),
+                PriceDataType.defaultFormat(sum, datatypeFormatter),
                 getDeltaString(sum, previousSum));
     }
 
@@ -386,7 +350,7 @@ public class HomeView extends StandardView implements WidthResizeListener {
         var statContent = new RangeStatCardInfo(range, orders.size() + " orders", delta).createDefaultContent();
         var chartContent = createSalesFunnelChartContent(orders);
 
-        return new Div(statContent, chartContent);
+        return new VerticalLayout(statContent, chartContent);
     }
 
     private Component createSalesFunnelChartContent(List<Order> orders) {
@@ -421,7 +385,6 @@ public class HomeView extends StandardView implements WidthResizeListener {
 
         var wrapper = chartsUtils.createViewStatChartWrapper(chart, false);
         wrapper.removeThemeVariants(CardVariant.values());
-        wrapper.getStyle().setMarginTop("1em");
         setBackgroundTransparent(wrapper);
 
         return wrapper;

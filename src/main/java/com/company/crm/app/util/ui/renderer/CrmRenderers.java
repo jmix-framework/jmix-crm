@@ -88,7 +88,7 @@ public class CrmRenderers {
         return new ComponentRenderer<>(item -> {
             boolean isDetailsVisible = grid.isDetailsVisible(item);
             Icon icon = isDetailsVisible ? CHEVRON_DOWN_SMALL.create() : CHEVRON_RIGHT_SMALL.create();
-            CrmUiUtils.setCursorPointer(icon);
+            CrmUiUtils.setClickableCursor(icon);
             icon.addClassNames(IconSize.SMALL);
             icon.addClickListener(e -> {
                 if (!grid.isDetailsVisibleOnClick()) {
@@ -113,7 +113,7 @@ public class CrmRenderers {
                     .setHeader(messages.getMessage(Order.class, "Order.number"));
             ordersGrid.addColumn(Order::getDate)
                     .setHeader(messages.getMessage(Order.class, "Order.date"));
-            ordersGrid.addColumn(order -> defaultFormat(order.getTotal()))
+            ordersGrid.addColumn(order -> defaultFormat(order.getTotal(), datatypeFormatter))
                     .setHeader(messages.getMessage(Order.class, "Order.total"));
             ordersGrid.setItems(client.getOrders());
             setDefaultEmptyStateComponent(ordersGrid);
@@ -137,7 +137,7 @@ public class CrmRenderers {
                     .setHeader(messages.getMessage(Payment.class, "Payment.number"));
             paymentsGrid.addColumn(Payment::getDate)
                     .setHeader(messages.getMessage(Payment.class, "Payment.date"));
-            paymentsGrid.addColumn(payment -> defaultFormat(payment.getAmount()))
+            paymentsGrid.addColumn(payment -> defaultFormat(payment.getAmount(), datatypeFormatter))
                     .setHeader(messages.getMessage(Payment.class, "Payment.amount"));
             paymentsGrid.setItems(invoice.getPayments());
             setDefaultEmptyStateComponent(paymentsGrid);
@@ -161,7 +161,7 @@ public class CrmRenderers {
                     .setHeader(messages.getMessage(Invoice.class, "Invoice.number"));
             invoicesGrid.addColumn(Invoice::getDate)
                     .setHeader(messages.getMessage(Invoice.class, "Invoice.date"));
-            invoicesGrid.addColumn(invoice -> defaultFormat(invoice.getTotal()))
+            invoicesGrid.addColumn(invoice -> defaultFormat(invoice.getTotal(), datatypeFormatter))
                     .setHeader(messages.getMessage(Invoice.class, "Invoice.total"));
             invoicesGrid.setItems(order.getInvoices());
             setDefaultEmptyStateComponent(invoicesGrid);
@@ -334,7 +334,7 @@ public class CrmRenderers {
     public Renderer<Order> orderLeftOverSumRenderer() {
         return new ComponentRenderer<>(order -> {
             BigDecimal leftOverSum = order.getLeftOverSum();
-            Span span = new Span(PriceDataType.formatWithoutCurrency(leftOverSum));
+            Span span = new Span(PriceDataType.formatWithoutCurrency(leftOverSum, datatypeFormatter));
 
             if (leftOverSum.compareTo(BigDecimal.valueOf(10_000)) > 0) {
                 CrmUiUtils.setBadge(span, CrmUiUtils.ERROR_BADGE);
@@ -358,7 +358,7 @@ public class CrmRenderers {
     private Span createBadgeWithCopy(String text) {
         Span badge = createBadge(text, "contrast");
         Tooltip.forComponent(badge).setText(messages.getMessage("copy"));
-        CrmUiUtils.setCursorPointer(badge);
+        CrmUiUtils.setClickableCursor(badge);
         badge.addClickListener(e -> {
             copyToClipboard(text);
             Popover popover = new Popover(new Text(messages.getMessage("copied")));

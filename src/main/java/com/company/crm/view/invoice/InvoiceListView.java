@@ -71,6 +71,7 @@ import static com.company.crm.app.util.ui.CrmUiUtils.addRowSelectionInMultiSelec
 import static com.company.crm.app.util.ui.CrmUiUtils.setBadge;
 import static com.company.crm.app.util.ui.color.EnumClassColors.getBadgeVariant;
 import static com.company.crm.app.util.ui.datacontext.DataContextUtils.addCondition;
+import static com.company.crm.app.util.ui.datacontext.DataContextUtils.installSortByCreatedDate;
 import static io.jmix.core.querycondition.PropertyCondition.equal;
 import static io.jmix.core.querycondition.PropertyCondition.greaterOrEqual;
 import static io.jmix.core.querycondition.PropertyCondition.lessOrEqual;
@@ -126,6 +127,11 @@ public class InvoiceListView extends StandardListView<Invoice> {
     private DataGrid<Invoice> invoicesDataGrid;
 
     private final LogicalCondition filtersCondition = LogicalCondition.and();
+
+    @Subscribe
+    private void onInit(final InitEvent event) {
+        installSortByCreatedDate(invoicesDl);
+    }
 
     @Override
     protected void onAttach(AttachEvent attachEvent) {
@@ -342,7 +348,7 @@ public class InvoiceListView extends StandardListView<Invoice> {
         block.setSpacing(false);
         block.setPadding(false);
         block.setMaxWidth(8, Unit.EM);
-        CrmUiUtils.setCursorPointer(block);
+        CrmUiUtils.setClickableCursor(block);
         block.setAlignItems(Alignment.CENTER);
         block.setJustifyContentMode(JustifyContentMode.CENTER);
         block.addClassName(Objects.equals(status, invoices_StatusSelect.getValue())

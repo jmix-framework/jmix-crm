@@ -46,7 +46,15 @@
                         <responsiveStep minWidth="0" columns="1"/>
                         <responsiveStep minWidth="40em" columns="2"/>
                     </responsiveSteps>
-                    <entityPicker property="client" readOnly="true"/>
+                    <entityComboBox id="clientPicker" property="client" readOnly="true">
+                        <itemsQuery class="com.company.crm.model.client.Client" escapeValueForLike="true"
+                                    searchStringFormat="(?i)%${inputString}%">
+                            <fetchPlan extends="_base"/>
+                            <query>
+                                <![CDATA[select e from Client e where e.name like :searchString escape '\' order by e.name]]>
+                            </query>
+                        </itemsQuery>
+                    </entityComboBox>
                     <select id="statusSelect" property="status"/>
                     <datePicker id="dateField" property="date"/>
                     <textField id="purchaseOrderField" property="purchaseOrder"/>

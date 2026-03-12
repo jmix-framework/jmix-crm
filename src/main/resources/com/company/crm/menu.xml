@@ -21,16 +21,21 @@
               icon="vaadin:file-text"/>
         <item view="Payment.list" id="payments" title="msg:///menu_config.finance.payments.title" icon="vaadin:wallet"/>
     </menu>
-    <menu id="administration" description="msg:///menu_config.administration.description"
-          title="msg:///menu_config.administration.title" icon="vaadin:cog">
+
+    <menu id="administration"
+          description="msg:///menu_config.administration.description"
+          title="msg:///menu_config.administration.title"
+          icon="vaadin:cog"
+          opened="true">
         <menu id="reports" title="msg://io.jmix.reportsflowui/menu.reports.title">
             <item view="report_Report.list" title="msg://io.jmix.reportsflowui/reportListView.menu"/>
             <item view="report_ReportGroup.list" title="msg://io.jmix.reportsflowui/reportGroupListView.menu"/>
             <item view="report_ReportRunView" title="msg://io.jmix.reportsflowui/reportRunView.menu"/>
             <item view="report_ReportTableView" title="msg://io.jmix.reportsflowui/reportTableView.menu"/>
         </menu>
-        <item view="dynat_CategoryView.list" id="dynamic_attributes" title="msg://io.jmix.dynattrflowui.panel/category"
-              icon="vaadin:table"/>
+        <item view="dynat_CategoryView.list" id="dynamic_attributes"
+              icon="vaadin:table"
+              title="msg://io.jmix.dynattrflowui.panel/category"/>
         <item view="appSettings.view" id="app_settings"
               title="msg://io.jmix.appsettingsflowui.view.appsettings/appSettingsEntityView.menu" icon="vaadin:wrench"/>
     </menu>

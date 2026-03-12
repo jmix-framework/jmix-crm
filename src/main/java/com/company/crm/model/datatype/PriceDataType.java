@@ -1,12 +1,13 @@
 package com.company.crm.model.datatype;
 
-import com.company.crm.app.util.context.AppContext;
 import io.jmix.core.metamodel.annotation.DatatypeDef;
 import io.jmix.core.metamodel.annotation.Ddl;
 import io.jmix.core.metamodel.datatype.Datatype;
 import io.jmix.core.metamodel.datatype.DatatypeFormatter;
 import org.apache.commons.lang3.StringUtils;
 import org.jspecify.annotations.Nullable;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 
 import java.math.BigDecimal;
 import java.text.ParseException;
@@ -20,23 +21,19 @@ import static org.apache.commons.lang3.StringUtils.substringBefore;
 @Ddl("DECIMAL(19,2)")
 public class PriceDataType implements Datatype<BigDecimal> {
 
+    @Lazy
+    @Autowired
+    private DatatypeFormatter datatypeFormatter;
+
     public static final String NAME = "price";
     private static final CurrencyPosition DEFAULT_CURRENCY_POSITION = CurrencyPosition.START;
 
-    public static String formatWithoutCurrency(Object value) {
-        return doFormatValueWithoutCurrency(value);
+    public static String formatWithoutCurrency(Object value, DatatypeFormatter datatypeFormatter) {
+        return doFormatValueWithoutCurrency(value, datatypeFormatter);
     }
 
-    public static String defaultFormat(Object value) {
-        return doFormatValueWithCurrency(value, DEFAULT_CURRENCY_POSITION);
-    }
-
-    public static String formatStartingCurrency(Object value) {
-        return doFormatValueWithCurrency(value, CurrencyPosition.START);
-    }
-
-    public static String formatEndingCurrency(Object value) {
-        return doFormatValueWithCurrency(value, CurrencyPosition.END);
+    public static String defaultFormat(Object value, DatatypeFormatter datatypeFormatter) {
+        return doFormatValueWithCurrency(value, datatypeFormatter, DEFAULT_CURRENCY_POSITION);
     }
 
     public enum CurrencyPosition {
@@ -45,7 +42,7 @@ public class PriceDataType implements Datatype<BigDecimal> {
 
     @Override
     public String format(@Nullable Object value) {
-        return doFormatValueWithCurrency(value, DEFAULT_CURRENCY_POSITION);
+        return doFormatValueWithCurrency(value, datatypeFormatter, DEFAULT_CURRENCY_POSITION);
     }
 
     @Override
@@ -65,7 +62,7 @@ public class PriceDataType implements Datatype<BigDecimal> {
         }
 
         try {
-            BigDecimal price = getDatatypeFormatter().parseBigDecimal(value);
+            BigDecimal price = datatypeFormatter.parseBigDecimal(value);
             return (price == null || price.compareTo(BigDecimal.ZERO) < 0) ? BigDecimal.ZERO : price;
         } catch (ParseException e) {
             return BigDecimal.ZERO;
@@ -82,22 +79,25 @@ public class PriceDataType implements Datatype<BigDecimal> {
         return "$";
     }
 
-    private static String doFormatValueWithCurrency(Object value, CurrencyPosition currencyPosition) {
-        String withoutCurrency = formatWithoutCurrency(value);
+    private static String doFormatValueWithCurrency(Object value,
+                                                    DatatypeFormatter datatypeFormatter,
+                                                    CurrencyPosition currencyPosition) {
+        String withoutCurrency = formatWithoutCurrency(value, datatypeFormatter);
         return switch (currencyPosition) {
             case START -> getCurrencySymbol() + withoutCurrency;
             case END -> withoutCurrency + getCurrencySymbol();
         };
     }
 
-    private static String doFormatValueWithoutCurrency(Object value) {
+    private static String doFormatValueWithoutCurrency(Object value,
+                                                       DatatypeFormatter datatypeFormatter) {
         if (value == null) {
             return "";
         }
 
         BigDecimal decimalValue = resolveBigDecimalValue(value);
         if (decimalValue != null) {
-            return getDatatypeFormatter().formatBigDecimal(decimalValue);
+            return datatypeFormatter.formatBigDecimal(decimalValue);
         }
 
         return "[NaN]";
@@ -118,9 +118,5 @@ public class PriceDataType implements Datatype<BigDecimal> {
             throw new IllegalStateException("Unsupported value type for price formatting: " + value.getClass().getName());
         }
         return decimalValue;
-    }
-
-    private static DatatypeFormatter getDatatypeFormatter() {
-        return AppContext.getBean(DatatypeFormatter.class);
     }
 }

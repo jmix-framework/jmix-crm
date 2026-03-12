@@ -1,13 +1,11 @@
 package com.company.crm.model.order;
 
 import com.company.crm.app.service.order.OrderService;
-import com.company.crm.app.service.util.UniqueNumbersService;
 import com.company.crm.app.util.context.AppContext;
 import com.company.crm.app.util.price.PriceCalculator;
 import com.company.crm.model.HasUniqueNumber;
 import com.company.crm.model.base.FullAuditEntity;
 import com.company.crm.model.client.Client;
-import com.company.crm.model.datatype.PriceDataType;
 import com.company.crm.model.invoice.Invoice;
 import io.jmix.core.DeletePolicy;
 import io.jmix.core.Messages;
@@ -29,7 +27,6 @@ import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
-import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -77,12 +74,12 @@ public class Order extends FullAuditEntity implements HasUniqueNumber {
     private String comment;
 
     @PositiveOrZero
-    @PropertyDatatype(PriceDataType.NAME)
+    @PropertyDatatype("price")
     @Column(name = "TOTAL")
     private BigDecimal total;
 
     @PositiveOrZero
-    @PropertyDatatype(PriceDataType.NAME)
+    @PropertyDatatype("price")
     @Column(name = "DISCOUNT_VALUE")
     private BigDecimal discountValue;
 
@@ -145,21 +142,21 @@ public class Order extends FullAuditEntity implements HasUniqueNumber {
 
     @JmixProperty
     @DependsOnProperties({"orderItems"})
-    @PropertyDatatype(PriceDataType.NAME)
+    @PropertyDatatype("price")
     public BigDecimal getSubTotal() {
         return calculateSubtotal(this);
     }
 
     @JmixProperty
     @DependsOnProperties({"orderItems"})
-    @PropertyDatatype(PriceDataType.NAME)
+    @PropertyDatatype("price")
     public BigDecimal getVat() {
         return PriceCalculator.calculateVat(this);
     }
 
     @JmixProperty
     @DependsOnProperties({"orderItems"})
-    @PropertyDatatype(PriceDataType.NAME)
+    @PropertyDatatype("price")
     public BigDecimal getItemsTotal() {
         BigDecimal total = BigDecimal.ZERO;
 
@@ -176,14 +173,14 @@ public class Order extends FullAuditEntity implements HasUniqueNumber {
 
     /// @see OrderService#getLeftOverSum
     @JmixProperty
-    @PropertyDatatype(PriceDataType.NAME)
+    @PropertyDatatype("price")
     public BigDecimal getLeftOverSum() {
         return getOrderService().getLeftOverSum(this);
     }
 
     ///  @see OrderService#getPaid
     @JmixProperty
-    @PropertyDatatype(PriceDataType.NAME)
+    @PropertyDatatype("price")
     public BigDecimal getPaid() {
         return getOrderService().getPaid(this);
     }
@@ -191,7 +188,7 @@ public class Order extends FullAuditEntity implements HasUniqueNumber {
     /// invoiced = sum of {@link Invoice#getSubtotal()}
     @JmixProperty
     @DependsOnProperties({"invoices"})
-    @PropertyDatatype(PriceDataType.NAME)
+    @PropertyDatatype("price")
     public BigDecimal getInvoiced() {
         List<Invoice> invoices = getInvoices();
         if (invoices == null || invoices.isEmpty()) {
@@ -253,14 +250,9 @@ public class Order extends FullAuditEntity implements HasUniqueNumber {
         this.number = number;
     }
 
-    @PrePersist
-    public void prePersist() {
-        setNumber(generateNextNumber());
-        setPurchaseOrder(generateNextPurchaseOrderNumber());
-    }
-
-    private static String generateNextPurchaseOrderNumber() {
-        return AppContext.getBean(UniqueNumbersService.class).getNextPurchaseOrderNumber();
+    @Override
+    public void applyNumber(String number) {
+        setNumber(number);
     }
 
     private OrderService getOrderService() {

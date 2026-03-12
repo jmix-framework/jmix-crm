@@ -106,7 +106,9 @@
                 <constraints nullable="false"/>
             </column>
             <column name="FULL_NAME" type="VARCHAR(255)"/>
-            <column name="TYPE_" type="VARCHAR(255)"/>
+            <column name="TYPE_" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
             <column name="VAT_NUMBER" type="VARCHAR(255)"/>
             <column name="REG_NUMBER" type="VARCHAR(255)"/>
             <column name="WEBSITE" type="VARCHAR(255)"/>

@@ -1,7 +1,6 @@
 package com.company.crm.app.util.ui;
 
 import com.company.crm.app.ui.component.GridEmptyStateComponent;
-import com.company.crm.app.util.context.AppContext;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasStyle;
 import com.vaadin.flow.component.HasValue;
@@ -11,17 +10,15 @@ import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.SvgIcon;
 import com.vaadin.flow.component.icon.VaadinIcon;
-import com.vaadin.flow.component.page.BrowserWindowResizeEvent;
 import com.vaadin.flow.component.page.Page;
-import com.vaadin.flow.component.page.PendingJavaScriptResult;
 import com.vaadin.flow.component.popover.Popover;
 import com.vaadin.flow.data.selection.MultiSelect;
 import com.vaadin.flow.data.selection.SingleSelect;
 import com.vaadin.flow.data.validator.EmailValidator;
-import com.vaadin.flow.dom.Style;
+import com.vaadin.flow.di.Instantiator;
 import com.vaadin.flow.dom.ThemeList;
 import com.vaadin.flow.router.QueryParameters;
-import com.vaadin.flow.shared.Registration;
+import com.vaadin.flow.theme.lumo.LumoUtility;
 import io.jmix.chartsflowui.component.Chart;
 import io.jmix.chartsflowui.kit.component.model.shared.Color;
 import io.jmix.core.Messages;
@@ -46,15 +43,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
 
 import static com.company.crm.model.datatype.PriceDataType.getCurrencySymbol;
 import static io.jmix.flowui.component.UiComponentUtils.getCurrentView;
 
 public final class CrmUiUtils {
 
+    public static final String BADGE_THEME_NAME = "badge";
     public static final String CONTRAST_BADGE = "contrast";
     public static final String DEFAULT_BADGE = "default";
     public static final String SUCCESS_BADGE = "success";
@@ -62,23 +58,21 @@ public final class CrmUiUtils {
     public static final String ERROR_BADGE = "error";
     public static final List<String> BADGE_VARIANTS = Arrays.asList(CONTRAST_BADGE, DEFAULT_BADGE, SUCCESS_BADGE, WARNING_BADGE, ERROR_BADGE);
 
-    private static final String GET_CLIENT_WIDTH_FUNC = "return window.innerWidth";
-    private static final String GET_CLIENT_HEIGHT_FUNC = "return window.innerHeight";
-
     public static SvgIcon appLogo() {
         return new SvgIcon("images/logo.svg");
     }
 
     public static void setDefaultEmptyStateComponent(Grid<?> grid) {
-        var text = AppContext.getBean(Messages.class).getMessage("defaultGridEmptyStateText");
+        var text = Instantiator.get(UI.getCurrent()).getOrCreate(Messages.class).getMessage("defaultGridEmptyStateText");
         var emptyState = new GridEmptyStateComponent(text);
         grid.setEmptyStateComponent(emptyState);
     }
 
     public static void showEmailSendingDialog(Collection<String> emails, boolean allowCustomValues) {
-        Dialogs dialogs = AppContext.getBean(Dialogs.class);
-        Messages messages = AppContext.getBean(Messages.class);
-        UiComponents uiComponents = AppContext.getBean(UiComponents.class);
+        Instantiator instantiator = Instantiator.get(UI.getCurrent());
+        Dialogs dialogs = instantiator.getOrCreate(Dialogs.class);
+        Messages messages = instantiator.getOrCreate(Messages.class);
+        UiComponents uiComponents = instantiator.getOrCreate(UiComponents.class);
 
         EmailValidator emailValidator = new EmailValidator(messages.getMessage("invalidEmail"));
 
@@ -126,7 +120,8 @@ public final class CrmUiUtils {
     }
 
     public static Popover searchHintPopover() {
-        return new Popover(new Html("<p>Press <b>Enter</b> to apply filter</p>"));
+        Messages messages = Instantiator.get(UI.getCurrent()).getOrCreate(Messages.class);
+        return new Popover(new Html(messages.getMessage("search.hint")));
     }
 
     public static Popover setSearchHintPopover(Component target) {
@@ -137,7 +132,6 @@ public final class CrmUiUtils {
         Popover popover = searchHintPopover();
         popover.setTarget(target);
         popover.setOpenOnFocus(true);
-
 
         if (oneTime) {
             AtomicReference<Runnable> detachRunnable = new AtomicReference<>(null);
@@ -169,55 +163,25 @@ public final class CrmUiUtils {
     }
 
     public static void setBackgroundTransparent(HasStyle component) {
-        component.getStyle().setBackground("transparent");
+        component.addClassNames(LumoUtility.Background.TRANSPARENT);
     }
 
     public static void openLink(String link) {
         getCurrentUI().ifPresent(ui -> ui.getPage().open(link, "_blank"));
     }
 
-    public static <T extends HasStyle> T makeResizable(T hasStyle) {
-        return makeResizable(hasStyle, ResizeMode.BOTH);
-    }
-
-    public static <T extends HasStyle> T makeResizable(T hasStyle, ResizeMode resizeMode) {
-        Style style = hasStyle.getStyle();
-        style.setOverflow(Style.Overflow.AUTO);
-        switch (resizeMode) {
-            case VERTICAL:
-                style.set("resize", "vertical");
-                break;
-            case HORIZONTAL:
-                style.set("resize", "horizontal");
-                break;
-            case BOTH:
-                style.set("resize", "both");
-                break;
-        }
-        return hasStyle;
-    }
-
-    public enum ResizeMode {
-        VERTICAL, HORIZONTAL, BOTH
-    }
-
     public static void setBadge(Span span, @Nullable String badgeVariant) {
-        var badgeThemeName = "badge";
         ThemeList themeList = span.getElement().getThemeList();
-        themeList.removeIf(theme -> Objects.equals(badgeThemeName, theme) || BADGE_VARIANTS.contains(badgeVariant));
+        themeList.removeIf(theme -> Objects.equals(BADGE_THEME_NAME, theme) || BADGE_VARIANTS.contains(badgeVariant));
 
         if (StringUtils.isNotBlank(badgeVariant)) {
-            themeList.add(badgeThemeName);
+            themeList.add(BADGE_THEME_NAME);
             themeList.add(badgeVariant);
         }
     }
 
-    public static void setCursorPointer(HasStyle hasStyle) {
-        setCursor(hasStyle, "pointer");
-    }
-
-    public static void setCursor(HasStyle hasStyle, String cursor) {
-        hasStyle.getStyle().set("cursor", cursor);
+    public static void setClickableCursor(HasStyle hasStyle) {
+        hasStyle.addClassNames("clickable");
     }
 
     public static Optional<UI> getCurrentUI() {
@@ -234,38 +198,6 @@ public final class CrmUiUtils {
 
     public static void reloadCurrentPage() {
         getCurrentPage().ifPresent(Page::reload);
-    }
-
-    public static Optional<Registration> addBrowserWindowResizeListener(Consumer<BrowserWindowResizeEvent> onResize) {
-        return getCurrentPage().map(page -> page.addBrowserWindowResizeListener(onResize::accept));
-    }
-
-    public static Optional<PendingJavaScriptResult> executeJs(final String js) {
-        return getCurrentPage().map(page -> page.executeJs(js));
-    }
-
-    public static void executeOnClientWidthAsync(Consumer<Integer> onWidth) {
-        executeGetClientWidthJs().ifPresent(p -> p.then(Integer.class, onWidth::accept));
-    }
-
-    public static Optional<CompletableFuture<Integer>> onClientWidthFuture() {
-        return executeGetClientWidthJs().map(p -> p.toCompletableFuture(Integer.class));
-    }
-
-    public static void onClientWidthFuture(Consumer<Integer> onWidth) {
-        onClientWidthFuture().ifPresent(c -> c.whenComplete((width, t) -> onWidth.accept(width)));
-    }
-
-    public static void executeOnClientHeightAsync(Consumer<Integer> onHeight) {
-        executeGetClientHeightJs().ifPresent(p -> p.then(Integer.class, onHeight::accept));
-    }
-
-    public static Optional<CompletableFuture<Integer>> onClientHeightFuture() {
-        return executeGetClientHeightJs().map(p -> p.toCompletableFuture(Integer.class));
-    }
-
-    public Optional<CompletableFuture<Integer>> onClientHeightFuture(Consumer<Integer> onHeight) {
-        return onClientHeightFuture().map(c -> c.whenComplete((width, t) -> onHeight.accept(width)));
     }
 
     public static void addColumnHeaderCurrencySuffix(DataGrid<?> grid, String... columnKey) {
@@ -311,17 +243,10 @@ public final class CrmUiUtils {
         }
     }
 
-    private static Optional<PendingJavaScriptResult> executeGetClientWidthJs() {
-        return executeJs(GET_CLIENT_WIDTH_FUNC);
-    }
-
-    private static Optional<PendingJavaScriptResult> executeGetClientHeightJs() {
-        return executeJs(GET_CLIENT_HEIGHT_FUNC);
-    }
-
     private static void onSendEmail(ActionPerformedEvent e) {
-        Messages messages = AppContext.getBean(Messages.class);
-        Notifications notifications = AppContext.getBean(Notifications.class);
+        Instantiator instantiator = Instantiator.get(UI.getCurrent());
+        Messages messages = instantiator.getOrCreate(Messages.class);
+        Notifications notifications = instantiator.getOrCreate(Notifications.class);
 
         Collection<String> emails = ((InputDialogAction) e.getSource()).getInputDialog().getValue("emails");
         String msg = messages.formatMessage("emailSentNotification", String.join(", ", emails));

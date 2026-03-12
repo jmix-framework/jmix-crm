@@ -10,7 +10,6 @@ import com.company.crm.app.ui.component.CrmLoader;
 import com.company.crm.app.util.AsyncTasksRegistry;
 import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.app.util.ui.CrmUiUtils;
-import com.company.crm.app.util.ui.listener.resize.WidthResizeListener;
 import com.company.crm.app.util.ui.renderer.CrmRenderers;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.client.ClientRepository;
@@ -42,6 +41,7 @@ import com.vaadin.flow.theme.lumo.LumoUtility.Overflow;
 import com.vaadin.flow.theme.lumo.LumoUtility.TextOverflow;
 import com.vaadin.flow.theme.lumo.LumoUtility.Whitespace;
 import io.jmix.core.Messages;
+import io.jmix.core.metamodel.datatype.DatatypeFormatter;
 import io.jmix.core.querycondition.LogicalCondition;
 import io.jmix.core.repository.JmixDataRepositoryContext;
 import io.jmix.core.security.CurrentAuthentication;
@@ -80,7 +80,7 @@ import static com.company.crm.app.util.ui.CrmUiUtils.addRowSelectionInMultiSelec
 import static com.company.crm.app.util.ui.CrmUiUtils.openLink;
 import static com.company.crm.app.util.ui.CrmUiUtils.setSearchHintPopover;
 import static com.company.crm.app.util.ui.datacontext.DataContextUtils.addCondition;
-import static com.company.crm.app.util.ui.listener.resize.WidthResizeListener.isWidthChanged;
+import static com.company.crm.app.util.ui.datacontext.DataContextUtils.installSortByCreatedDate;
 import static io.jmix.core.querycondition.PropertyCondition.contains;
 import static io.jmix.core.querycondition.PropertyCondition.equal;
 import static io.jmix.core.querycondition.PropertyCondition.isCollectionEmpty;
@@ -90,7 +90,7 @@ import static io.jmix.core.querycondition.PropertyCondition.isCollectionEmpty;
 @ViewDescriptor(path = "client-list-view.xml")
 @LookupComponent("clientsDataGrid")
 @DialogMode(width = "90%", resizable = true)
-public class ClientListView extends StandardListView<Client> implements WidthResizeListener {
+public class ClientListView extends StandardListView<Client> {
 
     @Autowired
     private Messages messages;
@@ -108,6 +108,8 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
     private UiAsyncTasks uiAsyncTasks;
     @Autowired
     private ClientRepository clientRepository;
+    @Autowired
+    private DatatypeFormatter datatypeFormatter;
     @Autowired
     private CurrentAuthentication currentAuthentication;
 
@@ -140,19 +142,13 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
     @ViewComponent
     private MessageBundle messageBundle;
 
-    private static volatile int lastWidth = -1;
-    private static final int widthBreakpoint = 600;
-
     private final AsyncTasksRegistry asyncTasksRegistry = AsyncTasksRegistry.newInstance();
 
     private final LogicalCondition filtersCondition = LogicalCondition.and();
 
-    @Override
-    public void configureUiForWidth(int width) {
-        if (isWidthChanged(width, lastWidth, widthBreakpoint)) {
-            lastWidth = width;
-            configureFiltersPanel(width);
-        }
+    @Subscribe
+    private void onInit(final InitEvent event) {
+        installSortByCreatedDate(clientsDl);
     }
 
     @Override
@@ -234,16 +230,17 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
     @Supply(to = "clientsDataGrid.website", subject = "renderer")
     private Renderer<Client> clientsDataGridWebsiteRenderer() {
         return new ComponentRenderer<>(c -> {
-            String website = Objects.toString(c.getWebsite(), "");
-            if (website.length() > 30) {
-                website = StringUtils.substring(website, 0, 27) + "...";
+            String website = StringUtils.defaultString(c.getWebsite());
+            String websitePreview = Objects.toString(c.getWebsite(), "");
+            if (websitePreview.length() > 30) {
+                websitePreview = StringUtils.substring(websitePreview, 0, 27) + "...";
             }
 
-            Span span = new Span(website);
-            CrmUiUtils.setCursorPointer(span);
-            span.setTitle(c.getWebsite());
+            Span span = new Span(websitePreview);
+            CrmUiUtils.setClickableCursor(span);
+            span.setTitle(website);
             span.addClassNames(LumoUtility.TextColor.PRIMARY, LumoUtility.TextColor.SECONDARY, TextOverflow.ELLIPSIS);
-            span.addClickListener(e -> openLink(c.getWebsite()));
+            span.addClickListener(e -> openLink(website));
             return span;
         });
     }
@@ -302,10 +299,11 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
 
     private void installCardLoader(Card card) {
         card.removeAll();
-        CrmLoader loader = new CrmLoader();
-        loader.startLoading();
-        card.add(loader);
+        card.setHeader(null);
         SkeletonStyler.apply(card);
+
+        CrmLoader loader = new CrmLoader(card);
+        loader.startLoading();
     }
 
     private Client[] getSelectedClients() {
@@ -392,7 +390,7 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
     }
 
     private void fillStatCard(String title, CrmCard card, BigDecimal content) {
-        var contentComponent = new H1(PriceDataType.defaultFormat(content));
+        var contentComponent = new H1(PriceDataType.defaultFormat(content, datatypeFormatter));
         contentComponent.setWidthFull();
         contentComponent.setMaxWidth(12, Unit.EM);
         contentComponent.addClassNames(Overflow.HIDDEN, TextOverflow.ELLIPSIS, Whitespace.NOWRAP);
@@ -509,14 +507,6 @@ public class ClientListView extends StandardListView<Client> implements WidthRes
                 case WITH_PAYMENTS -> filtersCondition.add(isCollectionEmpty("invoices.payments", false));
             }
         });
-    }
-
-    private void configureFiltersPanel(int width) {
-        if (width < widthBreakpoint) {
-            searchField.setWidthFull();
-        } else {
-            searchField.setWidth("50%");
-        }
     }
 
     private User getCurrentUser() {
