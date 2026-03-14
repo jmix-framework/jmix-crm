@@ -4,6 +4,7 @@ import com.company.crm.AbstractTest;
 import io.jmix.core.security.CurrentAuthentication;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +13,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@EnabledIfEnvironmentVariable(named = "AI_ENABLED", matches = "true")
 class SpringAiToolCallbackUserContextLLMTest extends AbstractTest {
 
     @Autowired

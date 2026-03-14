@@ -6,32 +6,27 @@ import com.company.crm.ai.report.introspection.AiReportModelDescriptorYamlExport
 import com.company.crm.ai.report.introspection.JmixReportDiscoveryTool;
 import com.company.crm.ai.service.AiConversationService;
 import com.company.crm.model.client.Client;
-import com.company.crm.ai.service.LLMJudgeTool;
+import com.company.crm.util.ai.LLMJudge;
+import com.company.crm.util.ai.LLMJudgeBuilder;
 import io.jmix.core.FetchPlan;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.client.ChatClient.CallResponseSpec;
-import org.springframework.ai.chat.client.ChatClient.ChatClientRequestSpec;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.lang.reflect.Method;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 /**
  * Integration test for RunReportTool using a real ChatClient to verify tool orchestration.
  */
 @EnabledIfEnvironmentVariable(named = "AI_ENABLED", matches = "true")
-class RunReportToolLLMIntegrationTest extends AbstractTest {
+class RunReportToolLLMTest extends AbstractTest {
 
     @Autowired
     private AiReportExecutionService executionService;
@@ -43,36 +38,42 @@ class RunReportToolLLMIntegrationTest extends AbstractTest {
     private AiConversationService aiConversationService;
 
     @Autowired
-    private ChatClient.Builder chatClientBuilder;
+    private ChatClient.Builder  chatClientBuilder;
+    @Autowired
+    private LLMJudgeBuilder llmJudgeBuilder;
 
-    private ChatClient chatClient;
-    private LLMJudgeTool llmJudgeTool;
-    private ChatClient judgeClient;
-
-    private JmixReportDiscoveryTool discoveryTool;
-    private RunReportTool runReportTool;
+    private ReportChatAssistant reportChatAssistant;
+    private LLMJudge llmJudge;
 
     @BeforeEach
     @Override
     protected void beforeEach() {
         List<String> allowedReports = List.of("client-360-report");
-        discoveryTool = new JmixReportDiscoveryTool(reportYamlExporter, allowedReports);
-        runReportTool = new RunReportTool(executionService, allowedReports);
-        
-        // Use a fresh builder from the context to avoid state pollution
-        this.chatClient = applicationContext.getBean(ChatClient.Builder.class)
-                .defaultSystem("You are a helpful assistant. Use report tools to answer questions.")
-                .build();
+        this.reportChatAssistant = new ReportChatAssistant(
+                chatClientBuilder.clone()
+                        .defaultSystem("You are a helpful assistant. Use report tools to answer questions.")
+                        .build(),
+                new JmixReportDiscoveryTool(reportYamlExporter, allowedReports),
+                new RunReportTool(executionService, allowedReports)
+        );
 
-        llmJudgeTool = new LLMJudgeTool();
-        this.judgeClient = applicationContext.getBean(ChatClient.Builder.class)
-                .defaultSystem("""
+        this.llmJudge = llmJudgeBuilder
+                .systemPrompt("""
                         You are an LLM Judge.
                         Assess only the final answer quality against the user request and criteria.
                         Do not require the response text to prove tool execution.
                         Treat mention of tool names as optional context, not mandatory evidence.
                         """)
-                .defaultTools(llmJudgeTool)
+                .judgePrompt("""
+                        Question: %s
+                        AI Response: %s
+                        Criteria: %s
+
+                        Evaluate only the final answer quality against the user request and criteria.
+                        Do not require the response text to prove tool execution.
+                        Treat tool-name mentions as optional context, not mandatory evidence.
+                        Use submitJudgement(correct, reasoning).
+                        """)
                 .build();
     }
 
@@ -90,25 +91,18 @@ class RunReportToolLLMIntegrationTest extends AbstractTest {
                     """.formatted(clientId, fromDate, toDate);
 
             // when
-            String response = chatClient.prompt()
-                    .user(question)
-                    .toolContext(Map.of("conversationId", java.util.UUID.fromString("00000000-0000-0000-0000-000000000000"))) // Dummy UUID for this test
-                    .tools(discoveryTool, runReportTool)
-                    .call()
-                    .content();
+            String response = reportChatAssistant.ask(question);
 
             // then
             assertThat(response).containsIgnoringCase("Client 360");
             assertThat(response).containsIgnoringCase("LLM Test Client");
             assertThat(response).contains("client-360-report");
 
-            LLMJudgeTool.JudgeResult evaluation = evaluateWithJudge(question, response, """
+            llmJudge.evaluateAnwserWithJudge(question, response, """
                     Evaluate only response quality against the user request.
                     Do not require explicit proof of tool execution inside the response text.
                     Tool-name mentions are optional context, not mandatory evidence.
                     """);
-            assertThat(evaluation).isNotNull();
-            assertThat(evaluation.correct()).isTrue();
         });
     }
 
@@ -130,12 +124,7 @@ class RunReportToolLLMIntegrationTest extends AbstractTest {
                     """.formatted(clientId, fromDate, toDate);
 
             // when
-            String response = chatClient.prompt()
-                    .user(question)
-                    .toolContext(Map.of("conversationId", java.util.UUID.fromString(conversationId)))
-                    .tools(discoveryTool, runReportTool)
-                    .call()
-                    .content();
+            String response = reportChatAssistant.ask(question, UUID.fromString(conversationId));
 
             // then
             assertThat(response).contains(clientId);
@@ -154,47 +143,29 @@ class RunReportToolLLMIntegrationTest extends AbstractTest {
         });
     }
 
-    @Test
-    void testEvaluateWithJudge_whenJudgeReturnsNoResult_throws() throws Exception {
-        // given
-        LLMJudgeTool emptyJudgeTool = new LLMJudgeTool();
-        ChatClient mockedJudgeClient = mock(ChatClient.class);
-        ChatClientRequestSpec requestSpec = mock(ChatClientRequestSpec.class);
-        CallResponseSpec responseSpec = mock(CallResponseSpec.class);
-        when(mockedJudgeClient.prompt(anyString())).thenReturn(requestSpec);
-        when(requestSpec.call()).thenReturn(responseSpec);
-        when(responseSpec.content()).thenReturn("No judgement submitted");
+    private static class ReportChatAssistant {
+        private static final UUID DEFAULT_CONVERSATION_ID =
+                UUID.fromString("00000000-0000-0000-0000-000000000000");
 
-        this.llmJudgeTool = emptyJudgeTool;
-        this.judgeClient = mockedJudgeClient;
+        private final ChatClient chatClient;
+        private final Object[] tools;
 
-        Method evaluateWithJudge = RunReportToolLLMIntegrationTest.class
-                .getDeclaredMethod("evaluateWithJudge", String.class, String.class, String.class);
-        evaluateWithJudge.setAccessible(true);
-
-        // when / then
-        assertThatThrownBy(() -> evaluateWithJudge.invoke(this, "Q", "A", "C"))
-                .hasCauseInstanceOf(IllegalStateException.class)
-                .hasRootCauseMessage("Judge did not return a result");
-    }
-
-    private LLMJudgeTool.JudgeResult evaluateWithJudge(String question, String aiResponse, String criteria) {
-        String judgePrompt = """
-                Question: %s
-                AI Response: %s
-                Criteria: %s
-                
-                Evaluate only the final answer quality against the user request and criteria.
-                Do not require the response text to prove tool execution.
-                Treat tool-name mentions as optional context, not mandatory evidence.
-                Use submitJudgement(correct, reasoning).
-                """.formatted(question, aiResponse, criteria);
-
-        judgeClient.prompt(judgePrompt).call().content();
-        LLMJudgeTool.JudgeResult result = llmJudgeTool.getLastResult();
-        if (result == null) {
-            throw new IllegalStateException("Judge did not return a result");
+        private ReportChatAssistant(ChatClient chatClient, JmixReportDiscoveryTool discoveryTool, RunReportTool runReportTool) {
+            this.chatClient = chatClient;
+            this.tools = new Object[]{discoveryTool, runReportTool};
         }
-        return result;
+
+        private String ask(String question) {
+            return ask(question, DEFAULT_CONVERSATION_ID);
+        }
+
+        private String ask(String question, UUID conversationId) {
+            return chatClient.prompt()
+                    .user(question)
+                    .toolContext(Map.of("conversationId", conversationId))
+                    .tools(tools)
+                    .call()
+                    .content();
+        }
     }
 }

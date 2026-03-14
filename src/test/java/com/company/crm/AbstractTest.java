@@ -4,6 +4,7 @@ import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.model.user.User;
 import com.company.crm.util.Entities;
 import com.company.crm.util.TestUsers;
+import com.company.crm.util.ai.LLMJudgeBuilder;
 import com.company.crm.util.extenstion.AuthenticatedAsExtension;
 import com.company.crm.util.extenstion.DataCleaner;
 import io.jmix.core.DataManager;
@@ -24,7 +25,7 @@ import java.util.function.Consumer;
 @ExtendWith({AuthenticatedAsExtension.class, DataCleaner.class})
 @ActiveProfiles(CrmConstants.SpringProfiles.TEST)
 @SpringBootTest(
-        classes = {CRMApplication.class, Entities.class, TestUsers.class},
+        classes = {CRMApplication.class, Entities.class, TestUsers.class, LLMJudgeBuilder.class},
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class AbstractTest {
 

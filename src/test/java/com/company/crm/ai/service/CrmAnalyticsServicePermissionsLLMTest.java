@@ -5,11 +5,13 @@ import com.company.crm.ai.jpql.query.AiJpqlQueryService;
 import com.company.crm.ai.jpql.query.JpqlQueryTool;
 import com.company.crm.model.client.Client;
 import com.company.crm.security.role.UiMinimalRole;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.tool.annotation.Tool;
+import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
@@ -18,6 +20,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@EnabledIfEnvironmentVariable(named = "AI_ENABLED", matches = "true")
 class CrmAnalyticsServicePermissionsLLMTest extends AbstractTest {
 
     @Autowired
@@ -27,27 +30,31 @@ class CrmAnalyticsServicePermissionsLLMTest extends AbstractTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    private ChatClient chatClient;
-    private JpqlQueryTool jpqlQueryTool;
+    private JpqlQueryProbe queryProbe;
 
     @BeforeEach
     void setUp() {
-        // given
-        this.jpqlQueryTool = new JpqlQueryTool(aiJpqlQueryService);
-        this.chatClient = chatClientBuilder
-                .defaultSystem("""
-                        You are a deterministic integration-test assistant.
-                        You must call executeQuery exactly once with the arguments provided by the user.
-                        Do not rewrite or normalize jpqlQuery.
-                        Do not rename, remove, or add parameter keys.
-                        Use the provided parameters map exactly as-is.
-                        Never pass parameters as null.
-                        If the provided map contains clientId, you MUST pass clientId in executeQuery parameters.
-                        Then return only one valid JSON object with keys:
-                        success, errorMessage, firstValue.
-                        Do not return markdown and do not add extra text.
-                        """)
-                .build();
+        this.queryProbe = new JpqlQueryProbe(
+                chatClientBuilder.clone()
+                        .defaultSystem("""
+                                You are a deterministic integration-test assistant.
+                                You must call executeQuery exactly once with the arguments provided by the user.
+                                After executeQuery returns, you must call submitQueryProbeResult exactly once.
+                                Do not rewrite or normalize jpqlQuery.
+                                Do not rename, remove, or add parameter keys.
+                                Use the provided parameters map exactly as-is.
+                                Never pass parameters as null.
+                                If the provided map contains clientId, you MUST pass clientId in executeQuery parameters.
+                                For submitQueryProbeResult:
+                                - success must match executeQuery.success
+                                - errorMessage must match executeQuery.errorMessage, or empty string if none
+                                - firstValue must be the first row's value for the first select alias, converted to string, or empty string if unavailable
+                                Do not add extra text outside the required tool calls.
+                                """)
+                        .build(),
+                new JpqlQueryTool(aiJpqlQueryService),
+                objectMapper
+        );
     }
 
     @Test
@@ -57,7 +64,7 @@ class CrmAnalyticsServicePermissionsLLMTest extends AbstractTest {
         Client client = systemAuthenticator.withSystem(() -> entities.client(expectedClientName));
 
         // when
-        QueryProbeResult result = withManager(() -> executeQueryWithLlm(
+        QueryProbeResult result = withManager(() -> queryProbe.execute(
                 "SELECT c.name AS clientName FROM Client c WHERE c.id = :clientId",
                 Map.of("clientId", client.getId().toString()),
                 List.of("clientName")
@@ -78,7 +85,7 @@ class CrmAnalyticsServicePermissionsLLMTest extends AbstractTest {
         testUsers.assignRole(uiMinimalUser.getUsername(), UiMinimalRole.CODE);
 
         // when
-        QueryProbeResult result = withUser(uiMinimalUser, () -> executeQueryWithLlm(
+        QueryProbeResult result = withUser(uiMinimalUser, () -> queryProbe.execute(
                 "SELECT c.name AS clientName FROM Client c WHERE c.id = :clientId",
                 Map.of("clientId", client.getId().toString()),
                 List.of("clientName")
@@ -100,7 +107,7 @@ class CrmAnalyticsServicePermissionsLLMTest extends AbstractTest {
         Client client = systemAuthenticator.withSystem(() -> entities.client(expectedClientName));
 
         // when
-        QueryProbeResult result = withUser("admin", () -> executeQueryWithLlm(
+        QueryProbeResult result = withUser("admin", () -> queryProbe.execute(
                 "SELECT c.name AS clientName FROM Client c WHERE c.id = :clientId",
                 Map.of("clientId", client.getId().toString()),
                 List.of("clientName")
@@ -112,69 +119,96 @@ class CrmAnalyticsServicePermissionsLLMTest extends AbstractTest {
         assertThat(result.errorMessage()).isEmpty();
     }
 
-    private QueryProbeResult executeQueryWithLlm(String jpqlQuery, Map<String, Object> parameters, List<String> selectAliases) {
-        try {
-            String prompt = """
-                    Run executeQuery exactly once with this exact payload (no modifications):
-                    {
-                      "jpqlQuery": %s,
-                      "parameters": %s,
-                      "selectAliases": %s,
-                      "offset": 0,
-                      "limit": 5
-                    }
-                    Rules:
+    private record QueryProbeResult(boolean success, String errorMessage, String firstValue) {
+    }
+
+    private static class JpqlQueryProbe {
+        private final ChatClient chatClient;
+        private final JpqlQueryTool jpqlQueryTool;
+        private final ObjectMapper objectMapper;
+
+        private JpqlQueryProbe(ChatClient chatClient, JpqlQueryTool jpqlQueryTool, ObjectMapper objectMapper) {
+            this.chatClient = chatClient;
+            this.jpqlQueryTool = jpqlQueryTool;
+            this.objectMapper = objectMapper;
+        }
+
+        private QueryProbeResult execute(String jpqlQuery, Map<String, Object> parameters, List<String> selectAliases) {
+            try {
+                QueryProbeCollectorTool collectorTool = new QueryProbeCollectorTool();
+                String prompt = buildExecuteQueryPrompt(jpqlQuery, parameters, selectAliases);
+
+                chatClient.prompt()
+                        .user(prompt)
+                        .tools(jpqlQueryTool, collectorTool)
+                        .call()
+                        .content();
+
+                QueryProbeResult result = collectorTool.getResult();
+                if (result == null) {
+                    return new QueryProbeResult(false, "Query probe did not submit result", "");
+                }
+                return result;
+            } catch (Exception e) {
+                throw new IllegalStateException("Failed to execute JPQL query through LLM callback", e);
+            }
+        }
+
+        private String buildExecuteQueryPrompt(String jpqlQuery, Map<String, Object> parameters, List<String> selectAliases) throws Exception {
+            return """
+                    Call executeQuery exactly once with these exact arguments:
+                    - jpqlQuery: %s
+                    - parameters: %s
+                    - selectAliases: %s
+                    - offset: 0
+                    - limit: 5
+
+                    Rules for executeQuery:
                     - Keep jpqlQuery byte-for-byte unchanged.
                     - Keep parameter keys unchanged (e.g. clientId stays clientId).
-                    - Do not add/remove parameters.
-                    - parameters must NOT be null.
-                    - parameters must include clientId exactly when provided.
-                    Return JSON only with keys success,errorMessage,firstValue.
+                    - Do not add or remove parameters.
+                    - parameters must not be null.
+                    - If parameters contains clientId, pass clientId exactly as provided.
+
+                    After executeQuery returns, call submitQueryProbeResult exactly once with:
+                    - success from executeQuery.success
+                    - errorMessage from executeQuery.errorMessage, or empty string if none
+                    - firstValue from the first returned row under the first select alias, converted to string, or empty string if unavailable
+
+                    Do not produce any plain-text answer.
                     """.formatted(
                     objectMapper.writeValueAsString(jpqlQuery),
                     objectMapper.writeValueAsString(parameters),
                     objectMapper.writeValueAsString(selectAliases)
             );
-
-            String rawResponse = chatClient.prompt()
-                    .user(prompt)
-                    .tools(jpqlQueryTool)
-                    .call()
-                    .content();
-
-            String json = extractJsonObject(rawResponse);
-            JsonNode node = objectMapper.readTree(json);
-            return new QueryProbeResult(
-                    node.path("success").asBoolean(false),
-                    textOrEmpty(node, "errorMessage"),
-                    textOrEmpty(node, "firstValue"),
-                    rawResponse
-            );
-        } catch (Exception e) {
-            throw new IllegalStateException("Failed to execute JPQL query through LLM callback", e);
         }
     }
 
-    private String textOrEmpty(JsonNode node, String key) {
-        JsonNode child = node.path(key);
-        if (child.isMissingNode() || child.isNull()) {
-            return "";
-        }
-        return child.asText("");
-    }
+    private static class QueryProbeCollectorTool {
+        private QueryProbeResult result;
 
-    private String extractJsonObject(String rawResponse) {
-        if (rawResponse == null) {
-            throw new IllegalStateException("LLM returned null response");
+        @Tool(name = "submitQueryProbeResult", description = """
+                Submit the final executeQuery outcome for this test callback.
+                Use success from executeQuery.success.
+                Use errorMessage from executeQuery.errorMessage, or empty string if none.
+                Use firstValue from the first returned row under the first select alias, converted to string, or empty string if unavailable.
+                """)
+        public void submitQueryProbeResult(
+                @ToolParam(description = "Whether executeQuery completed successfully") boolean success,
+                @ToolParam(description = "The executeQuery error message, or empty string if none") String errorMessage,
+                @ToolParam(description = "The first row's value for the first selected alias, or empty string if unavailable") String firstValue) {
+            this.result = new QueryProbeResult(success, sanitize(errorMessage), sanitize(firstValue));
         }
-        int firstBrace = rawResponse.indexOf('{');
-        int lastBrace = rawResponse.lastIndexOf('}');
-        if (firstBrace < 0 || lastBrace < firstBrace) {
-            throw new IllegalStateException("LLM response does not contain JSON object: " + rawResponse);
-        }
-        return rawResponse.substring(firstBrace, lastBrace + 1);
-    }
 
-    private record QueryProbeResult(boolean success, String errorMessage, String firstValue, String rawResponse) {
+        private QueryProbeResult getResult() {
+            return result;
+        }
+
+        private String sanitize(String value) {
+            if (value == null) {
+                return "";
+            }
+            return value.replaceAll("[\r\n\t]", " ").trim();
+        }
     }
 }

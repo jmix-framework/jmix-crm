@@ -28,6 +28,9 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Running tests suite
+        env:
+          SPRING_AI_OPENAI_APIKEY: ${{ secrets.OPENAI_API_KEY }}
+          AI_ENABLED: true
         run: chmod +x ./gradlew && ./gradlew test -Pvaadin.productionMode
 
       - name: Display test report

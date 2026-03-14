@@ -1,15 +1,15 @@
-package com.company.crm.ai.service;
+package com.company.crm.util.ai;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 
-public class LLMJudgeTool {
+public class LLMJudgementCollectorTool {
 
-    private static final Logger log = LoggerFactory.getLogger(LLMJudgeTool.class);
+    private static final Logger log = LoggerFactory.getLogger(LLMJudgementCollectorTool.class);
 
-    private JudgeResult lastResult;
+    private JudgeResult result;
 
     public record JudgeResult(boolean correct, String reasoning) {}
 
@@ -23,10 +23,10 @@ public class LLMJudgeTool {
         // Clean reasoning text from potential JSON-breaking characters
         String cleanReasoning = reasoning.replaceAll("[\r\n\t]", " ").trim();
         log.info("Judge evaluation: correct={}, reasoning={}", correct, cleanReasoning);
-        this.lastResult = new JudgeResult(correct, cleanReasoning);
+        this.result = new JudgeResult(correct, cleanReasoning);
     }
 
-    public JudgeResult getLastResult() {
-        return lastResult;
+    public JudgeResult getResult() {
+        return result;
     }
 }

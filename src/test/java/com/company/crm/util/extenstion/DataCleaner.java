@@ -24,12 +24,12 @@ import io.jmix.core.metamodel.model.MetaClass;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
-import org.junit.platform.commons.util.ReflectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.jdbc.JdbcTestUtils;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.List;
 import javax.sql.DataSource;
@@ -74,12 +74,56 @@ public class DataCleaner implements AfterAllCallback, AfterEachCallback {
         }
 
         var test = testOpt.get();
-        Method cleanDataMethod = ReflectionUtils.getRequiredMethod(test.getClass(), "cleanDataAfterEach");
-        cleanDataMethod.trySetAccessible();
-        Boolean needToClean = (Boolean) cleanDataMethod.invoke(test);
+        boolean needToClean = resolveNeedToClean(test);
 
         if (needToClean) {
             cleanData(context);
+        }
+    }
+
+    private boolean resolveNeedToClean(Object testInstance) {
+        Object currentInstance = testInstance;
+
+        while (currentInstance != null) {
+            Method cleanDataMethod = findCleanDataAfterEachMethod(currentInstance.getClass());
+            if (cleanDataMethod != null) {
+                try {
+                    cleanDataMethod.trySetAccessible();
+                    Object result = cleanDataMethod.invoke(currentInstance);
+                    return Boolean.TRUE.equals(result);
+                } catch (Exception e) {
+                    throw new IllegalStateException(
+                            "Failed to invoke cleanDataAfterEach() on " + currentInstance.getClass().getName(), e);
+                }
+            }
+
+            currentInstance = getEnclosingInstance(currentInstance);
+        }
+
+        throw new IllegalStateException(
+                "Could not resolve cleanDataAfterEach() on test instance " + testInstance.getClass().getName()
+                        + " or any enclosing test instance.");
+    }
+
+    private Method findCleanDataAfterEachMethod(Class<?> type) {
+        if (type == null) {
+            return null;
+        }
+
+        try {
+            return type.getDeclaredMethod("cleanDataAfterEach");
+        } catch (NoSuchMethodException ignored) {
+            return findCleanDataAfterEachMethod(type.getSuperclass());
+        }
+    }
+
+    private Object getEnclosingInstance(Object instance) {
+        try {
+            Field outerField = instance.getClass().getDeclaredField("this$0");
+            outerField.trySetAccessible();
+            return outerField.get(instance);
+        } catch (Exception ignored) {
+            return null;
         }
     }
 
