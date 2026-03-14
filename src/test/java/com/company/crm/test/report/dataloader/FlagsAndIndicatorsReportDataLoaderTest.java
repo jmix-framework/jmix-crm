@@ -2,6 +2,7 @@ package com.company.crm.test.report.dataloader;
 
 import com.company.crm.AbstractTest;
 import com.company.crm.model.client.Client;
+import com.company.crm.model.client.ClientType;
 import com.company.crm.model.datatype.PriceDataType;
 import com.company.crm.report.dataloader.FlagsAndIndicatorsReportDataLoader;
 import io.jmix.core.metamodel.datatype.DatatypeFormatter;
@@ -27,7 +28,7 @@ class FlagsAndIndicatorsReportDataLoaderTest extends AbstractTest {
     @Test
     void testLoadDataWithValidClient() {
         // given
-        Client client = entities.client("Flags Client", 400);
+        Client client = entities.client("Flags Client", 400, ClientType.INDIVIDUAL);
 
         Map<String, Object> params = Map.of(
                 "client", client,
@@ -42,25 +43,7 @@ class FlagsAndIndicatorsReportDataLoaderTest extends AbstractTest {
         assertThat(result).hasSize(1);
         Map<String, Object> flags = result.get(0);
 
-        // Check that all expected flags are present
-        assertThat(flags).containsKeys(
-            // Customer Classification Flags
-            "isHighValue", "isVIP", "isNew", "isFrequent", "isInactive",
 
-            // Financial Health Indicators
-            "hasPaymentIssues", "hasGoodPaymentHistory", "hasOutstandingBalance", "outstandingAmount",
-
-            // Business Relationship Indicators
-            "isBusiness", "hasAccountManager",
-
-            // Long-term and activity indicators
-            "isLongTerm", "customerTenure", "hasRecentActivity",
-
-            // Sales opportunity and risk assessment
-            "hasSalesOpportunity", "isCreditRisk"
-        );
-
-        // Deterministic flag values for a client without transactions
         assertThat(flags.get("isHighValue")).isEqualTo(false);
         assertThat(flags.get("isVIP")).isEqualTo(false);
         assertThat(flags.get("isNew")).isEqualTo(false);

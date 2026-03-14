@@ -67,9 +67,13 @@ public class Entities {
     }
 
     public Client client(String name, int daysAgo) {
+        return client(name, daysAgo, randomClientType());
+    }
+
+    public Client client(String name, int daysAgo, ClientType type) {
         Client client = createAndSaveEntity(Client.class, c -> {
             c.setName(name);
-            c.setType(randomClientType());
+            c.setType(type);
             c.setAddress(address());
         });
         client.setCreatedDate(

@@ -3,11 +3,13 @@ package com.company.crm.test.report.dataloader;
 import com.company.crm.AbstractTest;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.client.RiskLevel;
+import com.company.crm.model.datatype.PriceDataType;
 import com.company.crm.model.invoice.Invoice;
 import com.company.crm.model.invoice.InvoiceStatus;
 import com.company.crm.model.order.Order;
 import com.company.crm.model.order.OrderStatus;
 import com.company.crm.report.dataloader.RiskIndicatorsReportDataLoader;
+import io.jmix.core.metamodel.datatype.DatatypeFormatter;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -22,174 +24,169 @@ class RiskIndicatorsReportDataLoaderTest extends AbstractTest {
 
     @Autowired
     private RiskIndicatorsReportDataLoader dataLoader;
+    @Autowired
+    private DatatypeFormatter datatypeFormatter;
 
     @Test
-    void testLoadDataWithOverdueInvoices() {
-        // Given
+    void loadData_returnsMediumRiskWhenClientHasOverdueInvoicesInRange() {
+        // given
         Client client = entities.client("Risk Client");
-        dataManager.save(client);
-
         Order order = entities.order(client, LocalDate.of(2024, 1, 10), OrderStatus.DONE);
-        dataManager.save(order);
 
-        // Create some overdue invoices in date range
         Invoice overdueInvoice1 = entities.invoice(client, order, BigDecimal.valueOf(1000.00), InvoiceStatus.OVERDUE, LocalDate.of(2024, 1, 15));
         Invoice overdueInvoice2 = entities.invoice(client, order, BigDecimal.valueOf(750.00), InvoiceStatus.OVERDUE, LocalDate.of(2024, 1, 20));
-
-        // Create a paid invoice (should not count as overdue)
         Invoice paidInvoice = entities.invoice(client, order, BigDecimal.valueOf(500.00), InvoiceStatus.PAID, LocalDate.of(2024, 1, 17));
-
-        // Create overdue invoice outside date range (should not count)
         Invoice overdueOutOfRange = entities.invoice(client, order, BigDecimal.valueOf(300.00), InvoiceStatus.OVERDUE, LocalDate.of(2023, 12, 31));
 
-        dataManager.save(overdueInvoice1, overdueInvoice2, paidInvoice, overdueOutOfRange);
+        BigDecimal expectedOverdueAmount = overdueInvoice1.getTotal().add(overdueInvoice2.getTotal());
 
-        Map<String, Object> params = Map.of(
-                "client", client,
-                "fromDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 1)),
-                "toDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 31))
+        // when
+        Map<String, Object> riskData = loadRiskData(client, LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 31));
+
+        // then
+        assertRiskData(
+                riskData,
+                2L,
+                expectedOverdueAmount,
+                0.0,
+                RiskLevel.MEDIUM,
+                "risk-medium"
         );
-
-        // When
-        List<Map<String, Object>> result = dataLoader.loadData(null, null, params);
-
-        // Then
-        assertThat(result).hasSize(1);
-        Map<String, Object> riskData = result.get(0);
-
-        // Should count only overdue invoices in date range
-        assertThat(riskData.get("overdueCount")).isEqualTo(2L);
-        assertThat(riskData.get("overdueAmount")).isInstanceOf(String.class);
-
-        // Check all expected fields are present
         assertThat(riskData).containsKeys(
-            "overdueCount", "overdueAmount", "avgPaymentDuration",
-            "avgPaymentDurationFormatted", "riskLevel", "riskLevelClass"
+                "overdueCount",
+                "overdueAmount",
+                "avgPaymentDuration",
+                "avgPaymentDurationFormatted",
+                "riskLevel",
+                "riskLevelClass"
         );
-
-        // Check data types
-        assertThat(riskData.get("avgPaymentDuration")).isInstanceOf(Double.class);
-        assertThat(riskData.get("avgPaymentDurationFormatted")).isInstanceOf(String.class);
-        assertThat(riskData.get("riskLevel")).isInstanceOf(RiskLevel.class);
-        assertThat(riskData.get("riskLevelClass")).isInstanceOf(String.class);
-
-        // Check that avgPaymentDurationFormatted has proper format
-        String durationFormatted = (String) riskData.get("avgPaymentDurationFormatted");
-        assertThat(durationFormatted).endsWith(" days");
-        assertThat((RiskLevel) riskData.get("riskLevel")).isIn(RiskLevel.LOW, RiskLevel.MEDIUM, RiskLevel.HIGH);
-        assertThat((String) riskData.get("riskLevelClass")).isIn("risk-low", "risk-medium", "risk-high");
+        assertThat(paidInvoice.getStatus()).isEqualTo(InvoiceStatus.PAID);
+        assertThat(overdueOutOfRange.getDate()).isBefore(LocalDate.of(2024, 1, 1));
     }
 
     @Test
-    void testLoadDataWithNoOverdueInvoices() {
-        // Given
+    void loadData_returnsLowRiskWhenClientHasNoOverdueInvoices() {
+        // given
         Client client = entities.client("Safe Client");
-        dataManager.save(client);
-
         Order order = entities.order(client, LocalDate.of(2024, 1, 10), OrderStatus.DONE);
-        dataManager.save(order);
 
-        // Create only paid invoices
-        Invoice paidInvoice1 = entities.invoice(client, order, BigDecimal.valueOf(1000.00), InvoiceStatus.PAID, LocalDate.of(2024, 1, 15));
-        Invoice paidInvoice2 = entities.invoice(client, order, BigDecimal.valueOf(750.00), InvoiceStatus.PAID, LocalDate.of(2024, 1, 20));
+        Invoice firstInvoice = entities.invoice(client, order, BigDecimal.valueOf(1000.00), InvoiceStatus.PAID, LocalDate.of(2024, 1, 15));
+        Invoice secondInvoice = entities.invoice(client, order, BigDecimal.valueOf(750.00), InvoiceStatus.PAID, LocalDate.of(2024, 1, 20));
+        entities.payment(firstInvoice, LocalDate.of(2024, 1, 25), BigDecimal.valueOf(1000.00));
+        entities.payment(secondInvoice, LocalDate.of(2024, 1, 30), BigDecimal.valueOf(750.00));
 
-        dataManager.save(paidInvoice1, paidInvoice2);
+        // when
+        Map<String, Object> riskData = loadRiskData(client, LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 31));
 
-        Map<String, Object> params = Map.of(
-                "client", client,
-                "fromDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 1)),
-                "toDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 31))
+        // then
+        assertRiskData(
+                riskData,
+                0L,
+                BigDecimal.ZERO,
+                10.0,
+                RiskLevel.LOW,
+                "risk-low"
         );
-
-        // When
-        List<Map<String, Object>> result = dataLoader.loadData(null, null, params);
-
-        // Then
-        assertThat(result).hasSize(1);
-        Map<String, Object> riskData = result.get(0);
-
-        assertThat(riskData.get("overdueCount")).isEqualTo(0L);
-        assertThat(riskData.get("overdueAmount")).isInstanceOf(String.class);
-        assertThat((String) riskData.get("riskLevelClass")).isIn("risk-low", "risk-medium", "risk-high");
     }
 
     @Test
-    void testLoadDataDateFiltering() {
-        // Given
+    void loadData_filtersInvoicesByDateRangeBeforeCalculatingRisk() {
+        // given
         Client client = entities.client("Date Filter Client");
-        dataManager.save(client);
-
         Order order = entities.order(client, LocalDate.of(2024, 1, 10), OrderStatus.DONE);
-        dataManager.save(order);
 
-        // Overdue invoice in date range
         Invoice overdueInRange = entities.invoice(client, order, BigDecimal.valueOf(1000.00), InvoiceStatus.OVERDUE, LocalDate.of(2024, 6, 15));
-
-        // Overdue invoice outside date range
         Invoice overdueOutOfRange = entities.invoice(client, order, BigDecimal.valueOf(500.00), InvoiceStatus.OVERDUE, LocalDate.of(2024, 7, 15));
 
-        dataManager.save(overdueInRange, overdueOutOfRange);
+        // when
+        Map<String, Object> riskData = loadRiskData(client, LocalDate.of(2024, 6, 1), LocalDate.of(2024, 6, 30));
 
-        Map<String, Object> params = Map.of(
-                "client", client,
-                "fromDate", java.sql.Date.valueOf(LocalDate.of(2024, 6, 1)),
-                "toDate", java.sql.Date.valueOf(LocalDate.of(2024, 6, 30))
+        // then
+        assertRiskData(
+                riskData,
+                1L,
+                overdueInRange.getTotal(),
+                0.0,
+                RiskLevel.MEDIUM,
+                "risk-medium"
         );
-
-        // When
-        List<Map<String, Object>> result = dataLoader.loadData(null, null, params);
-
-        // Then
-        assertThat(result).hasSize(1);
-        Map<String, Object> riskData = result.get(0);
-
-        // Should count only overdue invoices in date range
-        assertThat(riskData.get("overdueCount")).isEqualTo(1L);
+        assertThat(overdueOutOfRange.getDate()).isAfter(LocalDate.of(2024, 6, 30));
     }
 
     @Test
-    void testLoadDataRiskLevelClassMapping() {
-        // Given
+    void loadData_returnsHighRiskCssClassWhenHighRiskThresholdIsExceeded() {
+        // given
         Client client = entities.client("Risk Mapping Client");
-        dataManager.save(client);
+        Order order = entities.order(client, LocalDate.of(2024, 1, 10), OrderStatus.DONE);
+        Invoice overdueInvoice1 = entities.invoice(client, order, BigDecimal.valueOf(2000.00), InvoiceStatus.OVERDUE, LocalDate.of(2024, 1, 15));
+        Invoice overdueInvoice2 = entities.invoice(client, order, BigDecimal.valueOf(2000.00), InvoiceStatus.OVERDUE, LocalDate.of(2024, 1, 16));
+        Invoice overdueInvoice3 = entities.invoice(client, order, BigDecimal.valueOf(2000.00), InvoiceStatus.OVERDUE, LocalDate.of(2024, 1, 17));
 
-        Map<String, Object> params = Map.of(
-                "client", client,
-                "fromDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 1)),
-                "toDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 31))
+        BigDecimal expectedOverdueAmount = overdueInvoice1.getTotal()
+                .add(overdueInvoice2.getTotal())
+                .add(overdueInvoice3.getTotal());
+
+        // when
+        Map<String, Object> riskData = loadRiskData(client, LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 31));
+
+        // then
+        assertRiskData(
+                riskData,
+                3L,
+                expectedOverdueAmount,
+                0.0,
+                RiskLevel.HIGH,
+                "risk-high"
         );
-
-        // When
-        List<Map<String, Object>> result = dataLoader.loadData(null, null, params);
-
-        // Then
-        assertThat(result).hasSize(1);
-        Map<String, Object> riskData = result.get(0);
-
-        String riskLevelClass = (String) riskData.get("riskLevelClass");
-
-        // Should be one of the expected CSS classes
-        assertThat(riskLevelClass).isIn("risk-low", "risk-medium", "risk-high");
     }
 
     @Test
-    void testLoadDataAlwaysReturnsOneRow() {
-        // Given
+    void loadData_alwaysReturnsOneFullyPopulatedRow() {
+        // given
         Client client = entities.client("Single Row Client");
-        dataManager.save(client);
 
-        Map<String, Object> params = Map.of(
-                "client", client,
-                "fromDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 1)),
-                "toDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 31))
-        );
+        // when
+        List<Map<String, Object>> result = dataLoader.loadData(null, null, createParams(client, LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 31)));
 
-        // When
-        List<Map<String, Object>> result = dataLoader.loadData(null, null, params);
-
-        // Then
+        // then
         assertThat(result).hasSize(1);
-        assertThat(result.get(0)).isNotEmpty();
+        assertRiskData(
+                result.get(0),
+                0L,
+                BigDecimal.ZERO,
+                0.0,
+                RiskLevel.LOW,
+                "risk-low"
+        );
     }
 
+    private Map<String, Object> loadRiskData(Client client, LocalDate fromDate, LocalDate toDate) {
+        List<Map<String, Object>> result = dataLoader.loadData(null, null, createParams(client, fromDate, toDate));
+        assertThat(result).hasSize(1);
+        return result.get(0);
+    }
+
+    private Map<String, Object> createParams(Client client, LocalDate fromDate, LocalDate toDate) {
+        return Map.of(
+                "client", client,
+                "fromDate", java.sql.Date.valueOf(fromDate),
+                "toDate", java.sql.Date.valueOf(toDate)
+        );
+    }
+
+    private void assertRiskData(
+            Map<String, Object> riskData,
+            long expectedOverdueCount,
+            BigDecimal expectedOverdueAmount,
+            double expectedAvgPaymentDuration,
+            RiskLevel expectedRiskLevel,
+            String expectedRiskLevelClass
+    ) {
+        assertThat(riskData.get("overdueCount")).isEqualTo(expectedOverdueCount);
+        assertThat(riskData.get("overdueAmount")).isEqualTo(PriceDataType.defaultFormat(expectedOverdueAmount, datatypeFormatter));
+        assertThat(riskData.get("avgPaymentDuration")).isEqualTo(expectedAvgPaymentDuration);
+        assertThat(riskData.get("avgPaymentDurationFormatted")).isEqualTo("%.0f days".formatted(expectedAvgPaymentDuration));
+        assertThat(riskData.get("riskLevel")).isEqualTo(expectedRiskLevel);
+        assertThat(riskData.get("riskLevelClass")).isEqualTo(expectedRiskLevelClass);
+    }
 }

@@ -37,10 +37,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * UI integration tests for AI Conversation views.
+ * UI tests for AI Conversation views.
  * Tests the complete UI workflow from list view to detail view using Jmix UI components.
  */
-public class AiConversationViewsUiIntegrationTest extends AbstractUiTest {
+public class AiConversationViewsUiTest extends AbstractUiTest {
 
     @Autowired
     private ViewNavigators viewNavigators;
