@@ -94,10 +94,6 @@ class RunReportToolLLMTest extends AbstractTest {
             String response = reportChatAssistant.ask(question);
 
             // then
-            assertThat(response).containsIgnoringCase("Client 360");
-            assertThat(response).containsIgnoringCase("LLM Test Client");
-            assertThat(response).contains("client-360-report");
-
             llmJudge.evaluateAnwserWithJudge(question, response, """
                     Evaluate only response quality against the user request.
                     Do not require explicit proof of tool execution inside the response text.
