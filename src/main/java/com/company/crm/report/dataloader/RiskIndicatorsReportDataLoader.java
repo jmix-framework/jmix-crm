@@ -8,6 +8,7 @@ import com.company.crm.model.datatype.PriceDataType;
 import com.company.crm.model.invoice.InvoiceStatus;
 import com.company.crm.report.util.ReportDataLoaderUtils;
 import io.jmix.core.DataManager;
+import io.jmix.core.metamodel.datatype.DatatypeFormatter;
 import io.jmix.reports.yarg.loaders.ReportDataLoader;
 import io.jmix.reports.yarg.structure.BandData;
 import io.jmix.reports.yarg.structure.ReportQuery;
@@ -28,10 +29,12 @@ public class RiskIndicatorsReportDataLoader implements ReportDataLoader {
 
     private final DataManager dataManager;
     private final Client360ReportService client360ReportService;
+    private final DatatypeFormatter datatypeFormatter;
 
-    public RiskIndicatorsReportDataLoader(DataManager dataManager, Client360ReportService client360ReportService) {
+    public RiskIndicatorsReportDataLoader(DataManager dataManager, Client360ReportService client360ReportService, DatatypeFormatter datatypeFormatter) {
         this.dataManager = dataManager;
         this.client360ReportService = client360ReportService;
+        this.datatypeFormatter = datatypeFormatter;
     }
 
     @Override
@@ -65,8 +68,8 @@ public class RiskIndicatorsReportDataLoader implements ReportDataLoader {
         RiskLevel riskLevel = client360ReportService.calculateRiskLevel(client, dateRange);
 
         Map<String, Object> fields = new HashMap<>();
-        fields.put("overdueCount", overdueCount != null ? overdueCount : 0L);
-        fields.put("overdueAmount", PriceDataType.defaultFormat(overdueAmount != null ? overdueAmount : BigDecimal.ZERO));
+        fields.put("overdueCount", overdueCount);
+        fields.put("overdueAmount", PriceDataType.defaultFormat(overdueAmount, datatypeFormatter));
         fields.put("avgPaymentDuration", avgPaymentDuration);
         fields.put("avgPaymentDurationFormatted", String.format("%.0f days", avgPaymentDuration));
         fields.put("riskLevel", riskLevel);

@@ -45,7 +45,7 @@ class ReportPaymentMapperTest extends AbstractTest {
         assertThat(result.get("number")).isEqualTo("PAY-001");
         assertThat(result.get("date")).isEqualTo(LocalDate.of(2024, 1, 20));
         assertThat(result.get("dateFormatted")).isEqualTo(datatypeFormatter.formatLocalDate(LocalDate.of(2024, 1, 20)));
-        assertThat(result.get("amount")).isEqualTo(PriceDataType.defaultFormat(BigDecimal.valueOf(750.50)));
+        assertThat(result.get("amount")).isEqualTo(PriceDataType.defaultFormat(BigDecimal.valueOf(750.50), datatypeFormatter));
         assertThat(result.get("invoiceNumber")).isEqualTo("INV-001");
     }
 
@@ -69,7 +69,7 @@ class ReportPaymentMapperTest extends AbstractTest {
         assertThat(result.get("number")).isEqualTo("PAY-002");
         assertThat(result.get("date")).isEqualTo(LocalDate.of(2024, 2, 15));
         assertThat(result.get("dateFormatted")).isEqualTo(datatypeFormatter.formatLocalDate(LocalDate.of(2024, 2, 15)));
-        assertThat(result.get("amount")).isEqualTo(PriceDataType.defaultFormat(BigDecimal.valueOf(1000.00)));
+        assertThat(result.get("amount")).isEqualTo(PriceDataType.defaultFormat(BigDecimal.valueOf(1000.00), datatypeFormatter));
         assertThat(result.get("invoiceNumber")).isEqualTo("");
     }
 
@@ -93,7 +93,7 @@ class ReportPaymentMapperTest extends AbstractTest {
         assertThat(result1).isEqualTo(result2);
         assertThat(result1.get("number")).isEqualTo("PAY-004");
         assertThat(result1.get("dateFormatted")).isEqualTo(datatypeFormatter.formatLocalDate(LocalDate.of(2024, 4, 10)));
-        assertThat(result1.get("amount")).isEqualTo(PriceDataType.defaultFormat(BigDecimal.valueOf(1500.25)));
+        assertThat(result1.get("amount")).isEqualTo(PriceDataType.defaultFormat(BigDecimal.valueOf(1500.25), datatypeFormatter));
         assertThat(result1.get("invoiceNumber")).isEqualTo("INV-004");
     }
 
@@ -113,7 +113,7 @@ class ReportPaymentMapperTest extends AbstractTest {
         Map<String, Object> result = mapper.toReportMap(payment);
 
         // then
-        assertThat(result.get("amount")).isEqualTo(PriceDataType.defaultFormat(null));
+        assertThat(result.get("amount")).isEqualTo(PriceDataType.defaultFormat(null, datatypeFormatter));
         assertThat(result.get("invoiceNumber")).isEqualTo("INV-NULL-AMOUNT");
     }
 }

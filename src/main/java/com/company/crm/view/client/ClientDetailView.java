@@ -110,8 +110,6 @@ public class ClientDetailView extends StandardDetailView<Client> {
     @Autowired
     private UiComponents uiComponents;
     @Autowired
-    private Notifications notifications;
-    @Autowired
     private MetadataTools metadataTools;
     @Autowired
     private ClientService clientService;

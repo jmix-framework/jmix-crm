@@ -21,6 +21,10 @@ public class HasUniqueNumberEventListener {
     public void onOrderSaving(final EntitySavingEvent<? extends UuidEntity> event) {
         UuidEntity entity = event.getEntity();
 
+        if (!event.isNewEntity()) {
+            return;
+        }
+
         if (entity instanceof HasUniqueNumber hasUniqueNumber) {
             hasUniqueNumber.applyNumber(uniqueNumbersService.getNextNumber(hasUniqueNumber.getClass()));
         }

@@ -1,5 +1,7 @@
 package com.company.crm.view.main;
 
+import com.company.crm.ai.model.AiConversation;
+import com.company.crm.ai.service.AiConversationService;
 import com.company.crm.ai.view.aiconversation.AiConversationDetailView;
 import com.company.crm.app.online.OnlineDemoDataCreator;
 import com.company.crm.app.ui.component.CrmLoader;
@@ -8,9 +10,6 @@ import com.company.crm.model.client.Client;
 import com.company.crm.model.client.ClientRepository;
 import com.company.crm.model.user.User;
 import com.company.crm.view.client.ClientListView;
-import com.company.crm.view.home.HomeView;
-import com.company.crm.ai.model.AiConversation;
-import com.company.crm.ai.service.AiConversationService;
 import com.google.common.base.Strings;
 import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.Component;
@@ -25,24 +24,22 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.popover.Popover;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.theme.lumo.LumoUtility;
+import io.jmix.core.AccessManager;
 import io.jmix.core.Messages;
 import io.jmix.core.Metadata;
-import io.jmix.core.AccessManager;
 import io.jmix.core.security.CurrentAuthentication;
-import io.jmix.flowui.asynctask.UiAsyncTasks;
 import io.jmix.core.usersubstitution.CurrentUserSubstitution;
 import io.jmix.flowui.DialogWindows;
 import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.ViewNavigators;
 import io.jmix.flowui.accesscontext.UiShowViewContext;
 import io.jmix.flowui.app.main.StandardMainView;
+import io.jmix.flowui.asynctask.UiAsyncTasks;
 import io.jmix.flowui.component.SupportsTypedValue.TypedValueChangeEvent;
 import io.jmix.flowui.component.textfield.TypedTextField;
 import io.jmix.flowui.component.virtuallist.JmixVirtualList;
 import io.jmix.flowui.kit.action.ActionPerformedEvent;
 import io.jmix.flowui.kit.component.button.JmixButton;
-import io.jmix.flowui.kit.component.main.ListMenu.MenuBarItem;
-import io.jmix.flowui.kit.component.main.ListMenu.MenuItem;
 import io.jmix.flowui.view.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -99,7 +96,6 @@ public class MainView extends StandardMainView {
     @Subscribe
     private void onReady(final ReadyEvent event) {
         checkChatButtonPermission();
-        selectSuitableMenuItem();
         if (onlineDemoDataCreator != null) {
             onlineDemoDataCreator.createDemoDataIfNeeded();
         }
@@ -210,25 +206,6 @@ public class MainView extends StandardMainView {
         dialogWindow.setWidth("35%");
         dialogWindow.setHeight("75%");
         dialogWindow.open();
-    }
-
-    @Subscribe(id = "applicationTitle", subject = "clickListener")
-    private void onApplicationTitleClick(final ClickEvent<H2> event) {
-        UI currentUI = UI.getCurrent();
-        if (currentUI == null) {
-            return;
-        }
-
-        Component currentView = currentUI.getCurrentView();
-        if (currentView == null) {
-            return;
-        }
-
-        if (currentView instanceof HomeView homeView) {
-            homeView.getUI().ifPresent(ui -> ui.getPage().reload());
-        } else {
-            viewNavigators.view(this, HomeView.class).navigate();
-        }
     }
 
     private Avatar createAvatar(String fullName) {
@@ -353,66 +330,5 @@ public class MainView extends StandardMainView {
     private List<Client> searchClientsByName(String name, int size) {
         defaultSleepForClientsSearching();
         return clientRepository.findAllByNameContains(name, Pageable.ofSize(size));
-    }
-
-    private void selectSuitableMenuItem() {
-        getUI().map(UI::getCurrentView)
-                .filter(View.class::isInstance)
-                .map(View.class::cast)
-                .map(v -> v.getClass())
-                .ifPresent(this::selectRelatedMenuItem);
-    }
-
-    @SuppressWarnings("rawtypes")
-    private void selectRelatedMenuItem(Class<? extends View> viewClass) {
-        MenuItemStructure menuStructure = buildMenuStructure();
-        for (MenuItemInfo itemInfo : menuStructure.itemsInfo()) {
-            if (itemInfo.menuItem() instanceof ViewMenuItem viewMenuItem) {
-                if (viewClass.equals(viewMenuItem.getControllerClass())) {
-                    Optional.ofNullable(itemInfo.parentMenuItem()).ifPresent(parent -> {
-                        if (parent instanceof MenuBarItem menuBarItem) {
-                            menuBarItem.setOpened(true);
-                        }
-                    });
-                    break;
-                }
-            }
-        }
-    }
-
-    private MenuItemStructure buildMenuStructure() {
-        MenuItemStructure menuStructure = new MenuItemStructure();
-        for (MenuItem menuItem : menu.getMenuItems()) {
-            buildMenuStructureRecursively(menuItem, null, menuStructure);
-        }
-        return menuStructure;
-    }
-
-    private void buildMenuStructureRecursively(MenuItem menuItem, MenuItem parentMenuItem, MenuItemStructure menuStructure) {
-        menuStructure.addInfo(new MenuItemInfo(menuItem, parentMenuItem));
-        if (menuItem instanceof MenuBarItem menuBarItem) {
-            for (MenuItem childItem : menuBarItem.getChildItems()) {
-                buildMenuStructureRecursively(childItem, menuItem, menuStructure);
-            }
-        }
-    }
-    private record MenuItemStructure(Collection<MenuItemInfo> itemsInfo) {
-
-        public MenuItemStructure() {
-            this(new ArrayList<>());
-        }
-
-        @Override
-        public Collection<MenuItemInfo> itemsInfo() {
-            return List.of(itemsInfo.toArray(new MenuItemInfo[0]));
-        }
-
-        public void addInfo(MenuItemInfo menuItemInfo) {
-            itemsInfo.add(menuItemInfo);
-        }
-    }
-
-    private record MenuItemInfo(MenuItem menuItem,
-                                @Nullable MenuItem parentMenuItem) {
     }
 }

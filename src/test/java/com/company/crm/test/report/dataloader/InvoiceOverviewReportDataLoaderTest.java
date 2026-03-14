@@ -10,10 +10,13 @@ import com.company.crm.model.order.Order;
 import com.company.crm.model.order.OrderStatus;
 import com.company.crm.model.payment.Payment;
 import com.company.crm.report.dataloader.InvoiceOverviewReportDataLoader;
+import io.jmix.core.metamodel.datatype.DatatypeFormatter;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.sql.Date;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +27,8 @@ class InvoiceOverviewReportDataLoaderTest extends AbstractTest {
 
     @Autowired
     private InvoiceOverviewReportDataLoader dataLoader;
+    @Autowired
+    private DatatypeFormatter datatypeFormatter;
 
     @Test
     void testLoadDataWithCompleteFinancialData() {
@@ -46,8 +51,8 @@ class InvoiceOverviewReportDataLoaderTest extends AbstractTest {
 
         Map<String, Object> params = Map.of(
                 "client", client,
-                "fromDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 1)),
-                "toDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 31))
+                "fromDate", Date.valueOf(LocalDate.of(2024, 1, 1)),
+                "toDate", Date.valueOf(LocalDate.of(2024, 1, 31))
         );
 
         // when
@@ -69,11 +74,11 @@ class InvoiceOverviewReportDataLoaderTest extends AbstractTest {
         BigDecimal expectedTotalPaid = payment1.getAmount().add(payment2.getAmount());
         BigDecimal expectedOutstanding = expectedTotalInvoiced.subtract(expectedTotalPaid);
         BigDecimal expectedPaymentRate = expectedTotalPaid
-                .divide(expectedTotalInvoiced, 4, java.math.RoundingMode.HALF_UP)
+                .divide(expectedTotalInvoiced, 4, RoundingMode.HALF_UP)
                 .multiply(BigDecimal.valueOf(100));
-        assertThat(overview.get("totalInvoiced")).isEqualTo(PriceDataType.defaultFormat(expectedTotalInvoiced));
-        assertThat(overview.get("totalPaid")).isEqualTo(PriceDataType.defaultFormat(expectedTotalPaid));
-        assertThat(overview.get("outstanding")).isEqualTo(PriceDataType.defaultFormat(expectedOutstanding));
+        assertThat(overview.get("totalInvoiced")).isEqualTo(PriceDataType.defaultFormat(expectedTotalInvoiced, datatypeFormatter));
+        assertThat(overview.get("totalPaid")).isEqualTo(PriceDataType.defaultFormat(expectedTotalPaid, datatypeFormatter));
+        assertThat(overview.get("outstanding")).isEqualTo(PriceDataType.defaultFormat(expectedOutstanding, datatypeFormatter));
         assertThat(overview.get("paymentRate")).isEqualTo(new PercentDataType().format(expectedPaymentRate));
     }
 
@@ -84,8 +89,8 @@ class InvoiceOverviewReportDataLoaderTest extends AbstractTest {
 
         Map<String, Object> params = Map.of(
                 "client", client,
-                "fromDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 1)),
-                "toDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 31))
+                "fromDate", Date.valueOf(LocalDate.of(2024, 1, 1)),
+                "toDate", Date.valueOf(LocalDate.of(2024, 1, 31))
         );
 
         // when
@@ -96,9 +101,9 @@ class InvoiceOverviewReportDataLoaderTest extends AbstractTest {
         Map<String, Object> overview = result.get(0);
 
         assertThat(overview.get("totalInvoiceCount")).isEqualTo(0L);
-        assertThat(overview.get("totalInvoiced")).isEqualTo(PriceDataType.defaultFormat(BigDecimal.ZERO));
-        assertThat(overview.get("totalPaid")).isEqualTo(PriceDataType.defaultFormat(BigDecimal.ZERO));
-        assertThat(overview.get("outstanding")).isEqualTo(PriceDataType.defaultFormat(BigDecimal.ZERO));
+        assertThat(overview.get("totalInvoiced")).isEqualTo(PriceDataType.defaultFormat(BigDecimal.ZERO, datatypeFormatter));
+        assertThat(overview.get("totalPaid")).isEqualTo(PriceDataType.defaultFormat(BigDecimal.ZERO, datatypeFormatter));
+        assertThat(overview.get("outstanding")).isEqualTo(PriceDataType.defaultFormat(BigDecimal.ZERO, datatypeFormatter));
         assertThat(overview.get("paymentRate")).isEqualTo(new PercentDataType().format(BigDecimal.ZERO));
     }
 
@@ -117,8 +122,8 @@ class InvoiceOverviewReportDataLoaderTest extends AbstractTest {
 
         Map<String, Object> params = Map.of(
                 "client", client,
-                "fromDate", java.sql.Date.valueOf(LocalDate.of(2024, 6, 1)),
-                "toDate", java.sql.Date.valueOf(LocalDate.of(2024, 6, 30))
+                "fromDate", Date.valueOf(LocalDate.of(2024, 6, 1)),
+                "toDate", Date.valueOf(LocalDate.of(2024, 6, 30))
         );
 
         // when
@@ -130,7 +135,7 @@ class InvoiceOverviewReportDataLoaderTest extends AbstractTest {
 
         // Should count only invoice in date range
         assertThat(overview.get("totalInvoiceCount")).isEqualTo(1L);
-        assertThat(overview.get("totalInvoiced")).isEqualTo(PriceDataType.defaultFormat(invoiceInRange.getTotal().add(invoiceOutOfRange.getTotal())));
+        assertThat(overview.get("totalInvoiced")).isEqualTo(PriceDataType.defaultFormat(invoiceInRange.getTotal().add(invoiceOutOfRange.getTotal()), datatypeFormatter));
     }
 
     @Test
@@ -140,8 +145,8 @@ class InvoiceOverviewReportDataLoaderTest extends AbstractTest {
 
         Map<String, Object> params = Map.of(
                 "client", client,
-                "fromDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 1)),
-                "toDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 31))
+                "fromDate", Date.valueOf(LocalDate.of(2024, 1, 1)),
+                "toDate", Date.valueOf(LocalDate.of(2024, 1, 31))
         );
 
         // when

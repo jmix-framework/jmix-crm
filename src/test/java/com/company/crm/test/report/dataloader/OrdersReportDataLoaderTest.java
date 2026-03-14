@@ -6,10 +6,12 @@ import com.company.crm.model.datatype.PriceDataType;
 import com.company.crm.model.order.Order;
 import com.company.crm.model.order.OrderStatus;
 import com.company.crm.report.dataloader.OrdersReportDataLoader;
+import io.jmix.core.metamodel.datatype.DatatypeFormatter;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;
+import java.sql.Date;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +22,8 @@ class OrdersReportDataLoaderTest extends AbstractTest {
 
     @Autowired
     private OrdersReportDataLoader dataLoader;
+    @Autowired
+    private DatatypeFormatter datatypeFormatter;
 
     @Test
     void testLoadDataWithMultipleOrders() {
@@ -39,8 +43,8 @@ class OrdersReportDataLoaderTest extends AbstractTest {
 
         Map<String, Object> params = Map.of(
                 "client", client,
-                "fromDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 1)),
-                "toDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 31))
+                "fromDate", Date.valueOf(LocalDate.of(2024, 1, 1)),
+                "toDate", Date.valueOf(LocalDate.of(2024, 1, 31))
         );
 
         // when
@@ -76,8 +80,8 @@ class OrdersReportDataLoaderTest extends AbstractTest {
 
         Map<String, Object> params = Map.of(
                 "client", client,
-                "fromDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 1)),
-                "toDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 31))
+                "fromDate", Date.valueOf(LocalDate.of(2024, 1, 1)),
+                "toDate", Date.valueOf(LocalDate.of(2024, 1, 31))
         );
 
         // when
@@ -97,8 +101,8 @@ class OrdersReportDataLoaderTest extends AbstractTest {
 
         Map<String, Object> params = Map.of(
                 "client", client,
-                "fromDate", java.sql.Date.valueOf(LocalDate.of(2024, 6, 1)),
-                "toDate", java.sql.Date.valueOf(LocalDate.of(2024, 6, 30))
+                "fromDate", Date.valueOf(LocalDate.of(2024, 6, 1)),
+                "toDate", Date.valueOf(LocalDate.of(2024, 6, 30))
         );
 
         // when
@@ -119,8 +123,8 @@ class OrdersReportDataLoaderTest extends AbstractTest {
 
         Map<String, Object> params = Map.of(
                 "client", client1,
-                "fromDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 1)),
-                "toDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 31))
+                "fromDate", Date.valueOf(LocalDate.of(2024, 1, 1)),
+                "toDate", Date.valueOf(LocalDate.of(2024, 1, 31))
         );
 
         // when
@@ -129,7 +133,7 @@ class OrdersReportDataLoaderTest extends AbstractTest {
         // then
         assertThat(result).hasSize(1);
         assertThat(result.get(0).get("date")).isEqualTo(LocalDate.of(2024, 1, 15));
-        assertThat(result.get(0).get("total")).isEqualTo(PriceDataType.defaultFormat(BigDecimal.valueOf(101)));
+        assertThat(result.get(0).get("total")).isEqualTo(PriceDataType.defaultFormat(BigDecimal.valueOf(101), datatypeFormatter));
     }
 
 }

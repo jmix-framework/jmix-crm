@@ -6,6 +6,7 @@ import com.company.crm.model.datatype.PriceDataType;
 import com.company.crm.model.order.Order;
 import com.company.crm.model.order.OrderStatus;
 import com.company.crm.report.mapper.ReportOrderMapper;
+import io.jmix.core.metamodel.datatype.DatatypeFormatter;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -19,6 +20,8 @@ class ReportOrderMapperTest extends AbstractTest {
 
     @Autowired
     private ReportOrderMapper mapper;
+    @Autowired
+    private DatatypeFormatter datatypeFormatter;
 
     @Test
     void testToReportMapWithCompleteOrder() {
@@ -40,7 +43,7 @@ class ReportOrderMapperTest extends AbstractTest {
         assertThat((String) result.get("dateFormatted")).isNotBlank();
         assertThat(result.get("status")).isInstanceOf(String.class);
         assertThat((String) result.get("status")).isNotBlank();
-        assertThat(result.get("total")).isEqualTo(PriceDataType.defaultFormat(BigDecimal.valueOf(1250.75)));
+        assertThat(result.get("total")).isEqualTo(PriceDataType.defaultFormat(BigDecimal.valueOf(1250.75), datatypeFormatter));
         assertThat(result.get("comment")).isEqualTo("Complete order with all fields");
     }
 
@@ -64,7 +67,7 @@ class ReportOrderMapperTest extends AbstractTest {
         assertThat((String) result.get("dateFormatted")).isNotBlank();
         assertThat(result.get("status")).isInstanceOf(String.class);
         assertThat((String) result.get("status")).isNotBlank();
-        assertThat(result.get("total")).isEqualTo(PriceDataType.defaultFormat(BigDecimal.ZERO));
+        assertThat(result.get("total")).isEqualTo(PriceDataType.defaultFormat(BigDecimal.ZERO, datatypeFormatter));
         assertThat(result.get("comment")).isEqualTo("");
     }
 
@@ -84,7 +87,7 @@ class ReportOrderMapperTest extends AbstractTest {
         // then
         assertThat(result1).isEqualTo(result2);
         assertThat(result1.get("number")).isEqualTo("ORD-002");
-        assertThat(result1.get("total")).isEqualTo(PriceDataType.defaultFormat(BigDecimal.valueOf(500.00)));
+        assertThat(result1.get("total")).isEqualTo(PriceDataType.defaultFormat(BigDecimal.valueOf(500.00), datatypeFormatter));
     }
 
     @Test
@@ -102,6 +105,6 @@ class ReportOrderMapperTest extends AbstractTest {
         // then
         assertThat(result.get("number")).isEqualTo("Will be generated");
         assertThat(result.get("comment")).isEqualTo("");
-        assertThat(result.get("total")).isEqualTo(PriceDataType.defaultFormat(BigDecimal.valueOf(100)));
+        assertThat(result.get("total")).isEqualTo(PriceDataType.defaultFormat(BigDecimal.valueOf(100), datatypeFormatter));
     }
 }

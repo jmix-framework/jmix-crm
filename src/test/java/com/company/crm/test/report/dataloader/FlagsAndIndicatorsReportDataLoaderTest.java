@@ -4,10 +4,12 @@ import com.company.crm.AbstractTest;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.datatype.PriceDataType;
 import com.company.crm.report.dataloader.FlagsAndIndicatorsReportDataLoader;
+import io.jmix.core.metamodel.datatype.DatatypeFormatter;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;
+import java.sql.Date;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
@@ -19,6 +21,8 @@ class FlagsAndIndicatorsReportDataLoaderTest extends AbstractTest {
 
     @Autowired
     private FlagsAndIndicatorsReportDataLoader dataLoader;
+    @Autowired
+    private DatatypeFormatter datatypeFormatter;
 
     @Test
     void testLoadDataWithValidClient() {
@@ -27,8 +31,8 @@ class FlagsAndIndicatorsReportDataLoaderTest extends AbstractTest {
 
         Map<String, Object> params = Map.of(
                 "client", client,
-                "fromDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 1)),
-                "toDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 31))
+                "fromDate", Date.valueOf(LocalDate.of(2024, 1, 1)),
+                "toDate", Date.valueOf(LocalDate.of(2024, 1, 31))
         );
 
         // when
@@ -71,7 +75,7 @@ class FlagsAndIndicatorsReportDataLoaderTest extends AbstractTest {
         assertThat(flags.get("hasRecentActivity")).isEqualTo(false);
         assertThat(flags.get("hasSalesOpportunity")).isEqualTo(false);
         assertThat(flags.get("isCreditRisk")).isEqualTo(false);
-        assertThat(flags.get("outstandingAmount")).isEqualTo(PriceDataType.defaultFormat(BigDecimal.ZERO));
+        assertThat(flags.get("outstandingAmount")).isEqualTo(PriceDataType.defaultFormat(BigDecimal.ZERO, datatypeFormatter));
         assertThat((String) flags.get("customerTenure")).contains("year");
     }
 
@@ -80,8 +84,8 @@ class FlagsAndIndicatorsReportDataLoaderTest extends AbstractTest {
         // given
         Map<String, Object> params = new HashMap<>();
         params.put("client", null);
-        params.put("fromDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 1)));
-        params.put("toDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 31)));
+        params.put("fromDate", Date.valueOf(LocalDate.of(2024, 1, 1)));
+        params.put("toDate", Date.valueOf(LocalDate.of(2024, 1, 31)));
 
         // when
         List<Map<String, Object>> result = dataLoader.loadData(null, null, params);
@@ -99,8 +103,8 @@ class FlagsAndIndicatorsReportDataLoaderTest extends AbstractTest {
 
         Map<String, Object> params = Map.of(
                 "client", client,
-                "fromDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 1)),
-                "toDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 31))
+                "fromDate", Date.valueOf(LocalDate.of(2024, 1, 1)),
+                "toDate", Date.valueOf(LocalDate.of(2024, 1, 31))
         );
 
         // when
@@ -118,14 +122,14 @@ class FlagsAndIndicatorsReportDataLoaderTest extends AbstractTest {
         // Different date ranges should potentially affect the flags
         Map<String, Object> params1 = Map.of(
                 "client", client,
-                "fromDate", java.sql.Date.valueOf(LocalDate.of(2023, 1, 1)),
-                "toDate", java.sql.Date.valueOf(LocalDate.of(2023, 12, 31))
+                "fromDate", Date.valueOf(LocalDate.of(2023, 1, 1)),
+                "toDate", Date.valueOf(LocalDate.of(2023, 12, 31))
         );
 
         Map<String, Object> params2 = Map.of(
                 "client", client,
-                "fromDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 1)),
-                "toDate", java.sql.Date.valueOf(LocalDate.of(2024, 12, 31))
+                "fromDate", Date.valueOf(LocalDate.of(2024, 1, 1)),
+                "toDate", Date.valueOf(LocalDate.of(2024, 12, 31))
         );
 
         // when

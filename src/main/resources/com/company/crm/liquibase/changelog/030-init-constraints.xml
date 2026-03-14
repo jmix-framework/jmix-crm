@@ -190,11 +190,11 @@
                                  referencedTableName="USER_"/>
 
         <addForeignKeyConstraint baseColumnNames="CONVERSATION_ID" baseTableName="AI_CONVERSATION_ATTACHMENT"
-                                 constraintName="FK_AI_CONVERSATION_ATTACHMENT_ON_CONVERSATION"
+                                 constraintName="FK_AI_CONVERSATION_ATTACHMENT_ON_CONVERSATION" onDelete="CASCADE"
                                  referencedColumnNames="ID" referencedTableName="AI_CONVERSATION"/>
 
         <addForeignKeyConstraint baseColumnNames="CONVERSATION_ID" baseTableName="CHAT_MESSAGE"
-                                 constraintName="FK_CHAT_MESSAGE_ON_CONVERSATION" referencedColumnNames="ID"
-                                 referencedTableName="AI_CONVERSATION"/>
+                                 constraintName="FK_CHAT_MESSAGE_ON_CONVERSATION" onDelete="CASCADE"
+                                 referencedColumnNames="ID" referencedTableName="AI_CONVERSATION"/>
     </changeSet>
 </databaseChangeLog>

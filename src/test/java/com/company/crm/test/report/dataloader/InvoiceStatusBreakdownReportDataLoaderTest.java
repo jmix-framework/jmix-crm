@@ -8,11 +8,14 @@ import com.company.crm.model.invoice.InvoiceStatus;
 import com.company.crm.model.order.Order;
 import com.company.crm.model.order.OrderStatus;
 import com.company.crm.report.dataloader.InvoiceStatusBreakdownReportDataLoader;
+import io.jmix.core.metamodel.datatype.DatatypeFormatter;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;
+import java.sql.Date;
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -22,6 +25,8 @@ class InvoiceStatusBreakdownReportDataLoaderTest extends AbstractTest {
 
     @Autowired
     private InvoiceStatusBreakdownReportDataLoader dataLoader;
+    @Autowired
+    private DatatypeFormatter datatypeFormatter;
 
     @Test
     void testLoadDataWithVariousStatuses() {
@@ -41,8 +46,8 @@ class InvoiceStatusBreakdownReportDataLoaderTest extends AbstractTest {
 
         Map<String, Object> params = Map.of(
                 "client", client,
-                "fromDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 1)),
-                "toDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 31))
+                "fromDate", Date.valueOf(LocalDate.of(2024, 1, 1)),
+                "toDate", Date.valueOf(LocalDate.of(2024, 1, 31))
         );
 
         // when
@@ -59,7 +64,7 @@ class InvoiceStatusBreakdownReportDataLoaderTest extends AbstractTest {
             .orElseThrow();
 
         assertThat(newStatus.get("count")).isEqualTo(2L);
-        assertThat(newStatus.get("amount")).isEqualTo(PriceDataType.defaultFormat(invoice1.getTotal().add(invoice2.getTotal())));
+        assertThat(newStatus.get("amount")).isEqualTo(PriceDataType.defaultFormat(invoice1.getTotal().add(invoice2.getTotal()), datatypeFormatter));
         assertThat(newStatus.get("statusFormatted")).isInstanceOf(String.class);
 
         // Find the breakdown for PAID status
@@ -69,7 +74,7 @@ class InvoiceStatusBreakdownReportDataLoaderTest extends AbstractTest {
             .orElseThrow();
 
         assertThat(paidStatus.get("count")).isEqualTo(1L);
-        assertThat(paidStatus.get("amount")).isEqualTo(PriceDataType.defaultFormat(invoice3.getTotal()));
+        assertThat(paidStatus.get("amount")).isEqualTo(PriceDataType.defaultFormat(invoice3.getTotal(), datatypeFormatter));
 
         // Find the breakdown for OVERDUE status
         Map<String, Object> overdueStatus = result.stream()
@@ -78,7 +83,7 @@ class InvoiceStatusBreakdownReportDataLoaderTest extends AbstractTest {
             .orElseThrow();
 
         assertThat(overdueStatus.get("count")).isEqualTo(1L);
-        assertThat(overdueStatus.get("amount")).isEqualTo(PriceDataType.defaultFormat(invoice4.getTotal()));
+        assertThat(overdueStatus.get("amount")).isEqualTo(PriceDataType.defaultFormat(invoice4.getTotal(), datatypeFormatter));
 
         // Check that all rows have the expected structure
         result.forEach(row -> {
@@ -95,8 +100,8 @@ class InvoiceStatusBreakdownReportDataLoaderTest extends AbstractTest {
 
         Map<String, Object> params = Map.of(
                 "client", client,
-                "fromDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 1)),
-                "toDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 31))
+                "fromDate", Date.valueOf(LocalDate.of(2024, 1, 1)),
+                "toDate", Date.valueOf(LocalDate.of(2024, 1, 31))
         );
 
         // when
@@ -108,7 +113,7 @@ class InvoiceStatusBreakdownReportDataLoaderTest extends AbstractTest {
 
         result.forEach(row -> {
             assertThat(row.get("count")).isEqualTo(0L);
-            assertThat(row.get("amount")).isEqualTo(PriceDataType.defaultFormat(BigDecimal.ZERO));
+            assertThat(row.get("amount")).isEqualTo(PriceDataType.defaultFormat(BigDecimal.ZERO, datatypeFormatter));
         });
     }
 
@@ -127,8 +132,8 @@ class InvoiceStatusBreakdownReportDataLoaderTest extends AbstractTest {
 
         Map<String, Object> params = Map.of(
                 "client", client,
-                "fromDate", java.sql.Date.valueOf(LocalDate.of(2024, 6, 1)),
-                "toDate", java.sql.Date.valueOf(LocalDate.of(2024, 6, 30))
+                "fromDate", Date.valueOf(LocalDate.of(2024, 6, 1)),
+                "toDate", Date.valueOf(LocalDate.of(2024, 6, 30))
         );
 
         // when
@@ -142,7 +147,7 @@ class InvoiceStatusBreakdownReportDataLoaderTest extends AbstractTest {
 
         // Should count only the invoice in date range
         assertThat(newStatus.get("count")).isEqualTo(1L);
-        assertThat(newStatus.get("amount")).isEqualTo(PriceDataType.defaultFormat(invoiceInRange.getTotal()));
+        assertThat(newStatus.get("amount")).isEqualTo(PriceDataType.defaultFormat(invoiceInRange.getTotal(), datatypeFormatter));
     }
 
     @Test
@@ -152,8 +157,8 @@ class InvoiceStatusBreakdownReportDataLoaderTest extends AbstractTest {
 
         Map<String, Object> params = Map.of(
                 "client", client,
-                "fromDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 1)),
-                "toDate", java.sql.Date.valueOf(LocalDate.of(2024, 1, 31))
+                "fromDate", Date.valueOf(LocalDate.of(2024, 1, 1)),
+                "toDate", Date.valueOf(LocalDate.of(2024, 1, 31))
         );
 
         // when
@@ -162,7 +167,7 @@ class InvoiceStatusBreakdownReportDataLoaderTest extends AbstractTest {
         // then
         assertThat(result).hasSize(InvoiceStatus.values().length);
         assertThat(result.stream().map(row -> (String) row.get("status")).toList())
-                .containsExactly(java.util.Arrays.stream(InvoiceStatus.values()).map(Enum::name).toArray(String[]::new));
+                .containsExactly(Arrays.stream(InvoiceStatus.values()).map(Enum::name).toArray(String[]::new));
     }
 
 }

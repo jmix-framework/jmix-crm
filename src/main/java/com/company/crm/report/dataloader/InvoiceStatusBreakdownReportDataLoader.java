@@ -7,6 +7,7 @@ import com.company.crm.model.invoice.InvoiceStatus;
 import com.company.crm.report.util.ReportDataLoaderUtils;
 import io.jmix.core.DataManager;
 import io.jmix.core.MetadataTools;
+import io.jmix.core.metamodel.datatype.DatatypeFormatter;
 import io.jmix.reports.yarg.loaders.ReportDataLoader;
 import io.jmix.reports.yarg.structure.BandData;
 import io.jmix.reports.yarg.structure.ReportQuery;
@@ -28,10 +29,12 @@ public class InvoiceStatusBreakdownReportDataLoader implements ReportDataLoader 
 
     private final DataManager dataManager;
     private final MetadataTools metadataTools;
+    private final DatatypeFormatter datatypeFormatter;
 
-    public InvoiceStatusBreakdownReportDataLoader(DataManager dataManager, MetadataTools metadataTools) {
+    public InvoiceStatusBreakdownReportDataLoader(DataManager dataManager, MetadataTools metadataTools, DatatypeFormatter datatypeFormatter) {
         this.dataManager = dataManager;
         this.metadataTools = metadataTools;
+        this.datatypeFormatter = datatypeFormatter;
     }
 
     @Override
@@ -64,8 +67,8 @@ public class InvoiceStatusBreakdownReportDataLoader implements ReportDataLoader 
             Map<String, Object> statusData = new HashMap<>();
             statusData.put("status", status.name());
             statusData.put("statusFormatted", metadataTools.format(status));
-            statusData.put("count", count != null ? count : 0L);
-            statusData.put("amount", PriceDataType.defaultFormat(amount != null ? amount : BigDecimal.ZERO));
+            statusData.put("count", count);
+            statusData.put("amount", PriceDataType.defaultFormat(amount, datatypeFormatter));
             breakdown.add(statusData);
         }
 

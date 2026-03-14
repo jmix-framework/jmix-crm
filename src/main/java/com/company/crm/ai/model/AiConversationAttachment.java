@@ -1,17 +1,13 @@
 package com.company.crm.ai.model;
 
 import com.company.crm.model.base.CreateAuditEntity;
+import io.jmix.core.DeletePolicy;
 import io.jmix.core.FileRef;
-import io.jmix.core.entity.annotation.JmixGeneratedValue;
+import io.jmix.core.entity.annotation.OnDeleteInverse;
 import io.jmix.core.metamodel.annotation.JmixEntity;
 import io.jmix.core.metamodel.annotation.PropertyDatatype;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import org.springframework.data.annotation.CreatedBy;
-import org.springframework.data.annotation.CreatedDate;
-
-import java.time.OffsetDateTime;
-import java.util.UUID;
 
 @JmixEntity
 @Table(name = "AI_CONVERSATION_ATTACHMENT", indexes = {
@@ -20,6 +16,7 @@ import java.util.UUID;
 @Entity
 public class AiConversationAttachment extends CreateAuditEntity {
 
+    @OnDeleteInverse(DeletePolicy.CASCADE)
     @NotNull
     @JoinColumn(name = "CONVERSATION_ID", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

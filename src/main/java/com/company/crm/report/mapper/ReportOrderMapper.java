@@ -38,7 +38,7 @@ public class ReportOrderMapper {
         fields.put("date", order.getDate());
         fields.put("dateFormatted", datatypeFormatter.formatLocalDate(order.getDate()));
         fields.put("status", metadataTools.format(order.getStatus()));
-        fields.put("total", PriceDataType.defaultFormat(order.getTotal()));
+        fields.put("total", PriceDataType.defaultFormat(order.getTotal(), datatypeFormatter));
         fields.put("comment", Objects.toString(order.getComment(), ""));
         return fields;
     }

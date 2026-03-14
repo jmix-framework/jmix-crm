@@ -34,7 +34,7 @@ public class ReportPaymentMapper {
         fields.put("number", Objects.toString(payment.getNumber(), ""));
         fields.put("date", payment.getDate());
         fields.put("dateFormatted", datatypeFormatter.formatLocalDate(payment.getDate()));
-        fields.put("amount", PriceDataType.defaultFormat(payment.getAmount()));
+        fields.put("amount", PriceDataType.defaultFormat(payment.getAmount(), datatypeFormatter));
         fields.put("invoiceNumber", extractInvoiceNumber(payment));
         return fields;
     }

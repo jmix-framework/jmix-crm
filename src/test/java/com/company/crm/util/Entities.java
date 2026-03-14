@@ -69,6 +69,7 @@ public class Entities {
     public Client client(String name, int daysAgo) {
         Client client = createAndSaveEntity(Client.class, c -> {
             c.setName(name);
+            c.setType(randomClientType());
             c.setAddress(address());
         });
         client.setCreatedDate(
