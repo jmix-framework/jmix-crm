@@ -31,7 +31,9 @@ import org.springframework.core.Ordered;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
+import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
 import com.opencsv.exceptions.CsvException;
 
 import java.io.IOException;
@@ -124,7 +126,7 @@ public class DemoDataGenerator implements Ordered {
         loadUserTasks(usersByUsername);
 
         publishProgress(progressListener, messages.getMessage("demoData.progress.importingCatalog"));
-        Map<Category, List<CategoryItem>> catalog = generateCatalog();
+        Map<Category, List<CategoryItem>> catalog = loadCatalog();
 
         publishProgress(progressListener, messages.getMessage("demoData.progress.creatingClients"));
         Map<UUID, Client> clientsById = loadClients(usersByUsername);
@@ -168,10 +170,10 @@ public class DemoDataGenerator implements Ordered {
         return List.of(alice, bob);
     }
 
-    // ---- Catalog (from xlsx, same as before) ----
+    // ---- Catalog (from xlsx) ----
 
-    private Map<Category, List<CategoryItem>> generateCatalog() {
-        log.info("Generating catalog from catalog.xlsx...");
+    private Map<Category, List<CategoryItem>> loadCatalog() {
+        log.info("Importing catalog from catalog.xlsx...");
         try (InputStream inputStream = getClass().getResourceAsStream("/demo-data/catalog.xlsx")) {
             if (inputStream == null) {
                 log.error("catalog.xlsx not found in classpath!");
@@ -416,13 +418,19 @@ public class DemoDataGenerator implements Ordered {
     // ---- CSV Reader ----
 
     private List<String[]> readCsv(String resourcePath) {
+        return readCsv(resourcePath, ',');
+    }
+
+    private List<String[]> readCsv(String resourcePath, char separator) {
         try (InputStream is = getClass().getResourceAsStream(resourcePath)) {
             if (is == null) {
                 log.error("CSV file not found: {}", resourcePath);
                 return List.of();
             }
-            try (CSVReader csvReader = new CSVReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
-                csvReader.skip(1); // skip header
+            try (CSVReader csvReader = new CSVReaderBuilder(new InputStreamReader(is, StandardCharsets.UTF_8))
+                    .withCSVParser(new CSVParserBuilder().withSeparator(separator).build())
+                    .withSkipLines(1)
+                    .build()) {
                 return csvReader.readAll();
             }
         } catch (IOException | CsvException e) {

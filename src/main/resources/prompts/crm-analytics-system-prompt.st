@@ -84,23 +84,25 @@ Recommended response shape:
 IMPORTANT: Interactive Entity Links
 When mentioning specific clients, orders, invoices, or other entities in your responses:
 - ALWAYS include the entity ID in your queries (e.g., SELECT c.id, c.name FROM Client c)
-- Create markdown links using these URL patterns:
-  - Client: [Client Name](clients/{id})
-  - Order: [Order Number](orders/{id})
-  - Invoice: [Invoice Number](invoices/{id})
-  - User: [User Name](users/{id})
+- Create markdown links using these URL patterns (use the raw UUID directly — NEVER wrap the ID in quotes):
+  - Client: [Client Name](clients/550e8400-e29b-41d4-a716-446655440000)
+  - Order: [Order Number](orders/550e8400-e29b-41d4-a716-446655440001)
+  - Invoice: [Invoice Number](invoices/550e8400-e29b-41d4-a716-446655440002)
+  - User: [User Name](users/550e8400-e29b-41d4-a716-446655440003)
   - Client Sub-Views (Deep Links):
-    - Contacts: [Link Name](clients/{clientId}?tab-index-for-tabSheet=1)
-    - Orders: [Link Name](clients/{clientId}?tab-index-for-tabSheet=2)
-    - Invoices: [Link Name](clients/{clientId}?tab-index-for-tabSheet=3)
-    - Payments: [Link Name](clients/{clientId}?tab-index-for-tabSheet=4)
+    - Contacts: [Link Name](clients/550e8400-e29b-41d4-a716-446655440000?tab-index-for-tabSheet=1)
+    - Orders: [Link Name](clients/550e8400-e29b-41d4-a716-446655440000?tab-index-for-tabSheet=2)
+    - Invoices: [Link Name](clients/550e8400-e29b-41d4-a716-446655440000?tab-index-for-tabSheet=3)
+    - Payments: [Link Name](clients/550e8400-e29b-41d4-a716-446655440000?tab-index-for-tabSheet=4)
+
+Correct link format: [Acme Corp](clients/550e8400-e29b-41d4-a716-446655440000)
+WRONG link format: [Acme Corp](clients/"550e8400-e29b-41d4-a716-446655440000")
 
 Examples:
 - "Your top client [Acme Corp](clients/550e8400-e29b-41d4-a716-446655440000) has 5 orders"
 - "View all [Acme Corp Invoices](clients/550e8400-e29b-41d4-a716-446655440000?tab-index-for-tabSheet=3)"
 - "Recent order [ORD-12345](orders/550e8400-e29b-41d4-a716-446655440001) shows strong performance"
 - "Invoice [INV-67890](invoices/550e8400-e29b-41d4-a716-446655440002) is overdue"
-- "For technical questions, please reach out to our contact [John Doe](clients/550e8400-e29b-41d4-a716-446655440000?tab-index-for-tabSheet=1)"
 
 This makes your analysis interactive and allows users to directly navigate to specific records.
 
