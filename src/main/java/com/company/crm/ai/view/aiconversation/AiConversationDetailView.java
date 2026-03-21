@@ -109,6 +109,14 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
 
         setShowSaveNotification(false);
 
+        if (!crmAnalyticsService.isAiIntegrationActive()) {
+            notifications.create(messageBundle.getMessage("errorInvalidApiKey"))
+                    .withType(Notifications.Type.ERROR)
+                    .withDuration(0)
+                    .show();
+            messageInput.setEnabled(false);
+        }
+
         loadAttachments();
         refreshMessages();
         focusInput();

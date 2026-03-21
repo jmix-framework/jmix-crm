@@ -64,6 +64,9 @@ public class CrmAnalyticsService {
     private static final String CRM_MESSAGE_TYPE_METADATA_KEY = "crmMessageType";
     private static final String ATTACHMENT_MESSAGE_TYPE = "ATTACHMENT";
 
+    @Value("${spring.ai.openai.api-key:}")
+    private String openAiApiKey;
+
     private final ChatClient chatClient;
     private final JpqlQueryTool jpqlQueryTool;
     private final JmixJpaEntityDiscoveryTool jmixJpaEntityDiscoveryTool;
@@ -104,6 +107,12 @@ public class CrmAnalyticsService {
         this.runReportTool = new RunReportTool(aiReportExecutionService, CRM_REPORTS);
         this.attachmentMediaResolver = attachmentMediaResolver;
         this.messages = messages;
+    }
+
+    public boolean isAiIntegrationActive() {
+        return openAiApiKey != null
+                && !openAiApiKey.isBlank()
+                && !openAiApiKey.contains("YOUR_API_KEY");
     }
 
     /**
