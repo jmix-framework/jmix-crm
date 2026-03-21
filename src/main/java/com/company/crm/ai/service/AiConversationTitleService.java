@@ -3,16 +3,14 @@ package com.company.crm.ai.service;
 import com.company.crm.ai.model.AiConversation;
 import com.company.crm.ai.model.ChatMessage;
 import com.company.crm.ai.model.ChatMessageType;
-import io.jmix.core.DataManager;
 import io.jmix.core.Messages;
-import io.jmix.core.security.Authenticated;
+import io.jmix.core.UnconstrainedDataManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -27,6 +25,7 @@ public class AiConversationTitleService {
 
     private static final Logger log = LoggerFactory.getLogger(AiConversationTitleService.class);
 
+    private static final String SKIP_TITLE_MARKER = "NEW_CONVERSATION";
     private static final int TITLE_MAX_LENGTH = 80;
     private static final int MESSAGE_SNIPPET_MAX_LENGTH = 240;
     private static final int TITLE_MIN_USER_MESSAGES = 1;
@@ -34,12 +33,12 @@ public class AiConversationTitleService {
     private static final double TITLE_TEMPERATURE = 0.0;
     private static final int TITLE_MAX_TOKENS = 32;
 
-    private final DataManager dataManager;
+    private final UnconstrainedDataManager dataManager;
     private final ChatClient chatClient;
     private final Messages messages;
 
     public AiConversationTitleService(
-            DataManager dataManager,
+            UnconstrainedDataManager dataManager,
             ChatClient.Builder chatClientBuilder,
             @Value("classpath:prompts/ai-conversation-title-system-prompt.st") Resource systemPrompt,
             AiConversationTitleProperties properties,
@@ -52,9 +51,7 @@ public class AiConversationTitleService {
         this.messages = messages;
     }
 
-    @Async
-    @Authenticated
-    public void generateTitleIfNeededAsync(UUID conversationId) {
+    public void generateTitleIfNeeded(UUID conversationId) {
         if (conversationId == null) {
             return;
         }
@@ -102,6 +99,7 @@ public class AiConversationTitleService {
 
             latestConversation.setTitle(sanitizedTitle);
             dataManager.save(latestConversation);
+            log.debug("Generated title '{}' for conversation {}", sanitizedTitle, conversationId);
         } catch (Exception e) {
             log.warn("Failed to generate conversation title for {}", conversationId, e);
         }
@@ -131,7 +129,7 @@ public class AiConversationTitleService {
                 .orElse("");
     }
 
-    private String generateTitle(String conversationSnippet) {
+    public String generateTitle(String conversationSnippet) {
         String prompt = """
                 Create one short title for this CRM conversation.
                 Conversation:
@@ -159,10 +157,11 @@ public class AiConversationTitleService {
                 && !messages.formatMessage(AiConversation.class, "defaultTitle").equals(title);
     }
 
-    private String sanitizeTitle(String title) {
+    public String sanitizeTitle(String title) {
         return normalize(title, TITLE_MAX_LENGTH)
                 .map(t -> t.replaceAll("\"", ""))
                 .map(t -> t.endsWith(".") ? t.substring(0, t.length() - 1).trim() : t)
+                .filter(t -> !t.contains(SKIP_TITLE_MARKER))
                 .orElse("");
     }
 

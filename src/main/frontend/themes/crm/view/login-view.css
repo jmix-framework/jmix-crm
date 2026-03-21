@@ -125,6 +125,15 @@
     margin-left: clamp(-2vw, -4vw, -200px);
 }
 
+.usage-scenarios-btn {
+    color: rgba(255, 255, 255, 0.8) !important;
+    font-size: var(--lumo-font-size-s);
+}
+
+.usage-scenarios-btn:hover {
+    color: white !important;
+}
+
 @media (max-width: 1100px) {
     .login-shell {
         flex-direction: column;

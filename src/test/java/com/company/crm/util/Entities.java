@@ -15,7 +15,6 @@ import com.company.crm.model.order.OrderStatus;
 import com.company.crm.model.payment.Payment;
 import com.company.crm.model.user.User;
 import io.jmix.core.UnconstrainedDataManager;
-import net.datafaker.Faker;
 import org.springframework.boot.test.context.TestComponent;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -26,8 +25,6 @@ import java.util.function.Consumer;
 
 @TestComponent
 public class Entities {
-
-    public static final Faker FAKER = new Faker();
 
     private static final ThreadLocalRandom RANDOM = ThreadLocalRandom.current();
 
@@ -182,14 +179,13 @@ public class Entities {
     }
 
     public Address address() {
-        var fakeAddress = FAKER.address();
         Address address = dataManager.create(Address.class);
-        address.setCountry(fakeAddress.country());
-        address.setCity(fakeAddress.city());
-        address.setStreet(fakeAddress.streetAddress());
-        address.setBuilding(fakeAddress.buildingNumber());
-        address.setPostalCode(fakeAddress.postcode());
-        address.setApartment(RANDOM.nextInt(50) + "");
+        address.setCountry("Germany");
+        address.setCity("Munich");
+        address.setStreet("Leopoldstraße");
+        address.setBuilding(String.valueOf(RANDOM.nextInt(1, 200)));
+        address.setPostalCode("80802");
+        address.setApartment(String.valueOf(RANDOM.nextInt(1, 50)));
         return address;
     }
 

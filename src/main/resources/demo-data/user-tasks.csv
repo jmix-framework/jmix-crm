@@ -1,0 +1,45 @@
+authorUsername,title,description,dueDateOffset,isCompleted
+admin,Prepare quarterly review,Create revenue and pipeline report for the quarterly meeting,-10,true
+admin,Clean up pipeline,Archive inactive opportunities and update deal stages,-20,true
+admin,Document customer feedback,Record feedback from last service call in CRM,-16,true
+admin,Check order delivery status,Verify delivery status of open orders with supplier,-14,true
+admin,Schedule annual reviews,Send appointment proposals for annual reviews with A-clients,-5,false
+admin,Follow up on client meeting,Write meeting notes and agree on next steps,-3,false
+admin,New client onboarding,Prepare welcome package and schedule introductory call for new clients,-7,true
+admin,Update contact information,Refresh outdated contacts at key accounts,-5,false
+manager,Prepare client visit,Create presentation materials and talking points for on-site meeting,-16,true
+manager,Check contract renewals,Identify expiring contracts of top clients and initiate renewal,-19,false
+manager,Analyze cross-selling potential,Review existing clients for additional product opportunities,-20,false
+manager,Document customer feedback,Record feedback from last service call in CRM,-10,false
+manager,Check order delivery status,Verify delivery status of open orders with supplier,-5,true
+manager,Schedule annual reviews,Send appointment proposals for annual reviews with A-clients,-13,true
+manager,Approve pending invoices,Review draft invoices and submit for approval,-7,false
+manager,New client onboarding,Prepare welcome package and schedule introductory call for new clients,-13,true
+james,Write weekly status report,Summarize client activities and pipeline updates for the team,-12,false
+james,Create quote for client,Calculate custom quote for large client request,-4,true
+james,Follow up on open quotes,Call back all open quotes older than 14 days,-15,false
+james,Reconcile incoming payments,Match open items with received payments,-5,true
+james,Create revenue forecast,Calculate monthly revenue forecast based on current pipeline,-10,true
+james,Handle customer complaint,Review client complaint and draft resolution proposal,-9,false
+james,Check contract renewals,Identify expiring contracts of top clients and initiate renewal,-3,false
+james,Evaluate customer satisfaction,Analyze NPS survey results and derive action items,-9,true
+james,Document customer feedback,Record feedback from last service call in CRM,-20,true
+james,Schedule annual reviews,Send appointment proposals for annual reviews with A-clients,-12,false
+james,Follow up on client meeting,Write meeting notes and agree on next steps,-15,false
+james,Update contact information,Refresh outdated contacts at key accounts,-15,true
+alice,Follow up on open quotes,Call back all open quotes older than 14 days,0,true
+alice,Prepare quarterly review,Create revenue and pipeline report for the quarterly meeting,-6,false
+alice,Prepare client visit,Create presentation materials and talking points for on-site meeting,-2,true
+alice,Reconcile incoming payments,Match open items with received payments,-3,true
+alice,Create revenue forecast,Calculate monthly revenue forecast based on current pipeline,-12,false
+alice,Handle customer complaint,Review client complaint and draft resolution proposal,-16,true
+alice,Check contract renewals,Identify expiring contracts of top clients and initiate renewal,-1,false
+alice,Check order delivery status,Verify delivery status of open orders with supplier,-19,false
+alice,Schedule annual reviews,Send appointment proposals for annual reviews with A-clients,-4,false
+alice,New client onboarding,Prepare welcome package and schedule introductory call for new clients,-14,false
+robert,Create revenue forecast,Calculate monthly revenue forecast based on current pipeline,-20,false
+robert,Check contract renewals,Identify expiring contracts of top clients and initiate renewal,-11,false
+robert,Evaluate customer satisfaction,Analyze NPS survey results and derive action items,-3,true
+robert,Analyze cross-selling potential,Review existing clients for additional product opportunities,-19,false
+robert,Schedule annual reviews,Send appointment proposals for annual reviews with A-clients,-14,false
+robert,Approve pending invoices,Review draft invoices and submit for approval,-10,false

@@ -112,6 +112,8 @@ public class ClientListView extends StandardListView<Client> {
     private DatatypeFormatter datatypeFormatter;
     @Autowired
     private CurrentAuthentication currentAuthentication;
+    @Autowired
+    private com.company.crm.app.util.role.RoleUtils roleUtils;
 
     // stats
     @ViewComponent
@@ -451,9 +453,20 @@ public class ClientListView extends StandardListView<Client> {
     }
 
     private void initializeFilterFields() {
-        List<User> accountManagers = new ArrayList<>(userService.loadAccountManagers());
-        accountManagers.addFirst(getCurrentUser());
-        accountManagerSelect.setItems(accountManagers);
+        boolean hasOnlyMyAccounts = roleUtils.isUserHasRole(
+                getCurrentUser(), com.company.crm.security.role.OnlyMyAccountsRole.CODE);
+
+        if (hasOnlyMyAccounts) {
+            accountManagerSelect.setItems(List.of(getCurrentUser()));
+            accountManagerSelect.setValue(getCurrentUser());
+            accountManagerSelect.setEnabled(false);
+            showOnlyMyClientsCheckBox.setValue(true);
+            showOnlyMyClientsCheckBox.setEnabled(false);
+        } else {
+            List<User> accountManagers = new ArrayList<>(userService.loadAccountManagers());
+            accountManagers.addFirst(getCurrentUser());
+            accountManagerSelect.setItems(accountManagers);
+        }
 
         setSearchHintPopover(searchField);
 
@@ -461,12 +474,15 @@ public class ClientListView extends StandardListView<Client> {
                 .forEach(field -> field.addValueChangeListener(e -> applyFilters()));
 
         //noinspection unchecked
+        List<User> finalAccountManagers = hasOnlyMyAccounts
+                ? List.of(getCurrentUser())
+                : new ArrayList<>(userService.loadAccountManagers());
         FieldValueQueryParameterBinder.builder(this)
                 .addStringBinding(searchField)
                 .addBooleanBinding(showOnlyMyClientsCheckBox)
                 .addEnumBinding(ClientType.class, typeSelect)
                 .addEnumBinding(ClientCategory.class, categorySelect)
-                .addEntitySelectBinding(accountManagerSelect, () -> accountManagers)
+                .addEntitySelectBinding(accountManagerSelect, () -> finalAccountManagers)
                 .build();
     }
 

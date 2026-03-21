@@ -29,6 +29,7 @@ import io.jmix.flowui.view.ViewComponent;
 import io.jmix.flowui.view.ViewController;
 import io.jmix.flowui.view.ViewDescriptor;
 import io.jmix.flowui.view.ViewValidation;
+import io.jmix.flowui.DialogWindows;
 import io.jmix.securityflowui.authentication.AuthDetails;
 import io.jmix.securityflowui.authentication.LoginViewSupport;
 import org.apache.commons.lang3.StringUtils;
@@ -80,6 +81,8 @@ public class LoginView extends StandardView implements LocaleChangeObserver {
     private MessageBundle messageBundle;
     @Autowired
     private ViewValidation viewValidation;
+    @Autowired
+    private DialogWindows dialogWindows;
 
     @Value("${ui.login.defaultUsername:}")
     private String defaultUsername;
@@ -148,6 +151,11 @@ public class LoginView extends StandardView implements LocaleChangeObserver {
             errorMessageDescription.setText(messageBundle.getMessage("loginForm.badCredentials"));
             errorMessage.setVisible(true);
         }
+    }
+
+    @Subscribe(id = "usageBtn", subject = "clickListener")
+    public void onUsageBtnClick(final ClickEvent<JmixButton> event) {
+        dialogWindows.view(this, com.company.crm.view.usagehelp.UsageHelpView.class).open();
     }
 
     @Override

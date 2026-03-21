@@ -71,8 +71,8 @@
         <insert tableName="USER_" dbms="postgresql, mssql, hsqldb, h2">
             <column name="ID" value="60885987-1b61-4247-94c7-dff348347f95"/>
             <column name="VERSION" value="1"/>
-            <column name="USERNAME" value="supervisor"/>
-            <column name="PASSWORD" value="{noop}supervisor"/>
+            <column name="USERNAME" value="james"/>
+            <column name="PASSWORD" value="{noop}james"/>
             <column name="FIRST_NAME" value="James"/>
             <column name="LAST_NAME" value="Sullivan"/>
             <column name="ACTIVE" valueBoolean="true"/>
@@ -80,8 +80,8 @@
         <insert tableName="USER_" dbms="oracle, mysql, mariadb">
             <column name="ID" value="608859871b61424794c7dff348347f95"/>
             <column name="VERSION" value="1"/>
-            <column name="USERNAME" value="supervisor"/>
-            <column name="PASSWORD" value="{noop}supervisor"/>
+            <column name="USERNAME" value="james"/>
+            <column name="PASSWORD" value="{noop}james"/>
             <column name="ACTIVE" valueBoolean="true"/>
         </insert>
 
@@ -127,14 +127,14 @@
         <insert tableName="SEC_ROLE_ASSIGNMENT" dbms="postgresql, mssql, hsqldb, h2">
             <column name="ID" value="6c9e420a-2b7a-4c42-8654-a9027ee14085"/>
             <column name="VERSION" value="1"/>
-            <column name="USERNAME" value="supervisor"/>
+            <column name="USERNAME" value="james"/>
             <column name="ROLE_CODE" value="supervisor"/>
             <column name="ROLE_TYPE" value="resource"/>
         </insert>
         <insert tableName="SEC_ROLE_ASSIGNMENT" dbms="oracle, mysql, mariadb">
             <column name="ID" value="6c9e420a2b7a4c428654a9027ee14085"/>
             <column name="VERSION" value="1"/>
-            <column name="USERNAME" value="supervisor"/>
+            <column name="USERNAME" value="james"/>
             <column name="ROLE_CODE" value="supervisor"/>
             <column name="ROLE_TYPE" value="resource"/>
         </insert>
@@ -153,6 +153,186 @@
             <column name="USERNAME" value="manager"/>
             <column name="ROLE_CODE" value="manager"/>
             <column name="ROLE_TYPE" value="resource"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="5" author="crm" context="!cuba">
+        <validCheckSum>ANY</validCheckSum>
+
+        <!-- ALICE (demo user) -->
+        <insert tableName="USER_" dbms="postgresql, mssql, hsqldb, h2">
+            <column name="ID" value="a1b2c3d4-e5f6-7890-abcd-ef1234567890"/>
+            <column name="VERSION" value="1"/>
+            <column name="USERNAME" value="alice"/>
+            <column name="PASSWORD" value="{noop}alice"/>
+            <column name="FIRST_NAME" value="Alice"/>
+            <column name="LAST_NAME" value="Brown"/>
+            <column name="ACTIVE" valueBoolean="true"/>
+        </insert>
+        <insert tableName="USER_" dbms="oracle, mysql, mariadb">
+            <column name="ID" value="a1b2c3d4e5f67890abcdef1234567890"/>
+            <column name="VERSION" value="1"/>
+            <column name="USERNAME" value="alice"/>
+            <column name="PASSWORD" value="{noop}alice"/>
+            <column name="FIRST_NAME" value="Alice"/>
+            <column name="LAST_NAME" value="Brown"/>
+            <column name="ACTIVE" valueBoolean="true"/>
+        </insert>
+
+        <!-- BOB (demo user) -->
+        <insert tableName="USER_" dbms="postgresql, mssql, hsqldb, h2">
+            <column name="ID" value="b2c3d4e5-f6a7-8901-bcde-f12345678901"/>
+            <column name="VERSION" value="1"/>
+            <column name="USERNAME" value="robert"/>
+            <column name="PASSWORD" value="{noop}robert"/>
+            <column name="FIRST_NAME" value="Robert"/>
+            <column name="LAST_NAME" value="Taylor"/>
+            <column name="ACTIVE" valueBoolean="true"/>
+        </insert>
+        <insert tableName="USER_" dbms="oracle, mysql, mariadb">
+            <column name="ID" value="b2c3d4e5f6a78901bcdef12345678901"/>
+            <column name="VERSION" value="1"/>
+            <column name="USERNAME" value="robert"/>
+            <column name="PASSWORD" value="{noop}robert"/>
+            <column name="FIRST_NAME" value="Robert"/>
+            <column name="LAST_NAME" value="Taylor"/>
+            <column name="ACTIVE" valueBoolean="true"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="6" author="crm" context="!cuba">
+        <validCheckSum>ANY</validCheckSum>
+
+        <!-- ALICE: resource role "manager" -->
+        <insert tableName="SEC_ROLE_ASSIGNMENT" dbms="postgresql, mssql, hsqldb, h2">
+            <column name="ID" value="c3d4e5f6-a7b8-9012-cdef-123456789012"/>
+            <column name="VERSION" value="1"/>
+            <column name="USERNAME" value="alice"/>
+            <column name="ROLE_CODE" value="manager"/>
+            <column name="ROLE_TYPE" value="resource"/>
+        </insert>
+        <insert tableName="SEC_ROLE_ASSIGNMENT" dbms="oracle, mysql, mariadb">
+            <column name="ID" value="c3d4e5f6a7b89012cdef123456789012"/>
+            <column name="VERSION" value="1"/>
+            <column name="USERNAME" value="alice"/>
+            <column name="ROLE_CODE" value="manager"/>
+            <column name="ROLE_TYPE" value="resource"/>
+        </insert>
+
+        <!-- ALICE: row-level role "ai-chat-user-rl" -->
+        <insert tableName="SEC_ROLE_ASSIGNMENT" dbms="postgresql, mssql, hsqldb, h2">
+            <column name="ID" value="c3d4e5f6-a7b8-9012-cdef-123456789013"/>
+            <column name="VERSION" value="1"/>
+            <column name="USERNAME" value="alice"/>
+            <column name="ROLE_CODE" value="ai-chat-user-rl"/>
+            <column name="ROLE_TYPE" value="row_level"/>
+        </insert>
+        <insert tableName="SEC_ROLE_ASSIGNMENT" dbms="oracle, mysql, mariadb">
+            <column name="ID" value="c3d4e5f6a7b89012cdef123456789013"/>
+            <column name="VERSION" value="1"/>
+            <column name="USERNAME" value="alice"/>
+            <column name="ROLE_CODE" value="ai-chat-user-rl"/>
+            <column name="ROLE_TYPE" value="row_level"/>
+        </insert>
+
+        <!-- ALICE: row-level role "only-my-accounts-rl" -->
+        <insert tableName="SEC_ROLE_ASSIGNMENT" dbms="postgresql, mssql, hsqldb, h2">
+            <column name="ID" value="c3d4e5f6-a7b8-9012-cdef-123456789014"/>
+            <column name="VERSION" value="1"/>
+            <column name="USERNAME" value="alice"/>
+            <column name="ROLE_CODE" value="only-my-accounts-rl"/>
+            <column name="ROLE_TYPE" value="row_level"/>
+        </insert>
+        <insert tableName="SEC_ROLE_ASSIGNMENT" dbms="oracle, mysql, mariadb">
+            <column name="ID" value="c3d4e5f6a7b89012cdef123456789014"/>
+            <column name="VERSION" value="1"/>
+            <column name="USERNAME" value="alice"/>
+            <column name="ROLE_CODE" value="only-my-accounts-rl"/>
+            <column name="ROLE_TYPE" value="row_level"/>
+        </insert>
+
+        <!-- BOB: resource role "manager" -->
+        <insert tableName="SEC_ROLE_ASSIGNMENT" dbms="postgresql, mssql, hsqldb, h2">
+            <column name="ID" value="d4e5f6a7-b8c9-0123-defa-234567890123"/>
+            <column name="VERSION" value="1"/>
+            <column name="USERNAME" value="robert"/>
+            <column name="ROLE_CODE" value="manager"/>
+            <column name="ROLE_TYPE" value="resource"/>
+        </insert>
+        <insert tableName="SEC_ROLE_ASSIGNMENT" dbms="oracle, mysql, mariadb">
+            <column name="ID" value="d4e5f6a7b8c90123defa234567890123"/>
+            <column name="VERSION" value="1"/>
+            <column name="USERNAME" value="robert"/>
+            <column name="ROLE_CODE" value="manager"/>
+            <column name="ROLE_TYPE" value="resource"/>
+        </insert>
+
+        <!-- BOB: row-level role "ai-chat-user-rl" -->
+        <insert tableName="SEC_ROLE_ASSIGNMENT" dbms="postgresql, mssql, hsqldb, h2">
+            <column name="ID" value="d4e5f6a7-b8c9-0123-defa-234567890124"/>
+            <column name="VERSION" value="1"/>
+            <column name="USERNAME" value="robert"/>
+            <column name="ROLE_CODE" value="ai-chat-user-rl"/>
+            <column name="ROLE_TYPE" value="row_level"/>
+        </insert>
+        <insert tableName="SEC_ROLE_ASSIGNMENT" dbms="oracle, mysql, mariadb">
+            <column name="ID" value="d4e5f6a7b8c90123defa234567890124"/>
+            <column name="VERSION" value="1"/>
+            <column name="USERNAME" value="robert"/>
+            <column name="ROLE_CODE" value="ai-chat-user-rl"/>
+            <column name="ROLE_TYPE" value="row_level"/>
+        </insert>
+
+        <!-- BOB: row-level role "only-my-accounts-rl" -->
+        <insert tableName="SEC_ROLE_ASSIGNMENT" dbms="postgresql, mssql, hsqldb, h2">
+            <column name="ID" value="d4e5f6a7-b8c9-0123-defa-234567890125"/>
+            <column name="VERSION" value="1"/>
+            <column name="USERNAME" value="robert"/>
+            <column name="ROLE_CODE" value="only-my-accounts-rl"/>
+            <column name="ROLE_TYPE" value="row_level"/>
+        </insert>
+        <insert tableName="SEC_ROLE_ASSIGNMENT" dbms="oracle, mysql, mariadb">
+            <column name="ID" value="d4e5f6a7b8c90123defa234567890125"/>
+            <column name="VERSION" value="1"/>
+            <column name="USERNAME" value="robert"/>
+            <column name="ROLE_CODE" value="only-my-accounts-rl"/>
+            <column name="ROLE_TYPE" value="row_level"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="7" author="crm" context="!cuba">
+        <validCheckSum>ANY</validCheckSum>
+
+        <!-- MANAGER: row-level role "ai-chat-user-rl" -->
+        <insert tableName="SEC_ROLE_ASSIGNMENT" dbms="postgresql, mssql, hsqldb, h2">
+            <column name="ID" value="e5f6a7b8-c9d0-1234-efab-345678901234"/>
+            <column name="VERSION" value="1"/>
+            <column name="USERNAME" value="manager"/>
+            <column name="ROLE_CODE" value="ai-chat-user-rl"/>
+            <column name="ROLE_TYPE" value="row_level"/>
+        </insert>
+        <insert tableName="SEC_ROLE_ASSIGNMENT" dbms="oracle, mysql, mariadb">
+            <column name="ID" value="e5f6a7b8c9d01234efab345678901234"/>
+            <column name="VERSION" value="1"/>
+            <column name="USERNAME" value="manager"/>
+            <column name="ROLE_CODE" value="ai-chat-user-rl"/>
+            <column name="ROLE_TYPE" value="row_level"/>
+        </insert>
+
+        <!-- SUPERVISOR: row-level role "ai-chat-user-rl" -->
+        <insert tableName="SEC_ROLE_ASSIGNMENT" dbms="postgresql, mssql, hsqldb, h2">
+            <column name="ID" value="f6a7b8c9-d0e1-2345-fabc-456789012345"/>
+            <column name="VERSION" value="1"/>
+            <column name="USERNAME" value="james"/>
+            <column name="ROLE_CODE" value="ai-chat-user-rl"/>
+            <column name="ROLE_TYPE" value="row_level"/>
+        </insert>
+        <insert tableName="SEC_ROLE_ASSIGNMENT" dbms="oracle, mysql, mariadb">
+            <column name="ID" value="f6a7b8c9d0e12345fabc456789012345"/>
+            <column name="VERSION" value="1"/>
+            <column name="USERNAME" value="james"/>
+            <column name="ROLE_CODE" value="ai-chat-user-rl"/>
+            <column name="ROLE_TYPE" value="row_level"/>
         </insert>
     </changeSet>
 

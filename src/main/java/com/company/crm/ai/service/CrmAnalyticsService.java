@@ -70,7 +70,7 @@ public class CrmAnalyticsService {
     private final JmixReportDiscoveryTool jmixReportDiscoveryTool;
     private final RunReportTool runReportTool;
     private final AiAttachmentMediaResolver attachmentMediaResolver;
-    private final AiConversationTitleService aiConversationTitleService;
+
     private final Messages messages;
 
     @Autowired
@@ -84,7 +84,6 @@ public class CrmAnalyticsService {
             MetadataTools metadataTools,
             ChatMemoryRepository chatMemoryRepository,
             AiAttachmentMediaResolver attachmentMediaResolver,
-            AiConversationTitleService aiConversationTitleService,
             Messages messages
     ) {
         ChatMemory chatMemory = MessageWindowChatMemory.builder()
@@ -104,7 +103,6 @@ public class CrmAnalyticsService {
         this.jmixReportDiscoveryTool = new JmixReportDiscoveryTool(reportYamlExporter, CRM_REPORTS);
         this.runReportTool = new RunReportTool(aiReportExecutionService, CRM_REPORTS);
         this.attachmentMediaResolver = attachmentMediaResolver;
-        this.aiConversationTitleService = aiConversationTitleService;
         this.messages = messages;
     }
 
@@ -164,9 +162,6 @@ public class CrmAnalyticsService {
                 .call()
                 .content();
 
-        if (conversationUuid != null) {
-            aiConversationTitleService.generateTitleIfNeededAsync(conversationUuid);
-        }
         return response;
     }
 

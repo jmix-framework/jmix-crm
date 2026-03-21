@@ -48,9 +48,11 @@ class CrmAnalyticsServiceLLMTest extends AbstractTest {
         setupJudge();
     }
 
+    private static final String DEFAULT_TITLE = "New AI Conversation";
+
     private void setupTestConversation() {
         AiConversation conversation = dataManager.create(AiConversation.class);
-        conversation.setTitle("Test LLM Judge Conversation");
+        conversation.setTitle(DEFAULT_TITLE);
         dataManager.saveWithoutReload(conversation);
         conversationId = conversation.getId().toString();
         log.info("Created test conversation with ID: {}", conversationId);
@@ -597,6 +599,27 @@ class CrmAnalyticsServiceLLMTest extends AbstractTest {
                 "SELECT COUNT(o) FROM Client c LEFT JOIN c.orders o WHERE c.name = :name AND @between(o.date, now-180, now-91, day)",
                 Long.class
             ).parameter("name", clientName).one();
+        }
+    }
+
+    @Nested
+    class ConversationTitleGeneration {
+
+        @BeforeEach
+        void prepareKnownDataset() {
+            setupKnownTestData();
+        }
+
+        @Test
+        void businessQuestion_shouldUpdateConversationTitle() {
+            String response = askBusinessQuestion("How many clients do we have in total?");
+            assertThat(response).isNotBlank();
+
+            AiConversation conversation = dataManager.load(AiConversation.class)
+                    .id(UUID.fromString(conversationId))
+                    .one();
+
+            assertThat(conversation.getTitle()).isNotEqualTo(DEFAULT_TITLE);
         }
     }
 

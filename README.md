@@ -92,11 +92,13 @@ The local profile generates demo data on the application start:
 
 ## 👥 Application Accounts
 
-| Position      | Username         | Password   |
-|---------------|------------------|------------|
-| Administrator | ```admin```      | admin      |
-| Supervisor    | ```supervisor``` | supervisor |
-| Manager       | ```manager```    | manager    |
+| Position         | Username         | Password     | Access                                          |
+|------------------|------------------|--------------|--------------------------------------------------|
+| Administrator    | ```admin```      | admin        | Full access to all data and settings             |
+| Supervisor       | ```james```      | james        | Manager + catalog management + assign accounts   |
+| Manager          | ```manager```    | manager      | Full access to all clients and orders            |
+| Account Manager  | ```alice```      | alice        | Only sees clients assigned to Alice Brown        |
+| Account Manager  | ```robert```     | robert       | Only sees clients assigned to Robert Taylor      |
 
 ## ⚙️ Domain Model
 

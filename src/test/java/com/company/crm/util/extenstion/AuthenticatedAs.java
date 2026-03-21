@@ -15,7 +15,7 @@ public @interface AuthenticatedAs {
 
     String ADMIN_USERNAME = "admin";
     String MANAGER_USERNAME = "manager";
-    String SUPERVISOR_USERNAME = "supervisor";
+    String SUPERVISOR_USERNAME = "james";
 
     AuthenticatedAs ADMIN = createAuthenticatedAs(ADMIN_USERNAME);
     AuthenticatedAs MANAGER = createAuthenticatedAs(MANAGER_USERNAME);

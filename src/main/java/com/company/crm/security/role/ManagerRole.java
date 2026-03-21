@@ -30,12 +30,12 @@ import io.jmix.securityflowui.role.annotation.MenuPolicy;
 import io.jmix.securityflowui.role.annotation.ViewPolicy;
 
 @ResourceRole(name = "Manager", code = ManagerRole.CODE, scope = SecurityScope.UI)
-public interface ManagerRole extends UiMinimalRole, AiChatUserRole, ReportsRunRole {
+public interface ManagerRole extends UiMinimalRole, ReportsRunRole {
 
     String CODE = "manager";
     String NAME = "Manager";
 
-    @MenuPolicy(menuIds = {"home", "tasks", "clients", "orders", "AiConversation.list"})
+    @MenuPolicy(menuIds = {"home", "tasks", "clients", "orders", "finance", "invoices", "payments", "AiConversation.list"})
     @ViewPolicy(viewIds = {"HomeView", "UserTask.list", "Client.list", "Order.list", "CategoryItem.detail", "Category.detail", "Client.detail", "Invoice.detail", "Invoice.list", "OrderItem.detail", "Order.detail", "Payment.detail", "Payment.list", "AddressFragment", "Contact.detail", "flowui_AddConditionView", "flowui_GroupFilterCondition.detail", "flowui_JpqlFilterCondition.detail", "flowui_PropertyFilterCondition.detail", "flowui_DateIntervalDialog", "FragmentRenderer", "AiConversation.list", "AiConversation.detail", "AiAttachmentCardFragmentRenderer"})
     void views();
 
@@ -93,6 +93,7 @@ public interface ManagerRole extends UiMinimalRole, AiChatUserRole, ReportsRunRo
     @EntityPolicy(entityClass = Payment.class, actions = EntityPolicyAction.ALL)
     void payment();
 
+    @EntityAttributePolicy(entityClass = UserTask.class, attributes = "*", action = EntityAttributePolicyAction.MODIFY)
     @EntityPolicy(entityClass = UserTask.class, actions = EntityPolicyAction.ALL)
     void userTask();
 
