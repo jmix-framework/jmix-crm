@@ -14,6 +14,7 @@ import com.company.crm.model.order.OrderItem;
 import com.company.crm.model.payment.Payment;
 import com.company.crm.model.user.User;
 import io.jmix.core.Messages;
+import io.jmix.core.security.CurrentAuthentication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
@@ -31,6 +32,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -52,8 +54,9 @@ public class CrmAnalyticsService {
 
     private final ChatClient chatClient;
     private final AiAttachmentMediaResolver attachmentMediaResolver;
-
+    private final Resource systemPrompt;
     private final Messages messages;
+    private final CurrentAuthentication currentAuthentication;
 
     @Autowired
     public CrmAnalyticsService(
@@ -62,20 +65,22 @@ public class CrmAnalyticsService {
             ChatMemoryRepository chatMemoryRepository,
             AiAttachmentMediaResolver attachmentMediaResolver,
             Messages messages,
+            CurrentAuthentication currentAuthentication,
             ApplicationContext applicationContext) {
         ChatMemory chatMemory = MessageWindowChatMemory.builder()
                 .chatMemoryRepository(chatMemoryRepository)
                 .build();
 
         this.chatClient = chatClientBuilder
-                .defaultSystem(systemPrompt)
                 .defaultAdvisors(
                         SimpleLoggerAdvisor.builder().build(),
                         MessageChatMemoryAdvisor.builder(chatMemory).build()
                 )
                 .build();
         this.attachmentMediaResolver = attachmentMediaResolver;
+        this.systemPrompt = systemPrompt;
         this.messages = messages;
+        this.currentAuthentication = currentAuthentication;
         this.applicationContext = applicationContext;
     }
 
@@ -121,6 +126,9 @@ public class CrmAnalyticsService {
         List<Media> mediaAttachments = attachmentMediaResolver.resolve(conversationUuid, attachmentRefs);
 
         var promptSpec = chatClient.prompt()
+                .system(system -> system
+                        .text(systemPrompt)
+                        .param("responseLanguage", resolveResponseLanguage()))
                 .user(user -> {
                     user.text(userQuestion);
                     if (!userMetadata.isEmpty()) {
@@ -157,6 +165,11 @@ public class CrmAnalyticsService {
                         .buildToolsArray())
                 .call()
                 .content();
+    }
+
+    private String resolveResponseLanguage() {
+        Locale locale = currentAuthentication.getLocale();
+        return locale != null ? locale.getLanguage() : Locale.ENGLISH.getLanguage();
     }
 
     private UUID tryParseConversationId(String conversationId) {
