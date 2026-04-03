@@ -4,10 +4,12 @@ import com.company.crm.app.config.SpringProfiles;
 import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.model.catalog.item.CategoryItem;
 import com.company.crm.model.client.Client;
+import io.jmix.core.CoreProperties;
+import io.jmix.core.LocaleResolver;
+import io.jmix.core.Messages;
 import io.jmix.core.Metadata;
 import io.jmix.core.UnconstrainedDataManager;
 import io.jmix.dynattr.AttributeType;
-import io.jmix.dynattr.MsgBundleTools;
 import io.jmix.dynattr.model.Category;
 import io.jmix.dynattr.model.CategoryAttribute;
 import jakarta.annotation.PostConstruct;
@@ -17,10 +19,13 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Properties;
 import java.util.UUID;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
@@ -39,26 +44,28 @@ public class DynamicAttributesInitializer {
             UUID.fromString("019be66a-e48b-7996-9cfb-0ed1ddfed4c3");
 
     public static final String VENDOR_ATTRIBUTE_CODE = "softwareProductsVendor";
-    public static final String VENDOR_ATTRIBUTE_NAME = "Vendor";
-    public static final String SOFTWARE_PRODUCTS_CATEGORY_NAME = "Software products";
-
-    public static final String SALES_TERRITORY_CATEGORY_NAME = "Sales territory";
-    public static final String SALES_TERRITORY_SALES_AREA_NAME = "Sales Area";
+    public static final String SOFTWARE_PRODUCTS_CATEGORY_NAME_KEY = "dynamicAttributes.softwareProducts.categoryName";
+    public static final String SOFTWARE_PRODUCTS_VENDOR_ATTRIBUTE_NAME_KEY = "dynamicAttributes.softwareProducts.vendorName";
     public static final String SALES_TERRITORY_SALES_AREA_CODE = "salesTerritorySalesArea";
+    public static final String SALES_TERRITORY_CATEGORY_NAME_KEY = "dynamicAttributes.salesTerritory.categoryName";
+    public static final String SALES_TERRITORY_SALES_AREA_NAME_KEY = "dynamicAttributes.salesTerritory.salesAreaName";
 
     private final Metadata metadata;
     private final UnconstrainedDataManager dataManager;
     private final SpringProfiles springProfiles;
-    private final MsgBundleTools msgBundleTools;
+    private final Messages messages;
+    private final CoreProperties coreProperties;
 
     public DynamicAttributesInitializer(Metadata metadata,
                                         UnconstrainedDataManager dataManager,
                                         SpringProfiles springProfiles,
-                                        MsgBundleTools msgBundleTools) {
+                                        Messages messages,
+                                        CoreProperties coreProperties) {
         this.metadata = metadata;
         this.dataManager = dataManager;
         this.springProfiles = springProfiles;
-        this.msgBundleTools = msgBundleTools;
+        this.messages = messages;
+        this.coreProperties = coreProperties;
     }
 
     @PostConstruct
@@ -74,24 +81,37 @@ public class DynamicAttributesInitializer {
     }
 
     private void createSoftwareProductsCategoryIfNeeded() {
+        String categoryName = getDefaultLocalizedValue(SOFTWARE_PRODUCTS_CATEGORY_NAME_KEY);
+        String vendorAttributeName = getDefaultLocalizedValue(SOFTWARE_PRODUCTS_VENDOR_ATTRIBUTE_NAME_KEY);
+
         ensureCategoryWithAttribute(SOFTWARE_PRODUCTS_CATEGORY_ID,
-                SOFTWARE_PRODUCTS_CATEGORY_NAME,
+                categoryName,
                 CategoryItem.class.getSimpleName(),
                 SOFTWARE_PRODUCTS_VENDOR_ATTR_ID,
-                VENDOR_ATTRIBUTE_NAME,
+                vendorAttributeName,
                 VENDOR_ATTRIBUTE_CODE);
+
+        findCategory(SOFTWARE_PRODUCTS_CATEGORY_ID, categoryName, CategoryItem.class.getSimpleName())
+                .ifPresent(category -> ensureLocalizedCategoryName(category, SOFTWARE_PRODUCTS_CATEGORY_NAME_KEY));
+        findAttribute(SOFTWARE_PRODUCTS_VENDOR_ATTR_ID, VENDOR_ATTRIBUTE_CODE)
+                .ifPresent(attribute -> ensureLocalizedAttributeName(attribute, SOFTWARE_PRODUCTS_VENDOR_ATTRIBUTE_NAME_KEY));
     }
 
     private void createSalesTerritoryCategoryIfNeeded() {
+        String categoryName = getDefaultLocalizedValue(SALES_TERRITORY_CATEGORY_NAME_KEY);
+        String salesAreaName = getDefaultLocalizedValue(SALES_TERRITORY_SALES_AREA_NAME_KEY);
+
         ensureCategoryWithAttribute(SALES_TERRITORY_CATEGORY_ID,
-                SALES_TERRITORY_CATEGORY_NAME,
+                categoryName,
                 Client.class.getSimpleName(),
                 SALES_TERRITORY_SALES_AREA_ATTR_ID,
-                SALES_TERRITORY_SALES_AREA_NAME,
+                salesAreaName,
                 SALES_TERRITORY_SALES_AREA_CODE);
 
+        findCategory(SALES_TERRITORY_CATEGORY_ID, categoryName, Client.class.getSimpleName())
+                .ifPresent(category -> ensureLocalizedCategoryName(category, SALES_TERRITORY_CATEGORY_NAME_KEY));
         findAttribute(SALES_TERRITORY_SALES_AREA_ATTR_ID, SALES_TERRITORY_SALES_AREA_CODE)
-                .ifPresent(this::ensureSalesAreaLocalization);
+                .ifPresent(attribute -> ensureLocalizedAttributeName(attribute, SALES_TERRITORY_SALES_AREA_NAME_KEY));
     }
 
     private void ensureCategoryWithAttribute(UUID categoryId, String categoryName, String entityType,
@@ -110,32 +130,65 @@ public class DynamicAttributesInitializer {
         dataManager.save(attribute);
     }
 
-    private void ensureSalesAreaLocalization(CategoryAttribute attribute) {
-        String localeNames = buildLocalizedNames(
-                SALES_TERRITORY_SALES_AREA_NAME,
-                "Vertriebsgebiet"
-        );
-
-        boolean changed = false;
-        if (!Objects.equals(attribute.getName(), SALES_TERRITORY_SALES_AREA_NAME)) {
-            attribute.setName(SALES_TERRITORY_SALES_AREA_NAME);
-            changed = true;
-        }
-        if (!Objects.equals(attribute.getLocaleNames(), localeNames)) {
-            attribute.setLocaleNames(localeNames);
-            changed = true;
-        }
-
-        if (changed) {
-            dataManager.save(attribute);
-        }
+    private void ensureLocalizedCategoryName(Category category, String messageKey) {
+        ensureLocalizedName(category::getName, category::getLocaleNames,
+                category::setName, category::setLocaleNames,
+                messageKey, category);
     }
 
-    private String buildLocalizedNames(String englishValue, String germanValue) {
-        Properties properties = new Properties();
-        properties.setProperty("en", englishValue);
-        properties.setProperty("de", germanValue);
-        return msgBundleTools.getMsgBundle(properties);
+    private void ensureLocalizedAttributeName(CategoryAttribute attribute, String messageKey) {
+        ensureLocalizedName(attribute::getName, attribute::getLocaleNames,
+                attribute::setName, attribute::setLocaleNames,
+                messageKey, attribute);
+    }
+
+    private void ensureLocalizedName(Supplier<String> nameSupplier,
+                                     Supplier<String> localeNamesSupplier,
+                                     Consumer<String> nameSetter,
+                                     Consumer<String> localeNamesSetter,
+                                     String messageKey,
+                                     Object entityToSave) {
+        String localeNames = buildLocaleNames(messageKey);
+        String defaultName = getDefaultLocalizedValue(messageKey);
+
+        if (Objects.equals(nameSupplier.get(), defaultName)
+                && Objects.equals(localeNamesSupplier.get(), localeNames)) {
+            return;
+        }
+
+        nameSetter.accept(defaultName);
+        localeNamesSetter.accept(localeNames);
+        dataManager.save(entityToSave);
+    }
+
+    private String buildLocaleNames(String messageKey) {
+        StringBuilder localeNames = new StringBuilder();
+
+        for (Locale locale : getAvailableLocales()) {
+            if (!localeNames.isEmpty()) {
+                localeNames.append('\n');
+            }
+
+            localeNames.append(LocaleResolver.localeToString(locale))
+                    .append('=')
+                    .append(messages.getMessage(messageKey, locale));
+        }
+
+        return localeNames.toString();
+    }
+
+    private String getDefaultLocalizedValue(String messageKey) {
+        return messages.getMessage(messageKey, getDefaultLocale());
+    }
+
+    private Locale getDefaultLocale() {
+        return getAvailableLocales().stream()
+                .findFirst()
+                .orElse(Locale.ENGLISH);
+    }
+
+    private List<Locale> getAvailableLocales() {
+        return coreProperties.getAvailableLocales();
     }
 
     private Category createCategory(UUID id, String name, String entityType) {
