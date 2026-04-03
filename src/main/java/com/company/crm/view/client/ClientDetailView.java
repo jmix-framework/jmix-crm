@@ -425,7 +425,7 @@ public class ClientDetailView extends StandardDetailView<Client> {
     }
 
     private void createOrdersByLastYearsChart() {
-        Chart chart = chartsUtils.createViewStatChart("Purchase Frequency", SeriesType.BAR)
+        Chart chart = chartsUtils.createViewStatChart(messages.getMessage("com.company.crm.view.client/analytics.purchaseFrequency"), SeriesType.BAR)
                 .withDataSet(createOrdersByLastYearsChartDataSet())
                 .withLegend(new Legend().withShow(false));
         configureAxes(chart);
@@ -433,7 +433,7 @@ public class ClientDetailView extends StandardDetailView<Client> {
     }
 
     private void createAverageOrderValueChart() {
-        Chart chart = chartsUtils.createViewStatChart("Average Order Value", SeriesType.BAR)
+        Chart chart = chartsUtils.createViewStatChart(messages.getMessage("com.company.crm.view.client/analytics.averageOrderValue"), SeriesType.BAR)
                 .withDataSet(createAverageOrderValueChartDataSet())
                 .withLegend(new Legend().withShow(false));
         configureAxes(chart);
@@ -441,7 +441,7 @@ public class ClientDetailView extends StandardDetailView<Client> {
     }
 
     private void createSalesCycleLengthChart() {
-        Chart chart = chartsUtils.createViewStatChart("Sales Cycle Length", SeriesType.BAR)
+        Chart chart = chartsUtils.createViewStatChart(messages.getMessage("com.company.crm.view.client/analytics.salesCycleLength"), SeriesType.BAR)
                 .withDataSet(createSalesCycleLengthChartDataSet())
                 .withLegend(new Legend().withShow(false));
         configureAxes(chart);

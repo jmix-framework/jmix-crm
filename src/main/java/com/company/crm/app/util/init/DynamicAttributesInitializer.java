@@ -7,6 +7,7 @@ import com.company.crm.model.client.Client;
 import io.jmix.core.Metadata;
 import io.jmix.core.UnconstrainedDataManager;
 import io.jmix.dynattr.AttributeType;
+import io.jmix.dynattr.MsgBundleTools;
 import io.jmix.dynattr.model.Category;
 import io.jmix.dynattr.model.CategoryAttribute;
 import jakarta.annotation.PostConstruct;
@@ -16,7 +17,9 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.UUID;
 
 @Component
@@ -46,11 +49,16 @@ public class DynamicAttributesInitializer {
     private final Metadata metadata;
     private final UnconstrainedDataManager dataManager;
     private final SpringProfiles springProfiles;
+    private final MsgBundleTools msgBundleTools;
 
-    public DynamicAttributesInitializer(Metadata metadata, UnconstrainedDataManager dataManager, SpringProfiles springProfiles) {
+    public DynamicAttributesInitializer(Metadata metadata,
+                                        UnconstrainedDataManager dataManager,
+                                        SpringProfiles springProfiles,
+                                        MsgBundleTools msgBundleTools) {
         this.metadata = metadata;
         this.dataManager = dataManager;
         this.springProfiles = springProfiles;
+        this.msgBundleTools = msgBundleTools;
     }
 
     @PostConstruct
@@ -81,6 +89,9 @@ public class DynamicAttributesInitializer {
                 SALES_TERRITORY_SALES_AREA_ATTR_ID,
                 SALES_TERRITORY_SALES_AREA_NAME,
                 SALES_TERRITORY_SALES_AREA_CODE);
+
+        findAttribute(SALES_TERRITORY_SALES_AREA_ATTR_ID, SALES_TERRITORY_SALES_AREA_CODE)
+                .ifPresent(this::ensureSalesAreaLocalization);
     }
 
     private void ensureCategoryWithAttribute(UUID categoryId, String categoryName, String entityType,
@@ -97,6 +108,34 @@ public class DynamicAttributesInitializer {
         log.info("Creating missing category {} with attribute {}", categoryName, attributeName);
         CategoryAttribute attribute = createAttribute(attributeId, category, entityType, attributeName, attributeCode);
         dataManager.save(attribute);
+    }
+
+    private void ensureSalesAreaLocalization(CategoryAttribute attribute) {
+        String localeNames = buildLocalizedNames(
+                SALES_TERRITORY_SALES_AREA_NAME,
+                "Vertriebsgebiet"
+        );
+
+        boolean changed = false;
+        if (!Objects.equals(attribute.getName(), SALES_TERRITORY_SALES_AREA_NAME)) {
+            attribute.setName(SALES_TERRITORY_SALES_AREA_NAME);
+            changed = true;
+        }
+        if (!Objects.equals(attribute.getLocaleNames(), localeNames)) {
+            attribute.setLocaleNames(localeNames);
+            changed = true;
+        }
+
+        if (changed) {
+            dataManager.save(attribute);
+        }
+    }
+
+    private String buildLocalizedNames(String englishValue, String germanValue) {
+        Properties properties = new Properties();
+        properties.setProperty("en", englishValue);
+        properties.setProperty("de", germanValue);
+        return msgBundleTools.getMsgBundle(properties);
     }
 
     private Category createCategory(UUID id, String name, String entityType) {

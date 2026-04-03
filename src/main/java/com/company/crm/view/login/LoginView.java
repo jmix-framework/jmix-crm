@@ -14,6 +14,7 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.VaadinSession;
 import io.jmix.core.CoreProperties;
 import io.jmix.core.MessageTools;
+import io.jmix.core.Messages;
 import io.jmix.core.security.AccessDeniedException;
 import io.jmix.flowui.DialogWindows;
 import io.jmix.flowui.component.select.JmixSelect;
@@ -62,6 +63,8 @@ public class LoginView extends StandardView implements LocaleChangeObserver {
     @ViewComponent
     private JmixButton submitBtn;
     @ViewComponent
+    private JmixButton usageBtn;
+    @ViewComponent
     private Div errorMessage;
     @ViewComponent
     private H5 errorMessageTitle;
@@ -74,6 +77,8 @@ public class LoginView extends StandardView implements LocaleChangeObserver {
     private LoginViewSupport loginViewSupport;
     @Autowired
     private MessageTools messageTools;
+    @Autowired
+    private Messages messages;
     @ViewComponent
     private MessageBundle messageBundle;
     @Autowired
@@ -163,6 +168,7 @@ public class LoginView extends StandardView implements LocaleChangeObserver {
         usernameField.setRequiredMessage(messageBundle.getMessage("loginForm.errorUsername"));
         passwordField.setLabel(messageBundle.getMessage("loginForm.password"));
         passwordField.setRequiredMessage(messageBundle.getMessage("loginForm.errorPassword"));
+        usageBtn.setText(messages.getMessage("usageHelp.buttonTitle"));
         submitBtn.setText(messageBundle.getMessage("loginForm.submit"));
     }
 }

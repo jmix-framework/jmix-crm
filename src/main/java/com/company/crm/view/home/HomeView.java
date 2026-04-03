@@ -347,7 +347,11 @@ public class HomeView extends StandardView {
             delta = (percentChange >= 0 ? "↑" : "↓") + String.format("%.2f", Math.abs(percentChange)) + "%";
         }
 
-        var statContent = new RangeStatCardInfo(range, orders.size() + " orders", delta).createDefaultContent();
+        var statContent = new RangeStatCardInfo(
+                range,
+                messageBundle.formatMessage("salesOrdersCount", orders.size()),
+                delta
+        ).createDefaultContent();
         var chartContent = createSalesFunnelChartContent(orders);
 
         return new VerticalLayout(statContent, chartContent);

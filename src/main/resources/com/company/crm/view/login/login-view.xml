@@ -11,7 +11,7 @@
                         <span text="B2B CRM" classNames="login-brand-text"/>
                     </hbox>
                     <button id="usageBtn"
-                            text="Usage scenarios" icon="vaadin:question-circle-o"
+                            text="msg:///usageHelp.buttonTitle" icon="vaadin:question-circle-o"
                             themeNames="small tertiary-inline"
                             classNames="usage-scenarios-btn"/>
                     <div id="errorMessage" classNames="login-form-error-message" visible="false">

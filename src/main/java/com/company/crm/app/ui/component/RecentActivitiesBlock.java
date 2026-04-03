@@ -162,7 +162,7 @@ public class RecentActivitiesBlock extends Div implements ApplicationContextAwar
                     SkeletonStyler.remove(scroller);
                     HasComponents scrollerContent = (HasComponents) scroller.getContent();
                     if (activities.isEmpty()) {
-                        scrollerContent.add(createEmptyRow(title));
+                        scrollerContent.add(createEmptyRow());
                     } else {
                         for (UserActivity activity : activities) {
                             Component row = createActivityRow(activity);
@@ -189,8 +189,8 @@ public class RecentActivitiesBlock extends Div implements ApplicationContextAwar
         }
     }
 
-    private static Component createEmptyRow(String title) {
-        Span span = new Span("No activities found for %s...".formatted(title.toLowerCase()));
+    private Component createEmptyRow() {
+        Span span = new Span(messages.getMessage("recentActivities.emptyState"));
         span.addClassNames(LumoUtility.Padding.Top.MEDIUM);
         return span;
     }

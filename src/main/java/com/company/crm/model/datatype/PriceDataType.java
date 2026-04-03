@@ -1,13 +1,15 @@
 package com.company.crm.model.datatype;
 
+import com.company.crm.app.util.context.AppContext;
+import io.jmix.core.Messages;
 import io.jmix.core.metamodel.annotation.DatatypeDef;
 import io.jmix.core.metamodel.annotation.Ddl;
 import io.jmix.core.metamodel.datatype.Datatype;
 import io.jmix.core.metamodel.datatype.DatatypeFormatter;
+import io.jmix.core.security.CurrentAuthentication;
 import org.apache.commons.lang3.StringUtils;
+import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 
 import java.math.BigDecimal;
 import java.text.ParseException;
@@ -21,10 +23,6 @@ import static org.apache.commons.lang3.StringUtils.substringBefore;
 @Ddl("DECIMAL(19,2)")
 public class PriceDataType implements Datatype<BigDecimal> {
 
-    @Lazy
-    @Autowired
-    private DatatypeFormatter datatypeFormatter;
-
     public static final String NAME = "price";
     private static final CurrencyPosition DEFAULT_CURRENCY_POSITION = CurrencyPosition.START;
 
@@ -33,7 +31,7 @@ public class PriceDataType implements Datatype<BigDecimal> {
     }
 
     public static String defaultFormat(Object value, DatatypeFormatter datatypeFormatter) {
-        return doFormatValueWithCurrency(value, datatypeFormatter, DEFAULT_CURRENCY_POSITION);
+        return doFormatValueWithCurrency(value, datatypeFormatter, null);
     }
 
     public enum CurrencyPosition {
@@ -42,19 +40,26 @@ public class PriceDataType implements Datatype<BigDecimal> {
 
     @Override
     public String format(@Nullable Object value) {
-        return doFormatValueWithCurrency(value, datatypeFormatter, DEFAULT_CURRENCY_POSITION);
+        return doFormatValueWithCurrency(value, getDatatypeFormatter(), null);
     }
 
     @Override
     public String format(@Nullable Object value, Locale locale) {
-        return format(value);
+        return doFormatValueWithCurrency(value, getDatatypeFormatter(), locale);
     }
 
     @Nullable
     @Override
     public BigDecimal parse(@Nullable String value) {
-        value = defaultIfBlank(substringBefore(value, getCurrencySymbol()), value);
-        value = defaultIfBlank(substringAfter(value, getCurrencySymbol()), value);
+        return parse(value, null);
+    }
+
+    @Nullable
+    @Override
+    public BigDecimal parse(@Nullable String value, Locale locale) {
+        String currencySymbol = getCurrencySymbol(locale);
+        value = defaultIfBlank(substringBefore(value, currencySymbol), value);
+        value = defaultIfBlank(substringAfter(value, currencySymbol), value);
         value = StringUtils.trim(value);
 
         if (StringUtils.isBlank(value)) {
@@ -62,30 +67,48 @@ public class PriceDataType implements Datatype<BigDecimal> {
         }
 
         try {
-            BigDecimal price = datatypeFormatter.parseBigDecimal(value);
+            BigDecimal price = getDatatypeFormatter().parseBigDecimal(value);
             return (price == null || price.compareTo(BigDecimal.ZERO) < 0) ? BigDecimal.ZERO : price;
         } catch (ParseException e) {
             return BigDecimal.ZERO;
         }
     }
 
-    @Nullable
-    @Override
-    public BigDecimal parse(@Nullable String value, Locale locale) {
-        return parse(value);
+    private static @NonNull DatatypeFormatter getDatatypeFormatter() {
+        return AppContext.getBean(DatatypeFormatter.class);
     }
 
     public static String getCurrencySymbol() {
-        return "$";
+        return getCurrencySymbol(currentLocale());
+    }
+
+    public static String getCurrencySymbol(@Nullable Locale locale) {
+        Locale effectiveLocale = locale != null ? locale : currentLocale();
+        return getMessages().getMessage("currencySymbol", effectiveLocale);
+    }
+
+    private static @NonNull Messages getMessages() {
+        return AppContext.getBean(Messages.class);
+    }
+
+    public static CurrencyPosition getCurrencyPosition(@Nullable Locale locale) {
+        Locale effectiveLocale = locale != null ? locale : currentLocale();
+        String configuredPosition = getMessages().getMessage("currencyPosition", effectiveLocale);
+
+        try {
+            return CurrencyPosition.valueOf(configuredPosition.toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException e) {
+            return DEFAULT_CURRENCY_POSITION;
+        }
     }
 
     private static String doFormatValueWithCurrency(Object value,
                                                     DatatypeFormatter datatypeFormatter,
-                                                    CurrencyPosition currencyPosition) {
+                                                    @Nullable Locale locale) {
         String withoutCurrency = formatWithoutCurrency(value, datatypeFormatter);
-        return switch (currencyPosition) {
-            case START -> getCurrencySymbol() + withoutCurrency;
-            case END -> withoutCurrency + getCurrencySymbol();
+        return switch (getCurrencyPosition(locale)) {
+            case START -> getCurrencySymbol(locale) + withoutCurrency;
+            case END -> withoutCurrency + getCurrencySymbol(locale);
         };
     }
 
@@ -118,5 +141,9 @@ public class PriceDataType implements Datatype<BigDecimal> {
             throw new IllegalStateException("Unsupported value type for price formatting: " + value.getClass().getName());
         }
         return decimalValue;
+    }
+
+    private static Locale currentLocale() {
+        return AppContext.getBean(CurrentAuthentication.class).getLocale();
     }
 }
