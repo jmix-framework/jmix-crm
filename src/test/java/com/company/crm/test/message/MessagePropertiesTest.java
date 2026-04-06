@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class MessagePropertiesTest {
 
-    private static final int EXPECTED_LOCALIZED_MESSAGE_FILES = 3;
+    private static final int EXPECTED_LOCALIZED_MESSAGE_FILES = 5;
     private static final Pattern LOCALIZED_MESSAGES_FILENAME = Pattern.compile("messages_(.+)\\.properties");
 
     @Test
