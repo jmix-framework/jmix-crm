@@ -1,6 +1,6 @@
-# ![CRM](src/main/resources/META-INF/resources/images/logo.svg) B2B CRM
+# ![CRM](../src/main/resources/META-INF/resources/images/logo.svg) B2B CRM
 
-Idiomas: [English](README.md) | [Русский](README_ru.md) | [Deutsch](README_de.md) | [Italiano](README_it.md) | [Español](README_es.md)
+Idiomas: [English](../README.md) | [Русский](README_ru.md) | [Deutsch](README_de.md) | [Italiano](README_it.md) | [Español](README_es.md) | [Tiếng Việt](README_vi.md) | [Српски](README_sr.md)
 
 `B2B CRM` es una demo de aplicación empresarial creada con Jmix que muestra cómo desarrollar sistemas de negocio **listos para su puesta en producción**
 para `clientes`, `pedidos`, `facturación`, `finanzas` y `analítica`. <br>Refleja escenarios reales **ERP/CRM** y demuestra
@@ -54,7 +54,7 @@ Requisitos: Java 21+
 
 ### Para ejecutar el proyecto
 
-1. Ejecuta la configuración Jmix [B2B CRM](.run/crm-app.run.xml) o ejecuta
+1. Ejecuta la configuración Jmix [B2B CRM](../.run/crm-app.run.xml) o ejecuta
 
    ```bash
    ./gradlew bootRun
@@ -103,7 +103,7 @@ Capacidades principales:
 
 Configuración:
 
-- Define `spring.ai.openai.api-key` en [application.properties](src/main/resources/application.properties) o proporciona la variable de entorno `SPRING_AI_OPENAI_APIKEY`
+- Define `spring.ai.openai.api-key` en [application.properties](../src/main/resources/application.properties) o proporciona la variable de entorno `SPRING_AI_OPENAI_APIKEY`
 
 Cuando esté habilitado, abre el elemento `CRM AI` en el menú principal para iniciar una nueva conversación.
 
@@ -112,8 +112,8 @@ Cuando esté habilitado, abre el elemento `CRM AI` en el menú principal para in
 El perfil local genera datos demo al iniciar la aplicación:
 
 - Puedes desactivar la generación de datos demo con la propiedad `crm.generateDemoData`
-  en [application.properties](src/main/resources/application.properties)
-- El catálogo se importa desde [catalog.xlsx](src/main/resources/demo-data/catalog.xlsx)
+  en [application.properties](../src/main/resources/application.properties)
+- El catálogo se importa desde [catalog.xlsx](../src/main/resources/demo-data/catalog.xlsx)
 
 ## 👥 Cuentas de la aplicación
 

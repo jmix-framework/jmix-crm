@@ -1,6 +1,6 @@
-# ![CRM](src/main/resources/META-INF/resources/images/logo.svg) B2B CRM
+# ![CRM](../src/main/resources/META-INF/resources/images/logo.svg) B2B CRM
 
-Языки: [English](README.md) | [Русский](README_ru.md) | [Deutsch](README_de.md) | [Italiano](README_it.md) | [Español](README_es.md)
+Языки: [English](../README.md) | [Русский](README_ru.md) | [Deutsch](README_de.md) | [Italiano](README_it.md) | [Español](README_es.md) | [Tiếng Việt](README_vi.md) | [Српски](README_sr.md)
 
 `B2B CRM` — корпоративное демонстрационное приложение на Jmix, показывающее, как разрабатывать **готовые к production** бизнес-системы
 для работы с `клиентами`, `заказами`, `счетами`, `финансами` и `аналитикой`. <br>Оно отражает реальные сценарии **ERP/CRM** и демонстрирует
@@ -54,7 +54,7 @@
 
 ### Запуск проекта
 
-1. Запустите Jmix run configuration [B2B CRM](.run/crm-app.run.xml) или выполните команду
+1. Запустите Jmix run configuration [B2B CRM](../.run/crm-app.run.xml) или выполните команду
 
    ```bash
    ./gradlew bootRun
@@ -103,7 +103,7 @@ docker-compose up
 
 Настройка:
 
-- Укажите `spring.ai.openai.api-key` в [application.properties](src/main/resources/application.properties) или передайте переменную окружения `SPRING_AI_OPENAI_APIKEY`
+- Укажите `spring.ai.openai.api-key` в [application.properties](../src/main/resources/application.properties) или передайте переменную окружения `SPRING_AI_OPENAI_APIKEY`
 
 После включения откройте пункт `CRM AI` в главном меню, чтобы начать новый диалог.
 
