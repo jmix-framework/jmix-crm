@@ -1,54 +1,41 @@
 package com.company.crm.ai.view.aiconversation;
 
 import com.company.crm.ai.config.CrmAiConfig;
-import com.company.crm.ai.model.AiAttachmentType;
 import com.company.crm.ai.model.AiConversation;
-import com.company.crm.ai.model.AiConversationAttachment;
+import com.company.crm.ai.model.AiPromptSuggestionDto;
+import com.company.crm.ai.model.AiUiStatusUpdate;
 import com.company.crm.ai.model.ChatMessage;
 import com.company.crm.ai.model.ChatMessageType;
-import com.company.crm.ai.service.CrmAnalyticsService;
-import com.company.crm.app.service.storage.CrmFileStorage;
-import com.company.crm.app.ui.component.GridEmptyStateComponent;
+import com.company.crm.ai.service.AiConversationStartService;
+import com.company.crm.ai.service.PendingAttachmentInput;
 import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.view.main.MainView;
 import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.Component;
-import com.vaadin.flow.component.messages.MessageInput;
-import com.vaadin.flow.component.messages.MessageList;
-import com.vaadin.flow.component.messages.MessageListItem;
+import com.vaadin.flow.component.card.Card;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.progressbar.ProgressBar;
-import com.vaadin.flow.component.upload.FileRejectedEvent;
-import com.vaadin.flow.component.upload.SucceededEvent;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.Route;
 import io.jmix.core.DataManager;
-import io.jmix.core.FileRef;
-import io.jmix.core.FileStorage;
-import io.jmix.core.FileStorageLocator;
-import io.jmix.core.Messages;
-import io.jmix.core.MetadataTools;
 import io.jmix.core.TimeSource;
 import io.jmix.core.security.CurrentAuthentication;
 import io.jmix.flowui.Dialogs;
+import io.jmix.flowui.Fragments;
 import io.jmix.flowui.Notifications;
 import io.jmix.flowui.UiComponents;
-import io.jmix.flowui.app.inputdialog.DialogActions;
-import io.jmix.flowui.app.inputdialog.DialogOutcome;
-import io.jmix.flowui.app.inputdialog.InputParameter;
-import io.jmix.flowui.asynctask.UiAsyncTasks;
-import io.jmix.flowui.component.upload.JmixUpload;
-import io.jmix.flowui.component.upload.receiver.FileTemporaryStorageBuffer;
-import io.jmix.flowui.component.upload.receiver.TemporaryStorageFileData;
+import io.jmix.flowui.component.gridlayout.GridLayout;
+import io.jmix.flowui.component.sidepanellayout.SidePanelLayout;
+import io.jmix.flowui.component.virtuallist.JmixVirtualList;
 import io.jmix.flowui.kit.component.button.JmixButton;
 import io.jmix.flowui.model.CollectionContainer;
-import io.jmix.flowui.model.CollectionLoader;
 import io.jmix.flowui.model.InstanceContainer;
 import io.jmix.flowui.model.InstanceLoader;
-import io.jmix.flowui.upload.TemporaryStorage;
 import io.jmix.flowui.view.EditedEntityContainer;
 import io.jmix.flowui.view.MessageBundle;
+import io.jmix.flowui.view.PrimaryDetailView;
 import io.jmix.flowui.view.StandardDetailView;
 import io.jmix.flowui.view.Subscribe;
+import io.jmix.flowui.view.Supply;
 import io.jmix.flowui.view.Target;
 import io.jmix.flowui.view.ViewComponent;
 import io.jmix.flowui.view.ViewController;
@@ -56,17 +43,21 @@ import io.jmix.flowui.view.ViewDescriptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
+import org.springframework.security.core.userdetails.UserDetails;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Route(value = "ai-conversations/:id", layout = MainView.class)
 @ViewController(id = CrmConstants.ViewIds.AI_CONVERSATION_DETAIL)
 @ViewDescriptor(path = "ai-conversation-detail-view.xml")
 @EditedEntityContainer("aiConversationDc")
+@PrimaryDetailView(AiConversation.class)
 public class AiConversationDetailView extends StandardDetailView<AiConversation> {
 
     private static final Logger log = LoggerFactory.getLogger(AiConversationDetailView.class);
@@ -74,36 +65,40 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
     @ViewComponent
     private InstanceContainer<AiConversation> aiConversationDc;
     @ViewComponent
-    private CollectionContainer<AiConversationAttachment> attachmentsDc;
+    private CollectionContainer<AiPromptSuggestionDto> promptSuggestionsDc;
     @ViewComponent
-    private CollectionLoader<AiConversationAttachment> attachmentsDl;
+    private VerticalLayout timelineContentLayout;
     @ViewComponent
-    private VerticalLayout chatPanel;
+    private VerticalLayout composerContainer;
     @ViewComponent
-    private VerticalLayout attachmentsPanel;
+    private Component promptSuggestionsHeading;
     @ViewComponent
-    private Component attachmentsGridLayout;
+    private GridLayout<AiPromptSuggestionDto> promptSuggestionsGridLayout;
     @ViewComponent
-    private JmixUpload attachmentUpload;
+    private Component topSpacer;
+    @ViewComponent
+    private Component bottomSpacer;
+    @ViewComponent
+    private JmixButton attachmentsToggleBtn;
+    @ViewComponent
+    private SidePanelLayout contextSidePanel;
+    @ViewComponent
+    private VerticalLayout contextSidePanelContent;
     @ViewComponent
     private MessageBundle messageBundle;
+    @ViewComponent
+    private JmixButton editConversationTitleBtn;
 
     @Autowired
-    private CrmAnalyticsService crmAnalyticsService;
+    private AiConversationStartService aiConversationStartService;
     @Autowired
     private CurrentAuthentication currentAuthentication;
-    @Autowired
-    private UiAsyncTasks uiAsyncTasks;
     @Autowired
     private UiComponents uiComponents;
     @Autowired
     private TimeSource timeSource;
     @Autowired
-    private MetadataTools metadataTools;
-    @Autowired
     private Dialogs dialogs;
-    @Autowired
-    private Messages messages;
     @Autowired
     private DataManager dataManager;
     @Autowired
@@ -111,14 +106,25 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
     @Autowired
     private Notifications notifications;
     @Autowired
-    private TemporaryStorage temporaryStorage;
+    private Fragments fragments;
     @Autowired
-    private FileStorageLocator fileStorageLocator;
+    private AssistantResponseTaskCoordinator assistantResponseTaskCoordinator;
+    @Autowired
+    private ConversationContextPanelSupport contextPanelSupport;
+    @Autowired
+    private PendingAssistantResponseSupport pendingAssistantResponseSupport;
 
-    private MessageList messageList;
-    private MessageInput messageInput;
-    private ProgressBar progressBar;
-    private GridEmptyStateComponent attachmentsEmptyState;
+    private JmixVirtualList<TimelineItem> timelineList;
+    private AiConversationComposerFragment composerFragment;
+    private TimelineItem activeThinkingItem;
+    private AiConversationTimelineRenderer timelineRenderer;
+    private PromptSuggestionSupport promptSuggestionSupport;
+    private ConversationTitleEditDialog titleEditDialog;
+    private UUID freshAssistantMessageId;
+    private final AiConversationTimelineItemFactory timelineItemFactory = new AiConversationTimelineItemFactory();
+    private List<TimelineItem> timelineItems = List.of();
+    private List<String> initialEntityReferences = List.of();
+    private boolean initialEntityReferencesApplied;
 
     @Subscribe
     public void onInit(final InitEvent event) {
@@ -127,7 +133,6 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
 
     @Subscribe
     public void onReady(final ReadyEvent event) {
-
         setShowSaveNotification(false);
 
         if (!crmAiConfig.isAiIntegrationEnabled()) {
@@ -135,398 +140,472 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
                     .withType(Notifications.Type.ERROR)
                     .withDuration(0)
                     .show();
-            messageInput.setEnabled(false);
+            composerFragment.setInputEnabled(false);
         }
 
-        loadAttachments();
-        refreshMessages();
+        applyInitialEntityReferencesIfNeeded();
+        refreshTimelineItems();
+        refreshPromptSuggestions();
+        refreshComposerState();
+        refreshAttachmentsToggleLabel();
         focusInput();
+        triggerPendingAssistantResponseIfNeeded();
     }
 
     @Subscribe(id = "aiConversationDl", target = Target.DATA_LOADER)
     public void onAiConversationDlPostLoad(final InstanceLoader.PostLoadEvent<AiConversation> event) {
-        loadAttachments();
-        refreshMessages();
+        applyInitialEntityReferencesIfNeeded();
+        refreshTimelineItems();
+        refreshPromptSuggestions();
+        refreshComposerState();
+        refreshAttachmentsToggleLabel();
     }
 
-    @Subscribe(id = "attachmentsDl", target = Target.DATA_LOADER)
-    public void onAttachmentsDlPostLoad(final CollectionLoader.PostLoadEvent<AiConversationAttachment> event) {
-        updateAttachmentsEmptyState();
-    }
-
-    @Subscribe("attachmentUpload")
-    public void onAttachmentUploadSucceeded(final SucceededEvent event) {
-        AiConversation conversation = aiConversationDc.getItemOrNull();
-        TemporaryStorageFileData uploadedFileData = resolveUploadedFileData(event);
-
-        if (conversation == null) {
-            removeTemporaryUpload(uploadedFileData);
-            attachmentUpload.clearFileList();
-            notifications.create(messageBundle.getMessage("attachmentUploadNoConversation"))
-                    .withType(Notifications.Type.ERROR)
-                    .show();
-            return;
-        }
-
-        String uploadedFileName = resolveUploadedFileName(
-                event.getFileName(),
-                uploadedFileData != null ? uploadedFileData.getFileName() : null
-        );
-        FileRef uploadedFileRef = moveUploadedFileToStorage(uploadedFileData, uploadedFileName);
-        if (uploadedFileRef == null) {
-            attachmentUpload.clearFileList();
-            notifications.create(messageBundle.getMessage("attachmentUploadMissingFile"))
-                    .withType(Notifications.Type.ERROR)
-                    .show();
-            return;
-        }
-
-        try {
-            markConversationStartedIfNeeded(conversation);
-
-            AiConversationAttachment attachment = dataManager.create(AiConversationAttachment.class);
-            attachment.setConversation(conversation);
-            attachment.setFile(uploadedFileRef);
-            attachment.setFileName(uploadedFileName);
-            attachment.setTitle(uploadedFileName);
-            attachment.setType(AiAttachmentType.USER_UPLOADED);
-            attachment = dataManager.save(attachment);
-
-            attachmentUpload.clearFileList();
-            loadAttachments();
-
-            String actorName = resolveCurrentActorName();
-            String uploadEventText = buildUploadEventText(actorName, uploadedFileName);
-            messageList.addItem(userUploadMessageListItem(uploadEventText, now()));
-            submitUploadToAi(conversation, attachment, event.getMIMEType(), uploadedFileName, actorName);
-        } catch (Exception e) {
-            removeTemporaryUpload(uploadedFileData);
-            attachmentUpload.clearFileList();
-            log.error("Failed to persist uploaded attachment", e);
-            notifications.create(messageBundle.getMessage("attachmentUploadPersistError"))
-                    .withType(Notifications.Type.ERROR)
-                    .show();
-        }
-    }
-
-    @Subscribe("attachmentUpload")
-    public void onAttachmentUploadFileRejected(final FileRejectedEvent event) {
-        notifications.create(event.getErrorMessage())
-                .withType(Notifications.Type.WARNING)
-                .show();
+    public void setInitialEntityReferences(Collection<String> entityReferences) {
+        this.initialEntityReferences = entityReferences != null ? List.copyOf(entityReferences) : List.of();
+        this.initialEntityReferencesApplied = false;
     }
 
     @Subscribe("editConversationTitleBtn")
     public void onEditConversationTitleBtnClick(final ClickEvent<JmixButton> event) {
-        AiConversation conversation = aiConversationDc.getItemOrNull();
-        if (conversation == null) {
-            return;
-        }
-
-        String currentTitle = conversation.getTitle() == null ? "" : conversation.getTitle();
-
-        dialogs.createInputDialog(this)
-                .withHeader(messageBundle.getMessage("editConversationTitleDialog.header"))
-                .withLabelsPosition(Dialogs.InputDialogBuilder.LabelsPosition.TOP)
-                .withParameters(
-                        InputParameter.stringParameter("title")
-                                .withLabel(messageBundle.getMessage("editConversationTitleDialog.titleField"))
-                                .withRequired(true)
-                                .withDefaultValue(currentTitle)
-                )
-                .withActions(DialogActions.OK_CANCEL)
-                .withCloseListener(closeEvent -> {
-                    if (!closeEvent.closedWith(DialogOutcome.OK)) {
-                        return;
-                    }
-
-                    String updatedTitle = closeEvent.getValue("title");
-                    if (updatedTitle == null || updatedTitle.isBlank()) {
-                        return;
-                    }
-
-                    String sanitizedTitle = updatedTitle.trim();
-                    AiConversation editableConversation = aiConversationDc.getItemOrNull();
-                    if (editableConversation == null) {
-                        return;
-                    }
-
-                    editableConversation.setTitle(sanitizedTitle);
+        titleEditDialog().open(this, aiConversationDc.getItem(), () -> {
                     getViewData().getDataContext().save();
-
                     reloadViewData();
-                })
-                .open();
+                }
+        );
     }
 
-    private void onMessageSubmit(MessageInput.SubmitEvent event) {
-        String userMessage = event.getValue();
+    @Subscribe("attachmentsToggleBtn")
+    public void onAttachmentsToggleBtnClick(final ClickEvent<JmixButton> event) {
+        renderContextSidePanel();
+        contextSidePanel.openSidePanel();
+    }
+
+    private void submitUserMessageFromComposer(AiConversationComposerFragment.Submission submission) {
+        submitUserMessage(submission.prompt(), submission.entityReferences(), submission.attachments());
+    }
+
+    private void submitUserMessage(String userMessage) {
+        submitUserMessage(userMessage, composerFragment.entityReferences(), composerFragment.attachments());
+    }
+
+    private void submitUserMessage(String userMessage,
+                                   List<String> entityReferences,
+                                   List<PendingAttachmentInput> attachments) {
         if (userMessage == null || userMessage.trim().isEmpty()) {
             return;
         }
 
-        AiConversation conversation = aiConversationDc.getItemOrNull();
-        if (conversation == null) {
-            log.warn("Cannot submit message: AiConversation item is null or has no ID");
-            return;
-        }
+        AiConversation conversation = aiConversationDc.getItem();
 
+        ChatMessage savedUserMessage;
         try {
-            markConversationStartedIfNeeded(conversation);
+            savedUserMessage = aiConversationStartService.createUserMessageAndEnsureStarted(
+                    conversation,
+                    userMessage.trim(),
+                    entityReferences,
+                    attachments
+            );
+            refreshPromptSuggestions();
         } catch (Exception e) {
-            log.error("Failed to mark conversation as started before message submit", e);
-            notifications.create("Failed to start conversation. Please try again.")
+            log.error("Failed to persist user message with context", e);
+            notifications.create(messageBundle.getMessage("errorProcessingMessage"))
                     .withType(Notifications.Type.ERROR)
                     .show();
             return;
         }
 
-        messageList.addItem(userMessageListItem(userMessage, now()));
+        appendTimelineItem(TimelineItem.user(savedUserMessage));
+        composerFragment.clear();
+        refreshComposerState();
 
-        progressBar.setVisible(true);
-        messageInput.setEnabled(false);
+        showThinkingIndicator();
+        composerFragment.setInputEnabled(false);
+        promptSuggestionsGridLayout.setEnabled(false);
 
-        uiAsyncTasks.supplierConfigurer(() ->
-                        crmAnalyticsService.processBusinessQuestion(userMessage, conversation.getId().toString())
-                )
-                .withResultHandler(response -> {
-                    messageList.addItem(assistantMessageListItem(response, now()));
-                    reloadViewData();
-                    focusInput();
-                })
-                .withExceptionHandler(e -> {
-                    log.error("Error processing message async", e);
-                    messageList.addItem(assistantMessageListItem(messageBundle.getMessage("errorProcessingMessage"), now()));
-                    focusInput();
-                })
-                .supplyAsync();
+        runAssistantResponseTask(savedUserMessage);
     }
 
-    private void submitUploadToAi(
-            AiConversation conversation,
-            AiConversationAttachment attachment,
-            String mimeType,
-            String uploadedFileName,
-            String actorName
-    ) {
-        progressBar.setVisible(true);
-        messageInput.setEnabled(false);
-
-        uiAsyncTasks.supplierConfigurer(() ->
-                        crmAnalyticsService.processAttachmentUpload(
-                                conversation.getId().toString(),
-                                attachment.getId(),
-                                uploadedFileName,
-                                mimeType,
-                                actorName
-                        )
-                )
-                .withResultHandler(response -> {
-                    messageList.addItem(assistantMessageListItem(response, now()));
-                    reloadViewData();
-                    focusInput();
-                })
-                .withExceptionHandler(e -> {
-                    log.error("Error processing attachment upload async", e);
-                    messageList.addItem(assistantMessageListItem(messageBundle.getMessage("errorProcessingAttachment"), now()));
-                    focusInput();
-                })
-                .supplyAsync();
-    }
-
-    private void loadAttachments() {
-        AiConversation conversation = aiConversationDc.getItemOrNull();
-        if (conversation == null) {
-            attachmentsDl.setParameter("conversationId", null);
-            attachmentsDc.setItems(List.of());
-            updateAttachmentsEmptyState();
-            return;
-        }
-        attachmentsDl.setParameter("conversationId", conversation.getId());
-        attachmentsDl.load();
-    }
-
-    private void updateAttachmentsEmptyState() {
-        if (attachmentsEmptyState == null) {
-            return;
-        }
-        boolean empty = attachmentsDc.getItems().isEmpty();
-        attachmentsEmptyState.setVisible(empty);
-        attachmentsGridLayout.setVisible(!empty);
-    }
-
-    private void refreshMessages() {
-        AiConversation conversation = aiConversationDc.getItemOrNull();
-        if (messageList == null || conversation == null) {
-            return;
-        }
-
-        List<ChatMessage> chatMessages = Optional.ofNullable(conversation.getMessages()).orElse(List.of());
-        List<MessageListItem> messageListItems = chatMessages.stream()
-                .map(this::createMessageListItem)
-                .toList();
-        messageList.setItems(messageListItems);
-    }
-
-    private void reloadViewData() {
-        prepareAttachmentsLoaderParameter();
-        getViewData().loadAll();
-        loadAttachments();
-        refreshMessages();
-    }
-
-    private void prepareAttachmentsLoaderParameter() {
-        AiConversation conversation = aiConversationDc.getItemOrNull();
-        UUID conversationId = conversation != null ? conversation.getId() : null;
-        attachmentsDl.setParameter("conversationId", conversationId);
-    }
-
-    private void markConversationStartedIfNeeded(AiConversation conversation) {
-        if (Boolean.TRUE.equals(conversation.getFirstMessageSent())) {
-            return;
-        }
-        conversation.setFirstMessageSent(true);
-        getViewData().getDataContext().save();
-    }
-
-    private MessageListItem createMessageListItem(ChatMessage message) {
-        ChatMessageType messageType = message.getType();
-        if (ChatMessageType.ASSISTANT.equals(messageType)) {
-            return assistantMessageListItem(message.getContent(), message.getCreatedDate());
-        }
-        if (ChatMessageType.USER_UPLOAD.equals(messageType) || ChatMessageType.ATTACHMENT.equals(messageType)) {
-            return userUploadMessageListItem(message.getContent(), message.getCreatedDate());
-        }
-        return userMessageListItem(message.getContent(), message.getCreatedDate());
-    }
-
-    private MessageListItem assistantMessageListItem(String content, OffsetDateTime createdAt) {
-        MessageListItem item = new MessageListItem(content, createdAt.toInstant(), messageBundle.getMessage("assistantName"));
-        item.setUserColorIndex(2);
-        return item;
-    }
-
-    private MessageListItem userMessageListItem(String content, OffsetDateTime createdAt) {
-        UserDetails user = currentAuthentication.getUser();
-        String userName = resolveCurrentActorName();
-        MessageListItem item = new MessageListItem(content, createdAt.toInstant(), userName);
-        item.setUserAbbreviation(user.getUsername().substring(0, 1));
-        item.setUserColorIndex(1);
-        return item;
-    }
-
-    private MessageListItem userUploadMessageListItem(String content, OffsetDateTime createdAt) {
-        MessageListItem item = new MessageListItem(content, createdAt.toInstant(), messageBundle.getMessage("uploadEventName"));
-        item.setUserAbbreviation("AT");
-        item.addClassNames("attachment-event");
-        return item;
-    }
-
-    private OffsetDateTime now() {
-        return timeSource.now().toOffsetDateTime();
-    }
-
-    private String resolveUploadedFileName(String fileNameFromEvent, String fileNameFromBuffer) {
-        if (fileNameFromEvent != null && !fileNameFromEvent.isBlank()) {
-            return fileNameFromEvent;
-        }
-        if (fileNameFromBuffer != null && !fileNameFromBuffer.isBlank()) {
-            return fileNameFromBuffer;
-        }
-        return "uploaded-file";
-    }
-
-    private FileRef moveUploadedFileToStorage(TemporaryStorageFileData uploadedFileData, String uploadedFileName) {
-        if (uploadedFileData == null) {
-            return null;
-        }
-        FileStorage fileStorage = fileStorageLocator.getByName(CrmFileStorage.STORAGE_NAME);
-        return temporaryStorage.putFileIntoStorage(
-                uploadedFileData.getFileInfo().getId(),
-                uploadedFileName,
-                fileStorage
+    private void runAssistantResponseTask(ChatMessage savedUserMessage) {
+        assistantResponseTaskCoordinator.run(
+                this,
+                aiConversationDc.getItem(),
+                savedUserMessage,
+                this::appendThinkingStatusUpdate,
+                this::handleAssistantResponseDone,
+                this::showAssistantProcessingError
         );
     }
 
-    private TemporaryStorageFileData resolveUploadedFileData(SucceededEvent event) {
-        if (event.getUpload().getReceiver() instanceof FileTemporaryStorageBuffer storageBuffer) {
-            return storageBuffer.getFileData();
+    private void handleAssistantResponseDone(ChatMessage finalMessage) {
+        // Tools can persist attachments in a separate transaction, so the view's
+        // data container is stale here and needs a full reload.
+        if (finalMessage != null) {
+            freshAssistantMessageId = finalMessage.getId();
         }
-        return null;
+        activeThinkingItem = null;
+        getViewData().loadAll();
+        focusInput();
     }
 
-    private void removeTemporaryUpload(TemporaryStorageFileData uploadedFileData) {
-        if (uploadedFileData == null) {
+    private void showAssistantProcessingError() {
+        removeThinkingIndicator();
+        appendTimelineItem(TimelineItem.assistant(transientMessage(
+                messageBundle.getMessage("errorProcessingMessage"),
+                ChatMessageType.ASSISTANT
+        )));
+        focusInput();
+    }
+
+    private void showThinkingIndicator() {
+        ChatMessage placeholder = transientMessage("", ChatMessageType.ASSISTANT);
+        activeThinkingItem = TimelineItem.thinking(placeholder);
+        appendTimelineItem(activeThinkingItem);
+    }
+
+    private void appendThinkingStatusUpdate(AiUiStatusUpdate statusUpdate) {
+        if (activeThinkingItem == null || statusUpdate == null || statusUpdate.message() == null || statusUpdate.message().isBlank()) {
             return;
         }
-        try {
-            temporaryStorage.deleteFile(uploadedFileData.getFileInfo().getId());
-        } catch (Exception e) {
-            log.warn("Failed to cleanup temporary upload {}", uploadedFileData.getFileInfo().getId(), e);
+
+        List<AiUiStatusUpdate> statusUpdates = activeThinkingItem.statusUpdates();
+        if (!statusUpdates.isEmpty()) {
+            AiUiStatusUpdate last = statusUpdates.get(statusUpdates.size() - 1);
+            // Only fold into the last entry if it is still in-flight (no result yet).
+            // A completed entry with the same base message belongs to a previous tool
+            // call and must not swallow a fresh start phrase for the next call.
+            if (last.message().equals(statusUpdate.message()) && !last.isCompleted()) {
+                if (statusUpdate.isCompleted()) {
+                    statusUpdates.set(statusUpdates.size() - 1, statusUpdate);
+                    refreshTimelineItem(activeThinkingItem);
+                    scrollToBottom();
+                }
+                return;
+            }
+        }
+
+        statusUpdates.add(statusUpdate);
+        if (statusUpdates.size() > 6) {
+            statusUpdates.remove(0);
+        }
+        refreshTimelineItem(activeThinkingItem);
+        scrollToBottom();
+    }
+
+    private void refreshTimelineItem(TimelineItem item) {
+        if (timelineList != null && timelineList.getDataProvider() != null) {
+            timelineList.getDataProvider().refreshItem(item);
         }
     }
 
-    private String buildUploadEventText(String actorName, String uploadedFileName) {
-        return messageBundle.formatMessage("attachmentUploadEventMessage", actorName, uploadedFileName);
+    private void removeThinkingIndicator() {
+        if (activeThinkingItem == null) {
+            return;
+        }
+        freshAssistantMessageId = null;
+        List<TimelineItem> updatedItems = new ArrayList<>(timelineItems);
+        updatedItems.remove(activeThinkingItem);
+        timelineItems = updatedItems;
+        if (timelineList != null) {
+            timelineList.setItems(timelineItems);
+        }
+        activeThinkingItem = null;
     }
 
-    private String resolveCurrentActorName() {
-        UserDetails user = currentAuthentication.getUser();
-        String userName = metadataTools.getInstanceName(user);
-        if (!userName.isBlank()) {
-            return userName;
+    private void reloadViewData() {
+        // Title-edit and similar non-AI reloads should not re-animate a previously fresh
+        // assistant row, so clear the marker before the rebuild.
+        freshAssistantMessageId = null;
+        getViewData().loadAll();
+        refreshTimelineItems();
+        refreshPromptSuggestions();
+        refreshComposerState();
+        refreshAttachmentsToggleLabel();
+    }
+
+    private void refreshTimelineItems() {
+        if (timelineList == null) {
+            return;
         }
-        return user.getUsername() != null && !user.getUsername().isBlank()
-                ? user.getUsername()
-                : "User";
+        timelineItems = timelineItemFactory.buildTimelineItems(aiConversationDc.getItem());
+        timelineList.setItems(timelineItems);
+        scrollToBottom();
+    }
+
+    private void appendTimelineItem(TimelineItem item) {
+        freshAssistantMessageId = null;
+        List<TimelineItem> updatedItems = new ArrayList<>(timelineItems);
+        updatedItems.add(item);
+        timelineItems = updatedItems;
+        timelineList.setItems(timelineItems);
+        scrollToBottom();
+    }
+
+    private void scrollToBottom() {
+        if (timelineList != null && !timelineItems.isEmpty()) {
+            timelineList.scrollToIndex(timelineItems.size() - 1);
+        }
+    }
+
+    private void refreshPromptSuggestions() {
+        AiConversation conversation = aiConversationDc.getItem();
+
+        if (Boolean.TRUE.equals(conversation.getFirstMessageSent()) || hasInitialEntityReferences()) {
+            promptSuggestionsDc.setItems(List.of());
+            promptSuggestionsHeading.setVisible(false);
+            promptSuggestionsGridLayout.setVisible(false);
+            return;
+        }
+
+        if (promptSuggestionsDc.getItems().isEmpty()) {
+            promptSuggestionsDc.setItems(promptSuggestionSupport().selectInitialSuggestions());
+        }
+
+        boolean hasSuggestions = !promptSuggestionsDc.getItems().isEmpty();
+        promptSuggestionsHeading.setVisible(hasSuggestions);
+        promptSuggestionsGridLayout.setVisible(hasSuggestions);
+        promptSuggestionsGridLayout.setEnabled(crmAiConfig.isAiIntegrationEnabled());
+    }
+
+    private void refreshComposerState() {
+        if (isReadOnly()) {
+            if (editConversationTitleBtn != null) {
+                editConversationTitleBtn.setVisible(false);
+            }
+            composerContainer.setVisible(false);
+            topSpacer.setVisible(false);
+            bottomSpacer.setVisible(false);
+            promptSuggestionsHeading.setVisible(false);
+            promptSuggestionsGridLayout.setVisible(false);
+
+            if (timelineContentLayout != null) {
+                timelineContentLayout.setFlexGrow(1, timelineList);
+                timelineContentLayout.setFlexGrow(0, topSpacer);
+                timelineContentLayout.setFlexGrow(0, composerContainer);
+                timelineContentLayout.setFlexGrow(0, bottomSpacer);
+            }
+
+            if (timelineList != null) {
+                timelineList.setHeightFull();
+            }
+
+            refreshContentWidth();
+            return;
+        }
+
+        boolean conversationStarted = isConversationStarted();
+        boolean hasPromptSuggestions = !promptSuggestionsDc.getItems().isEmpty();
+
+        topSpacer.setVisible(!conversationStarted);
+        bottomSpacer.setVisible(!conversationStarted);
+        promptSuggestionsHeading.setVisible(!conversationStarted && hasPromptSuggestions);
+        promptSuggestionsGridLayout.setVisible(!conversationStarted && hasPromptSuggestions);
+
+        if (timelineContentLayout != null) {
+            timelineContentLayout.setFlexGrow(conversationStarted ? 1 : 0, timelineList);
+            timelineContentLayout.setFlexGrow(conversationStarted ? 0 : 0.75, topSpacer);
+            timelineContentLayout.setFlexGrow(0, composerContainer);
+            timelineContentLayout.setFlexGrow(conversationStarted ? 0 : 1.25, bottomSpacer);
+        }
+
+        if (composerFragment != null) {
+            var inputBar = composerFragment.getInputBar();
+            var messageInput = composerFragment.getMessageInput();
+            if (inputBar != null && messageInput != null) {
+                inputBar.setFlexGrow(1, messageInput);
+            }
+        }
+
+        if (timelineList != null) {
+            timelineList.setHeightFull();
+            if (!conversationStarted) {
+                timelineList.setHeight(null);
+            }
+        }
+
+        refreshContentWidth();
+    }
+
+    private void refreshContentWidth() {
+        if (timelineList == null || composerFragment == null) {
+            return;
+        }
+
+        var messageInput = composerFragment.getMessageInput();
+        var pendingContextLayout = composerFragment.getPendingContextLayout();
+        var inputBar = composerFragment.getInputBar();
+        var attachmentUpload = composerFragment.getAttachmentUpload();
+        var addMenuBar = composerFragment.getAddMenuBar();
+
+        if (messageInput == null || pendingContextLayout == null || inputBar == null 
+                || attachmentUpload == null || addMenuBar == null) {
+            return;
+        }
+
+        timelineList.getStyle().set("width", "100%");
+        pendingContextLayout.getStyle().set("width", "100%");
+        inputBar.getStyle().set("width", "100%");
+
+        attachmentUpload.getStyle().set("width", "auto");
+        addMenuBar.getStyle().set("flex-shrink", "0");
+    }
+
+    private void applyInitialEntityReferencesIfNeeded() {
+        if (initialEntityReferencesApplied || initialEntityReferences.isEmpty()) {
+            return;
+        }
+
+        composerFragment.addEntityReferences(initialEntityReferences);
+        initialEntityReferencesApplied = true;
+    }
+
+    private boolean hasInitialEntityReferences() {
+        return !initialEntityReferences.isEmpty() || initialEntityReferencesApplied;
+    }
+
+    private Component createTimelineComponent(TimelineItem item) {
+        return timelineRenderer.createTimelineComponent(item);
+    }
+
+    private ChatMessage transientMessage(String content, ChatMessageType type) {
+        ChatMessage message = dataManager.create(ChatMessage.class);
+        message.setConversation(aiConversationDc.getItem());
+        message.setContent(content);
+        message.setType(type);
+        message.setCreatedDate(timeSource.now().toOffsetDateTime());
+        message.setCreatedBy(currentAuthentication.getUser().getUsername());
+        return message;
     }
 
     private void focusInput() {
-        progressBar.setVisible(false);
-        messageInput.setEnabled(true);
-        messageInput.focus();
+        boolean aiEnabled = crmAiConfig.isAiIntegrationEnabled();
+        composerFragment.setInputEnabled(aiEnabled);
+        promptSuggestionsGridLayout.setEnabled(aiEnabled);
+        if (aiEnabled) {
+            composerFragment.focus();
+        }
     }
 
+    @SuppressWarnings("unchecked")
     private void initDynamicComponentsIfNeeded() {
-        if (messageList == null) {
-            messageList = uiComponents.create(MessageList.class);
-            messageList.setSizeFull();
-            messageList.setMarkdown(true);
-            messageList.addClassName("ai-conversation-message-list");
+        initTimelineRenderingIfNeeded();
+        if (timelineList == null) {
+            timelineList = uiComponents.create(JmixVirtualList.class);
+            timelineList.setWidthFull();
+            timelineList.setRenderer(new ComponentRenderer<>(this::createTimelineComponent));
+            timelineList.addClassName("ai-conversation-timeline-list");
         }
-        if (messageInput == null) {
-            messageInput = uiComponents.create(MessageInput.class);
-            messageInput.setWidthFull();
-            messageInput.addSubmitListener(this::onMessageSubmit);
-        }
-        if (progressBar == null) {
-            progressBar = uiComponents.create(ProgressBar.class);
-            progressBar.setWidthFull();
-            progressBar.setIndeterminate(true);
-            progressBar.setVisible(false);
-        }
-        if (attachmentsEmptyState == null) {
-            attachmentsEmptyState = new GridEmptyStateComponent(messages.getMessage("defaultGridEmptyStateText"));
-            attachmentsEmptyState.setSizeFull();
-            attachmentsEmptyState.setVisible(false);
+        if (composerFragment == null) {
+            composerFragment = fragments.create(this, AiConversationComposerFragment.class);
+            composerFragment.setVariant(AiConversationComposerFragment.Variant.TIMELINE);
+            composerFragment.setSubmitHandler(this::submitUserMessageFromComposer);
+            composerFragment.setPendingContextActions(
+                    contextPanelSupport::downloadAttachment,
+                    entityReference -> contextPanelSupport.openCrmEntityDetail(this, messageBundle, entityReference)
+            );
         }
 
-        if (chatPanel != null && messageList.getParent().isEmpty()) {
-            chatPanel.add(messageList, progressBar, messageInput);
-            chatPanel.setFlexGrow(1, messageList);
+        if (timelineContentLayout != null && timelineList.getParent().isEmpty()) {
+            timelineContentLayout.addComponentAsFirst(timelineList);
         }
-        if (attachmentsPanel != null && attachmentsEmptyState.getParent().isEmpty()) {
-            attachmentsPanel.addComponentAtIndex(2, attachmentsEmptyState);
-            attachmentsPanel.setFlexGrow(1, attachmentsEmptyState);
+        if (composerContainer != null && composerFragment.getParent().isEmpty()) {
+            composerContainer.addComponentAsFirst(composerFragment);
         }
     }
 
-    public int getRenderedAttachmentCount() {
-        return attachmentsDc.getItems().size();
+    private void initTimelineRenderingIfNeeded() {
+        if (timelineRenderer == null) {
+            timelineRenderer = new AiConversationTimelineRenderer(
+                    messageBundle,
+                    contextPanelSupport.contextCardFactory(this, messageBundle),
+                    this::resolveActorName,
+                    this::formatMessageTime,
+                    () -> freshAssistantMessageId
+            );
+        }
     }
 
-    public boolean hasRenderedAttachment(UUID attachmentId) {
-        return attachmentsDc.getItems().stream()
-                .anyMatch(attachment -> attachmentId.equals(attachment.getId()));
+    private String resolveActorName(ChatMessage message) {
+        String createdBy = message.getCreatedBy();
+        UserDetails currentUser = currentAuthentication.getUser();
+        if (createdBy == null || createdBy.isBlank() || createdBy.equals(currentUser.getUsername())) {
+            if (currentUser instanceof com.company.crm.model.user.User crmUser) {
+                String fullName = crmUser.getFullName();
+                if (fullName != null && !fullName.isBlank()) {
+                    return fullName;
+                }
+            }
+            return currentUser.getUsername() != null && !currentUser.getUsername().isBlank()
+                    ? currentUser.getUsername()
+                    : messageBundle.getMessage("defaultActorName");
+        }
+        return createdBy;
     }
+
+    private String formatMessageTime(OffsetDateTime createdDate) {
+        if (createdDate == null) {
+            return "";
+        }
+        return DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT)
+                .withLocale(currentAuthentication.getLocale())
+                .format(createdDate);
+    }
+
+    private PromptSuggestionSupport promptSuggestionSupport() {
+        if (promptSuggestionSupport == null) {
+            promptSuggestionSupport = new PromptSuggestionSupport(
+                    uiComponents,
+                    dataManager,
+                    messageBundle,
+                    this::submitUserMessage
+            );
+        }
+        return promptSuggestionSupport;
+    }
+
+    private ConversationTitleEditDialog titleEditDialog() {
+        if (titleEditDialog == null) {
+            titleEditDialog = new ConversationTitleEditDialog(dialogs, messageBundle);
+        }
+        return titleEditDialog;
+    }
+
+    private void renderContextSidePanel() {
+        contextPanelSupport.render(this, messageBundle, contextSidePanelContent, contextSidePanel, aiConversationDc.getItem());
+    }
+
+    private void refreshAttachmentsToggleLabel() {
+        contextPanelSupport.refreshToggleLabel(
+                this,
+                messageBundle,
+                attachmentsToggleBtn,
+                contextSidePanel,
+                contextSidePanelContent,
+                aiConversationDc.getItem()
+        );
+    }
+
+    @Supply(to = "promptSuggestionsGridLayout", subject = "renderer")
+    private ComponentRenderer<Card, AiPromptSuggestionDto> promptSuggestionsGridLayoutRenderer() {
+        return new ComponentRenderer<>(suggestion -> promptSuggestionSupport().createPromptSuggestionCard(suggestion));
+    }
+
+    private boolean isConversationStarted() {
+        return Boolean.TRUE.equals(aiConversationDc.getItem().getFirstMessageSent());
+    }
+
+    private void triggerPendingAssistantResponseIfNeeded() {
+        if (isReadOnly() || !crmAiConfig.isAiIntegrationEnabled() || activeThinkingItem != null) {
+            return;
+        }
+
+        pendingAssistantResponseSupport.findPendingUserMessage(aiConversationDc.getItem())
+                .ifPresent(userMessage -> {
+                    showThinkingIndicator();
+                    composerFragment.setInputEnabled(false);
+                    promptSuggestionsGridLayout.setEnabled(false);
+                    runAssistantResponseTask(userMessage);
+                });
+    }
+
 }

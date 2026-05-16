@@ -4,39 +4,34 @@ import com.company.crm.AbstractUiTest;
 import com.company.crm.ai.model.AiAttachmentType;
 import com.company.crm.ai.model.AiConversation;
 import com.company.crm.ai.model.AiConversationAttachment;
+import com.company.crm.ai.model.ChatMessage;
+import com.company.crm.ai.model.ChatMessageEntityReference;
+import com.company.crm.ai.model.ChatMessageType;
 import com.company.crm.ai.service.CrmAnalyticsService;
 import com.company.crm.ai.view.aiconversation.AiConversationDetailView;
 import com.company.crm.ai.view.aiconversation.AiConversationListView;
-import com.vaadin.flow.component.upload.SucceededEvent;
-import com.vaadin.flow.component.upload.Upload;
+import com.company.crm.model.catalog.category.Category;
+import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import io.jmix.core.DataManager;
 import io.jmix.core.FileRef;
-import io.jmix.core.FileStorage;
-import io.jmix.core.FileStorageLocator;
+import io.jmix.core.Id;
+import io.jmix.core.IdSerialization;
 import io.jmix.flowui.ViewNavigators;
 import io.jmix.flowui.component.grid.DataGrid;
-import io.jmix.flowui.component.upload.receiver.FileTemporaryStorageBuffer;
-import io.jmix.flowui.component.upload.receiver.TemporaryStorageFileData;
 import io.jmix.flowui.data.grid.DataGridItems;
 import io.jmix.flowui.kit.component.button.JmixButton;
 import io.jmix.flowui.testassist.UiTestUtils;
-import io.jmix.flowui.upload.TemporaryStorage;
-import io.jmix.flowui.upload.TemporaryStorageImpl;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
-import java.io.File;
 import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 /**
  * UI tests for AI Conversation views.
@@ -50,12 +45,11 @@ public class AiConversationViewsUiTest extends AbstractUiTest {
     @Autowired
     private DataManager dataManager;
 
+    @Autowired
+    private IdSerialization idSerialization;
+
     @MockitoBean
     private CrmAnalyticsService mockAnalyticsService;
-    @MockitoBean
-    private TemporaryStorageImpl temporaryStorage;
-    @MockitoBean
-    private FileStorageLocator fileStorageLocator;
 
     @Test
     void testListViewDisplaysConversations() {
@@ -87,25 +81,6 @@ public class AiConversationViewsUiTest extends AbstractUiTest {
     }
 
     @Test
-    void testNewChatButtonCreatesAndNavigates() {
-        // given
-        viewNavigators.view(UiTestUtils.getCurrentView(), AiConversationListView.class).navigate();
-
-        // when
-        AiConversationListView listView = UiTestUtils.getCurrentView();
-        JmixButton createButton = UiTestUtils.getComponent(listView, "createButton");
-        createButton.click();
-
-        // then
-        assertThat(createButton.getText()).isEqualTo("New Chat");
-        AiConversationDetailView detailView = UiTestUtils.getCurrentView();
-        AiConversation editedEntity = detailView.getEditedEntity();
-        assertThat(editedEntity.getId()).isNotNull();
-        assertThat(dataManager.load(AiConversation.class).id(editedEntity.getId()).optional()).isPresent();
-        assertThat(editedEntity.getTitle()).contains("New AI Conversation");
-    }
-
-    @Test
     void testOpenExistingConversation() {
         // given
         AiConversation testConversation = createAndSaveEntity(AiConversation.class, conv -> {
@@ -124,15 +99,91 @@ public class AiConversationViewsUiTest extends AbstractUiTest {
                 .findFirst()
                 .orElseThrow();
         dataGrid.select(foundConversation);
-        JmixButton editButton = UiTestUtils.getComponent(listView, "editButton");
-        editButton.click();
+        JmixButton readButton = UiTestUtils.getComponent(listView, "readButton");
+        readButton.click();
 
         // then
-        assertThat(editButton.getText()).isEqualTo("Open");
+        assertThat(readButton.getText()).isEqualTo("View");
         AiConversationDetailView detailView = UiTestUtils.getCurrentView();
+        assertThat(detailView.isReadOnly()).isTrue();
         AiConversation editedEntity = detailView.getEditedEntity();
         assertThat(editedEntity.getId()).isEqualTo(testConversation.getId());
         assertThat(editedEntity.getTitle()).isEqualTo(testConversation.getTitle());
+    }
+
+    @Test
+    void testOpenTimelineViewDisplaysInlineAttachmentEvent() {
+        // given
+        AiConversation testConversation = createAndSaveEntity(AiConversation.class, conv -> {
+            conv.setTitle("Timeline Conversation");
+            conv.setCreatedDate(OffsetDateTime.now());
+            conv.setFirstMessageSent(true);
+        });
+
+        ChatMessage message = createAndSaveEntity(ChatMessage.class, msg -> {
+            msg.setConversation(testConversation);
+            msg.setType(ChatMessageType.ASSISTANT);
+            msg.setContent("CRM AI added Timeline CSV to context");
+            msg.setCreatedDate(OffsetDateTime.now());
+        });
+
+        createAndSaveEntity(AiConversationAttachment.class, att -> {
+            att.setMessage(message);
+            att.setFile(new FileRef("storage", "2026/05/15/timeline.csv", "timeline.csv"));
+            att.setFileName("timeline.csv");
+            att.setTitle("Timeline CSV");
+            att.setType(AiAttachmentType.AI_GENERATED);
+            att.setCreatedDate(OffsetDateTime.now());
+        });
+
+        // when
+        viewNavigators.detailView(UiTestUtils.getCurrentView(), AiConversation.class)
+                .editEntity(testConversation)
+                .navigate();
+
+        // then
+        AiConversationDetailView detailView = UiTestUtils.getCurrentView();
+        assertThat(detailView.getEditedEntity().getId()).isEqualTo(testConversation.getId());
+        openContextPanel(detailView);
+        assertThat(contextPanelText(detailView)).contains("Timeline CSV");
+    }
+
+    @Test
+    void testOpenTimelineViewDisplaysEntityReferenceEvent() {
+        // given
+        AiConversation testConversation = createAndSaveEntity(AiConversation.class, conv -> {
+            conv.setTitle("Timeline Entity Conversation");
+            conv.setCreatedDate(OffsetDateTime.now());
+            conv.setFirstMessageSent(true);
+        });
+        Category category = createAndSaveEntity(Category.class, cat -> {
+            cat.setName("Timeline Category");
+            cat.setCode("timeline-category-" + UUID.randomUUID());
+        });
+        String entityReference = idSerialization.idToString(Id.of(category));
+
+        ChatMessage message = createAndSaveEntity(ChatMessage.class, msg -> {
+            msg.setConversation(testConversation);
+            msg.setType(ChatMessageType.ASSISTANT);
+            msg.setContent("added CRM entity Categories \"Timeline Category\" to context");
+            msg.setCreatedDate(OffsetDateTime.now());
+        });
+
+        createAndSaveEntity(ChatMessageEntityReference.class, ref -> {
+            ref.setMessage(message);
+            ref.setEntityReference(entityReference);
+        });
+
+        // when
+        viewNavigators.detailView(UiTestUtils.getCurrentView(), AiConversation.class)
+                .editEntity(testConversation)
+                .navigate();
+
+        // then
+        AiConversationDetailView detailView = UiTestUtils.getCurrentView();
+        assertThat(detailView.getEditedEntity().getId()).isEqualTo(testConversation.getId());
+        openContextPanel(detailView);
+        assertThat(contextPanelText(detailView)).contains("Timeline Category");
     }
 
     @Test
@@ -152,15 +203,10 @@ public class AiConversationViewsUiTest extends AbstractUiTest {
         AiConversationDetailView detailView = UiTestUtils.getCurrentView();
         assertThat(detailView.getEditedEntity().getId()).isEqualTo(testConversation.getId());
         assertThat(detailView.getEditedEntity().getTitle()).isEqualTo("Test Detail View");
-        assertThat(detailView.getRenderedAttachmentCount()).isEqualTo(0);
     }
 
     @Test
     void testComponentIntegrationInViews() {
-        // given
-        when(mockAnalyticsService.processBusinessQuestion(anyString(), anyString()))
-                .thenReturn("Test AI response from mock service");
-
         AiConversation testConversation = createAndSaveEntity(AiConversation.class, conv -> {
             conv.setTitle("Component Integration Test");
             conv.setCreatedDate(OffsetDateTime.now());
@@ -170,20 +216,6 @@ public class AiConversationViewsUiTest extends AbstractUiTest {
         // when
         viewNavigators.view(UiTestUtils.getCurrentView(), AiConversationListView.class).navigate();
         AiConversationListView listView = UiTestUtils.getCurrentView();
-
-        JmixButton createButton = UiTestUtils.getComponent(listView, "createButton");
-        createButton.click();
-
-        // Should be in detail view now
-        AiConversationDetailView detailView = UiTestUtils.getCurrentView();
-        assertThat(createButton.getText()).isEqualTo("New Chat");
-        UUID draftConversationId = detailView.getEditedEntity().getId();
-        assertThat(draftConversationId).isNotNull();
-        assertThat(dataManager.load(AiConversation.class).id(draftConversationId).optional()).isPresent();
-
-        // Test 2: Navigate back to list and open existing conversation
-        viewNavigators.view(detailView, AiConversationListView.class).navigate();
-        listView = UiTestUtils.getCurrentView();
 
         DataGrid<AiConversation> dataGrid = UiTestUtils.getComponent(listView, "aiConversationsDataGrid");
 
@@ -195,12 +227,13 @@ public class AiConversationViewsUiTest extends AbstractUiTest {
                 .orElseThrow();
         dataGrid.select(foundConversation);
 
-        JmixButton editButton = UiTestUtils.getComponent(listView, "editButton");
-        editButton.click();
+        JmixButton readButton = UiTestUtils.getComponent(listView, "readButton");
+        readButton.click();
 
         // then
-        detailView = UiTestUtils.getCurrentView();
-        assertThat(editButton.getText()).isEqualTo("Open");
+        AiConversationDetailView detailView = UiTestUtils.getCurrentView();
+        assertThat(readButton.getText()).isEqualTo("View");
+        assertThat(detailView.isReadOnly()).isTrue();
         assertThat(detailView.getEditedEntity().getId()).isEqualTo(testConversation.getId());
     }
 
@@ -212,8 +245,15 @@ public class AiConversationViewsUiTest extends AbstractUiTest {
             conv.setCreatedDate(OffsetDateTime.now());
         });
 
-        AiConversationAttachment attachment = createAndSaveEntity(AiConversationAttachment.class, att -> {
-            att.setConversation(conversation);
+        ChatMessage message = createAndSaveEntity(ChatMessage.class, msg -> {
+            msg.setConversation(conversation);
+            msg.setType(ChatMessageType.ASSISTANT);
+            msg.setContent("Attachment message");
+            msg.setCreatedDate(OffsetDateTime.now());
+        });
+
+        createAndSaveEntity(AiConversationAttachment.class, att -> {
+            att.setMessage(message);
             att.setFile(new FileRef("storage", "2026/02/22/report.html", "report.html"));
             att.setFileName("report.html");
             att.setType(AiAttachmentType.AI_GENERATED);
@@ -222,7 +262,7 @@ public class AiConversationViewsUiTest extends AbstractUiTest {
 
         AiConversation conversationWithAttachments = dataManager.load(AiConversation.class)
                 .id(conversation.getId())
-                .fetchPlan(fp -> fp.add("attachments", sub -> sub.addFetchPlan("_base")))
+                .fetchPlan(fp -> fp.add("messages", sub -> sub.add("attachments", attSub -> attSub.addFetchPlan("_base"))))
                 .one();
 
         // when
@@ -232,8 +272,92 @@ public class AiConversationViewsUiTest extends AbstractUiTest {
 
         // then
         AiConversationDetailView detailView = UiTestUtils.getCurrentView();
-        assertThat(detailView.getRenderedAttachmentCount()).isGreaterThan(0);
-        assertThat(detailView.hasRenderedAttachment(attachment.getId())).isTrue();
+        openContextPanel(detailView);
+        assertThat(contextPanelText(detailView)).contains("report.html");
+    }
+
+    @Test
+    void testContextToggleButtonHasLocalizedLabelAndNoBadgeWhenEmpty() {
+        // given
+        AiConversation conversation = createAndSaveEntity(AiConversation.class, conv -> {
+            conv.setTitle("Empty Context Conversation");
+            conv.setCreatedDate(OffsetDateTime.now());
+        });
+
+        // when
+        viewNavigators.detailView(UiTestUtils.getCurrentView(), AiConversation.class)
+                .editEntity(conversation)
+                .navigate();
+
+        // then
+        AiConversationDetailView detailView = UiTestUtils.getCurrentView();
+        JmixButton toggleButton = UiTestUtils.getComponent(detailView, "attachmentsToggleBtn");
+        assertThat(toggleButton.getText()).isEqualTo("Context");
+        assertThat(toggleButton.getSuffixComponent()).isNull();
+    }
+
+    @Test
+    void testContextToggleButtonShowsBadgeWithAggregatedContextCount() {
+        // given
+        AiConversation conversation = createAndSaveEntity(AiConversation.class, conv -> {
+            conv.setTitle("Context Badge Conversation");
+            conv.setCreatedDate(OffsetDateTime.now());
+            conv.setFirstMessageSent(true);
+        });
+
+        Category category = createAndSaveEntity(Category.class, cat -> {
+            cat.setName("Badge Category");
+            cat.setCode("badge-category-" + UUID.randomUUID());
+        });
+        String entityReference = idSerialization.idToString(Id.of(category));
+
+        ChatMessage message = createAndSaveEntity(ChatMessage.class, msg -> {
+            msg.setConversation(conversation);
+            msg.setType(ChatMessageType.ASSISTANT);
+            msg.setContent("Mixed-context message");
+            msg.setCreatedDate(OffsetDateTime.now());
+        });
+
+        createAndSaveEntity(ChatMessageEntityReference.class, ref -> {
+            ref.setMessage(message);
+            ref.setEntityReference(entityReference);
+        });
+
+        createAndSaveEntity(AiConversationAttachment.class, att -> {
+            att.setMessage(message);
+            att.setFile(new FileRef("storage", "2026/05/16/generated.csv", "generated.csv"));
+            att.setFileName("generated.csv");
+            att.setType(AiAttachmentType.AI_GENERATED);
+            att.setCreatedDate(OffsetDateTime.now());
+        });
+
+        createAndSaveEntity(AiConversationAttachment.class, att -> {
+            att.setMessage(message);
+            att.setFile(new FileRef("storage", "2026/05/16/uploaded.pdf", "uploaded.pdf"));
+            att.setFileName("uploaded.pdf");
+            att.setType(AiAttachmentType.USER_UPLOADED);
+            att.setCreatedDate(OffsetDateTime.now());
+        });
+
+        AiConversation conversationWithContext = dataManager.load(AiConversation.class)
+                .id(conversation.getId())
+                .fetchPlan(fp -> fp.add("messages", sub -> sub
+                        .add("attachments", attSub -> attSub.addFetchPlan("_base"))
+                        .add("entityReferences", refSub -> refSub.addFetchPlan("_base"))))
+                .one();
+
+        // when
+        viewNavigators.detailView(UiTestUtils.getCurrentView(), AiConversation.class)
+                .editEntity(conversationWithContext)
+                .navigate();
+
+        // then
+        AiConversationDetailView detailView = UiTestUtils.getCurrentView();
+        JmixButton toggleButton = UiTestUtils.getComponent(detailView, "attachmentsToggleBtn");
+        assertThat(toggleButton.getText()).isEqualTo("Context");
+        Component suffix = toggleButton.getSuffixComponent();
+        assertThat(suffix).isInstanceOf(Span.class);
+        assertThat(((Span) suffix).getText()).isEqualTo("3");
     }
 
     @Test
@@ -244,8 +368,15 @@ public class AiConversationViewsUiTest extends AbstractUiTest {
             conv.setCreatedDate(OffsetDateTime.now());
         });
 
-        AiConversationAttachment attachment = createAndSaveEntity(AiConversationAttachment.class, att -> {
-            att.setConversation(conversation);
+        ChatMessage message = createAndSaveEntity(ChatMessage.class, msg -> {
+            msg.setConversation(conversation);
+            msg.setType(ChatMessageType.ASSISTANT);
+            msg.setContent("Attachment message 2");
+            msg.setCreatedDate(OffsetDateTime.now());
+        });
+
+        createAndSaveEntity(AiConversationAttachment.class, att -> {
+            att.setMessage(message);
             att.setFile(new FileRef("storage", "2026/02/22/report.csv", "report.csv"));
             att.setFileName("report.csv");
             att.setTitle("Risk Allocation CSV");
@@ -255,7 +386,7 @@ public class AiConversationViewsUiTest extends AbstractUiTest {
 
         AiConversation conversationWithAttachments = dataManager.load(AiConversation.class)
                 .id(conversation.getId())
-                .fetchPlan(fp -> fp.add("attachments", sub -> sub.addFetchPlan("_base")))
+                .fetchPlan(fp -> fp.add("messages", sub -> sub.add("attachments", attSub -> attSub.addFetchPlan("_base"))))
                 .one();
 
         // when
@@ -265,55 +396,19 @@ public class AiConversationViewsUiTest extends AbstractUiTest {
 
         // then
         AiConversationDetailView detailView = UiTestUtils.getCurrentView();
-        assertThat(detailView.getRenderedAttachmentCount()).isGreaterThan(0);
-        assertThat(detailView.hasRenderedAttachment(attachment.getId())).isTrue();
+        openContextPanel(detailView);
+        assertThat(contextPanelText(detailView)).contains("Risk Allocation CSV");
         assertThat(detailView.getEditedEntity().getTitle()).isEqualTo("Attachment View Test 2");
     }
 
-    @Test
-    void testAttachmentUploadPersistsUserUploadedAttachment() {
-        // given
-        AiConversation conversation = createAndSaveEntity(AiConversation.class, conv -> {
-            conv.setTitle("Upload Integration Test");
-            conv.setCreatedDate(OffsetDateTime.now());
-        });
-
-        viewNavigators.detailView(UiTestUtils.getCurrentView(), AiConversation.class)
-                .editEntity(conversation)
-                .navigate();
-        AiConversationDetailView detailView = UiTestUtils.getCurrentView();
-
-        UUID tempFileId = UUID.randomUUID();
-        TemporaryStorage.FileInfo fileInfo = new TemporaryStorage.FileInfo(new File("test.tmp"), tempFileId);
-        TemporaryStorageFileData fileData = new TemporaryStorageFileData("analysis.csv", "text/csv", fileInfo);
-
-        FileTemporaryStorageBuffer receiver = mock(FileTemporaryStorageBuffer.class);
-        when(receiver.getFileData()).thenReturn(fileData);
-        Upload upload = mock(Upload.class);
-        when(upload.getReceiver()).thenReturn(receiver);
-        SucceededEvent event = new SucceededEvent(upload, "analysis.csv", "text/csv", 12);
-
-        FileStorage fileStorage = mock(FileStorage.class);
-        FileRef uploadedFileRef = new FileRef("crm", "2026/02/23/analysis.csv", "analysis.csv");
-        when(fileStorageLocator.getByName("crm")).thenReturn(fileStorage);
-        when(temporaryStorage.putFileIntoStorage(tempFileId, "analysis.csv", fileStorage))
-                .thenReturn(uploadedFileRef);
-        when(mockAnalyticsService.processAttachmentUpload(anyString(), any(UUID.class), anyString(), anyString(), anyString()))
-                .thenReturn("AI upload processed");
-
-        // when
-        detailView.onAttachmentUploadSucceeded(event);
-
-        // then
-        AiConversationAttachment savedAttachment = dataManager.load(AiConversationAttachment.class)
-                .query("select e from AiConversationAttachment e where e.conversation.id = :conversationId and e.fileName = :fileName")
-                .parameter("conversationId", conversation.getId())
-                .parameter("fileName", "analysis.csv")
-                .one();
-
-        assertThat(savedAttachment.getType()).isEqualTo(AiAttachmentType.USER_UPLOADED);
-        assertThat(savedAttachment.getFileName()).isEqualTo("analysis.csv");
-        assertThat(savedAttachment.getFile()).isEqualTo(uploadedFileRef);
-        verify(temporaryStorage).putFileIntoStorage(tempFileId, "analysis.csv", fileStorage);
+    private void openContextPanel(AiConversationDetailView detailView) {
+        JmixButton toggleButton = UiTestUtils.getComponent(detailView, "attachmentsToggleBtn");
+        toggleButton.click();
     }
+
+    private String contextPanelText(AiConversationDetailView detailView) {
+        VerticalLayout contextPanelContent = UiTestUtils.getComponent(detailView, "contextSidePanelContent");
+        return contextPanelContent.getElement().getTextRecursively();
+    }
+
 }

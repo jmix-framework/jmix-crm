@@ -61,6 +61,7 @@
                 <button id="removeButton" action="ordersDataGrid.removeAction"/>
                 <button id="addInvoice" action="ordersDataGrid.addInvoice"/>
                 <button id="excelExport" action="ordersDataGrid.excelExport"/>
+                <button id="chatAboutThisButton" action="ordersDataGrid.chatAboutThis"/>
             </startSlot>
             <endSlot>
                 <simplePagination id="pagination" dataLoader="ordersDl" itemsPerPageVisible="true"/>
@@ -84,6 +85,7 @@
                 <action id="removeAction" type="list_remove"/>
                 <action id="addInvoice" type="list_itemTracking" text="msg://addInvoice" icon="INVOICE"/>
                 <action id="excelExport" type="grdexp_excelExport"/>
+                <action id="chatAboutThis" type="ai_chatAboutThis" text="msg://chatAboutThis" icon="crm:sparkles"/>
             </actions>
             <columns resizable="true" sortable="true">
                 <column key="itemDetails" frozen="true" flexGrow="0" autoWidth="true" sortable="false"/>

@@ -18,16 +18,16 @@ import jakarta.validation.constraints.NotNull;
 
 @JmixEntity
 @Table(name = "AI_CONVERSATION_ATTACHMENT", indexes = {
-        @Index(name = "IDX_AI_CONV_ATTACH_CONV", columnList = "CONVERSATION_ID")
+        @Index(name = "IDX_AI_CONV_ATTACH_MESSAGE", columnList = "MESSAGE_ID")
 })
 @Entity
 public class AiConversationAttachment extends CreateAuditEntity {
 
     @OnDeleteInverse(DeletePolicy.CASCADE)
     @NotNull
-    @JoinColumn(name = "CONVERSATION_ID", nullable = false)
+    @JoinColumn(name = "MESSAGE_ID", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    private AiConversation conversation;
+    private ChatMessage message;
 
     @NotNull
     @Column(name = "FILE_", nullable = false, length = 1024)
@@ -78,12 +78,12 @@ public class AiConversationAttachment extends CreateAuditEntity {
         this.file = file;
     }
 
-    public AiConversation getConversation() {
-        return conversation;
+    public ChatMessage getMessage() {
+        return message;
     }
 
-    public void setConversation(AiConversation conversation) {
-        this.conversation = conversation;
+    public void setMessage(ChatMessage message) {
+        this.message = message;
     }
 
 }

@@ -46,7 +46,7 @@ class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
                 "SELECT EXTRACT(YEAR FROM o.date) AS orderYear, EXTRACT(MONTH FROM o.date) AS orderMonth, COUNT(o) AS orderCount " +
                         "FROM Order_ o GROUP BY EXTRACT(YEAR FROM o.date), EXTRACT(MONTH FROM o.date) ORDER BY orderYear, orderMonth",
                 JpqlParameters.empty(),
-                List.of("orderYear", "orderMonth", "orderCount"), null, null
+                List.of("orderYear", "orderMonth", "orderCount"), null, null, null
         );
 
         // when
@@ -73,7 +73,7 @@ class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
         QueryExecutionResult result = jpqlExecutorTool.executeQuery(
                 "SELECT o.total AS originalTotal, (o.total * 2) AS doubledTotal FROM Order_ o WHERE o.total > 0 ORDER BY o.total",
                 JpqlParameters.empty(),
-                List.of("originalTotal", "doubledTotal"), null, null
+                List.of("originalTotal", "doubledTotal"), null, null, null
         );
 
         // when
@@ -104,7 +104,7 @@ class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
                         "CONCAT(c.name, ' - Client') AS concatName " +
                         "FROM Client c ORDER BY c.name",
                 JpqlParameters.empty(),
-                List.of("upperName", "lowerName", "nameLength", "nameSubstring", "concatName"), null, null
+                List.of("upperName", "lowerName", "nameLength", "nameSubstring", "concatName"), null, null, null
         );
 
         // when
@@ -131,7 +131,7 @@ class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
                         "COALESCE(SUM(o.total), 0) AS totalRevenue " +
                         "FROM Client c LEFT JOIN c.orders o GROUP BY c ORDER BY totalRevenue DESC",
                 JpqlParameters.empty(),
-                List.of("clientName", "clientCategory", "totalRevenue"), null, null
+                List.of("clientName", "clientCategory", "totalRevenue"), null, null, null
         );
 
         // when
@@ -162,7 +162,7 @@ class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
         QueryExecutionResult result = jpqlExecutorTool.executeQuery(
                 "SELECT c.name AS clientName, o.total AS orderTotal FROM Client c JOIN c.orders o ORDER BY o.total DESC",
                 JpqlParameters.empty(),
-                List.of("clientName", "orderTotal"), null, null
+                List.of("clientName", "orderTotal"), null, null, null
         );
 
         // when
@@ -189,7 +189,7 @@ class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
                         "MIN(o.total) AS minOrder " +
                         "FROM Order_ o",
                 JpqlParameters.empty(),
-                List.of("orderCount", "totalRevenue", "averageOrder", "maxOrder", "minOrder"), null, null
+                List.of("orderCount", "totalRevenue", "averageOrder", "maxOrder", "minOrder"), null, null, null
         );
 
         // when
@@ -220,7 +220,7 @@ class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
                 "SELECT o.number AS orderNumber, o.date AS orderDate, o.total AS orderTotal " +
                         "FROM Order_ o WHERE @between(o.date, now-10000, now+1, day) ORDER BY o.date DESC",
                 JpqlParameters.empty(),
-                List.of("orderNumber", "orderDate", "orderTotal"), null, null
+                List.of("orderNumber", "orderDate", "orderTotal"), null, null, null
         );
 
         assertThat(recentResult.success()).isTrue();
@@ -230,7 +230,7 @@ class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
         QueryExecutionResult todayResult = jpqlExecutorTool.executeQuery(
                 "SELECT COUNT(o) AS todayOrderCount FROM Order_ o WHERE @today(o.date)",
                 JpqlParameters.empty(),
-                List.of("todayOrderCount"), null, null
+                List.of("todayOrderCount"), null, null, null
         );
 
         // when
@@ -261,7 +261,7 @@ class JmixJpqlExtensionsIntegrationTest extends AbstractTest {
         QueryExecutionResult result = jpqlExecutorTool.executeQuery(
                 "SELECT c.name AS clientName FROM Client c WHERE UPPER(c.name) LIKE '%CORP%' OR UPPER(c.name) LIKE '%ENTERPRISE%'",
                 JpqlParameters.empty(),
-                List.of("clientName"), null, null
+                List.of("clientName"), null, null, null
         );
 
         // when

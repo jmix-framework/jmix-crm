@@ -1,40 +1,31 @@
 package com.company.crm.ai.service;
 
-import com.company.crm.ai.service.AiAttachmentMediaResolver.AttachmentRef;
-import com.company.crm.ai.tool.CrmAiTools;
-import com.company.crm.model.base.UuidEntity;
-import com.company.crm.model.catalog.category.Category;
-import com.company.crm.model.catalog.item.CategoryItem;
-import com.company.crm.model.catalog.item.CategoryItemComment;
-import com.company.crm.model.client.Client;
-import com.company.crm.model.contact.Contact;
-import com.company.crm.model.invoice.Invoice;
-import com.company.crm.model.order.Order;
-import com.company.crm.model.order.OrderItem;
-import com.company.crm.model.payment.Payment;
-import com.company.crm.model.user.User;
-import io.jmix.core.Messages;
+import com.company.crm.ai.context.AiContextEntityRegistry;
+import com.company.crm.ai.memory.JmixChatMemoryRepository;
+import com.company.crm.ai.model.AiUiStatusUpdate;
+import com.company.crm.ai.model.ChatMessage;
+import com.company.crm.ai.model.ChatMessageType;
+import com.company.crm.ai.tool.AiToolUiStatus;
+import com.company.crm.ai.tool.CrmAiToolFactory;
+import com.company.crm.report.CategoryCashflowRiskReport;
+import com.company.crm.report.Client360Report;
+import io.jmix.core.DataManager;
 import io.jmix.core.security.CurrentAuthentication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
-import org.springframework.ai.chat.memory.ChatMemory;
-import org.springframework.ai.chat.memory.ChatMemoryRepository;
-import org.springframework.ai.chat.memory.MessageWindowChatMemory;
-import org.springframework.ai.content.Media;
+import org.springframework.ai.chat.messages.Message;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 /**
  * AI-powered analytics service that processes natural language business questions against CRM data.
@@ -44,130 +35,124 @@ public class CrmAnalyticsService {
 
     private static final Logger log = LoggerFactory.getLogger(CrmAnalyticsService.class);
 
-    private static final String CRM_MESSAGE_TYPE_METADATA_KEY = "crmMessageType";
-    private static final String ATTACHMENT_MESSAGE_TYPE = "ATTACHMENT";
+    private final CrmAiToolFactory crmAiToolFactory;
 
-    private final ApplicationContext applicationContext;
-
-    private final Messages messages;
     private final Resource systemPrompt;
-    private final ChatClient chatClient;
+    private final ChatClient statelessChatClient;
+    private final JmixChatMemoryRepository chatMemoryRepository;
     private final CurrentAuthentication currentAuthentication;
-    private final AiAttachmentMediaResolver attachmentMediaResolver;
+    private final DataManager dataManager;
+    private final AiContextEntityRegistry contextEntityRegistry;
 
     @Autowired
     public CrmAnalyticsService(
             ChatClient.Builder chatClientBuilder,
             @Value("classpath:prompts/crm-analytics-system-prompt.st") Resource systemPrompt,
-            ChatMemoryRepository chatMemoryRepository,
-            AiAttachmentMediaResolver attachmentMediaResolver,
-            Messages messages,
+            JmixChatMemoryRepository chatMemoryRepository,
             CurrentAuthentication currentAuthentication,
-            ApplicationContext applicationContext) {
-        ChatMemory chatMemory = MessageWindowChatMemory.builder()
-                .chatMemoryRepository(chatMemoryRepository)
+            DataManager dataManager,
+            AiContextEntityRegistry contextEntityRegistry,
+            CrmAiToolFactory crmAiToolFactory) {
+        this.statelessChatClient = chatClientBuilder.clone()
+                .defaultAdvisors(SimpleLoggerAdvisor.builder().build())
                 .build();
-
-        this.chatClient = chatClientBuilder
-                .defaultAdvisors(
-                        SimpleLoggerAdvisor.builder().build(),
-                        MessageChatMemoryAdvisor.builder(chatMemory).build()
-                )
-                .build();
-        this.attachmentMediaResolver = attachmentMediaResolver;
+        this.chatMemoryRepository = chatMemoryRepository;
         this.systemPrompt = systemPrompt;
-        this.messages = messages;
         this.currentAuthentication = currentAuthentication;
-        this.applicationContext = applicationContext;
+        this.dataManager = dataManager;
+        this.contextEntityRegistry = contextEntityRegistry;
+        this.crmAiToolFactory = crmAiToolFactory;
     }
 
-    /**
-     * Processes a natural language business question and returns AI-generated insights.
-     */
-    public String processBusinessQuestion(String userQuestion, String conversationId) {
-        return processBusinessQuestionInternal(userQuestion, conversationId, List.of(), Map.of());
+    public String processUserMessage(UUID chatMessageId) {
+        return processUserMessage(chatMessageId, null);
     }
 
-    /**
-     * Sends a dedicated user-upload event as a separate user turn and forwards the uploaded
-     * attachment as model media input.
-     */
-    public String processAttachmentUpload(String conversationId, UUID attachmentId, String fileName, String mimeType, String actorName) {
-        String safeFileName = StringUtils.hasText(fileName) ? fileName : messages.formatMessage(CrmAnalyticsService.class, "defaultFileName");
-        String safeActorName = StringUtils.hasText(actorName) ? actorName : messages.formatMessage(CrmAnalyticsService.class, "defaultActorName");
-        String uploadEventPrompt = messages.formatMessage(CrmAnalyticsService.class, "attachmentUploadPrompt", safeActorName, safeFileName);
-        return processBusinessQuestionInternal(
-                uploadEventPrompt,
-                conversationId,
-                List.of(new AttachmentRef(attachmentId, mimeType)),
-                Map.of(CRM_MESSAGE_TYPE_METADATA_KEY, ATTACHMENT_MESSAGE_TYPE)
+    public String processUserMessage(UUID chatMessageId, Consumer<AiUiStatusUpdate> uiStatusUpdateCallback) {
+        ChatMessage userMessage = dataManager.load(ChatMessage.class)
+                .id(chatMessageId)
+                .fetchPlan(fp -> fp.addFetchPlan(io.jmix.core.FetchPlan.BASE)
+                        .add("conversation", io.jmix.core.FetchPlan.BASE)
+                        .add("entityReferences", io.jmix.core.FetchPlan.BASE)
+                        .add("attachments", io.jmix.core.FetchPlan.BASE))
+                .one();
+
+        UUID conversationId = userMessage.getConversation().getId();
+        String conversationIdString = conversationId.toString();
+        List<Message> history = chatMemoryRepository.findByConversationId(conversationIdString);
+
+        ChatMessage assistantMessage = dataManager.create(ChatMessage.class);
+        assistantMessage.setConversation(userMessage.getConversation());
+        assistantMessage.setType(ChatMessageType.ASSISTANT);
+        assistantMessage.setContent("");
+        assistantMessage = dataManager.save(assistantMessage);
+        UUID assistantMessageId = assistantMessage.getId();
+
+        try {
+            publishUiStatus(uiStatusUpdateCallback, "Thinking...");
+
+            String response = buildPromptSpec(statelessChatClient, conversationId, assistantMessageId, uiStatusUpdateCallback)
+                    .messages(history)
+                    .call()
+                    .content();
+
+            assistantMessage.setContent(response != null ? response : "");
+            dataManager.save(assistantMessage);
+            return response;
+        } catch (RuntimeException e) {
+            try {
+                dataManager.remove(assistantMessage);
+            } catch (Exception cleanupError) {
+                log.warn("Failed to remove assistant placeholder {}", assistantMessage.getId(), cleanupError);
+            }
+            throw e;
+        }
+    }
+
+    private ChatClient.ChatClientRequestSpec buildPromptSpec(ChatClient client,
+                                                            UUID conversationUuid,
+                                                            UUID assistantMessageId,
+                                                            Consumer<AiUiStatusUpdate> uiStatusUpdateCallback) {
+        List<String> allowedReports = List.of(
+                Client360Report.CODE,
+                CategoryCashflowRiskReport.CODE
         );
-    }
 
-    private String processBusinessQuestionInternal(
-            String userQuestion,
-            String conversationId,
-            List<AttachmentRef> attachmentRefs,
-            Map<String, Object> userMetadata
-    ) {
-        log.debug("Processing business question: {} (conversation: {}, attachmentCount: {})",
-                userQuestion, conversationId, attachmentRefs.size());
+        Map<String, Object> toolContext = new HashMap<>();
+        if (conversationUuid != null) {
+            toolContext.put("conversationId", conversationUuid);
+        }
+        if (assistantMessageId != null) {
+            toolContext.put("assistantMessageId", assistantMessageId);
+        }
+        if (uiStatusUpdateCallback != null) {
+            toolContext.put(AiToolUiStatus.UI_STATUS_UPDATE_CALLBACK, uiStatusUpdateCallback);
+        }
 
-        UUID conversationUuid = tryParseConversationId(conversationId);
-        List<Media> mediaAttachments = attachmentMediaResolver.resolve(conversationUuid, attachmentRefs);
-
-        var promptSpec = chatClient.prompt()
+        ChatClient.ChatClientRequestSpec spec = client.prompt()
                 .system(system -> system
                         .text(systemPrompt)
                         .param("responseLanguage", resolveResponseLanguage()))
-                .user(user -> {
-                    user.text(userQuestion);
-                    if (!userMetadata.isEmpty()) {
-                        user.metadata(userMetadata);
-                    }
-                    if (!mediaAttachments.isEmpty()) {
-                        user.media(mediaAttachments.toArray(new Media[0]));
-                    }
-                })
-                .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId));
-
-        if (conversationUuid != null) {
-            promptSpec = promptSpec.toolContext(Map.of("conversationId", conversationUuid));
-        }
-
-        Set<Class<? extends UuidEntity>> allowedEntities = Set.of(
-                Client.class, Order.class, OrderItem.class, Category.class,
-                CategoryItem.class, CategoryItemComment.class, Invoice.class,
-                Payment.class, User.class, Contact.class
-        );
-
-        List<String> allowedReports = List.of(
-                "client-360-report",
-                "category-cashflow-risk-report"
-        );
-
-        return promptSpec
-                .tools(CrmAiTools.builder(applicationContext)
+                .tools(crmAiToolFactory.builder()
                         .jpqlQueryExecutorTool()
                         .viewsDiscoveryTool()
-                        .entitiesDiscoveryTool(allowedEntities)
+                        .entitiesDiscoveryTool(contextEntityRegistry.toolEntityClasses())
                         .reportsDiscoveryTool(allowedReports)
                         .runReportTool(allowedReports)
-                        .buildToolsArray())
-                .call()
-                .content();
+                        .buildToolsArray());
+        if (!toolContext.isEmpty()) {
+            spec = spec.toolContext(toolContext);
+        }
+        return spec;
+    }
+
+    private void publishUiStatus(Consumer<AiUiStatusUpdate> uiStatusUpdateCallback, String message) {
+        if (uiStatusUpdateCallback != null) {
+            uiStatusUpdateCallback.accept(new AiUiStatusUpdate(message));
+        }
     }
 
     private String resolveResponseLanguage() {
         return currentAuthentication.getLocale().getLanguage();
-    }
-
-    private UUID tryParseConversationId(String conversationId) {
-        try {
-            return UUID.fromString(conversationId);
-        } catch (IllegalArgumentException e) {
-            log.warn("Invalid conversationId format for tool context: {}", conversationId);
-            return null;
-        }
     }
 }

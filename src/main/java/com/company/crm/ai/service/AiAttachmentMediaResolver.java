@@ -1,7 +1,6 @@
 package com.company.crm.ai.service;
 
 import com.company.crm.ai.model.AiConversationAttachment;
-import io.jmix.core.DataManager;
 import io.jmix.core.FileRef;
 import io.jmix.core.FileStorage;
 import io.jmix.core.FileStorageLocator;
@@ -13,10 +12,11 @@ import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 /**
  * Resolves AI conversation attachments into Spring AI {@link Media} objects for LLM input.
@@ -25,8 +25,24 @@ import java.util.UUID;
 public class AiAttachmentMediaResolver {
 
     private static final int MAX_MEDIA_NAME_LENGTH = 96;
+    private static final int MAX_TEXT_CONTEXT_LENGTH = 60_000;
 
-    private static final Set<MimeType> SUPPORTED_MEDIA_TYPES = Set.of(
+    private static final Set<MimeType> IMAGE_MEDIA_TYPES = Set.of(
+            Media.Format.IMAGE_PNG,
+            Media.Format.IMAGE_JPEG,
+            Media.Format.IMAGE_GIF,
+            Media.Format.IMAGE_WEBP
+    );
+
+    private static final Set<MimeType> TEXT_CONTEXT_TYPES = Set.of(
+            Media.Format.DOC_CSV,
+            Media.Format.DOC_HTML,
+            Media.Format.DOC_TXT,
+            Media.Format.DOC_MD,
+            MimeTypeUtils.APPLICATION_JSON
+    );
+
+    private static final Set<MimeType> SUPPORTED_ATTACHMENT_TYPES = Set.of(
             Media.Format.DOC_PDF,
             Media.Format.DOC_CSV,
             Media.Format.DOC_DOC,
@@ -36,10 +52,24 @@ public class AiAttachmentMediaResolver {
             Media.Format.DOC_HTML,
             Media.Format.DOC_TXT,
             Media.Format.DOC_MD,
+            MimeTypeUtils.APPLICATION_JSON,
             Media.Format.IMAGE_PNG,
             Media.Format.IMAGE_JPEG,
             Media.Format.IMAGE_GIF,
             Media.Format.IMAGE_WEBP
+    );
+
+    private static final Set<MimeType> SPREADSHEET_TYPES = Set.of(
+            Media.Format.DOC_CSV,
+            Media.Format.DOC_XLS,
+            Media.Format.DOC_XLSX
+    );
+
+    private static final Set<MimeType> TEXT_DOCUMENT_TYPES = Set.of(
+            Media.Format.DOC_PDF,
+            Media.Format.DOC_HTML,
+            Media.Format.DOC_TXT,
+            Media.Format.DOC_MD
     );
 
     private static final Map<String, MimeType> EXTENSION_MIME_TYPES = Map.ofEntries(
@@ -53,6 +83,7 @@ public class AiAttachmentMediaResolver {
             Map.entry(".htm", Media.Format.DOC_HTML),
             Map.entry(".txt", Media.Format.DOC_TXT),
             Map.entry(".md", Media.Format.DOC_MD),
+            Map.entry(".json", MimeTypeUtils.APPLICATION_JSON),
             Map.entry(".png", Media.Format.IMAGE_PNG),
             Map.entry(".jpg", Media.Format.IMAGE_JPEG),
             Map.entry(".jpeg", Media.Format.IMAGE_JPEG),
@@ -60,49 +91,31 @@ public class AiAttachmentMediaResolver {
             Map.entry(".webp", Media.Format.IMAGE_WEBP)
     );
 
-    private final DataManager dataManager;
     private final FileStorageLocator fileStorageLocator;
 
-    public AiAttachmentMediaResolver(DataManager dataManager, FileStorageLocator fileStorageLocator) {
-        this.dataManager = dataManager;
+    public AiAttachmentMediaResolver(FileStorageLocator fileStorageLocator) {
         this.fileStorageLocator = fileStorageLocator;
     }
 
-    /**
-     * Resolves attachments for a conversation into Spring AI Media objects.
-     */
-    public List<Media> resolve(UUID conversationId, List<AttachmentRef> attachmentRefs) {
-        if (attachmentRefs.isEmpty()) {
-            return List.of();
-        }
-        if (conversationId == null) {
-            throw new IllegalArgumentException("Attachment media input requires a valid conversation UUID.");
-        }
-
-        return attachmentRefs.stream()
-                .map(ref -> resolveAttachment(conversationId, ref))
-                .toList();
-    }
-
-    private Media resolveAttachment(UUID conversationId, AttachmentRef ref) {
-        AiConversationAttachment attachment = dataManager.load(AiConversationAttachment.class)
-                .query("select e from AiConversationAttachment e where e.id = :id and e.conversation.id = :conversationId")
-                .parameter("id", ref.attachmentId())
-                .parameter("conversationId", conversationId)
-                .optional()
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "Attachment not found in conversation: " + ref.attachmentId()));
-
+    public ResolvedAttachmentInput resolve(AiConversationAttachment attachment, String mimeTypeHint) {
+        String fileName = attachment.getFileName();
         FileRef fileRef = attachment.getFile();
         if (fileRef == null) {
-            throw new IllegalArgumentException("Attachment has no file payload: " + ref.attachmentId());
+            throw new IllegalArgumentException("Attachment has no file payload: " + attachment.getId());
+        }
+        byte[] data = readFileBytes(fileRef);
+        MimeType mimeType = resolveSupportedMimeType(mimeTypeHint, fileName);
+
+        if (IMAGE_MEDIA_TYPES.contains(mimeType)) {
+            Media media = Media.builder()
+                    .mimeType(mimeType)
+                    .data(data)
+                    .name(sanitizeMediaName(fileName))
+                    .build();
+            return new ResolvedAttachmentInput(List.of(media), null);
         }
 
-        return Media.builder()
-                .mimeType(resolveSupportedMimeType(ref.mimeType(), attachment.getFileName()))
-                .data(readFileBytes(fileRef))
-                .name(sanitizeMediaName(attachment.getFileName()))
-                .build();
+        return new ResolvedAttachmentInput(List.of(), buildTextContext(fileName, mimeType, data));
     }
 
     private byte[] readFileBytes(FileRef fileRef) {
@@ -116,12 +129,12 @@ public class AiAttachmentMediaResolver {
 
     private MimeType resolveSupportedMimeType(String rawMimeType, String fileName) {
         MimeType parsed = tryParseMimeType(rawMimeType);
-        if (parsed != null && SUPPORTED_MEDIA_TYPES.contains(parsed)) {
+        if (parsed != null && SUPPORTED_ATTACHMENT_TYPES.contains(parsed)) {
             return parsed;
         }
 
-        MimeType fromExtension = mimeTypeFromExtension(fileName);
-        if (fromExtension != null && SUPPORTED_MEDIA_TYPES.contains(fromExtension)) {
+        MimeType fromExtension = mimeTypeFromFileName(fileName);
+        if (fromExtension != null && SUPPORTED_ATTACHMENT_TYPES.contains(fromExtension)) {
             return fromExtension;
         }
 
@@ -139,16 +152,58 @@ public class AiAttachmentMediaResolver {
         }
     }
 
-    private MimeType mimeTypeFromExtension(String fileName) {
+    public static MimeType mimeTypeFromFileName(String fileName) {
         if (!StringUtils.hasText(fileName)) {
             return null;
         }
-        String normalized = fileName.toLowerCase();
+        String normalized = fileName.toLowerCase(Locale.ROOT);
         return EXTENSION_MIME_TYPES.entrySet().stream()
                 .filter(entry -> normalized.endsWith(entry.getKey()))
                 .map(Map.Entry::getValue)
                 .findFirst()
                 .orElse(null);
+    }
+
+    public static AttachmentMediaKind mediaKindFromFileName(String fileName) {
+        MimeType mimeType = mimeTypeFromFileName(fileName);
+        if (SPREADSHEET_TYPES.contains(mimeType)) {
+            return AttachmentMediaKind.SPREADSHEET;
+        }
+        if (TEXT_DOCUMENT_TYPES.contains(mimeType)) {
+            return AttachmentMediaKind.TEXT_DOCUMENT;
+        }
+        if (MimeTypeUtils.APPLICATION_JSON.equals(mimeType)) {
+            return AttachmentMediaKind.JSON;
+        }
+        if (IMAGE_MEDIA_TYPES.contains(mimeType)) {
+            return AttachmentMediaKind.IMAGE;
+        }
+        return AttachmentMediaKind.OTHER;
+    }
+
+    private String buildTextContext(String fileName, MimeType mimeType, byte[] data) {
+        StringBuilder context = new StringBuilder();
+        context.append("Attached file: ").append(StringUtils.hasText(fileName) ? fileName : "uploaded-file")
+                .append("\nMIME type: ").append(mimeType);
+
+        if (!TEXT_CONTEXT_TYPES.contains(mimeType)) {
+            return context.append("\nContent: The file content is not text-readable in this chat context.")
+                    .toString();
+        }
+
+        String text = new String(data, StandardCharsets.UTF_8);
+        text = trimTextContext(text);
+
+        return context.append("\nContent:\n").append(text).toString();
+    }
+
+    private String trimTextContext(String text) {
+        String normalized = text.strip();
+        if (normalized.length() <= MAX_TEXT_CONTEXT_LENGTH) {
+            return normalized;
+        }
+        return normalized.substring(0, MAX_TEXT_CONTEXT_LENGTH)
+                + "\n\n[Attachment content truncated after %d characters.]".formatted(MAX_TEXT_CONTEXT_LENGTH);
     }
 
     private String sanitizeMediaName(String fileName) {
@@ -163,6 +218,14 @@ public class AiAttachmentMediaResolver {
         return sanitized.length() > MAX_MEDIA_NAME_LENGTH ? sanitized.substring(0, MAX_MEDIA_NAME_LENGTH) : sanitized;
     }
 
-    public record AttachmentRef(UUID attachmentId, String mimeType) {
+    public record ResolvedAttachmentInput(List<Media> media, String textContext) {
+    }
+
+    public enum AttachmentMediaKind {
+        SPREADSHEET,
+        TEXT_DOCUMENT,
+        JSON,
+        IMAGE,
+        OTHER
     }
 }

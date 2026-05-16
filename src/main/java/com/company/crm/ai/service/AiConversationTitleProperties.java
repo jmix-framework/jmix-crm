@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 public class AiConversationTitleProperties {
 
     private String modelId;
+    private boolean enabled = true;
 
     public String getModelId() {
         return modelId;
@@ -15,5 +16,13 @@ public class AiConversationTitleProperties {
 
     public void setModelId(String modelId) {
         this.modelId = modelId;
+    }
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
     }
 }

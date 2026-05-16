@@ -26,9 +26,7 @@
     <layout>
         <hbox id="buttonsPanel" classNames="buttons-panel">
             <startSlot>
-                <button id="createButton" action="aiConversationsDataGrid.createAction"/>
-                <button id="editButton" action="aiConversationsDataGrid.editAction"/>
-                <button id="removeButton" action="aiConversationsDataGrid.removeAction"/>
+                <button id="readButton" action="aiConversationsDataGrid.readAction"/>
             </startSlot>
             <endSlot>
                 <simplePagination id="pagination" dataLoader="aiConversationsDl"/>
@@ -40,11 +38,7 @@
                   dataContainer="aiConversationsDc"
                   columnReorderingAllowed="true">
             <actions>
-                <action id="createAction" type="list_create" text="msg://aiConversationListView.createAction.text"
-                        icon="vaadin:magic"/>
-                <action id="editAction" type="list_edit" text="msg://aiConversationListView.editAction.text"
-                        icon="vaadin:external-link"/>
-                <action id="removeAction" type="list_remove"/>
+                <action id="readAction" type="list_read" text="msg://aiConversationListView.readAction.text"/>
             </actions>
             <columns resizable="true">
                 <column property="title" width="60%"/>

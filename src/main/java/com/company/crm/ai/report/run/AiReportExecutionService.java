@@ -1,14 +1,14 @@
 package com.company.crm.ai.report.run;
 
 import com.company.crm.ai.model.AiAttachmentType;
-import com.company.crm.ai.model.AiConversation;
 import com.company.crm.ai.model.AiConversationAttachment;
 import com.company.crm.ai.model.ChatMessage;
-import com.company.crm.ai.model.ChatMessageType;
 import io.jmix.core.DataManager;
 import io.jmix.core.FileRef;
 import io.jmix.core.FileStorage;
-import io.jmix.core.Messages;
+import io.jmix.core.Metadata;
+import io.jmix.core.MetadataTools;
+import io.jmix.core.metamodel.model.MetaClass;
 import io.jmix.reports.ReportRepository;
 import io.jmix.reports.entity.Report;
 import io.jmix.reports.entity.ReportTemplate;
@@ -35,15 +35,15 @@ import static io.jmix.reports.entity.ReportOutputType.valueOf;
 public class AiReportExecutionService {
 
     private static final Logger log = LoggerFactory.getLogger(AiReportExecutionService.class);
-    private static final String DEFAULT_ASSISTANT_NAME = "CRM AI";
 
-    private final Messages messages;
     private final DataManager dataManager;
     private final FileStorage fileStorage;
     private final ReportRunner reportRunner;
     private final ReportRepository reportRepository;
     private final ReportContentConverter contentConverter;
     private final AiReportParameterConverter parameterConverter;
+    private final Metadata metadata;
+    private final MetadataTools metadataTools;
 
     public AiReportExecutionService(ReportRepository reportRepository,
                                     ReportRunner reportRunner,
@@ -51,14 +51,16 @@ public class AiReportExecutionService {
                                     ReportContentConverter contentConverter,
                                     FileStorage fileStorage,
                                     DataManager dataManager,
-                                    Messages messages) {
+                                    Metadata metadata,
+                                    MetadataTools metadataTools) {
         this.reportRepository = reportRepository;
         this.reportRunner = reportRunner;
         this.parameterConverter = parameterConverter;
         this.contentConverter = contentConverter;
         this.fileStorage = fileStorage;
         this.dataManager = dataManager;
-        this.messages = messages;
+        this.metadata = metadata;
+        this.metadataTools = metadataTools;
     }
 
     /**
@@ -75,6 +77,10 @@ public class AiReportExecutionService {
         return executeReport(reportCode, parameters, templateCode, outputType, allowedReportCodes, null);
     }
 
+    public ReportExecutionResult executeReport(String reportCode, Map<String, Object> parameters, String templateCode, String outputType, Collection<String> allowedReportCodes, UUID conversationId) {
+        return executeReport(reportCode, parameters, templateCode, outputType, allowedReportCodes, conversationId, null);
+    }
+
     /**
      * Executes a report by its code with provided parameters and persists result if conversationId is provided.
      *
@@ -86,7 +92,7 @@ public class AiReportExecutionService {
      * @param conversationId     Optional AI conversation ID to link the report to.
      * @return Execution result with content or error details
      */
-    public ReportExecutionResult executeReport(String reportCode, Map<String, Object> parameters, String templateCode, String outputType, Collection<String> allowedReportCodes, UUID conversationId) {
+    public ReportExecutionResult executeReport(String reportCode, Map<String, Object> parameters, String templateCode, String outputType, Collection<String> allowedReportCodes, UUID conversationId, UUID assistantMessageId) {
         try {
             // 0. Mandatory Whitelist Guard
             if (allowedReportCodes == null || !allowedReportCodes.contains(reportCode)) {
@@ -165,8 +171,9 @@ public class AiReportExecutionService {
             ReportExecutionResult result = ReportExecutionResult.success(reportCode, effectiveTemplateCode, effectiveOutputType, content);
 
             // 7. Optional Persistence
-            if (conversationId != null) {
-                return persistReportResult(result, conversationId, report.getName());
+            if (assistantMessageId != null) {
+                String primaryEntityName = resolvePrimaryEntityInstanceName(conversionResult.convertedParameters());
+                return persistReportResult(result, assistantMessageId, report.getName(), primaryEntityName);
             }
 
             return result;
@@ -177,12 +184,17 @@ public class AiReportExecutionService {
         }
     }
 
-    private ReportExecutionResult persistReportResult(ReportExecutionResult result, UUID conversationId, String reportName) {
+    private ReportExecutionResult persistReportResult(ReportExecutionResult result, UUID assistantMessageId, String reportName, String primaryEntityName) {
         FileRef fileRef = null;
         try {
-            AiConversation conversation = dataManager.load(AiConversation.class).id(conversationId).optional().orElse(null);
-            if (conversation == null) {
-                log.warn("Cannot persist report result: AiConversation with ID {} not found", conversationId);
+            ChatMessage assistantMessage = dataManager.load(ChatMessage.class)
+                    .id(assistantMessageId)
+                    .fetchPlan(fp -> fp.addFetchPlan(io.jmix.core.FetchPlan.BASE)
+                            .add("conversation", io.jmix.core.FetchPlan.BASE))
+                    .optional()
+                    .orElse(null);
+            if (assistantMessage == null) {
+                log.warn("Cannot persist report result: ChatMessage with ID {} not found", assistantMessageId);
                 return result;
             }
 
@@ -195,16 +207,18 @@ public class AiReportExecutionService {
             fileRef = fileStorage.saveStream(fileName, new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8)));
 
             AiConversationAttachment attachment = dataManager.create(AiConversationAttachment.class);
-            attachment.setConversation(conversation);
+            attachment.setMessage(assistantMessage);
             attachment.setFile(fileRef);
             attachment.setFileName(fileName);
             String attachmentTitle = reportName != null && !reportName.isBlank() ? reportName : result.reportCode();
+            if (primaryEntityName != null && !primaryEntityName.isBlank()) {
+                attachmentTitle = attachmentTitle + " - " + primaryEntityName;
+            }
             attachment.setTitle(attachmentTitle);
             attachment.setType(AiAttachmentType.AI_GENERATED);
             dataManager.save(attachment);
-            saveAttachmentEventMessage(conversation, attachmentTitle);
 
-            String citation = String.format("\n\n[View Report Attachments](/ai-conversations/%s)", conversation.getId());
+            String citation = String.format("\n\n[View Report Attachments](/ai-conversations/%s)", assistantMessage.getConversation().getId());
             return new ReportExecutionResult(
                     result.success(),
                     result.reportCode(),
@@ -223,30 +237,8 @@ public class AiReportExecutionService {
                     log.warn("Failed to cleanup report file {} after persistence error", fileRef, cleanupError);
                 }
             }
-            log.error("Failed to persist report result for conversation {}", conversationId, e);
+            log.error("Failed to persist report result for assistant message {}", assistantMessageId, e);
             return result;
-        }
-    }
-
-    private void saveAttachmentEventMessage(AiConversation conversation, String attachmentTitle) {
-        try {
-            ChatMessage attachmentMessage = dataManager.create(ChatMessage.class);
-            attachmentMessage.setConversation(conversation);
-            attachmentMessage.setType(ChatMessageType.ATTACHMENT);
-            attachmentMessage.setContent(messages.formatMessage(AiReportExecutionService.class,
-                    "attachmentEventMessage", assistantName(), attachmentTitle));
-            dataManager.save(attachmentMessage);
-        } catch (Exception e) {
-            log.warn("Failed to persist attachment event message for conversation {}", conversation.getId(), e);
-        }
-    }
-
-    private String assistantName() {
-        try {
-            String value = messages.getMessage("com.company.crm.ai.view.aiconversation/assistantName");
-            return !value.isBlank() ? value : DEFAULT_ASSISTANT_NAME;
-        } catch (Exception e) {
-            return DEFAULT_ASSISTANT_NAME;
         }
     }
 
@@ -269,5 +261,29 @@ public class AiReportExecutionService {
                         && template.getReportOutputType().name().equalsIgnoreCase(outputType))
                 .findFirst()
                 .orElse(null);
+    }
+
+    private String resolvePrimaryEntityInstanceName(Map<String, Object> convertedParameters) {
+        if (convertedParameters == null || convertedParameters.isEmpty()) {
+            return null;
+        }
+        for (Object value : convertedParameters.values()) {
+            if (value == null) {
+                continue;
+            }
+            MetaClass metaClass = metadata.findClass(value.getClass());
+            if (metaClass == null) {
+                continue;
+            }
+            try {
+                String name = metadataTools.getInstanceName(value);
+                if (name != null && !name.isBlank()) {
+                    return name;
+                }
+            } catch (Exception e) {
+                log.debug("Could not resolve instance name for parameter value {}", value, e);
+            }
+        }
+        return null;
     }
 }

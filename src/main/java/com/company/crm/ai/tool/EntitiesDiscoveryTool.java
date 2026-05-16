@@ -6,9 +6,9 @@ import io.jmix.core.MetadataTools;
 import io.jmix.core.metamodel.model.MetaClass;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
-import org.springframework.context.ApplicationContext;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -26,30 +26,16 @@ public class EntitiesDiscoveryTool implements CrmAiTool {
 
     private final MetadataTools metadataTools;
     private final AiDomainModelDescriptorYamlExporter yamlExporter;
+    private final AiToolUiStatus aiToolUiStatus;
     private final Set<Class<? extends UuidEntity>> whitelist;
 
-    public static EntitiesDiscoveryTool create(ApplicationContext applicationContext,
-                                               Collection<Class<? extends UuidEntity>> whitelist) {
-        return new EntitiesDiscoveryTool(
-                applicationContext.getBean(MetadataTools.class),
-                applicationContext.getBean(AiDomainModelDescriptorYamlExporter.class),
-                whitelist == null ? Collections.emptySet() : whitelist);
-    }
-
-    /**
-     * Creates a discovery tool with an optional whitelist.
-     *
-     * @param metadataTools Jmix metadata tools
-     * @param yamlExporter  YAML exporter for detailed schema information
-     * @param whitelist     Optional collection of entity classes. If provided, only these entities
-     *                      will be available for schema introspection. Discovery (names only)
-     *                      remains available for all entities to help the LLM navigate.
-     */
-    private EntitiesDiscoveryTool(MetadataTools metadataTools,
-                                  AiDomainModelDescriptorYamlExporter yamlExporter,
-                                  Collection<Class<? extends UuidEntity>> whitelist) {
+    public EntitiesDiscoveryTool(MetadataTools metadataTools,
+                                 AiDomainModelDescriptorYamlExporter yamlExporter,
+                                 AiToolUiStatus aiToolUiStatus,
+                                 Collection<Class<? extends UuidEntity>> whitelist) {
         this.metadataTools = metadataTools;
         this.yamlExporter = yamlExporter;
+        this.aiToolUiStatus = aiToolUiStatus;
         this.whitelist = whitelist != null ? Set.copyOf(whitelist) : Collections.emptySet();
     }
 
@@ -66,12 +52,16 @@ public class EntitiesDiscoveryTool implements CrmAiTool {
             - Find specific entities by name patterns
             - Get correct entity names for detailed schema introspection
             """)
-    public List<String> getAllEntityNames() {
+    public List<String> getAllEntityNames(ToolContext toolContext) {
+        String statusStart = "Inspecting available CRM entities...";
         log.info("LLM Tool Call: getAllEntityNames()");
-        return metadataTools.getAllJpaEntityMetaClasses().stream()
+        aiToolUiStatus.update(toolContext, statusStart);
+        List<String> names = metadataTools.getAllJpaEntityMetaClasses().stream()
                 .map(MetaClass::getName)
                 .sorted()
                 .collect(Collectors.toList());
+        aiToolUiStatus.complete(toolContext, statusStart, String.format("Discovered %d data entities", names.size()));
+        return names;
     }
 
     /**
@@ -97,8 +87,11 @@ public class EntitiesDiscoveryTool implements CrmAiTool {
             """)
     public String getDomainModelForEntities(
             @ToolParam(description = "List of entity names to include (e.g., [\"Client\", \"Order\"])")
-            List<String> entityNames) {
+            List<String> entityNames,
+            ToolContext toolContext) {
+        String statusStart = "Reading CRM schema details...";
         log.info("LLM Tool Call: getDomainModelForEntities({})", entityNames);
+        aiToolUiStatus.update(toolContext, statusStart);
         try {
             // Apply whitelist filter if configured
             Set<Class<?>> requestedClasses = metadataTools.getAllJpaEntityMetaClasses().stream()
@@ -108,12 +101,19 @@ public class EntitiesDiscoveryTool implements CrmAiTool {
                     .collect(Collectors.toSet());
 
             if (requestedClasses.isEmpty()) {
-                return "Error: No authorized or valid entity names provided. Use getAllEntityNames() to see what's available.";
+                String errorResult = "Error: No authorized or valid entity names provided. Use getAllEntityNames() to see what's available.";
+                aiToolUiStatus.complete(toolContext, statusStart, "No matching entities found");
+                return errorResult;
             }
 
-            return yamlExporter.export(requestedClasses);
+            String yaml = yamlExporter.export(requestedClasses);
+            List<String> matchedNames = requestedClasses.stream()
+                    .map(Class::getSimpleName).sorted().collect(Collectors.toList());
+            aiToolUiStatus.complete(toolContext, statusStart, String.format("Loaded schema details for %s", matchedNames));
+            return yaml;
         } catch (Exception e) {
             log.error("Failed to generate domain model schema", e);
+            aiToolUiStatus.complete(toolContext, statusStart, "Failed to read schema details");
             return "Error generating schema: " + e.getMessage();
         }
     }

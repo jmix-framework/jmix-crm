@@ -5,6 +5,7 @@ import io.jmix.core.DeletePolicy;
 import io.jmix.core.entity.annotation.OnDeleteInverse;
 import io.jmix.core.metamodel.annotation.InstanceName;
 import io.jmix.core.metamodel.annotation.JmixEntity;
+import io.jmix.core.metamodel.annotation.Composition;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -12,8 +13,12 @@ import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
+
+import java.util.List;
 
 @JmixEntity
 @Table(name = "CHAT_MESSAGE", indexes = {
@@ -37,6 +42,32 @@ public class ChatMessage extends CreateAuditEntity {
     @NotNull
     @Column(name = "TYPE_", nullable = false)
     private String type;
+
+    @Composition
+    @OneToMany(mappedBy = "message")
+    @OrderBy("sortOrder ASC, createdDate ASC, id ASC")
+    private List<ChatMessageEntityReference> entityReferences;
+
+    @Composition
+    @OneToMany(mappedBy = "message")
+    @OrderBy("createdDate ASC, id ASC")
+    private List<AiConversationAttachment> attachments;
+
+    public List<AiConversationAttachment> getAttachments() {
+        return attachments;
+    }
+
+    public void setAttachments(List<AiConversationAttachment> attachments) {
+        this.attachments = attachments;
+    }
+
+    public List<ChatMessageEntityReference> getEntityReferences() {
+        return entityReferences;
+    }
+
+    public void setEntityReferences(List<ChatMessageEntityReference> entityReferences) {
+        this.entityReferences = entityReferences;
+    }
 
     public ChatMessageType getType() {
         return type == null ? null : ChatMessageType.fromId(type);

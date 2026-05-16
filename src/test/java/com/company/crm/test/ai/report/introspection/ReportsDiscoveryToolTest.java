@@ -17,7 +17,7 @@ class ReportsDiscoveryToolTest extends AbstractTest {
         ReportsDiscoveryTool discoveryTool = ReportsDiscoveryTool.create(applicationContext, List.of());
 
         // when
-        String yaml = discoveryTool.getAvailableReports();
+        String yaml = discoveryTool.getAvailableReports(null);
 
         // then
         assertThat(yaml).isNotEmpty();
@@ -39,7 +39,7 @@ class ReportsDiscoveryToolTest extends AbstractTest {
         List<String> requestedCodes = List.of("client-360-report");
 
         // when
-        String yaml = discoveryTool.getReportsByCodes(requestedCodes);
+        String yaml = discoveryTool.getReportsByCodes(requestedCodes, null);
 
         // then
         assertThat(yaml).contains("client-360-report:");

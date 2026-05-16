@@ -36,7 +36,7 @@ import java.util.Map;
 import java.util.Objects;
 
 @ReportDef(
-        code = "client-360-report",
+        code = Client360Report.CODE,
         name = "Client 360 Report",
         description = "Comprehensive 360-degree view of a client including financial risk assessment, business indicators (VIP, Frequent, etc.), orders, invoices, payment history, contacts, and recent activities. Use this for a holistic overview of a specific client's status and history."
 )
@@ -148,6 +148,8 @@ import java.util.Objects;
  * This approach improves maintainability, testability, and separation of concerns.
  */
 public class Client360Report {
+
+    public static final String CODE = "client-360-report";
 
     // Minimal dependencies - only for simple coordination
     @Autowired

@@ -24,6 +24,7 @@
         <action id="cloneAction" text="msg:///clone" icon="COPY"/>
         <action id="emailAction" text="msg:///email" icon="ENVELOPE_O"/>
         <action id="downloadAction" text="msg:///download" icon="DOWNLOAD_ALT"/>
+        <action id="chatAboutThis" text="msg://chatAboutThis" icon="crm:sparkles"/>
     </actions>
     <layout>
         <hbox width="100%" justifyContent="BETWEEN" alignItems="CENTER">
@@ -36,6 +37,7 @@
                 <button action="cloneAction" themeNames="contrast"/>
                 <button action="emailAction" themeNames="contrast"/>
                 <button action="downloadAction" themeNames="contrast"/>
+                <button id="chatAboutThisButton" action="chatAboutThis" themeNames="contrast"/>
             </hbox>
         </hbox>
         <scroller width="100%" height="100%">

@@ -1,5 +1,6 @@
 package com.company.crm.ai.service;
 
+import com.company.crm.ai.config.CrmAiConfig;
 import com.company.crm.ai.model.AiConversation;
 import com.company.crm.ai.model.ChatMessage;
 import com.company.crm.ai.model.ChatMessageType;
@@ -36,14 +37,19 @@ public class AiConversationTitleService {
     private final UnconstrainedDataManager dataManager;
     private final ChatClient chatClient;
     private final Messages messages;
+    private final AiConversationTitleProperties properties;
+    private final CrmAiConfig crmAiConfig;
 
     public AiConversationTitleService(
             UnconstrainedDataManager dataManager,
             ChatClient.Builder chatClientBuilder,
             @Value("classpath:prompts/ai-conversation-title-system-prompt.st") Resource systemPrompt,
             AiConversationTitleProperties properties,
+            CrmAiConfig crmAiConfig,
             Messages messages) {
         this.dataManager = dataManager;
+        this.properties = properties;
+        this.crmAiConfig = crmAiConfig;
         this.chatClient = chatClientBuilder.clone()
                 .defaultSystem(systemPrompt)
                 .defaultOptions(buildOptions(properties.getModelId()))
@@ -52,7 +58,7 @@ public class AiConversationTitleService {
     }
 
     public void generateTitleIfNeeded(UUID conversationId) {
-        if (conversationId == null) {
+        if (conversationId == null || !crmAiConfig.isAiIntegrationEnabled() || !properties.isEnabled()) {
             return;
         }
         try {
@@ -159,7 +165,7 @@ public class AiConversationTitleService {
 
     public String sanitizeTitle(String title) {
         return normalize(title, TITLE_MAX_LENGTH)
-                .map(t -> t.replaceAll("\"", ""))
+                .map(t -> t.replace("\"", ""))
                 .map(t -> t.endsWith(".") ? t.substring(0, t.length() - 1).trim() : t)
                 .filter(t -> !t.contains(SKIP_TITLE_MARKER))
                 .orElse("");

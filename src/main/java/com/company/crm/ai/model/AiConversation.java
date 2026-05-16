@@ -29,19 +29,6 @@ public class AiConversation extends CreateAuditEntity {
     @OrderBy("createdDate ASC")
     private List<ChatMessage> messages;
 
-    @Composition
-    @OneToMany(mappedBy = "conversation")
-    @OrderBy("createdDate ASC")
-    private List<AiConversationAttachment> attachments;
-
-    public List<AiConversationAttachment> getAttachments() {
-        return attachments;
-    }
-
-    public void setAttachments(List<AiConversationAttachment> attachments) {
-        this.attachments = attachments;
-    }
-
     public List<ChatMessage> getMessages() {
         return messages;
     }

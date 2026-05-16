@@ -1,7 +1,9 @@
 package com.company.crm.security.role;
 
 import com.company.crm.ai.model.AiConversation;
+import com.company.crm.ai.model.AiConversationAttachment;
 import com.company.crm.ai.model.ChatMessage;
+import com.company.crm.ai.model.ChatMessageEntityReference;
 import io.jmix.security.role.annotation.JpqlRowLevelPolicy;
 import io.jmix.security.role.annotation.RowLevelRole;
 
@@ -14,4 +16,10 @@ public interface AiChatUserRole {
 
     @JpqlRowLevelPolicy(entityClass = ChatMessage.class, where = "{E}.createdBy = :current_user_username")
     void chatMessage();
+
+    @JpqlRowLevelPolicy(entityClass = AiConversationAttachment.class, where = "{E}.createdBy = :current_user_username")
+    void aiConversationAttachment();
+
+    @JpqlRowLevelPolicy(entityClass = ChatMessageEntityReference.class, where = "{E}.createdBy = :current_user_username")
+    void chatMessageEntityReference();
 }

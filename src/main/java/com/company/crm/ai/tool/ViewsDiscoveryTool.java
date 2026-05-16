@@ -28,9 +28,9 @@ public class ViewsDiscoveryTool implements CrmAiTool {
                 applicationContext.getBean(MetadataTools.class));
     }
 
-    private ViewsDiscoveryTool(ServerProperties serverProperties,
-                               ViewRegistry viewRegistry,
-                               MetadataTools metadataTools) {
+    public ViewsDiscoveryTool(ServerProperties serverProperties,
+                              ViewRegistry viewRegistry,
+                              MetadataTools metadataTools) {
         this.serverProperties = serverProperties;
         this.viewRegistry = viewRegistry;
         this.metadataTools = metadataTools;

@@ -158,6 +158,12 @@ vaadin-menu-bar[jmix-role='jmix-user-menu']:not([theme~='substituted']) .user-me
     border-radius: 10px;
 }
 
+/* Selected CRM AI menu item — magic purple background to match the New Chat
+   button. Text stays white via the contrast color inherited from the base rule. */
+.jmix-list-menu a[highlight].jmix-menu-item-link:has(vaadin-icon[icon="crm:sparkles"]) {
+    background-color: var(--jx-magic);
+}
+
 .jmix-list-menu vaadin-details-summary {
     padding: 0 !important;
 }
@@ -183,6 +189,14 @@ vaadin-menu-bar[jmix-role='jmix-user-menu']:not([theme~='substituted']) .user-me
     background-color: var(--lumo-primary-color-10pct);
     color: var(--lumo-primary-text-color);
     border-radius: 10px;
+}
+
+/* Hover over the CRM AI menu item (identified by the sparkles icon) uses the
+   magic-purple palette to match the brand. Skipped when the item is already
+   selected (blue highlight). */
+.jmix-list-menu a.jmix-menu-item-link:not([highlight]):has(vaadin-icon[icon="crm:sparkles"]):hover {
+    background-color: var(--jx-magic-soft);
+    color: var(--jx-magic-dark);
 }
 
 .jmix-menu-item-link:focus {

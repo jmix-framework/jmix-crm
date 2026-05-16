@@ -197,8 +197,7 @@ public class MainView extends StandardMainView {
 
     @Subscribe(id = "chatButton", subject = "clickListener")
     private void onChatButtonClick(final ClickEvent<JmixButton> event) {
-        String welcomeMessage = messages.getMessage("aiConversation.welcomeMessage");
-        final AiConversation savedConversation = aiConversationService.createNewConversation(welcomeMessage);
+        final AiConversation savedConversation = aiConversationService.createNewConversation();
 
         DialogWindow<AiConversationDetailView> dialogWindow = dialogWindows.detail(this, AiConversation.class)
                 .editEntity(savedConversation)

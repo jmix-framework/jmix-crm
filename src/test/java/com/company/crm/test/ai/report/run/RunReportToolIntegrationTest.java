@@ -3,6 +3,8 @@ package com.company.crm.test.ai.report.run;
 import com.company.crm.AbstractTest;
 import com.company.crm.ai.model.AiConversation;
 import com.company.crm.ai.model.AiConversationAttachment;
+import com.company.crm.ai.model.ChatMessage;
+import com.company.crm.ai.model.ChatMessageType;
 import com.company.crm.ai.report.run.ReportExecutionErrorCode;
 import com.company.crm.ai.report.run.ReportExecutionResult;
 import com.company.crm.ai.service.AiConversationService;
@@ -13,6 +15,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jmix.core.FetchPlan;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -62,12 +66,20 @@ class RunReportToolIntegrationTest extends AbstractTest {
         });
     }
 
-    @Test
-    void testRunReport_withConversationId() {
+    @ParameterizedTest(name = "assistantMessageId as String: {0}")
+    @ValueSource(booleans = {false, true})
+    void testRunReport_withAssistantMessageId(boolean asString) {
         systemAuthenticator.runWithSystem(() -> {
             // given
-            AiConversation conversation = aiConversationService.createNewConversation("Tool Test Persistence");
-            Client client = entities.client("Tool Persistence Client");
+            AiConversation conversation = aiConversationService.createNewConversation();
+            ChatMessage message = dataManager.create(ChatMessage.class);
+            message.setConversation(conversation);
+            message.setType(ChatMessageType.ASSISTANT);
+            message.setCreatedDate(LocalDate.now().atStartOfDay().atOffset(java.time.ZoneOffset.UTC));
+            dataManager.save(message);
+
+            Client client = entities.client(
+                    asString ? "Tool String Context Client" : "Tool Persistence Client");
 
             Map<String, Object> parameters = Map.of(
                     "client", client.getId().toString(),
@@ -75,7 +87,8 @@ class RunReportToolIntegrationTest extends AbstractTest {
                     "toDate", LocalDate.now().toString()
             );
 
-            ToolContext toolContext = new ToolContext(Map.of("conversationId", conversation.getId()));
+            Object assistantMessageIdParam = asString ? message.getId().toString() : message.getId();
+            ToolContext toolContext = new ToolContext(Map.of("assistantMessageId", assistantMessageIdParam));
 
             // when
             ReportExecutionResult result = reportTool.runReport(
@@ -94,46 +107,13 @@ class RunReportToolIntegrationTest extends AbstractTest {
 
             AiConversation reloadedConversation = dataManager.load(AiConversation.class)
                     .id(conversation.getId())
-                    .fetchPlan(fp -> fp.add("attachments", sub -> sub.addFetchPlan(FetchPlan.BASE)))
+                    .fetchPlan(fp -> fp.add("messages", sub -> sub.add("attachments", attSub -> attSub.addFetchPlan(FetchPlan.BASE))))
                     .one();
-            assertThat(reloadedConversation.getAttachments()).hasSize(1);
-            AiConversationAttachment attachment = reloadedConversation.getAttachments().getFirst();
-            assertThat(attachment.getFileName()).startsWith("report_client-360-report_");
-            assertThat(attachment.getFileName()).endsWith(".html");
-            assertThat(attachment.getFile()).isNotNull();
-        });
-    }
-
-    @Test
-    void testRunReport_withConversationIdAsString() {
-        systemAuthenticator.runWithSystem(() -> {
-            // given
-            AiConversation conversation = aiConversationService.createNewConversation("Tool String Conversation");
-            Client client = entities.client("Tool String Context Client");
-
-            Map<String, Object> parameters = Map.of(
-                    "client", client.getId().toString(),
-                    "fromDate", LocalDate.now().minusDays(30).toString(),
-                    "toDate", LocalDate.now().toString()
-            );
-
-            ToolContext toolContext = new ToolContext(Map.of("conversationId", conversation.getId().toString()));
-
-            // when
-            ReportExecutionResult result = reportTool.runReport("client-360-report", parameters, null, "HTML", toolContext);
-
-            // then
-            assertThat(result.success()).isTrue();
-            assertThat(result.content()).contains(
-                    String.format("[View Report Attachments](/ai-conversations/%s)", conversation.getId())
-            );
-
-            AiConversation reloadedConversation = dataManager.load(AiConversation.class)
-                    .id(conversation.getId())
-                    .fetchPlan(fp -> fp.add("attachments", sub -> sub.addFetchPlan(FetchPlan.BASE)))
-                    .one();
-            assertThat(reloadedConversation.getAttachments()).hasSize(1);
-            AiConversationAttachment attachment = reloadedConversation.getAttachments().getFirst();
+            List<AiConversationAttachment> attachments = reloadedConversation.getMessages().stream()
+                    .flatMap(m -> m.getAttachments().stream())
+                    .toList();
+            assertThat(attachments).hasSize(1);
+            AiConversationAttachment attachment = attachments.getFirst();
             assertThat(attachment.getFileName()).startsWith("report_client-360-report_");
             assertThat(attachment.getFileName()).endsWith(".html");
             assertThat(attachment.getFile()).isNotNull();

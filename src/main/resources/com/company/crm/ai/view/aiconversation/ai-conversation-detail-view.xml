@@ -5,59 +5,96 @@
         <instance id="aiConversationDc"
                   class="com.company.crm.ai.model.AiConversation">
             <fetchPlan extends="_base">
-                <property name="messages" fetchPlan="_base"/>
-                <property name="attachments" fetchPlan="_base"/>
+                <property name="messages" fetchPlan="_base">
+                    <property name="attachments" fetchPlan="_base"/>
+                    <property name="entityReferences" fetchPlan="_base"/>
+                </property>
             </fetchPlan>
             <loader id="aiConversationDl"/>
         </instance>
-        <collection id="attachmentsDc"
-                    class="com.company.crm.ai.model.AiConversationAttachment">
+        <collection id="promptSuggestionsDc"
+                    class="com.company.crm.ai.model.AiPromptSuggestionDto">
             <fetchPlan extends="_base"/>
-            <loader id="attachmentsDl">
-                <query>
-                    <![CDATA[select e from AiConversationAttachment e where e.conversation.id = :conversationId order by e.createdDate desc]]>
-                </query>
-            </loader>
         </collection>
     </data>
     <facets>
         <dataLoadCoordinator auto="true"/>
     </facets>
     <layout>
-        <split id="conversationSplit" orientation="HORIZONTAL" width="100%" height="100%" splitterPosition="68">
-            <vbox id="chatPanel" width="100%" height="100%" spacing="true" padding="true">
-                <hbox id="conversationTitleLayout" spacing="false" alignItems="CENTER">
-                    <h3 id="conversationTitle"
-                        dataContainer="aiConversationDc"
-                        property="title"
-                        classNames="m-0"/>
-                    <button id="editConversationTitleBtn"
-                            icon="PENCIL"
-                            themeNames="tertiary-inline small icon"
-                            classNames="ms-xs"
-                            ariaLabel="msg://editConversationTitleAction"/>
-                </hbox>
+        <sidePanelLayout id="contextSidePanel"
+                         width="100%"
+                         height="100%"
+                         sidePanelPosition="RIGHT"
+                         sidePanelOverlay="true"
+                         sidePanelHorizontalSize="24rem"
+                         modal="false"
+                         closeOnOutsideClick="true"
+                         classNames="ai-conversation-context-side-panel">
+            <vbox id="timelineRoot"
+                  width="100%"
+                  height="100%"
+                  spacing="false"
+                  padding="false"
+                  classNames="ai-conversation-timeline-view">
+                <vbox id="timelineCanvas"
+                      width="100%"
+                      height="100%"
+                      spacing="true"
+                      padding="false"
+                      classNames="ai-timeline-canvas">
+                    <hbox id="conversationTitleLayout"
+                          width="100%"
+                          spacing="false"
+                          alignItems="CENTER"
+                          expand="conversationTitle"
+                          classNames="ai-conversation-title-layout">
+                        <h3 id="conversationTitle"
+                            dataContainer="aiConversationDc"
+                            property="title"
+                            classNames="m-0"/>
+                        <button id="editConversationTitleBtn"
+                                icon="PENCIL"
+                                themeNames="tertiary-inline small icon"
+                                classNames="ms-xs"
+                                ariaLabel="msg://editConversationTitleAction"/>
+                        <button id="attachmentsToggleBtn"
+                                icon="PAPERCLIP"
+                                themeNames="tertiary"
+                                classNames="ai-conversation-attachments-toggle"
+                                ariaLabel="msg://attachmentsToggleAction"/>
+                    </hbox>
+                    <vbox id="timelineContentLayout"
+                          width="100%"
+                          height="100%"
+                          spacing="true"
+                          padding="false"
+                          classNames="ai-timeline-content">
+                        <div id="topSpacer" width="100%"/>
+                        <vbox id="composerContainer"
+                              width="100%"
+                              spacing="true"
+                              padding="false"
+                              classNames="ai-timeline-composer">
+                            <h2 id="promptSuggestionsHeading"
+                                text="msg://promptSuggestionsHeading"
+                                classNames="ai-timeline-prompt-suggestions-heading"/>
+                            <gridLayout id="promptSuggestionsGridLayout"
+                                        itemsContainer="promptSuggestionsDc"
+                                        width="100%"
+                                        columnMinWidth="14rem"
+                                        gap="var(--lumo-space-s)"
+                                        classNames="ai-timeline-prompt-suggestions"/>
+                        </vbox>
+                        <div id="bottomSpacer" width="100%"/>
+                    </vbox>
+                </vbox>
             </vbox>
-            <vbox id="attachmentsPanel" width="100%" height="100%" spacing="false" padding="true">
-                <h3 id="attachmentsTitle"
-                    text="msg://com.company.crm.ai.view.aiconversation/attachmentsPanelTitle"
-                    classNames="m-0"/>
-                <gridLayout id="attachmentsGridLayout"
-                            itemsContainer="attachmentsDc"
-                            width="100%"
-                            gap="var(--lumo-space-xs)">
-                    <fragmentRenderer class="com.company.crm.ai.view.aiconversation.AiAttachmentCardFragmentRenderer"/>
-                </gridLayout>
-                <upload id="attachmentUpload"
-                        width="100%"
-                        classNames="attachments-dropzone"
-                        acceptedFileTypes=".pdf,.csv,.doc,.docx,.xls,.xlsx,.html,.htm,.txt,.md,.png,.jpg,.jpeg,.gif,.webp"
-                        uploadText="msg://com.company.crm.ai.view.aiconversation/attachmentUploadField.uploadText"
-                        dropLabel="msg://com.company.crm.ai.view.aiconversation/attachmentUpload.dropLabel"
-                        dropAllowed="true"
-                        receiverType="FILE_TEMPORARY_STORAGE_BUFFER"
-                        maxFiles="1"/>
-            </vbox>
-        </split>
+            <vbox id="contextSidePanelContent"
+                  width="100%"
+                  height="100%"
+                  spacing="false"
+                  padding="false"
+                  classNames="ai-conversation-context-side-panel-content"/>
+        </sidePanelLayout>
     </layout>
 </view>

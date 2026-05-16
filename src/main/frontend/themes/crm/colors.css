@@ -1,6 +1,48 @@
 /* custom theme colors*/
 html {
     --lumo-primary-color: rgb(0, 106, 245);
+
+    /* Chat / AI magic palette */
+    --jx-magic: #7a3fbf;
+    --jx-magic-soft: #f3ecfb;
+    --jx-magic-border: #ebd9fa;
+    --jx-magic-dark: #5e2f99;
+}
+
+vaadin-icon[icon="crm:sparkles"] {
+    color: var(--jx-magic);
+}
+
+/* Primary buttons have a blue background — icon must follow the white text. */
+vaadin-button[theme~="primary"] vaadin-icon[icon="crm:sparkles"] {
+    color: currentColor;
+}
+
+/* Any non-primary button with text + sparkles icon (e.g. "Chat about this") — the
+   whole button takes on the magic purple. Primary buttons are excluded (white on
+   blue bg) and icon-only buttons keep the default purple icon. */
+vaadin-button:not([theme~="primary"]):not([theme~="icon"]):has(vaadin-icon[icon="crm:sparkles"]) {
+    color: var(--jx-magic);
+}
+
+/* Selected side-menu item has a blue background and white text — make the icon white too. */
+.jmix-list-menu a[highlight] vaadin-icon[icon="crm:sparkles"] {
+    color: currentColor;
+}
+
+/* "ai" button theme — magic purple background with white foreground. Pair with
+   "primary" for full button styling (padding, font, border radius). */
+vaadin-button[theme~="ai"] {
+    background-color: var(--jx-magic);
+    color: var(--lumo-primary-contrast-color);
+}
+
+vaadin-button[theme~="ai"]:hover {
+    background-color: var(--jx-magic-dark);
+}
+
+vaadin-button[theme~="ai"] vaadin-icon[icon="crm:sparkles"] {
+    color: currentColor;
 }
 
 [theme~="dark"] {
