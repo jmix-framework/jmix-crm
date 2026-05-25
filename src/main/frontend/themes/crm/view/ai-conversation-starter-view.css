@@ -125,6 +125,22 @@
     height: 1px;
 }
 
+.ai-conversation-starter-conversation-card {
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.ai-conversation-starter-conversation-card-icon {
+    flex-shrink: 0;
+}
+
+.ai-conversation-starter-conversation-card-title {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 /* Force 2 columns for recents and suggestions on the centered canvas.
    Jmix grid-layout is a Web Component; the real grid lives in [part="items"] inside
    the shadow DOM, so we target it via ::part(items). */
@@ -138,4 +154,14 @@
     .ai-conversation-starter-suggestions-grid::part(items) {
         grid-template-columns: 1fr !important;
     }
+}
+
+/* Custom styles for starter view when opened inside a dialog */
+.opened-in-dialog .ai-conversation-starter-canvas {
+    padding-top: var(--lumo-space-l);
+}
+
+.opened-in-dialog .ai-conversation-starter-recent-grid::part(items),
+.opened-in-dialog .ai-conversation-starter-suggestions-grid::part(items) {
+    grid-template-columns: 1fr !important;
 }

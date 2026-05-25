@@ -65,19 +65,9 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
     @ViewComponent
     private InstanceContainer<AiConversation> aiConversationDc;
     @ViewComponent
-    private CollectionContainer<AiPromptSuggestionDto> promptSuggestionsDc;
-    @ViewComponent
     private VerticalLayout timelineContentLayout;
     @ViewComponent
     private VerticalLayout composerContainer;
-    @ViewComponent
-    private Component promptSuggestionsHeading;
-    @ViewComponent
-    private GridLayout<AiPromptSuggestionDto> promptSuggestionsGridLayout;
-    @ViewComponent
-    private Component topSpacer;
-    @ViewComponent
-    private Component bottomSpacer;
     @ViewComponent
     private JmixButton attachmentsToggleBtn;
     @ViewComponent
@@ -118,13 +108,10 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
     private AiConversationComposerFragment composerFragment;
     private TimelineItem activeThinkingItem;
     private AiConversationTimelineRenderer timelineRenderer;
-    private PromptSuggestionSupport promptSuggestionSupport;
     private ConversationTitleEditDialog titleEditDialog;
     private UUID freshAssistantMessageId;
     private final AiConversationTimelineItemFactory timelineItemFactory = new AiConversationTimelineItemFactory();
     private List<TimelineItem> timelineItems = List.of();
-    private List<String> initialEntityReferences = List.of();
-    private boolean initialEntityReferencesApplied;
 
     @Subscribe
     public void onInit(final InitEvent event) {
@@ -143,9 +130,7 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
             composerFragment.setInputEnabled(false);
         }
 
-        applyInitialEntityReferencesIfNeeded();
         refreshTimelineItems();
-        refreshPromptSuggestions();
         refreshComposerState();
         refreshAttachmentsToggleLabel();
         focusInput();
@@ -154,16 +139,9 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
 
     @Subscribe(id = "aiConversationDl", target = Target.DATA_LOADER)
     public void onAiConversationDlPostLoad(final InstanceLoader.PostLoadEvent<AiConversation> event) {
-        applyInitialEntityReferencesIfNeeded();
         refreshTimelineItems();
-        refreshPromptSuggestions();
         refreshComposerState();
         refreshAttachmentsToggleLabel();
-    }
-
-    public void setInitialEntityReferences(Collection<String> entityReferences) {
-        this.initialEntityReferences = entityReferences != null ? List.copyOf(entityReferences) : List.of();
-        this.initialEntityReferencesApplied = false;
     }
 
     @Subscribe("editConversationTitleBtn")
@@ -206,7 +184,6 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
                     entityReferences,
                     attachments
             );
-            refreshPromptSuggestions();
         } catch (Exception e) {
             log.error("Failed to persist user message with context", e);
             notifications.create(messageBundle.getMessage("errorProcessingMessage"))
@@ -221,7 +198,6 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
 
         showThinkingIndicator();
         composerFragment.setInputEnabled(false);
-        promptSuggestionsGridLayout.setEnabled(false);
 
         runAssistantResponseTask(savedUserMessage);
     }
@@ -318,7 +294,6 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
         freshAssistantMessageId = null;
         getViewData().loadAll();
         refreshTimelineItems();
-        refreshPromptSuggestions();
         refreshComposerState();
         refreshAttachmentsToggleLabel();
     }
@@ -347,42 +322,16 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
         }
     }
 
-    private void refreshPromptSuggestions() {
-        AiConversation conversation = aiConversationDc.getItem();
-
-        if (Boolean.TRUE.equals(conversation.getFirstMessageSent()) || hasInitialEntityReferences()) {
-            promptSuggestionsDc.setItems(List.of());
-            promptSuggestionsHeading.setVisible(false);
-            promptSuggestionsGridLayout.setVisible(false);
-            return;
-        }
-
-        if (promptSuggestionsDc.getItems().isEmpty()) {
-            promptSuggestionsDc.setItems(promptSuggestionSupport().selectInitialSuggestions());
-        }
-
-        boolean hasSuggestions = !promptSuggestionsDc.getItems().isEmpty();
-        promptSuggestionsHeading.setVisible(hasSuggestions);
-        promptSuggestionsGridLayout.setVisible(hasSuggestions);
-        promptSuggestionsGridLayout.setEnabled(crmAiConfig.isAiIntegrationEnabled());
-    }
-
     private void refreshComposerState() {
         if (isReadOnly()) {
             if (editConversationTitleBtn != null) {
                 editConversationTitleBtn.setVisible(false);
             }
             composerContainer.setVisible(false);
-            topSpacer.setVisible(false);
-            bottomSpacer.setVisible(false);
-            promptSuggestionsHeading.setVisible(false);
-            promptSuggestionsGridLayout.setVisible(false);
 
             if (timelineContentLayout != null) {
                 timelineContentLayout.setFlexGrow(1, timelineList);
-                timelineContentLayout.setFlexGrow(0, topSpacer);
                 timelineContentLayout.setFlexGrow(0, composerContainer);
-                timelineContentLayout.setFlexGrow(0, bottomSpacer);
             }
 
             if (timelineList != null) {
@@ -393,19 +342,9 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
             return;
         }
 
-        boolean conversationStarted = isConversationStarted();
-        boolean hasPromptSuggestions = !promptSuggestionsDc.getItems().isEmpty();
-
-        topSpacer.setVisible(!conversationStarted);
-        bottomSpacer.setVisible(!conversationStarted);
-        promptSuggestionsHeading.setVisible(!conversationStarted && hasPromptSuggestions);
-        promptSuggestionsGridLayout.setVisible(!conversationStarted && hasPromptSuggestions);
-
         if (timelineContentLayout != null) {
-            timelineContentLayout.setFlexGrow(conversationStarted ? 1 : 0, timelineList);
-            timelineContentLayout.setFlexGrow(conversationStarted ? 0 : 0.75, topSpacer);
+            timelineContentLayout.setFlexGrow(1, timelineList);
             timelineContentLayout.setFlexGrow(0, composerContainer);
-            timelineContentLayout.setFlexGrow(conversationStarted ? 0 : 1.25, bottomSpacer);
         }
 
         if (composerFragment != null) {
@@ -418,9 +357,6 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
 
         if (timelineList != null) {
             timelineList.setHeightFull();
-            if (!conversationStarted) {
-                timelineList.setHeight(null);
-            }
         }
 
         refreshContentWidth();
@@ -450,18 +386,7 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
         addMenuBar.getStyle().set("flex-shrink", "0");
     }
 
-    private void applyInitialEntityReferencesIfNeeded() {
-        if (initialEntityReferencesApplied || initialEntityReferences.isEmpty()) {
-            return;
-        }
 
-        composerFragment.addEntityReferences(initialEntityReferences);
-        initialEntityReferencesApplied = true;
-    }
-
-    private boolean hasInitialEntityReferences() {
-        return !initialEntityReferences.isEmpty() || initialEntityReferencesApplied;
-    }
 
     private Component createTimelineComponent(TimelineItem item) {
         return timelineRenderer.createTimelineComponent(item);
@@ -480,7 +405,6 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
     private void focusInput() {
         boolean aiEnabled = crmAiConfig.isAiIntegrationEnabled();
         composerFragment.setInputEnabled(aiEnabled);
-        promptSuggestionsGridLayout.setEnabled(aiEnabled);
         if (aiEnabled) {
             composerFragment.focus();
         }
@@ -551,25 +475,6 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
                 .format(createdDate);
     }
 
-    private PromptSuggestionSupport promptSuggestionSupport() {
-        if (promptSuggestionSupport == null) {
-            promptSuggestionSupport = new PromptSuggestionSupport(
-                    uiComponents,
-                    dataManager,
-                    messageBundle,
-                    this::submitUserMessage
-            );
-        }
-        return promptSuggestionSupport;
-    }
-
-    private ConversationTitleEditDialog titleEditDialog() {
-        if (titleEditDialog == null) {
-            titleEditDialog = new ConversationTitleEditDialog(dialogs, messageBundle);
-        }
-        return titleEditDialog;
-    }
-
     private void renderContextSidePanel() {
         contextPanelSupport.render(this, messageBundle, contextSidePanelContent, contextSidePanel, aiConversationDc.getItem());
     }
@@ -585,14 +490,14 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
         );
     }
 
-    @Supply(to = "promptSuggestionsGridLayout", subject = "renderer")
-    private ComponentRenderer<Card, AiPromptSuggestionDto> promptSuggestionsGridLayoutRenderer() {
-        return new ComponentRenderer<>(suggestion -> promptSuggestionSupport().createPromptSuggestionCard(suggestion));
+    private ConversationTitleEditDialog titleEditDialog() {
+        if (titleEditDialog == null) {
+            titleEditDialog = new ConversationTitleEditDialog(dialogs, messageBundle);
+        }
+        return titleEditDialog;
     }
 
-    private boolean isConversationStarted() {
-        return Boolean.TRUE.equals(aiConversationDc.getItem().getFirstMessageSent());
-    }
+
 
     private void triggerPendingAssistantResponseIfNeeded() {
         if (isReadOnly() || !crmAiConfig.isAiIntegrationEnabled() || activeThinkingItem != null) {
@@ -603,7 +508,6 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
                 .ifPresent(userMessage -> {
                     showThinkingIndicator();
                     composerFragment.setInputEnabled(false);
-                    promptSuggestionsGridLayout.setEnabled(false);
                     runAssistantResponseTask(userMessage);
                 });
     }

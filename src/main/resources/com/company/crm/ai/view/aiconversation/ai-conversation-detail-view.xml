@@ -12,10 +12,6 @@
             </fetchPlan>
             <loader id="aiConversationDl"/>
         </instance>
-        <collection id="promptSuggestionsDc"
-                    class="com.company.crm.ai.model.AiPromptSuggestionDto">
-            <fetchPlan extends="_base"/>
-        </collection>
     </data>
     <facets>
         <dataLoadCoordinator auto="true"/>
@@ -46,17 +42,21 @@
                           width="100%"
                           spacing="false"
                           alignItems="CENTER"
-                          expand="conversationTitle"
+                          expand="titleWrapper"
                           classNames="ai-conversation-title-layout">
-                        <h3 id="conversationTitle"
-                            dataContainer="aiConversationDc"
-                            property="title"
-                            classNames="m-0"/>
-                        <button id="editConversationTitleBtn"
-                                icon="PENCIL"
-                                themeNames="tertiary-inline small icon"
-                                classNames="ms-xs"
-                                ariaLabel="msg://editConversationTitleAction"/>
+                        <hbox id="titleWrapper"
+                              spacing="false"
+                              alignItems="CENTER">
+                            <h3 id="conversationTitle"
+                                dataContainer="aiConversationDc"
+                                property="title"
+                                classNames="m-0"/>
+                            <button id="editConversationTitleBtn"
+                                    icon="PENCIL"
+                                    themeNames="tertiary-inline small icon"
+                                    classNames="ms-xs"
+                                    ariaLabel="msg://editConversationTitleAction"/>
+                        </hbox>
                         <button id="attachmentsToggleBtn"
                                 icon="PAPERCLIP"
                                 themeNames="tertiary"
@@ -69,23 +69,11 @@
                           spacing="true"
                           padding="false"
                           classNames="ai-timeline-content">
-                        <div id="topSpacer" width="100%"/>
                         <vbox id="composerContainer"
                               width="100%"
                               spacing="true"
                               padding="false"
-                              classNames="ai-timeline-composer">
-                            <h2 id="promptSuggestionsHeading"
-                                text="msg://promptSuggestionsHeading"
-                                classNames="ai-timeline-prompt-suggestions-heading"/>
-                            <gridLayout id="promptSuggestionsGridLayout"
-                                        itemsContainer="promptSuggestionsDc"
-                                        width="100%"
-                                        columnMinWidth="14rem"
-                                        gap="var(--lumo-space-s)"
-                                        classNames="ai-timeline-prompt-suggestions"/>
-                        </vbox>
-                        <div id="bottomSpacer" width="100%"/>
+                              classNames="ai-timeline-composer"/>
                     </vbox>
                 </vbox>
             </vbox>

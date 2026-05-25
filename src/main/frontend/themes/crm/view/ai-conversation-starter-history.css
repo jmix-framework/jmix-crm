@@ -33,15 +33,12 @@
 }
 
 .ai-conversation-starter-history-group {
+    gap: var(--lumo-space-s);
     margin-top: var(--lumo-space-m);
 }
 
 .ai-conversation-starter-history-group-header {
     padding: 0 0 var(--lumo-space-xs);
-}
-
-.ai-conversation-starter-history-item:hover {
-    background: var(--lumo-contrast-5pct);
 }
 
 .ai-conversation-starter-history-empty {

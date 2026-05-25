@@ -23,11 +23,14 @@ import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.Route;
 import io.jmix.core.DataManager;
 import io.jmix.core.security.CurrentAuthentication;
+import io.jmix.flowui.DialogWindows;
 import io.jmix.flowui.Fragments;
 import io.jmix.flowui.Notifications;
 import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.ViewNavigators;
 import io.jmix.flowui.component.SupportsTypedValue;
+import io.jmix.flowui.view.DialogWindow;
+import io.jmix.flowui.view.StandardOutcome;
 import io.jmix.flowui.component.gridlayout.GridLayout;
 import io.jmix.flowui.component.sidepanellayout.SidePanelLayout;
 import io.jmix.flowui.component.textfield.TypedTextField;
@@ -49,6 +52,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -99,6 +103,8 @@ public class AiConversationStarterView extends StandardView {
     @Autowired
     private ViewNavigators viewNavigators;
     @Autowired
+    private DialogWindows dialogWindows;
+    @Autowired
     private Notifications notifications;
     @Autowired
     private CrmAiConfig crmAiConfig;
@@ -110,6 +116,30 @@ public class AiConversationStarterView extends StandardView {
     private AiConversationComposerFragment composerFragment;
     private PromptSuggestionSupport promptSuggestionSupport;
     private String historyFilter = "";
+    private boolean openedInDialog = false;
+    private List<String> initialEntityReferences = List.of();
+    private boolean initialEntityReferencesApplied = false;
+
+    public void setOpenedInDialog(boolean openedInDialog) {
+        this.openedInDialog = openedInDialog;
+        if (openedInDialog) {
+            getContent().addClassName("opened-in-dialog");
+        }
+    }
+
+    public void setInitialEntityReferences(Collection<String> entityReferences) {
+        this.initialEntityReferences = entityReferences != null ? List.copyOf(entityReferences) : List.of();
+        this.initialEntityReferencesApplied = false;
+    }
+
+    private void applyInitialEntityReferencesIfNeeded() {
+        if (initialEntityReferencesApplied || initialEntityReferences.isEmpty()) {
+            return;
+        }
+
+        composerFragment.addEntityReferences(initialEntityReferences);
+        initialEntityReferencesApplied = true;
+    }
 
     @Subscribe
     public void onInit(final InitEvent event) {
@@ -132,6 +162,7 @@ public class AiConversationStarterView extends StandardView {
         }
         refreshRecentConversationsVisibility();
         renderHistoryList();
+        applyInitialEntityReferencesIfNeeded();
         focusMessageInput();
     }
 
@@ -195,9 +226,25 @@ public class AiConversationStarterView extends StandardView {
 
         composerFragment.clear();
 
-        viewNavigators.detailView(this, AiConversation.class)
-                .editEntity(conversation)
-                .navigate();
+        if (openedInDialog) {
+            close(StandardOutcome.CLOSE);
+            DialogWindow<AiConversationDetailView> detailDialog = dialogWindows.detail(this, AiConversation.class)
+                    .editEntity(conversation)
+                    .withViewClass(AiConversationDetailView.class)
+                    .build();
+
+            detailDialog.setModal(false);
+            detailDialog.setLeft("65%");
+            detailDialog.setResizable(true);
+            detailDialog.setTop("5%");
+            detailDialog.setWidth("35%");
+            detailDialog.setHeight("75%");
+            detailDialog.open();
+        } else {
+            viewNavigators.detailView(this, AiConversation.class)
+                    .editEntity(conversation)
+                    .navigate();
+        }
     }
 
     @Supply(to = "promptSuggestionsGridLayout", subject = "renderer")
@@ -208,7 +255,7 @@ public class AiConversationStarterView extends StandardView {
 
     @Supply(to = "recentConversationsGridLayout", subject = "renderer")
     private ComponentRenderer<Card, AiConversation> recentConversationsGridLayoutRenderer() {
-        return new ComponentRenderer<>(this::createRecentConversationCard);
+        return new ComponentRenderer<>(this::createConversationCard);
     }
 
     @Subscribe("showAllHistoryBtn")
@@ -235,25 +282,21 @@ public class AiConversationStarterView extends StandardView {
         renderHistoryList();
     }
 
-    private Card createRecentConversationCard(AiConversation conversation) {
+    private Card createConversationCard(AiConversation conversation) {
         Card card = uiComponents.create(Card.class);
         card.setWidthFull();
+        card.addClassName("ai-conversation-starter-conversation-card");
         card.addThemeVariants(CardVariant.LUMO_OUTLINED);
-        card.getStyle().set("cursor", "pointer");
-        card.getStyle().set("overflow", "hidden");
         card.getElement().addEventListener("click", event -> openConversation(conversation));
 
         Icon icon = CrmIcons.SPARKLES.create();
-        icon.getStyle().set("flex-shrink", "0");
+        icon.addClassName("ai-conversation-starter-conversation-card-icon");
         card.setHeaderPrefix(icon);
 
         Span titleText = uiComponents.create(Span.class);
         titleText.setText(conversation.getInstanceName());
-        titleText.addClassNames("font-semibold", "text-m");
-        titleText.getStyle().set("display", "block");
-        titleText.getStyle().set("overflow", "hidden");
-        titleText.getStyle().set("text-overflow", "ellipsis");
-        titleText.getStyle().set("white-space", "nowrap");
+        titleText.addClassNames("font-semibold", "text-m",
+                "ai-conversation-starter-conversation-card-title");
         titleText.getElement().setProperty("title", conversation.getInstanceName());
         card.setTitle(titleText);
 
@@ -367,60 +410,9 @@ public class AiConversationStarterView extends StandardView {
         group.add(groupHeader);
 
         for (AiConversation conversation : conversations) {
-            group.add(createHistoryItem(conversation));
+            group.add(createConversationCard(conversation));
         }
         return group;
-    }
-
-    private Component createHistoryItem(AiConversation conversation) {
-        VerticalLayout item = uiComponents.create(VerticalLayout.class);
-        item.setPadding(false);
-        item.setSpacing(false);
-        item.setWidthFull();
-        item.addClassName("ai-conversation-starter-history-item");
-        item.getStyle().set("cursor", "pointer");
-        item.getStyle().set("padding", "var(--lumo-space-s) var(--lumo-space-xs)");
-        item.getStyle().set("border-radius", "var(--lumo-border-radius-m)");
-        item.getElement().addEventListener("click", e -> openConversation(conversation));
-
-        Span title = uiComponents.create(Span.class);
-        title.setText(conversation.getInstanceName());
-        title.addClassNames("font-semibold", "text-s");
-        title.getStyle().set("display", "block");
-        title.getStyle().set("overflow", "hidden");
-        title.getStyle().set("text-overflow", "ellipsis");
-        title.getStyle().set("white-space", "nowrap");
-        item.add(title);
-
-        String snippet = firstUserMessageSnippet(conversation);
-        if (!snippet.isBlank()) {
-            Span snippetSpan = uiComponents.create(Span.class);
-            snippetSpan.setText(snippet);
-            snippetSpan.addClassNames("text-secondary", "text-xs");
-            snippetSpan.getStyle().set("display", "-webkit-box");
-            snippetSpan.getStyle().set("-webkit-line-clamp", "2");
-            snippetSpan.getStyle().set("-webkit-box-orient", "vertical");
-            snippetSpan.getStyle().set("overflow", "hidden");
-            snippetSpan.getStyle().set("line-height", "1.3");
-            item.add(snippetSpan);
-        }
-
-        OffsetDateTime created = conversation.getCreatedDate();
-        if (created != null) {
-            Span meta = uiComponents.create(Span.class);
-            meta.setText(formatDateTime(created));
-            meta.addClassNames("text-tertiary", "text-xs");
-            meta.getStyle().set("margin-top", "var(--lumo-space-xs)");
-            item.add(meta);
-        }
-
-        Div separator = uiComponents.create(Div.class);
-        separator.getStyle().set("height", "1px");
-        separator.getStyle().set("background-color", "var(--lumo-contrast-10pct)");
-        separator.getStyle().set("margin-top", "var(--lumo-space-s)");
-        item.add(separator);
-
-        return item;
     }
 
     private String firstUserMessageSnippet(AiConversation conversation) {
@@ -444,9 +436,25 @@ public class AiConversationStarterView extends StandardView {
     }
 
     private void openConversation(AiConversation conversation) {
-        viewNavigators.detailView(this, AiConversation.class)
-                .editEntity(conversation)
-                .navigate();
+        if (openedInDialog) {
+            close(StandardOutcome.CLOSE);
+            DialogWindow<AiConversationDetailView> detailDialog = dialogWindows.detail(this, AiConversation.class)
+                    .editEntity(conversation)
+                    .withViewClass(AiConversationDetailView.class)
+                    .build();
+
+            detailDialog.setModal(false);
+            detailDialog.setLeft("65%");
+            detailDialog.setResizable(true);
+            detailDialog.setTop("5%");
+            detailDialog.setWidth("35%");
+            detailDialog.setHeight("75%");
+            detailDialog.open();
+        } else {
+            viewNavigators.detailView(this, AiConversation.class)
+                    .editEntity(conversation)
+                    .navigate();
+        }
     }
 
     private PromptSuggestionSupport promptSuggestionSupport() {

@@ -56,12 +56,11 @@ public class AiChatAboutThisSupport {
             return;
         }
 
-        AiConversation conversation = aiConversationService.createNewConversation();
-
-        DialogWindow<AiConversationDetailView> dialogWindow = dialogWindows.detail(origin, AiConversation.class)
-                .editEntity(conversation)
-                .withViewClass(AiConversationDetailView.class)
-                .withViewConfigurer(view -> view.setInitialEntityReferences(entityReferences))
+        DialogWindow<AiConversationStarterView> dialogWindow = dialogWindows.view(origin, AiConversationStarterView.class)
+                .withViewConfigurer(view -> {
+                    view.setOpenedInDialog(true);
+                    view.setInitialEntityReferences(entityReferences);
+                })
                 .build();
 
         dialogWindow.setModal(false);

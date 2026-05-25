@@ -3,6 +3,7 @@ package com.company.crm.view.main;
 import com.company.crm.ai.model.AiConversation;
 import com.company.crm.ai.service.AiConversationService;
 import com.company.crm.ai.view.aiconversation.AiConversationDetailView;
+import com.company.crm.ai.view.aiconversation.AiConversationStarterView;
 import com.company.crm.app.online.OnlineDemoDataCreator;
 import com.company.crm.app.ui.component.CrmLoader;
 import com.company.crm.app.util.constant.CrmConstants;
@@ -197,11 +198,7 @@ public class MainView extends StandardMainView {
 
     @Subscribe(id = "chatButton", subject = "clickListener")
     private void onChatButtonClick(final ClickEvent<JmixButton> event) {
-        final AiConversation savedConversation = aiConversationService.createNewConversation();
-
-        DialogWindow<AiConversationDetailView> dialogWindow = dialogWindows.detail(this, AiConversation.class)
-                .editEntity(savedConversation)
-                .withViewClass(AiConversationDetailView.class)
+        DialogWindow<AiConversationStarterView> dialogWindow = dialogWindows.view(this, AiConversationStarterView.class)
                 .build();
 
         dialogWindow.setModal(false);
@@ -210,6 +207,9 @@ public class MainView extends StandardMainView {
         dialogWindow.setTop("5%");
         dialogWindow.setWidth("35%");
         dialogWindow.setHeight("75%");
+
+        dialogWindow.getView().setOpenedInDialog(true);
+
         dialogWindow.open();
     }
 
