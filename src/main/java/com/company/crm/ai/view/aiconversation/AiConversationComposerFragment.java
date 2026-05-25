@@ -10,11 +10,8 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.upload.FailedEvent;
 import com.vaadin.flow.component.upload.FileRejectedEvent;
 import com.vaadin.flow.component.upload.SucceededEvent;
-import io.jmix.core.DataManager;
 import io.jmix.core.IdSerialization;
-import io.jmix.core.MessageTools;
 import io.jmix.core.Metadata;
-import io.jmix.core.MetadataTools;
 import io.jmix.flowui.Notifications;
 import io.jmix.flowui.component.upload.JmixUpload;
 import io.jmix.core.FileRef;
@@ -36,17 +33,25 @@ import io.jmix.flowui.view.ViewComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 @FragmentDescriptor("ai-conversation-composer-fragment.xml")
 public class AiConversationComposerFragment extends Fragment<VerticalLayout> {
 
     private static final Logger log = LoggerFactory.getLogger(AiConversationComposerFragment.class);
+    private static final Consumer<Submission> NOOP_SUBMIT_HANDLER = submission -> {
+    };
+    private static final Consumer<AiConversationAttachment> NOOP_ATTACHMENT_DOWNLOAD_HANDLER = attachment -> {
+    };
+    private static final Consumer<String> NOOP_ENTITY_REFERENCE_OPEN_HANDLER = entityReference -> {
+    };
 
     @ViewComponent
     private HorizontalLayout inputBar;
@@ -56,17 +61,10 @@ public class AiConversationComposerFragment extends Fragment<VerticalLayout> {
     private JmixUpload attachmentUpload;
     @ViewComponent
     private MessageBundle messageBundle;
-
-    @Autowired
-    private DataManager dataManager;
     @Autowired
     private IdSerialization idSerialization;
     @Autowired
     private Metadata metadata;
-    @Autowired
-    private MetadataTools metadataTools;
-    @Autowired
-    private MessageTools messageTools;
     @Autowired
     private Notifications notifications;
     @Autowired
@@ -84,13 +82,11 @@ public class AiConversationComposerFragment extends Fragment<VerticalLayout> {
     private MenuBar addMenuBar;
     private AiConversationContextCardFactory contextCardFactory;
     private AddContextMenuFactory addContextMenuFactory;
-    private Consumer<Submission> submitHandler = submission -> {
-    };
-    private Consumer<AiConversationAttachment> pendingAttachmentDownloadHandler = attachment -> {
-    };
-    private Consumer<String> pendingEntityReferenceOpenHandler = entityReference -> {
-    };
+    private Consumer<Submission> submitHandler = NOOP_SUBMIT_HANDLER;
+    private Consumer<AiConversationAttachment> pendingAttachmentDownloadHandler = NOOP_ATTACHMENT_DOWNLOAD_HANDLER;
+    private Consumer<String> pendingEntityReferenceOpenHandler = NOOP_ENTITY_REFERENCE_OPEN_HANDLER;
     private Variant variant = Variant.TIMELINE;
+    private boolean inputEnabled = true;
 
     public AiConversationComposerFragment() {
         addReadyListener(this::onReady);
@@ -99,30 +95,38 @@ public class AiConversationComposerFragment extends Fragment<VerticalLayout> {
     public void setVariant(Variant variant) {
         this.variant = Objects.requireNonNull(variant);
         applyVariantClassNames();
+        applyVariantSpecificLayout();
     }
 
     public void setSubmitHandler(Consumer<Submission> submitHandler) {
-        this.submitHandler = submitHandler != null ? submitHandler : submission -> {
-        };
+        this.submitHandler = Objects.requireNonNullElse(submitHandler, NOOP_SUBMIT_HANDLER);
     }
 
     public void setPendingContextActions(Consumer<AiConversationAttachment> pendingAttachmentDownloadHandler,
                                          Consumer<String> pendingEntityReferenceOpenHandler) {
-        this.pendingAttachmentDownloadHandler = pendingAttachmentDownloadHandler != null
-                ? pendingAttachmentDownloadHandler
-                : attachment -> {
-        };
-        this.pendingEntityReferenceOpenHandler = pendingEntityReferenceOpenHandler != null
-                ? pendingEntityReferenceOpenHandler
-                : entityReference -> {
-        };
+        this.pendingAttachmentDownloadHandler = Objects.requireNonNullElse(
+                pendingAttachmentDownloadHandler,
+                NOOP_ATTACHMENT_DOWNLOAD_HANDLER
+        );
+        this.pendingEntityReferenceOpenHandler = Objects.requireNonNullElse(
+                pendingEntityReferenceOpenHandler,
+                NOOP_ENTITY_REFERENCE_OPEN_HANDLER
+        );
         contextCardFactory = null;
         refreshPendingContextLayout();
     }
 
     public void setInputEnabled(boolean enabled) {
+        inputEnabled = enabled;
         if (messageInput != null) {
             messageInput.setEnabled(enabled);
+        }
+    }
+
+    public void setEnabledAndFocus(boolean enabled) {
+        setInputEnabled(enabled);
+        if (enabled) {
+            focus();
         }
     }
 
@@ -131,12 +135,7 @@ public class AiConversationComposerFragment extends Fragment<VerticalLayout> {
             return;
         }
 
-        messageInput.getElement().executeJs(
-                "requestAnimationFrame(() => {"
-                        + "  const target = this.shadowRoot && this.shadowRoot.querySelector('vaadin-text-area');"
-                        + "  (target || this).focus();"
-                        + "});"
-        );
+        messageInput.focus();
     }
 
     public void clear() {
@@ -146,26 +145,16 @@ public class AiConversationComposerFragment extends Fragment<VerticalLayout> {
     }
 
     public void addEntityReferences(Collection<String> refs) {
-        if (refs == null || refs.isEmpty()) {
-            return;
-        }
-        for (String ref : refs) {
-            if (!entityReferences.contains(ref)) {
-                entityReferences.add(ref);
-            }
-        }
+        safeStream(refs)
+                .filter(ref -> !entityReferences.contains(ref))
+                .forEach(entityReferences::add);
         refreshPendingContextLayout();
     }
 
     public void addAttachments(Collection<PendingAttachmentInput> inputs) {
-        if (inputs == null || inputs.isEmpty()) {
-            return;
-        }
-        for (PendingAttachmentInput input : inputs) {
-            if (!attachments.contains(input)) {
-                attachments.add(input);
-            }
-        }
+        safeStream(inputs)
+                .filter(input -> !attachments.contains(input))
+                .forEach(attachments::add);
         refreshPendingContextLayout();
     }
 
@@ -191,24 +180,18 @@ public class AiConversationComposerFragment extends Fragment<VerticalLayout> {
         return entityReferences.isEmpty() && attachments.isEmpty();
     }
 
-    MessageInput getMessageInput() {
-        return messageInput;
-    }
+    public void configureTimelineLayout() {
+        if (!hasReadyComponents()) {
+            return;
+        }
 
-    HorizontalLayout getInputBar() {
-        return inputBar;
-    }
-
-    VerticalLayout getPendingContextLayout() {
-        return pendingContextLayout;
-    }
-
-    JmixUpload getAttachmentUpload() {
-        return attachmentUpload;
-    }
-
-    MenuBar getAddMenuBar() {
-        return addMenuBar;
+        inputBar.setWidthFull();
+        pendingContextLayout.setWidthFull();
+        attachmentUpload.addClassName("ai-timeline-attachment-upload");
+        addMenuBar.addClassName("ai-timeline-add-menu");
+        attachmentUpload.getStyle().set("width", "auto");
+        addMenuBar.getStyle().set("flex-shrink", "0");
+        inputBar.expand(messageInput);
     }
 
     private void onReady(ReadyEvent event) {
@@ -230,21 +213,13 @@ public class AiConversationComposerFragment extends Fragment<VerticalLayout> {
         inputBar.removeAll();
         inputBar.add(addMenuBar, messageInput);
         inputBar.expand(messageInput);
+        messageInput.setEnabled(inputEnabled);
+        applyVariantSpecificLayout();
     }
 
     @Subscribe("attachmentUpload")
     public void onAttachmentUploadSucceeded(final SucceededEvent event) {
-        TemporaryStorageFileData uploadedFileData = null;
-        if (event.getUpload().getReceiver() instanceof MultiFileTemporaryStorageBuffer multiBuffer) {
-            String fileName = event.getFileName();
-            uploadedFileData = multiBuffer.getFiles().values().stream()
-                    .filter(data -> Objects.equals(data.getFileName(), fileName))
-                    .filter(data -> data.getFileInfo().getFile().exists())
-                    .findFirst()
-                    .orElse(null);
-        } else if (event.getUpload().getReceiver() instanceof FileTemporaryStorageBuffer storageBuffer) {
-            uploadedFileData = storageBuffer.getFileData();
-        }
+        final TemporaryStorageFileData uploadedFileData = findUploadedFileData(event);
 
         if (uploadedFileData == null) {
             attachmentUpload.clearFileList();
@@ -254,26 +229,8 @@ public class AiConversationComposerFragment extends Fragment<VerticalLayout> {
             return;
         }
 
-        String fileNameFromEvent = event.getFileName();
-        String fileNameFromBuffer = uploadedFileData.getFileName();
-        String uploadedFileName = "uploaded-file";
-        if (fileNameFromEvent != null && !fileNameFromEvent.isBlank()) {
-            uploadedFileName = fileNameFromEvent;
-        } else if (fileNameFromBuffer != null && !fileNameFromBuffer.isBlank()) {
-            uploadedFileName = fileNameFromBuffer;
-        }
-
-        FileRef uploadedFileRef = null;
-        try {
-            FileStorage fileStorage = fileStorageLocator.getByName(CrmFileStorage.STORAGE_NAME);
-            uploadedFileRef = temporaryStorage.putFileIntoStorage(
-                    uploadedFileData.getFileInfo().getId(),
-                    uploadedFileName,
-                    fileStorage
-            );
-        } catch (Exception e) {
-            log.warn("Failed to put file into storage", e);
-        }
+        final String uploadedFileName = resolveUploadedFileName(event, uploadedFileData);
+        final FileRef uploadedFileRef = putFileIntoStorage(uploadedFileData, uploadedFileName);
 
         if (uploadedFileRef == null) {
             attachmentUpload.clearFileList();
@@ -292,18 +249,56 @@ public class AiConversationComposerFragment extends Fragment<VerticalLayout> {
             refreshPendingContextLayout();
             focus();
         } catch (Exception e) {
-            if (uploadedFileData != null) {
-                try {
-                    temporaryStorage.deleteFile(uploadedFileData.getFileInfo().getId());
-                } catch (Exception cleanupError) {
-                    log.warn("Failed to cleanup temporary upload {}", uploadedFileData.getFileInfo().getId(), cleanupError);
-                }
+            try {
+                temporaryStorage.deleteFile(uploadedFileData.getFileInfo().getId());
+            } catch (Exception cleanupError) {
+                log.warn("Failed to cleanup temporary upload {}", uploadedFileData.getFileInfo().getId(), cleanupError);
             }
             attachmentUpload.clearFileList();
             log.error("Failed to stage uploaded attachment", e);
             notifications.create(messageBundle.getMessage("attachmentUploadPersistError"))
                     .withType(Notifications.Type.ERROR)
                     .show();
+        }
+    }
+
+    private String resolveUploadedFileName(SucceededEvent event, TemporaryStorageFileData uploadedFileData) {
+        String fileNameFromEvent = event.getFileName();
+        if (StringUtils.hasText(fileNameFromEvent)) {
+            return fileNameFromEvent;
+        }
+        String fileNameFromBuffer = uploadedFileData.getFileName();
+        if (StringUtils.hasText(fileNameFromBuffer)) {
+            return fileNameFromBuffer;
+        }
+        return "uploaded-file";
+    }
+
+    private TemporaryStorageFileData findUploadedFileData(SucceededEvent event) {
+        if (event.getUpload().getReceiver() instanceof MultiFileTemporaryStorageBuffer multiBuffer) {
+            String fileName = event.getFileName();
+            return multiBuffer.getFiles().values().stream()
+                    .filter(data -> Objects.equals(data.getFileName(), fileName))
+                    .filter(data -> data.getFileInfo().getFile().exists())
+                    .findFirst()
+                    .orElse(null);
+        } else if (event.getUpload().getReceiver() instanceof FileTemporaryStorageBuffer storageBuffer) {
+            return storageBuffer.getFileData();
+        }
+        return null;
+    }
+
+    private FileRef putFileIntoStorage(TemporaryStorageFileData uploadedFileData, String uploadedFileName) {
+        try {
+            FileStorage fileStorage = fileStorageLocator.getByName(CrmFileStorage.STORAGE_NAME);
+            return temporaryStorage.putFileIntoStorage(
+                    uploadedFileData.getFileInfo().getId(),
+                    uploadedFileName,
+                    fileStorage
+            );
+        } catch (Exception e) {
+            log.warn("Failed to put file into storage", e);
+            return null;
         }
     }
 
@@ -320,10 +315,10 @@ public class AiConversationComposerFragment extends Fragment<VerticalLayout> {
 
     private void showAttachmentUploadError(String detail) {
         attachmentUpload.clearFileList();
-        String message = messageBundle.getMessage("attachmentUploadRejected");
-        if (detail != null && !detail.isBlank()) {
-            message = message + " (" + detail + ")";
-        }
+        final String baseMessage = messageBundle.getMessage("attachmentUploadRejected");
+        final String message = (detail != null && !detail.isBlank())
+                ? baseMessage + " (" + detail + ")"
+                : baseMessage;
         notifications.create(message)
                 .withType(Notifications.Type.WARNING)
                 .show();
@@ -359,7 +354,6 @@ public class AiConversationComposerFragment extends Fragment<VerticalLayout> {
         }
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
     private void openEntityLookup(String entityType, Class<?> entityClass) {
         dialogWindows.lookup(FragmentUtils.getHostView(this), entityClass)
                 .withSelectHandler(selectedEntities -> selectedEntities.forEach(entity -> {
@@ -386,15 +380,9 @@ public class AiConversationComposerFragment extends Fragment<VerticalLayout> {
         if (contextCardFactory == null) {
             contextCardFactory = new AiConversationContextCardFactory(
                     uiComponents,
-                    dataManager,
-                    idSerialization,
                     metadata,
-                    metadataTools,
-                    messageTools,
-                    messageBundle,
                     pendingAttachmentDownloadHandler,
-                    pendingEntityReferenceOpenHandler,
-                    contextEntityRegistry
+                    pendingEntityReferenceOpenHandler
             );
         }
         return contextCardFactory;
@@ -412,29 +400,74 @@ public class AiConversationComposerFragment extends Fragment<VerticalLayout> {
             return;
         }
 
-        inputBar.removeClassName("ai-conversation-starter-input-bar");
-        inputBar.removeClassName("ai-timeline-input-bar");
-        pendingContextLayout.removeClassName("ai-conversation-starter-pending-context");
-        pendingContextLayout.removeClassName("ai-timeline-pending-context");
-        if (messageInput != null) {
-            messageInput.removeClassName("ai-conversation-starter-message-input");
-        }
+        clearAllVariantClassNames();
+        applyActiveVariantClassNames();
+    }
 
-        if (Variant.STARTER.equals(variant)) {
-            inputBar.addClassName("ai-conversation-starter-input-bar");
-            pendingContextLayout.addClassName("ai-conversation-starter-pending-context");
-            if (messageInput != null) {
-                messageInput.addClassName("ai-conversation-starter-message-input");
+    private void clearAllVariantClassNames() {
+        Stream.of(Variant.values()).forEach(v -> {
+            inputBar.removeClassName(v.getInputBarClass());
+            pendingContextLayout.removeClassName(v.getPendingContextClass());
+            if (messageInput != null && !v.getMessageInputClass().isEmpty()) {
+                messageInput.removeClassName(v.getMessageInputClass());
             }
-        } else {
-            inputBar.addClassName("ai-timeline-input-bar");
-            pendingContextLayout.addClassName("ai-timeline-pending-context");
+        });
+    }
+
+    private void applyActiveVariantClassNames() {
+        inputBar.addClassName(variant.getInputBarClass());
+        pendingContextLayout.addClassName(variant.getPendingContextClass());
+        if (messageInput != null && !variant.getMessageInputClass().isEmpty()) {
+            messageInput.addClassName(variant.getMessageInputClass());
         }
     }
 
+    private void applyVariantSpecificLayout() {
+        if (variant == Variant.TIMELINE) {
+            configureTimelineLayout();
+        }
+    }
+
+    private boolean hasReadyComponents() {
+        return inputBar != null
+                && pendingContextLayout != null
+                && attachmentUpload != null
+                && addMenuBar != null
+                && messageInput != null;
+    }
+
+    private static <T> Stream<T> safeStream(Collection<T> items) {
+        if (items == null) {
+            return Stream.empty();
+        }
+        return items.stream();
+    }
+
     public enum Variant {
-        STARTER,
-        TIMELINE
+        STARTER("ai-conversation-starter-input-bar", "ai-conversation-starter-pending-context", "ai-conversation-starter-message-input"),
+        TIMELINE("ai-timeline-input-bar", "ai-timeline-pending-context", "");
+
+        private final String inputBarClass;
+        private final String pendingContextClass;
+        private final String messageInputClass;
+
+        Variant(String inputBarClass, String pendingContextClass, String messageInputClass) {
+            this.inputBarClass = inputBarClass;
+            this.pendingContextClass = pendingContextClass;
+            this.messageInputClass = messageInputClass;
+        }
+
+        public String getInputBarClass() {
+            return inputBarClass;
+        }
+
+        public String getPendingContextClass() {
+            return pendingContextClass;
+        }
+
+        public String getMessageInputClass() {
+            return messageInputClass;
+        }
     }
 
     public record Submission(String prompt,

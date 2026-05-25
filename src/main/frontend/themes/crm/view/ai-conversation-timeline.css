@@ -212,11 +212,24 @@
     box-sizing: border-box;
     margin-top: 0;
     min-width: 0;
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr)) !important;
+    gap: var(--lumo-space-s) !important;
+}
+
+.ai-card-action-surface {
+    cursor: pointer;
+    min-width: 0;
 }
 
 .ai-timeline-context-card {
     box-sizing: border-box;
     min-width: 0;
+    max-width: 28rem;
+}
+
+.ai-timeline-pending-card {
     max-width: 28rem;
 }
 

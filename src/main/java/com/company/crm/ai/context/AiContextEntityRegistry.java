@@ -20,6 +20,7 @@ public class AiContextEntityRegistry {
         this.fetchPlans = fetchPlans;
     }
 
+    // TODO: remove
     public List<AiContextEntityDefinition> definitions() {
         return List.of(AiContextEntityDefinition.values());
     }
@@ -30,6 +31,7 @@ public class AiContextEntityRegistry {
                 .toList();
     }
 
+    // TODO: find why the set needs to be returned of if the answer can be answered within this enum?
     public Set<Class<? extends UuidEntity>> toolEntityClasses() {
         return Arrays.stream(AiContextEntityDefinition.values())
                 .filter(AiContextEntityDefinition::toolsAllowed)

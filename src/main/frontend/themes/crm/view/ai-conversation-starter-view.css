@@ -141,6 +141,33 @@
     white-space: nowrap;
 }
 
+.ai-conversation-starter-suggestion-card {
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.ai-conversation-starter-suggestion-card-icon {
+    color: var(--lumo-primary-color);
+    flex-shrink: 0;
+}
+
+.ai-conversation-starter-suggestion-card-title {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ai-conversation-starter-suggestion-card-prompt {
+    display: -webkit-box;
+    line-height: 1.4;
+    max-height: 2.8em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
 /* Force 2 columns for recents and suggestions on the centered canvas.
    Jmix grid-layout is a Web Component; the real grid lives in [part="items"] inside
    the shadow DOM, so we target it via ::part(items). */

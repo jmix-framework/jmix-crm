@@ -1,6 +1,7 @@
 package com.company.crm.ai.service;
 
 import com.company.crm.ai.model.AiConversationAttachment;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import io.jmix.core.FileRef;
 import io.jmix.core.FileStorage;
 import io.jmix.core.FileStorageLocator;
@@ -27,6 +28,7 @@ public class AiAttachmentMediaResolver {
     private static final int MAX_MEDIA_NAME_LENGTH = 96;
     private static final int MAX_TEXT_CONTEXT_LENGTH = 60_000;
 
+    // TODO: können diese aufzählungen in ein eigenes enum, was die hält und dann business fragen beantworten kann?
     private static final Set<MimeType> IMAGE_MEDIA_TYPES = Set.of(
             Media.Format.IMAGE_PNG,
             Media.Format.IMAGE_JPEG,
@@ -152,6 +154,8 @@ public class AiAttachmentMediaResolver {
         }
     }
 
+
+    // TODO: das koennte dann doch in den enum direkt, oder?
     public static MimeType mimeTypeFromFileName(String fileName) {
         if (!StringUtils.hasText(fileName)) {
             return null;
@@ -164,6 +168,7 @@ public class AiAttachmentMediaResolver {
                 .orElse(null);
     }
 
+    // TODO: das koennte dann doch in den enum direkt, oder?
     public static AttachmentMediaKind mediaKindFromFileName(String fileName) {
         MimeType mimeType = mimeTypeFromFileName(fileName);
         if (SPREADSHEET_TYPES.contains(mimeType)) {
@@ -181,6 +186,8 @@ public class AiAttachmentMediaResolver {
         return AttachmentMediaKind.OTHER;
     }
 
+
+    // TODO: evtl. eine Lösung zusammen mit dem EntityReferneceContentResolver -> Spring AI Prompt klasse zeug?
     private String buildTextContext(String fileName, MimeType mimeType, byte[] data) {
         StringBuilder context = new StringBuilder();
         context.append("Attached file: ").append(StringUtils.hasText(fileName) ? fileName : "uploaded-file")
@@ -191,6 +198,8 @@ public class AiAttachmentMediaResolver {
                     .toString();
         }
 
+
+        // TODO: reassigned local variable...
         String text = new String(data, StandardCharsets.UTF_8);
         text = trimTextContext(text);
 
@@ -206,6 +215,9 @@ public class AiAttachmentMediaResolver {
                 + "\n\n[Attachment content truncated after %d characters.]".formatted(MAX_TEXT_CONTEXT_LENGTH);
     }
 
+
+
+    // TODO: eigene klasse? Ein Record wie SanitizedMediaName oder so? ein bisschen mehr DDD. oder halt einfach nicht machen? warum überhaupt...
     private String sanitizeMediaName(String fileName) {
         String sanitized = (StringUtils.hasText(fileName) ? fileName : "uploaded-file")
                 .replaceAll("[^A-Za-z0-9\\s\\-()\\[\\]]", "_")
@@ -222,10 +234,20 @@ public class AiAttachmentMediaResolver {
     }
 
     public enum AttachmentMediaKind {
-        SPREADSHEET,
-        TEXT_DOCUMENT,
-        JSON,
-        IMAGE,
-        OTHER
+        SPREADSHEET(VaadinIcon.TABLE),
+        TEXT_DOCUMENT(VaadinIcon.FILE_TEXT_O),
+        JSON(VaadinIcon.CODE),
+        IMAGE(VaadinIcon.FILE_O),
+        OTHER(VaadinIcon.FILE_O);
+
+        private final VaadinIcon icon;
+
+        AttachmentMediaKind(VaadinIcon icon) {
+            this.icon = icon;
+        }
+
+        public VaadinIcon getIcon() {
+            return icon;
+        }
     }
 }

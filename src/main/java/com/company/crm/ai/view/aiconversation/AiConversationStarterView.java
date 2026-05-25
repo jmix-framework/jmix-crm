@@ -17,13 +17,21 @@ import com.vaadin.flow.component.card.CardVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.Route;
 import io.jmix.core.DataManager;
+import io.jmix.core.IdSerialization;
 import io.jmix.core.security.CurrentAuthentication;
 import io.jmix.flowui.DialogWindows;
+import io.jmix.flowui.Dialogs;
+import io.jmix.flowui.Views;
+import io.jmix.flowui.component.sidedialog.SideDialog;
+import io.jmix.flowui.kit.component.sidedialog.SideDialogPosition;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import io.jmix.flowui.Fragments;
 import io.jmix.flowui.Notifications;
 import io.jmix.flowui.UiComponents;
@@ -59,6 +67,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Route(value = "ai-conversations", layout = MainView.class)
 @ViewController(id = CrmConstants.ViewIds.AI_CONVERSATION_STARTER)
@@ -92,6 +101,8 @@ public class AiConversationStarterView extends StandardView {
     @ViewComponent
     private TypedTextField<String> historySearchField;
     @ViewComponent
+    private JmixButton showAllHistoryBtn;
+    @ViewComponent
     private MessageBundle messageBundle;
 
     @Autowired
@@ -105,6 +116,10 @@ public class AiConversationStarterView extends StandardView {
     @Autowired
     private DialogWindows dialogWindows;
     @Autowired
+    private Dialogs dialogs;
+    @Autowired
+    private Views views;
+    @Autowired
     private Notifications notifications;
     @Autowired
     private CrmAiConfig crmAiConfig;
@@ -112,13 +127,23 @@ public class AiConversationStarterView extends StandardView {
     private CurrentAuthentication currentAuthentication;
     @Autowired
     private Fragments fragments;
+    @Autowired
+    private IdSerialization idSerialization;
+    @Autowired
+    private AiConversationTimeFormatter aiConversationTimeFormatter;
 
     private AiConversationComposerFragment composerFragment;
     private PromptSuggestionSupport promptSuggestionSupport;
     private String historyFilter = "";
     private boolean openedInDialog = false;
+    private SideDialog parentSideDialog;
     private List<String> initialEntityReferences = List.of();
     private boolean initialEntityReferencesApplied = false;
+    private boolean starterViewActivated = false;
+
+    public void setParentSideDialog(SideDialog parentSideDialog) {
+        this.parentSideDialog = parentSideDialog;
+    }
 
     public void setOpenedInDialog(boolean openedInDialog) {
         this.openedInDialog = openedInDialog;
@@ -130,6 +155,7 @@ public class AiConversationStarterView extends StandardView {
     public void setInitialEntityReferences(Collection<String> entityReferences) {
         this.initialEntityReferences = entityReferences != null ? List.copyOf(entityReferences) : List.of();
         this.initialEntityReferencesApplied = false;
+        this.starterViewActivated = false;
     }
 
     private void applyInitialEntityReferencesIfNeeded() {
@@ -144,10 +170,30 @@ public class AiConversationStarterView extends StandardView {
     @Subscribe
     public void onInit(final InitEvent event) {
         initComposer();
+        promptSuggestionSupport = new PromptSuggestionSupport(
+                uiComponents,
+                dataManager,
+                idSerialization,
+                messageBundle,
+                this::startConversationWithPrompt
+        );
     }
 
     @Subscribe
     public void onReady(final ReadyEvent event) {
+        activateStarterView();
+    }
+
+    public void activateStarterView() {
+        if (starterViewActivated) {
+            return;
+        }
+        starterViewActivated = true;
+
+        if (openedInDialog) {
+            showAllHistoryBtn.setVisible(false);
+        }
+
         if (!crmAiConfig.isAiIntegrationEnabled()) {
             notifications.create(messageBundle.getMessage("errorInvalidApiKey"))
                     .withType(Notifications.Type.ERROR)
@@ -157,13 +203,25 @@ public class AiConversationStarterView extends StandardView {
             promptSuggestionsGridLayout.setEnabled(false);
         }
 
+        applyInitialEntityReferencesIfNeeded();
         if (promptSuggestionsDc.getItems().isEmpty()) {
-            promptSuggestionsDc.setItems(promptSuggestionSupport().selectInitialSuggestions());
+            promptSuggestionsDc.setItems(promptSuggestionSupport
+                    .selectSuggestionsForEntityReferences(initialEntityReferences));
+            showPromptSuggestionsGrid();
         }
         refreshRecentConversationsVisibility();
-        renderHistoryList();
-        applyInitialEntityReferencesIfNeeded();
+
+        if (!openedInDialog) {
+            renderHistoryList();
+        }
+
         focusMessageInput();
+
+        if (parentSideDialog != null) {
+            historySidePanel.setSidePanelHorizontalSize("100%");
+            historySidePanel.setSidePanelHorizontalMinSize("100%");
+            historySidePanel.setSidePanelHorizontalMaxSize("100%");
+        }
     }
 
     /**
@@ -226,7 +284,10 @@ public class AiConversationStarterView extends StandardView {
 
         composerFragment.clear();
 
-        if (openedInDialog) {
+        if (parentSideDialog != null) {
+            parentSideDialog.close();
+            openDetailInSideDialog(conversation);
+        } else if (openedInDialog) {
             close(StandardOutcome.CLOSE);
             DialogWindow<AiConversationDetailView> detailDialog = dialogWindows.detail(this, AiConversation.class)
                     .editEntity(conversation)
@@ -247,10 +308,14 @@ public class AiConversationStarterView extends StandardView {
         }
     }
 
+    private void showPromptSuggestionsGrid() {
+        promptSuggestionsGridLayout.setVisible(true);
+    }
+
     @Supply(to = "promptSuggestionsGridLayout", subject = "renderer")
     private ComponentRenderer<Card, AiPromptSuggestionDto> promptSuggestionsGridLayoutRenderer() {
         return new ComponentRenderer<>(suggestion ->
-                promptSuggestionSupport().createPromptSuggestionCard(suggestion));
+                promptSuggestionSupport.createPromptSuggestionCard(suggestion));
     }
 
     @Supply(to = "recentConversationsGridLayout", subject = "renderer")
@@ -283,31 +348,8 @@ public class AiConversationStarterView extends StandardView {
     }
 
     private Card createConversationCard(AiConversation conversation) {
-        Card card = uiComponents.create(Card.class);
-        card.setWidthFull();
-        card.addClassName("ai-conversation-starter-conversation-card");
-        card.addThemeVariants(CardVariant.LUMO_OUTLINED);
-        card.getElement().addEventListener("click", event -> openConversation(conversation));
-
-        Icon icon = CrmIcons.SPARKLES.create();
-        icon.addClassName("ai-conversation-starter-conversation-card-icon");
-        card.setHeaderPrefix(icon);
-
-        Span titleText = uiComponents.create(Span.class);
-        titleText.setText(conversation.getInstanceName());
-        titleText.addClassNames("font-semibold", "text-m",
-                "ai-conversation-starter-conversation-card-title");
-        titleText.getElement().setProperty("title", conversation.getInstanceName());
-        card.setTitle(titleText);
-
-        OffsetDateTime createdDate = conversation.getCreatedDate();
-        if (createdDate != null) {
-            Span subtitle = uiComponents.create(Span.class);
-            subtitle.setText(formatDateTime(createdDate));
-            subtitle.addClassNames("text-s", "text-secondary");
-            card.setSubtitle(subtitle);
-        }
-
+        AiConversationCard card = uiComponents.create(AiConversationCard.class);
+        card.setConversation(conversation, this::openConversation, this::formatDateTime);
         return card;
     }
 
@@ -357,12 +399,12 @@ public class AiConversationStarterView extends StandardView {
         LocalDate yesterday = today.minusDays(1);
         LocalDate weekStart = today.minusDays(7);
 
-        Map<String, List<AiConversation>> result = new LinkedHashMap<>();
-        for (AiConversation conversation : conversations) {
-            String bucket = bucketLabel(conversation, zone, today, yesterday, weekStart);
-            result.computeIfAbsent(bucket, k -> new java.util.ArrayList<>()).add(conversation);
-        }
-        return result;
+        return conversations.stream()
+                .collect(Collectors.groupingBy(
+                        conversation -> bucketLabel(conversation, zone, today, yesterday, weekStart),
+                        LinkedHashMap::new,
+                        Collectors.toList()
+                ));
     }
 
     private String bucketLabel(AiConversation conversation, ZoneId zone,
@@ -385,33 +427,8 @@ public class AiConversationStarterView extends StandardView {
     }
 
     private Component createHistoryGroup(String bucketLabel, List<AiConversation> conversations) {
-        VerticalLayout group = uiComponents.create(VerticalLayout.class);
-        group.setPadding(false);
-        group.setSpacing(false);
-        group.setWidthFull();
-        group.addClassName("ai-conversation-starter-history-group");
-
-        HorizontalLayout groupHeader = uiComponents.create(HorizontalLayout.class);
-        groupHeader.setWidthFull();
-        groupHeader.setAlignItems(com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment.CENTER);
-        groupHeader.addClassName("ai-conversation-starter-history-group-header");
-
-        Span bucket = uiComponents.create(Span.class);
-        bucket.setText(bucketLabel.toUpperCase(Locale.ROOT));
-        bucket.addClassNames("text-secondary", "text-xs", "font-semibold");
-        bucket.getStyle().set("letter-spacing", "0.04em");
-
-        Span groupCount = uiComponents.create(Span.class);
-        groupCount.setText(String.valueOf(conversations.size()));
-        groupCount.addClassNames("text-secondary", "text-xs");
-        groupCount.getStyle().set("margin-left", "var(--lumo-space-s)");
-
-        groupHeader.add(bucket, groupCount);
-        group.add(groupHeader);
-
-        for (AiConversation conversation : conversations) {
-            group.add(createConversationCard(conversation));
-        }
+        AiConversationHistoryGroup group = uiComponents.create(AiConversationHistoryGroup.class);
+        group.setGroup(bucketLabel, conversations, this::createConversationCard);
         return group;
     }
 
@@ -430,13 +447,14 @@ public class AiConversationStarterView extends StandardView {
     }
 
     private String formatDateTime(OffsetDateTime dateTime) {
-        return DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT)
-                .withLocale(currentAuthentication.getLocale())
-                .format(dateTime);
+        return aiConversationTimeFormatter.format(dateTime);
     }
 
     private void openConversation(AiConversation conversation) {
-        if (openedInDialog) {
+        if (parentSideDialog != null) {
+            parentSideDialog.close();
+            openDetailInSideDialog(conversation);
+        } else if (openedInDialog) {
             close(StandardOutcome.CLOSE);
             DialogWindow<AiConversationDetailView> detailDialog = dialogWindows.detail(this, AiConversation.class)
                     .editEntity(conversation)
@@ -457,15 +475,25 @@ public class AiConversationStarterView extends StandardView {
         }
     }
 
-    private PromptSuggestionSupport promptSuggestionSupport() {
-        if (promptSuggestionSupport == null) {
-            promptSuggestionSupport = new PromptSuggestionSupport(
-                    uiComponents,
-                    dataManager,
-                    messageBundle,
-                    this::startConversationWithPrompt
-            );
-        }
-        return promptSuggestionSupport;
+    private void openDetailInSideDialog(AiConversation conversation) {
+        AiConversationDetailView detailView = views.create(AiConversationDetailView.class);
+        detailView.setEntityToEdit(conversation);
+        detailView.setOpenedInSideDialog(true);
+        detailView.reloadViewData();
+
+        SideDialog detailSideDialog = dialogs.createSideDialog()
+                .withSideDialogPosition(SideDialogPosition.RIGHT)
+                .withHorizontalSize("35%")
+                .withModal(false)
+                .withContentComponents(detailView)
+                .withHeaderProvider(sd -> {
+                    AiSideDialogHeader header = uiComponents.create(AiSideDialogHeader.class);
+                    header.setDialog(sd);
+                    return header;
+                })
+                .build();
+
+        detailSideDialog.open();
     }
+
 }

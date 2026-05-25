@@ -34,6 +34,7 @@ class AddContextMenuFactory {
     MenuBar createAddMenuBar(JmixUpload attachmentUpload) {
         configureAttachmentUploadForMenu(attachmentUpload);
 
+        // TODO: eigene klasse, siehe AiAttachmentCard
         MenuBar menuBar = new MenuBar();
         menuBar.addThemeVariants(MenuBarVariant.LUMO_ICON);
         menuBar.addClassName("ai-timeline-add-menu");
@@ -72,6 +73,7 @@ class AddContextMenuFactory {
     }
 
     private Component createMenuItemContent(VaadinIcon iconName, String labelText) {
+        // TODO: eigene klasse, siehe AiAttachmentCard
         HorizontalLayout content = new HorizontalLayout();
         content.setPadding(false);
         content.setSpacing(true);

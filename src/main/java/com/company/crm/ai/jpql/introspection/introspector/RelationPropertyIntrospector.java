@@ -37,6 +37,7 @@ public class RelationPropertyIntrospector implements MetaPropertyIntrospector {
         Range range = property.getRange();
         Range.Cardinality cardinality = range.getCardinality();
 
+        // TODO: inline variables so wie bei EmbeddedPropertyInspector
         String javaType = range.asClass().getName();
         String type = cardinality.name();
         String target = range.asClass().getName();
@@ -54,6 +55,7 @@ public class RelationPropertyIntrospector implements MetaPropertyIntrospector {
             return false;
         }
 
+        // TODO: import
         jakarta.persistence.ManyToOne manyToOne = property.getAnnotatedElement().getAnnotation(jakarta.persistence.ManyToOne.class);
         if (manyToOne != null) {
             return manyToOne.optional();
@@ -68,21 +70,23 @@ public class RelationPropertyIntrospector implements MetaPropertyIntrospector {
     }
 
     private String getMappedByValue(MetaProperty property) {
+        // TODO: import
+        // TODO: avoid reperition (siehe zeile 75-93)
         jakarta.persistence.OneToMany oneToMany = property.getAnnotatedElement().getAnnotation(jakarta.persistence.OneToMany.class);
         if (oneToMany != null && !oneToMany.mappedBy().isBlank()) {
             return oneToMany.mappedBy();
         }
-
+// TODO: import
         jakarta.persistence.OneToOne oneToOne = property.getAnnotatedElement().getAnnotation(jakarta.persistence.OneToOne.class);
         if (oneToOne != null && !oneToOne.mappedBy().isBlank()) {
             return oneToOne.mappedBy();
         }
-
+// TODO: import
         jakarta.persistence.ManyToMany manyToMany = property.getAnnotatedElement().getAnnotation(jakarta.persistence.ManyToMany.class);
         if (manyToMany != null && !manyToMany.mappedBy().isBlank()) {
             return manyToMany.mappedBy();
         }
-
+// TODO: import
         io.jmix.core.metamodel.annotation.Composition composition = property.getAnnotatedElement().getAnnotation(io.jmix.core.metamodel.annotation.Composition.class);
         if (composition != null && !composition.inverse().isBlank()) {
             return composition.inverse();

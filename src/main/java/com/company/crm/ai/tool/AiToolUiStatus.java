@@ -10,6 +10,7 @@ import java.util.function.Consumer;
  * Helper component for publishing AI tool execution status updates to the UI
  * using Spring AI's thread-safe ToolContext mechanism.
  */
+// TODO: was macht die klasse? Das versteht doch keiner, oder? ISt das UI kram? dann hat das wenig mit tools zu tun
 @Component
 public class AiToolUiStatus {
 

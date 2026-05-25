@@ -150,6 +150,7 @@ public class JmixChatMemoryRepository implements ChatMemoryRepository {
         };
     }
 
+    // TODO: was macht die methode wirklich? warum nicht direkt einfach UUID.fromString inlinen?
     private UUID parseConversationId(String conversationId) {
         try {
             return UUID.fromString(conversationId);

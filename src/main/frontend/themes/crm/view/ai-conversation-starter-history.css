@@ -22,6 +22,10 @@
     padding: 0.125rem var(--lumo-space-xs);
 }
 
+.ai-conversation-starter-history-header-spacer {
+    flex: 1 1 auto;
+}
+
 .ai-conversation-starter-history-search {
     box-sizing: border-box;
     padding: 0 var(--lumo-space-m) var(--lumo-space-s);
@@ -39,6 +43,14 @@
 
 .ai-conversation-starter-history-group-header {
     padding: 0 0 var(--lumo-space-xs);
+}
+
+.ai-conversation-starter-history-bucket {
+    letter-spacing: 0.04em;
+}
+
+.ai-conversation-starter-history-group-count {
+    margin-left: var(--lumo-space-s);
 }
 
 .ai-conversation-starter-history-empty {

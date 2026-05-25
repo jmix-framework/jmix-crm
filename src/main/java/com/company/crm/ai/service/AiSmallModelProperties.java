@@ -4,11 +4,12 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 @Component
-@ConfigurationProperties(prefix = "crm.ai.title")
-public class AiConversationTitleProperties {
+@ConfigurationProperties(prefix = "crm.ai.small-model")
+public class AiSmallModelProperties {
 
     private String modelId;
-    private boolean enabled = true;
+    // TODO: remove
+    private String serviceTier;
 
     public String getModelId() {
         return modelId;
@@ -18,11 +19,11 @@ public class AiConversationTitleProperties {
         this.modelId = modelId;
     }
 
-    public boolean isEnabled() {
-        return enabled;
+    public String getServiceTier() {
+        return serviceTier;
     }
 
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
+    public void setServiceTier(String serviceTier) {
+        this.serviceTier = serviceTier;
     }
 }

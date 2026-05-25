@@ -36,8 +36,10 @@ public class ChatMessageAiInputMapper {
     }
 
     public Message map(ChatMessage chatMessage) {
+        // TODO: reassigned local variable...
         String content = chatMessage.getContent();
         ChatMessageType type = chatMessage.getType();
+        // TODO: reassigned local variable...
         List<Media> media = List.of();
 
         log.debug("Mapping chat message to AI input: {} (type: {})", chatMessage.getId(), type);
@@ -48,6 +50,7 @@ public class ChatMessageAiInputMapper {
         content = appendContentBlock(content,
                 entityReferenceContentResolver.resolveContext(chatMessage.getEntityReferences()));
 
+        // streams api?
         for (AiConversationAttachment attachment : safeAttachments(chatMessage)) {
             try {
                 ResolvedAttachmentInput resolvedAttachment = attachmentMediaResolver.resolve(attachment, null);
@@ -84,6 +87,7 @@ public class ChatMessageAiInputMapper {
     }
 
     private List<Media> appendMedia(List<Media> existing, List<Media> additional) {
+        // TODO: gibts da nicht ein apache commons für / spring lib?
         if (existing.isEmpty()) {
             return additional;
         }
@@ -93,6 +97,7 @@ public class ChatMessageAiInputMapper {
     }
 
     private String appendContentBlock(String content, String block) {
+        // TODO: das haben wir doch jetzt öfter schon mit diesem strings zusammenbauen für ein prompt. kannst du das in eine eigene klasse machen? siehe EntityReferenceContentResolver. Vielleicht mal bei Spring AI mit diesen Prompt objekten schauen?
         if (block == null || block.isBlank()) {
             return content;
         }

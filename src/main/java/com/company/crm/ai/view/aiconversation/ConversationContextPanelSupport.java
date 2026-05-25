@@ -1,6 +1,5 @@
 package com.company.crm.ai.view.aiconversation;
 
-import com.company.crm.ai.context.AiContextEntityRegistry;
 import com.company.crm.ai.model.AiConversation;
 import com.company.crm.ai.model.AiConversationAttachment;
 import com.company.crm.model.base.UuidEntity;
@@ -9,9 +8,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import io.jmix.core.DataManager;
 import io.jmix.core.Id;
 import io.jmix.core.IdSerialization;
-import io.jmix.core.MessageTools;
 import io.jmix.core.Metadata;
-import io.jmix.core.MetadataTools;
 import io.jmix.flowui.DialogWindows;
 import io.jmix.flowui.Notifications;
 import io.jmix.flowui.UiComponents;
@@ -30,51 +27,36 @@ class ConversationContextPanelSupport {
     private static final Logger log = LoggerFactory.getLogger(ConversationContextPanelSupport.class);
 
     private final UiComponents uiComponents;
+    private final Metadata metadata;
     private final DataManager dataManager;
     private final IdSerialization idSerialization;
-    private final Metadata metadata;
-    private final MetadataTools metadataTools;
-    private final MessageTools messageTools;
     private final DialogWindows dialogWindows;
     private final Notifications notifications;
     private final Downloader downloader;
-    private final AiContextEntityRegistry contextEntityRegistry;
     private final ConversationContextAggregator contextAggregator = new ConversationContextAggregator();
 
     ConversationContextPanelSupport(UiComponents uiComponents,
+                                    Metadata metadata,
                                     DataManager dataManager,
                                     IdSerialization idSerialization,
-                                    Metadata metadata,
-                                    MetadataTools metadataTools,
-                                    MessageTools messageTools,
                                     DialogWindows dialogWindows,
                                     Notifications notifications,
-                                    Downloader downloader,
-                                    AiContextEntityRegistry contextEntityRegistry) {
+                                    Downloader downloader) {
         this.uiComponents = uiComponents;
+        this.metadata = metadata;
         this.dataManager = dataManager;
         this.idSerialization = idSerialization;
-        this.metadata = metadata;
-        this.metadataTools = metadataTools;
-        this.messageTools = messageTools;
         this.dialogWindows = dialogWindows;
         this.notifications = notifications;
         this.downloader = downloader;
-        this.contextEntityRegistry = contextEntityRegistry;
     }
 
     AiConversationContextCardFactory contextCardFactory(View<?> origin, MessageBundle messageBundle) {
         return new AiConversationContextCardFactory(
                 uiComponents,
-                dataManager,
-                idSerialization,
                 metadata,
-                metadataTools,
-                messageTools,
-                messageBundle,
                 this::downloadAttachment,
-                entityReference -> openCrmEntityDetail(origin, messageBundle, entityReference),
-                contextEntityRegistry
+                entityReference -> openCrmEntityDetail(origin, messageBundle, entityReference)
         );
     }
 

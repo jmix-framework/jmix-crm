@@ -2,7 +2,6 @@ package com.company.crm.ai.view.aiconversation;
 
 import com.company.crm.ai.config.CrmAiConfig;
 import com.company.crm.ai.model.AiConversation;
-import com.company.crm.ai.model.AiPromptSuggestionDto;
 import com.company.crm.ai.model.AiUiStatusUpdate;
 import com.company.crm.ai.model.ChatMessage;
 import com.company.crm.ai.model.ChatMessageType;
@@ -12,7 +11,6 @@ import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.view.main.MainView;
 import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.Component;
-import com.vaadin.flow.component.card.Card;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.Route;
@@ -23,11 +21,9 @@ import io.jmix.flowui.Dialogs;
 import io.jmix.flowui.Fragments;
 import io.jmix.flowui.Notifications;
 import io.jmix.flowui.UiComponents;
-import io.jmix.flowui.component.gridlayout.GridLayout;
 import io.jmix.flowui.component.sidepanellayout.SidePanelLayout;
 import io.jmix.flowui.component.virtuallist.JmixVirtualList;
 import io.jmix.flowui.kit.component.button.JmixButton;
-import io.jmix.flowui.model.CollectionContainer;
 import io.jmix.flowui.model.InstanceContainer;
 import io.jmix.flowui.model.InstanceLoader;
 import io.jmix.flowui.view.EditedEntityContainer;
@@ -35,7 +31,6 @@ import io.jmix.flowui.view.MessageBundle;
 import io.jmix.flowui.view.PrimaryDetailView;
 import io.jmix.flowui.view.StandardDetailView;
 import io.jmix.flowui.view.Subscribe;
-import io.jmix.flowui.view.Supply;
 import io.jmix.flowui.view.Target;
 import io.jmix.flowui.view.ViewComponent;
 import io.jmix.flowui.view.ViewController;
@@ -44,12 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.time.OffsetDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.FormatStyle;
-import org.springframework.security.core.userdetails.UserDetails;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -83,6 +73,10 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
     private AiConversationStartService aiConversationStartService;
     @Autowired
     private CurrentAuthentication currentAuthentication;
+    @Autowired
+    private AiConversationTimeFormatter aiConversationTimeFormatter;
+    @Autowired
+    private AiConversationActorNameResolver aiConversationActorNameResolver;
     @Autowired
     private UiComponents uiComponents;
     @Autowired
@@ -226,15 +220,12 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
 
     private void showAssistantProcessingError() {
         removeThinkingIndicator();
-        appendTimelineItem(TimelineItem.assistant(transientMessage(
-                messageBundle.getMessage("errorProcessingMessage"),
-                ChatMessageType.ASSISTANT
-        )));
+        appendTimelineItem(TimelineItem.assistant(transientAssistantMessage(messageBundle.getMessage("errorProcessingMessage"))));
         focusInput();
     }
 
     private void showThinkingIndicator() {
-        ChatMessage placeholder = transientMessage("", ChatMessageType.ASSISTANT);
+        ChatMessage placeholder = transientAssistantMessage("");
         activeThinkingItem = TimelineItem.thinking(placeholder);
         appendTimelineItem(activeThinkingItem);
     }
@@ -288,7 +279,7 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
         activeThinkingItem = null;
     }
 
-    private void reloadViewData() {
+    public void reloadViewData() {
         // Title-edit and similar non-AI reloads should not re-animate a previously fresh
         // assistant row, so clear the marker before the rebuild.
         freshAssistantMessageId = null;
@@ -296,6 +287,14 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
         refreshTimelineItems();
         refreshComposerState();
         refreshAttachmentsToggleLabel();
+    }
+
+    public void setOpenedInSideDialog(boolean openedInSideDialog) {
+        if (openedInSideDialog) {
+            getContent().addClassName("opened-in-side-dialog");
+            contextSidePanel.setSidePanelPosition(io.jmix.flowui.kit.component.sidepanellayout.SidePanelPosition.BOTTOM);
+            contextSidePanel.addClassName("ai-conversation-context-side-panel-dialog");
+        }
     }
 
     private void refreshTimelineItems() {
@@ -323,67 +322,24 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
     }
 
     private void refreshComposerState() {
+        configureTimelineLayout();
+
         if (isReadOnly()) {
-            if (editConversationTitleBtn != null) {
-                editConversationTitleBtn.setVisible(false);
-            }
+            editConversationTitleBtn.setVisible(false);
             composerContainer.setVisible(false);
-
-            if (timelineContentLayout != null) {
-                timelineContentLayout.setFlexGrow(1, timelineList);
-                timelineContentLayout.setFlexGrow(0, composerContainer);
-            }
-
-            if (timelineList != null) {
-                timelineList.setHeightFull();
-            }
-
-            refreshContentWidth();
             return;
         }
 
-        if (timelineContentLayout != null) {
-            timelineContentLayout.setFlexGrow(1, timelineList);
-            timelineContentLayout.setFlexGrow(0, composerContainer);
-        }
-
-        if (composerFragment != null) {
-            var inputBar = composerFragment.getInputBar();
-            var messageInput = composerFragment.getMessageInput();
-            if (inputBar != null && messageInput != null) {
-                inputBar.setFlexGrow(1, messageInput);
-            }
-        }
-
-        if (timelineList != null) {
-            timelineList.setHeightFull();
-        }
-
-        refreshContentWidth();
+        editConversationTitleBtn.setVisible(true);
+        composerContainer.setVisible(true);
+        composerFragment.configureTimelineLayout();
     }
 
-    private void refreshContentWidth() {
-        if (timelineList == null || composerFragment == null) {
-            return;
-        }
-
-        var messageInput = composerFragment.getMessageInput();
-        var pendingContextLayout = composerFragment.getPendingContextLayout();
-        var inputBar = composerFragment.getInputBar();
-        var attachmentUpload = composerFragment.getAttachmentUpload();
-        var addMenuBar = composerFragment.getAddMenuBar();
-
-        if (messageInput == null || pendingContextLayout == null || inputBar == null 
-                || attachmentUpload == null || addMenuBar == null) {
-            return;
-        }
-
+    private void configureTimelineLayout() {
         timelineList.getStyle().set("width", "100%");
-        pendingContextLayout.getStyle().set("width", "100%");
-        inputBar.getStyle().set("width", "100%");
-
-        attachmentUpload.getStyle().set("width", "auto");
-        addMenuBar.getStyle().set("flex-shrink", "0");
+        timelineList.setHeightFull();
+        timelineContentLayout.setFlexGrow(1, timelineList);
+        timelineContentLayout.setFlexGrow(0, composerContainer);
     }
 
 
@@ -392,33 +348,51 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
         return timelineRenderer.createTimelineComponent(item);
     }
 
-    private ChatMessage transientMessage(String content, ChatMessageType type) {
+    private ChatMessage transientAssistantMessage(String content) {
         ChatMessage message = dataManager.create(ChatMessage.class);
         message.setConversation(aiConversationDc.getItem());
         message.setContent(content);
-        message.setType(type);
+        message.setType(ChatMessageType.ASSISTANT);
         message.setCreatedDate(timeSource.now().toOffsetDateTime());
         message.setCreatedBy(currentAuthentication.getUser().getUsername());
         return message;
     }
 
     private void focusInput() {
-        boolean aiEnabled = crmAiConfig.isAiIntegrationEnabled();
-        composerFragment.setInputEnabled(aiEnabled);
-        if (aiEnabled) {
-            composerFragment.focus();
-        }
+        composerFragment.setEnabledAndFocus(crmAiConfig.isAiIntegrationEnabled());
     }
 
     @SuppressWarnings("unchecked")
     private void initDynamicComponentsIfNeeded() {
-        initTimelineRenderingIfNeeded();
+        ensureTimelineRenderer();
+        ensureTimelineList();
+        ensureComposerFragment();
+        attachDynamicComponents();
+    }
+
+    private void ensureTimelineRenderer() {
+        if (timelineRenderer == null) {
+            timelineRenderer = new AiConversationTimelineRenderer(
+                    uiComponents,
+                    messageBundle,
+                    contextPanelSupport.contextCardFactory(this, messageBundle),
+                    this::resolveActorName,
+                    aiConversationTimeFormatter::format,
+                    () -> freshAssistantMessageId
+            );
+        }
+    }
+
+    private void ensureTimelineList() {
         if (timelineList == null) {
             timelineList = uiComponents.create(JmixVirtualList.class);
             timelineList.setWidthFull();
             timelineList.setRenderer(new ComponentRenderer<>(this::createTimelineComponent));
             timelineList.addClassName("ai-conversation-timeline-list");
         }
+    }
+
+    private void ensureComposerFragment() {
         if (composerFragment == null) {
             composerFragment = fragments.create(this, AiConversationComposerFragment.class);
             composerFragment.setVariant(AiConversationComposerFragment.Variant.TIMELINE);
@@ -428,51 +402,19 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
                     entityReference -> contextPanelSupport.openCrmEntityDetail(this, messageBundle, entityReference)
             );
         }
+    }
 
-        if (timelineContentLayout != null && timelineList.getParent().isEmpty()) {
+    private void attachDynamicComponents() {
+        if (timelineList.getParent().isEmpty()) {
             timelineContentLayout.addComponentAsFirst(timelineList);
         }
-        if (composerContainer != null && composerFragment.getParent().isEmpty()) {
+        if (composerFragment.getParent().isEmpty()) {
             composerContainer.addComponentAsFirst(composerFragment);
         }
     }
 
-    private void initTimelineRenderingIfNeeded() {
-        if (timelineRenderer == null) {
-            timelineRenderer = new AiConversationTimelineRenderer(
-                    messageBundle,
-                    contextPanelSupport.contextCardFactory(this, messageBundle),
-                    this::resolveActorName,
-                    this::formatMessageTime,
-                    () -> freshAssistantMessageId
-            );
-        }
-    }
-
     private String resolveActorName(ChatMessage message) {
-        String createdBy = message.getCreatedBy();
-        UserDetails currentUser = currentAuthentication.getUser();
-        if (createdBy == null || createdBy.isBlank() || createdBy.equals(currentUser.getUsername())) {
-            if (currentUser instanceof com.company.crm.model.user.User crmUser) {
-                String fullName = crmUser.getFullName();
-                if (fullName != null && !fullName.isBlank()) {
-                    return fullName;
-                }
-            }
-            return currentUser.getUsername() != null && !currentUser.getUsername().isBlank()
-                    ? currentUser.getUsername()
-                    : messageBundle.getMessage("defaultActorName");
-        }
-        return createdBy;
-    }
-
-    private String formatMessageTime(OffsetDateTime createdDate) {
-        if (createdDate == null) {
-            return "";
-        }
-        return DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT)
-                .withLocale(currentAuthentication.getLocale())
-                .format(createdDate);
+        return aiConversationActorNameResolver.resolve(message, messageBundle.getMessage("defaultActorName"));
     }
 
     private void renderContextSidePanel() {

@@ -206,7 +206,7 @@ public class ClientDetailView extends StandardDetailView<Client> {
 
     @Subscribe("chatAboutThis")
     private void onChatAboutThis(final ActionPerformedEvent event) {
-        aiChatAboutThisSupport.openChatAbout(this, getEditedEntity());
+        aiChatAboutThisSupport.openChatAbout(getEditedEntity());
     }
 
     @Install(to = "clientDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")

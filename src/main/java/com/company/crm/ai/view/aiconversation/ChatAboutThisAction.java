@@ -1,10 +1,7 @@
 package com.company.crm.ai.view.aiconversation;
 
-import com.vaadin.flow.component.Component;
 import io.jmix.flowui.action.ActionType;
 import io.jmix.flowui.action.list.ItemTrackingAction;
-import io.jmix.flowui.component.UiComponentUtils;
-import io.jmix.flowui.view.View;
 import org.springframework.beans.factory.annotation.Autowired;
 
 @ActionType(ChatAboutThisAction.ID)
@@ -30,12 +27,7 @@ public class ChatAboutThisAction<E> extends ItemTrackingAction<E> {
     @Override
     public void execute() {
         checkTarget();
-        if (!(target instanceof Component targetComponent)) {
-            throw new IllegalStateException("%s target is not a component".formatted(getClass().getSimpleName()));
-        }
-
-        View<?> origin = UiComponentUtils.getView(targetComponent);
-        aiChatAboutThisSupport.openChatAbout(origin, target.getSelectedItems());
+        aiChatAboutThisSupport.openChatAbout(target.getSelectedItems());
     }
 
     @Override

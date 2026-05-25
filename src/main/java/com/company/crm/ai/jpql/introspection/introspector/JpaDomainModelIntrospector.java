@@ -64,7 +64,9 @@ public class JpaDomainModelIntrospector {
         return metaClass.getProperties().stream()
                 .filter(metadataTools::isJpa)
                 .collect(LinkedHashMap::new,
-                        (map, property) -> introspectors.stream()
+                        (map, property) ->
+                                // TODO: extract function to name the beast
+                                introspectors.stream()
                                 .filter(introspector -> introspector.supports(property))
                                 .findFirst()
                                 .map(introspector -> introspector.introspect(property))

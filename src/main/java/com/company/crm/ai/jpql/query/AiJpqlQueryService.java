@@ -63,7 +63,7 @@ public class AiJpqlQueryService {
      */
     public QueryExecutionResult executeJpqlQuery(String jpqlQuery, JpqlParameters parameters, List<String> selectAliases, Integer offset, Integer limit) {
         int effectiveOffset = (offset != null) ? Math.max(0, offset) : 0;
-        int effectiveLimit = (limit != null) ? Math.min(MAX_LIMIT, Math.max(1, limit)) : DEFAULT_LIMIT;
+        int effectiveLimit = (limit != null) ? Math.clamp(limit, 1, MAX_LIMIT) : DEFAULT_LIMIT;
         ensureQueryIsPermitted(jpqlQuery);
 
         // First attempt: try with converted parameters
@@ -126,6 +126,7 @@ public class AiJpqlQueryService {
                 }
             }
 
+            // TODO: toArray sieht scheisse aus. geht das besser?
             String[] propertyNames = selectAliases != null ? selectAliases.toArray(new String[0]) : new String[0];
             if (propertyNames.length > 0) {
                 loadValuesBuilder.properties(propertyNames);
@@ -191,6 +192,7 @@ public class AiJpqlQueryService {
         return new JpqlParameters(filteredList);
     }
 
+    // TODO: eigene klasse? dieses ganze parameter name geschnatter
     private Set<String> extractNamedParameters(String jpqlQuery) {
         Set<String> names = new HashSet<>();
         if (jpqlQuery == null || jpqlQuery.isBlank()) {

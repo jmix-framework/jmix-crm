@@ -9,9 +9,9 @@ import io.jmix.core.UnconstrainedDataManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -26,7 +26,9 @@ public class AiConversationTitleService {
 
     private static final Logger log = LoggerFactory.getLogger(AiConversationTitleService.class);
 
+    // TODO: kann man das nicht besser machen? Das nervt mich mit solchen hacks
     private static final String SKIP_TITLE_MARKER = "NEW_CONVERSATION";
+
     private static final int TITLE_MAX_LENGTH = 80;
     private static final int MESSAGE_SNIPPET_MAX_LENGTH = 240;
     private static final int TITLE_MIN_USER_MESSAGES = 1;
@@ -37,28 +39,32 @@ public class AiConversationTitleService {
     private final UnconstrainedDataManager dataManager;
     private final ChatClient chatClient;
     private final Messages messages;
-    private final AiConversationTitleProperties properties;
     private final CrmAiConfig crmAiConfig;
+    private final Environment environment;
 
     public AiConversationTitleService(
             UnconstrainedDataManager dataManager,
             ChatClient.Builder chatClientBuilder,
             @Value("classpath:prompts/ai-conversation-title-system-prompt.st") Resource systemPrompt,
-            AiConversationTitleProperties properties,
+            AiSmallModelOptionsFactory smallModelOptionsFactory,
             CrmAiConfig crmAiConfig,
+            Environment environment,
             Messages messages) {
         this.dataManager = dataManager;
-        this.properties = properties;
         this.crmAiConfig = crmAiConfig;
+        this.environment = environment;
         this.chatClient = chatClientBuilder.clone()
                 .defaultSystem(systemPrompt)
-                .defaultOptions(buildOptions(properties.getModelId()))
+                .defaultOptions(smallModelOptionsFactory.builder()
+                        .temperature(TITLE_TEMPERATURE)
+                        .maxCompletionTokens(TITLE_MAX_TOKENS)
+                        .build())
                 .build();
         this.messages = messages;
     }
 
     public void generateTitleIfNeeded(UUID conversationId) {
-        if (conversationId == null || !crmAiConfig.isAiIntegrationEnabled() || !properties.isEnabled()) {
+        if (conversationId == null || !crmAiConfig.isAiIntegrationEnabled() || !isEnabled()) {
             return;
         }
         try {
@@ -124,6 +130,7 @@ public class AiConversationTitleService {
     }
 
     private String buildConversationSnippet(List<ChatMessage> messages) {
+        // TODO: was macht das hier. siehe TODO in EntityReferenceContentResolver mit Spring AI und Prompt Klasse usw.
         return messages.stream()
                 .filter(message -> message.getType() == ChatMessageType.USER || message.getType() == ChatMessageType.ASSISTANT)
                 .map(message -> {
@@ -135,6 +142,7 @@ public class AiConversationTitleService {
                 .orElse("");
     }
 
+    // TODO: siehe TODO in EntityReferenceContentResolver mit Spring AI und Prompt Klasse usw.
     public String generateTitle(String conversationSnippet) {
         String prompt = """
                 Create one short title for this CRM conversation.
@@ -148,14 +156,9 @@ public class AiConversationTitleService {
                 .content();
     }
 
-    private OpenAiChatOptions buildOptions(String modelId) {
-        OpenAiChatOptions.Builder optionsBuilder = OpenAiChatOptions.builder()
-                .temperature(TITLE_TEMPERATURE)
-                .maxCompletionTokens(TITLE_MAX_TOKENS);
-        if (StringUtils.hasText(modelId)) {
-            optionsBuilder.model(modelId);
-        }
-        return optionsBuilder.build();
+    private boolean isEnabled() {
+        // TODO: nimm die Properties klasse, nicht environment
+        return environment.getProperty("crm.ai.title.enabled", Boolean.class, true);
     }
 
     private boolean hasAiTitle(String title) {
@@ -164,6 +167,7 @@ public class AiConversationTitleService {
     }
 
     public String sanitizeTitle(String title) {
+        // TODO: sanitizer klasse wenn es sein muss.
         return normalize(title, TITLE_MAX_LENGTH)
                 .map(t -> t.replace("\"", ""))
                 .map(t -> t.endsWith(".") ? t.substring(0, t.length() - 1).trim() : t)
@@ -176,6 +180,7 @@ public class AiConversationTitleService {
     }
 
     private Optional<String> normalize(String text, int maxLength) {
+        // TODO: was macht das hier. siehe TODO in EntityReferenceContentResolver mit Spring AI und Prompt Klasse usw.
         return Optional.ofNullable(text)
                 .filter(StringUtils::hasText)
                 .map(t -> t.replaceAll("[\\n\\r]+", " ").trim())

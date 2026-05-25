@@ -10,6 +10,7 @@ import com.company.crm.ai.tool.CrmAiToolFactory;
 import com.company.crm.report.CategoryCashflowRiskReport;
 import com.company.crm.report.Client360Report;
 import io.jmix.core.DataManager;
+import io.jmix.core.FetchPlan;
 import io.jmix.core.security.CurrentAuthentication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,16 +72,17 @@ public class CrmAnalyticsService {
     public String processUserMessage(UUID chatMessageId, Consumer<AiUiStatusUpdate> uiStatusUpdateCallback) {
         ChatMessage userMessage = dataManager.load(ChatMessage.class)
                 .id(chatMessageId)
-                .fetchPlan(fp -> fp.addFetchPlan(io.jmix.core.FetchPlan.BASE)
-                        .add("conversation", io.jmix.core.FetchPlan.BASE)
-                        .add("entityReferences", io.jmix.core.FetchPlan.BASE)
-                        .add("attachments", io.jmix.core.FetchPlan.BASE))
+                .fetchPlan(fp -> fp.addFetchPlan(FetchPlan.BASE)
+                        .add("conversation", FetchPlan.BASE)
+                        .add("entityReferences", FetchPlan.BASE)
+                        .add("attachments", FetchPlan.BASE))
                 .one();
 
         UUID conversationId = userMessage.getConversation().getId();
         String conversationIdString = conversationId.toString();
         List<Message> history = chatMemoryRepository.findByConversationId(conversationIdString);
 
+        // TODO: reassign local variable
         ChatMessage assistantMessage = dataManager.create(ChatMessage.class);
         assistantMessage.setConversation(userMessage.getConversation());
         assistantMessage.setType(ChatMessageType.ASSISTANT);
@@ -96,11 +98,13 @@ public class CrmAnalyticsService {
                     .call()
                     .content();
 
+            // TODO: immer dieses != null ? .. : ..... sowas macht kein echter programmierer. einfach null reingeben, fertig
             assistantMessage.setContent(response != null ? response : "");
             dataManager.save(assistantMessage);
             return response;
         } catch (RuntimeException e) {
             try {
+                // TODO: warum? das save ist die letzte operation. wenn sie funktioniert, kommt man hier nicht rein, wenn nicht (und exception) dann wurde garnicht gespeichert...
                 dataManager.remove(assistantMessage);
             } catch (Exception cleanupError) {
                 log.warn("Failed to remove assistant placeholder {}", assistantMessage.getId(), cleanupError);
@@ -109,6 +113,7 @@ public class CrmAnalyticsService {
         }
     }
 
+    // TODO: vielleicht eigene klasse?
     private ChatClient.ChatClientRequestSpec buildPromptSpec(ChatClient client,
                                                             UUID conversationUuid,
                                                             UUID assistantMessageId,
@@ -129,6 +134,7 @@ public class CrmAnalyticsService {
             toolContext.put(AiToolUiStatus.UI_STATUS_UPDATE_CALLBACK, uiStatusUpdateCallback);
         }
 
+        // TODO: Reassign variable
         ChatClient.ChatClientRequestSpec spec = client.prompt()
                 .system(system -> system
                         .text(systemPrompt)
@@ -147,6 +153,7 @@ public class CrmAnalyticsService {
     }
 
     private void publishUiStatus(Consumer<AiUiStatusUpdate> uiStatusUpdateCallback, String message) {
+        // TODO: nicht überall if checks....
         if (uiStatusUpdateCallback != null) {
             uiStatusUpdateCallback.accept(new AiUiStatusUpdate(message));
         }

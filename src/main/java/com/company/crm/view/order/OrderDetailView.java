@@ -228,7 +228,7 @@ public class OrderDetailView extends StandardDetailView<Order> {
 
     @Subscribe("chatAboutThis")
     private void onChatAboutThis(final ActionPerformedEvent event) {
-        aiChatAboutThisSupport.openChatAbout(this, getEditedEntity());
+        aiChatAboutThisSupport.openChatAbout(getEditedEntity());
     }
 
     @Subscribe("cloneAction")

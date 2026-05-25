@@ -46,6 +46,7 @@ public class EnumPropertyIntrospector implements MetaPropertyIntrospector {
         String comment = metadataTools.getMetaAnnotationValue(property, Comment.class);
 
         if (enumClass.isEnum()) {
+            // TODO: reassigned local variable
             enums = new LinkedHashMap<>();
 
             if (EnumClass.class.isAssignableFrom(enumClass)) {

@@ -7,6 +7,7 @@ import io.jmix.core.metamodel.annotation.JmixEntity;
 
 import java.util.UUID;
 
+// TODO: rename -Dto - einfach AiPromptSuggestion
 @JmixEntity(name = "crm_AiPromptSuggestionDto")
 public class AiPromptSuggestionDto {
 

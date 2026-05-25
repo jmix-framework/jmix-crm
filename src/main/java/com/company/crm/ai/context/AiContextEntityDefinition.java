@@ -26,19 +26,19 @@ import java.util.function.Function;
  */
 public enum AiContextEntityDefinition {
 
-    USER_TASK(UserTask.class, VaadinIcon.CHECK_SQUARE, "contextEntity.tasks", true, true,
+    USER_TASK(UserTask.class, "task", VaadinIcon.CHECK_SQUARE, "contextEntity.tasks", true, true,
             fp -> fp.builder(UserTask.class)
                     .addFetchPlan(FetchPlan.BASE)
                     .add("author", FetchPlan.BASE)
                     .build()),
 
-    CATEGORY(Category.class, VaadinIcon.LIST_UL, "contextEntity.categories", true, true,
+    CATEGORY(Category.class, "category", VaadinIcon.LIST_UL, "contextEntity.categories", true, true,
             fp -> fp.builder(Category.class)
                     .addFetchPlan(FetchPlan.BASE)
                     .add("parent", FetchPlan.BASE)
                     .build()),
 
-    CATEGORY_ITEM(CategoryItem.class, VaadinIcon.CUBES, "contextEntity.products", true, true,
+    CATEGORY_ITEM(CategoryItem.class, "product", VaadinIcon.CUBES, "contextEntity.products", true, true,
             fp -> fp.builder(CategoryItem.class)
                     .addFetchPlan(FetchPlan.BASE)
                     .add("category", FetchPlan.BASE)
@@ -46,7 +46,7 @@ public enum AiContextEntityDefinition {
                             .add("sender", FetchPlan.BASE))
                     .build()),
 
-    CLIENT(Client.class, VaadinIcon.USERS, "contextEntity.clients", true, true,
+    CLIENT(Client.class, "client", VaadinIcon.USERS, "contextEntity.clients", true, true,
             fp -> fp.builder(Client.class)
                     .addFetchPlan(FetchPlan.BASE)
                     .add("accountManager", FetchPlan.INSTANCE_NAME)
@@ -71,7 +71,7 @@ public enum AiContextEntityDefinition {
                                     .add("date")))
                     .build()),
 
-    ORDER(Order.class, VaadinIcon.CART, "contextEntity.orders", true, true,
+    ORDER(Order.class, "order", VaadinIcon.CART, "contextEntity.orders", true, true,
             fp -> fp.builder(Order.class)
                     .addFetchPlan(FetchPlan.BASE)
                     .add("client", FetchPlan.BASE)
@@ -82,7 +82,7 @@ public enum AiContextEntityDefinition {
                             .add("payments", FetchPlan.BASE))
                     .build()),
 
-    INVOICE(Invoice.class, VaadinIcon.FILE_TEXT, "contextEntity.invoices", true, true,
+    INVOICE(Invoice.class, "invoice", VaadinIcon.FILE_TEXT, "contextEntity.invoices", true, true,
             fp -> fp.builder(Invoice.class)
                     .addFetchPlan(FetchPlan.BASE)
                     .add("client", FetchPlan.BASE)
@@ -92,7 +92,7 @@ public enum AiContextEntityDefinition {
                     .add("payments", FetchPlan.BASE)
                     .build()),
 
-    PAYMENT(Payment.class, VaadinIcon.WALLET, "contextEntity.payments", true, true,
+    PAYMENT(Payment.class, "payment", VaadinIcon.WALLET, "contextEntity.payments", true, true,
             fp -> fp.builder(Payment.class)
                     .addFetchPlan(FetchPlan.BASE)
                     .add("invoice", invoice -> invoice.addFetchPlan(FetchPlan.BASE)
@@ -100,13 +100,14 @@ public enum AiContextEntityDefinition {
                             .add("order", FetchPlan.BASE))
                     .build()),
 
-    CONTACT(Contact.class, VaadinIcon.USER_CARD, "contextEntity.contacts", false, true,
+    CONTACT(Contact.class, "contact", VaadinIcon.USER_CARD, "contextEntity.contacts", false, true,
             fp -> fp.builder(Contact.class)
                     .addFetchPlan(FetchPlan.BASE)
                     .add("client", FetchPlan.BASE)
                     .build()),
 
-    ORDER_ITEM(OrderItem.class, VaadinIcon.CART_O, "contextEntity.orderItems", false, true,
+    // TODO: kann glaube ich raus
+    ORDER_ITEM(OrderItem.class, "orderItem", VaadinIcon.CART_O, "contextEntity.orderItems", false, true,
             fp -> fp.builder(OrderItem.class)
                     .addFetchPlan(FetchPlan.BASE)
                     .add("order", order -> order.addFetchPlan(FetchPlan.BASE)
@@ -115,7 +116,7 @@ public enum AiContextEntityDefinition {
                             .add("category", FetchPlan.BASE))
                     .build()),
 
-    CATEGORY_ITEM_COMMENT(CategoryItemComment.class, VaadinIcon.COMMENT, "contextEntity.productComments", false, true,
+    CATEGORY_ITEM_COMMENT(CategoryItemComment.class, "productComment", VaadinIcon.COMMENT, "contextEntity.productComments", false, true,
             fp -> fp.builder(CategoryItemComment.class)
                     .addFetchPlan(FetchPlan.BASE)
                     .add("categoryItem", categoryItem -> categoryItem.addFetchPlan(FetchPlan.BASE)
@@ -123,12 +124,13 @@ public enum AiContextEntityDefinition {
                     .add("sender", FetchPlan.BASE)
                     .build()),
 
-    USER(User.class, VaadinIcon.USER, "contextEntity.users", false, true,
+    USER(User.class, "user", VaadinIcon.USER, "contextEntity.users", false, true,
             fp -> fp.builder(User.class)
                     .addFetchPlan(FetchPlan.BASE)
                     .build());
 
     private final Class<? extends UuidEntity> entityClass;
+    private final String suggestionKey;
     private final VaadinIcon icon;
     private final String menuMessageKey;
     private final boolean addMenuVisible;
@@ -137,6 +139,7 @@ public enum AiContextEntityDefinition {
 
     AiContextEntityDefinition(
             Class<? extends UuidEntity> entityClass,
+            String suggestionKey,
             VaadinIcon icon,
             String menuMessageKey,
             boolean addMenuVisible,
@@ -144,6 +147,7 @@ public enum AiContextEntityDefinition {
             Function<FetchPlans, FetchPlan> fetchPlanFactory
     ) {
         this.entityClass = entityClass;
+        this.suggestionKey = suggestionKey;
         this.icon = icon;
         this.menuMessageKey = menuMessageKey;
         this.addMenuVisible = addMenuVisible;
@@ -153,6 +157,10 @@ public enum AiContextEntityDefinition {
 
     public Class<? extends UuidEntity> entityClass() {
         return entityClass;
+    }
+
+    public String suggestionKey() {
+        return suggestionKey;
     }
 
     public VaadinIcon icon() {

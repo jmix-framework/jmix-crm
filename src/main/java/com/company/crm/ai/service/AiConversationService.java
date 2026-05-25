@@ -68,7 +68,11 @@ public class AiConversationService {
         message.setConversation(conversation);
         message.setType(ChatMessageType.USER);
         message.setContent(text.trim());
+
+
+        // TODO: macht Jmix automatisch...
         message.setCreatedDate(now());
+        // TODO: macht Jmix automatisch...
         message.setCreatedBy(currentAuthentication.getUser().getUsername());
 
         List<ChatMessageEntityReference> referenceEntities = createEntityReferences(message, entityReferences);
@@ -86,8 +90,9 @@ public class AiConversationService {
     }
 
     private List<ChatMessageEntityReference> createEntityReferences(ChatMessage message, List<String> entityReferences) {
+        // TODO: sowas hackiges... geht das nicht schöner?
         List<String> distinctReferences = new LinkedHashSet<>(
-                entityReferences != null ? entityReferences : List.<String>of()
+                entityReferences != null ? entityReferences : List.of()
         ).stream()
                 .filter(StringUtils::hasText)
                 .toList();
@@ -122,6 +127,7 @@ public class AiConversationService {
     }
 
     private String resolveFileName(PendingAttachmentInput attachment) {
+        // TODO: schon wieder irgendeine filename scheisse... warum all over the place?
         if (StringUtils.hasText(attachment.fileName())) {
             return attachment.fileName();
         }

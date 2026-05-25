@@ -35,3 +35,7 @@
     box-sizing: border-box;
     padding-bottom: var(--lumo-space-s);
 }
+
+.ai-conversation-context-side-panel-dialog {
+    --jmix-side-panel-layout-vertical-size: 22rem;
+}

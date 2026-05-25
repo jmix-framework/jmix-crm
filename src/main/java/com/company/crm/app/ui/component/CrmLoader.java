@@ -33,7 +33,7 @@ public class CrmLoader extends VerticalLayout {
         setPadding(false);
         setAlignItems(Alignment.CENTER);
         setJustifyContentMode(JustifyContentMode.CENTER);
-        getStyle().setTransition("opacity 200ms ease");
+        addClassName("crm-loader");
         addComponents();
     }
 

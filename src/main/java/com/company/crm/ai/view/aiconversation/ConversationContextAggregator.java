@@ -6,11 +6,11 @@ import com.company.crm.ai.model.AiConversationAttachment;
 import com.company.crm.ai.model.ChatMessage;
 import com.company.crm.ai.model.ChatMessageEntityReference;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 class ConversationContextAggregator {
 
@@ -27,29 +27,31 @@ class ConversationContextAggregator {
                         .thenComparing(ChatMessage::getId, Comparator.nullsLast(Comparator.naturalOrder())))
                 .toList();
 
-        LinkedHashSet<String> entityReferences = new LinkedHashSet<>();
-        List<AiConversationAttachment> generated = new ArrayList<>();
-        List<AiConversationAttachment> uploaded = new ArrayList<>();
+        List<String> entityReferences = messages.stream()
+                .flatMap(message -> Optional.ofNullable(message.getEntityReferences()).orElse(List.of()).stream())
+                .map(ChatMessageEntityReference::getEntityReference)
+                .filter(ref -> ref != null && !ref.isBlank())
+                .collect(Collectors.collectingAndThen(
+                        Collectors.toCollection(LinkedHashSet::new),
+                        List::copyOf
+                ));
 
-        for (ChatMessage message : messages) {
-            Optional.ofNullable(message.getEntityReferences()).orElse(List.of()).stream()
-                    .map(ChatMessageEntityReference::getEntityReference)
-                    .filter(ref -> ref != null && !ref.isBlank())
-                    .forEach(entityReferences::add);
+        List<AiConversationAttachment> attachments = messages.stream()
+                .flatMap(message -> Optional.ofNullable(message.getAttachments()).orElse(List.of()).stream())
+                .toList();
 
-            Optional.ofNullable(message.getAttachments()).orElse(List.of()).forEach(attachment -> {
-                if (AiAttachmentType.AI_GENERATED.equals(attachment.getType())) {
-                    generated.add(attachment);
-                } else {
-                    uploaded.add(attachment);
-                }
-            });
-        }
+        List<AiConversationAttachment> generated = attachments.stream()
+                .filter(attachment -> AiAttachmentType.AI_GENERATED.equals(attachment.getType()))
+                .toList();
+
+        List<AiConversationAttachment> uploaded = attachments.stream()
+                .filter(attachment -> !AiAttachmentType.AI_GENERATED.equals(attachment.getType()))
+                .toList();
 
         return new ConversationContextItems(
-                List.copyOf(entityReferences),
-                List.copyOf(generated),
-                List.copyOf(uploaded)
+                entityReferences,
+                generated,
+                uploaded
         );
     }
 }

@@ -11,3 +11,19 @@ html {
 .clickable {
     cursor: var(--lumo-clickable-cursor);
 }
+
+.sortable-grab-handle {
+    cursor: grab;
+}
+
+.crm-card-background-success {
+    background: linear-gradient(45deg, var(--lumo-base-color), var(--lumo-primary-color-10pct));
+}
+
+.crm-card-background-error {
+    background: linear-gradient(45deg, var(--lumo-base-color), var(--lumo-error-color-10pct));
+}
+
+.crm-card-background-default {
+    background: linear-gradient(45deg, var(--lumo-base-color), var(--lumo-contrast-10pct));
+}

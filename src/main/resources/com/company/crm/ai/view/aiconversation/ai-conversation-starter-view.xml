@@ -134,7 +134,8 @@
                         classNames="m-0"/>
                     <span id="historyPanelCount"
                           classNames="text-secondary text-s ai-conversation-starter-history-count"/>
-                    <div id="historyHeaderSpacer" css="flex: 1 1 auto;"/>
+                    <div id="historyHeaderSpacer"
+                         classNames="ai-conversation-starter-history-header-spacer"/>
                     <button id="historyNewBtn"
                             text="msg://aiConversationStarterView.newConversation"
                             icon="PLUS"

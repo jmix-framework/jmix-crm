@@ -39,6 +39,7 @@ public class ResultConverter {
         }
 
         List<Map<String, Object>> mapList = new ArrayList<>();
+        // TODO: to streams api?
         for (KeyValueEntity keyValueEntity : results) {
             Map<String, Object> row = new LinkedHashMap<>();
             for (String propertyName : propertyNames) {

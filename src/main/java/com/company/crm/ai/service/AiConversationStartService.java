@@ -9,6 +9,7 @@ import org.springframework.util.StringUtils;
 
 import java.util.List;
 
+// TODO: merge mit AiConversationService
 @Service
 public class AiConversationStartService {
 
@@ -35,9 +36,11 @@ public class AiConversationStartService {
                 attachments
         );
 
+        // TODO: wenn return wert, dann auch first class klasse, nicht nested class
         return new StartedConversation(conversation, userMessage);
     }
 
+    // TODO: kein transactional an klassen, macht jmix mit data manager automatisch.
     @Transactional
     public ChatMessage createUserMessageAndEnsureStarted(AiConversation conversation,
                                                          String prompt,

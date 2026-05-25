@@ -142,8 +142,10 @@ public class AiJpqlParameterConverter {
                 .orElse(null);
     }
 
+    // TODO: das wirkt wie AI slop... kann das weg?
     private boolean isLikelyNumeric(String s) {
         if (s == null || s.isEmpty()) return false;
+        // TODO: reassigned local variable
         int dotCount = 0;
         for (int i = 0; i < s.length(); i++) {
             char c = s.charAt(i);

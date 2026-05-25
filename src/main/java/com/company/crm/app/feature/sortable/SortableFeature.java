@@ -13,6 +13,7 @@ import org.vaadin.jchristophe.SortableLayout;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.IntStream;
 
 public final class SortableFeature {
 
@@ -71,7 +72,7 @@ public final class SortableFeature {
 
         sortableLayout.addClassNames(component.getClassNames().toArray(String[]::new));
 
-        component.getChildren().forEach(child -> child.getStyle().setCursor("grab"));
+        component.getChildren().forEach(child -> child.addClassName("sortable-grab-handle"));
 
         return sortableLayout;
     }
@@ -79,11 +80,11 @@ public final class SortableFeature {
     public static void reorder(SortableLayout sortableLayout, List<Component> newOrder) {
         Component layout = sortableLayout.getChildren().findFirst().orElse(null);
         if (layout instanceof HasComponents hasComponents) {
-            for (int i = 0; i < newOrder.size(); i++) {
-                Component component = newOrder.get(i);
+            IntStream.range(0, newOrder.size()).forEach(index -> {
+                Component component = newOrder.get(index);
                 hasComponents.remove(component);
-                hasComponents.addComponentAtIndex(i, component);
-            }
+                hasComponents.addComponentAtIndex(index, component);
+            });
         }
     }
 
