@@ -41,8 +41,9 @@
                 <action id="readAction" type="list_read" text="msg://aiConversationListView.readAction.text"/>
             </actions>
             <columns resizable="true">
-                <column property="title" width="60%"/>
-                <column property="createdDate" width="40%"/>
+                <column property="title" width="50%"/>
+                <column property="createdBy" width="25%"/>
+                <column property="createdDate" width="25%"/>
             </columns>
         </dataGrid>
         <hbox id="lookupActions" visible="false">

@@ -37,7 +37,7 @@ public interface ManagerRole extends UiMinimalRole, ReportsRunRole {
     String NAME = "Manager";
 
     @MenuPolicy(menuIds = {"home", "tasks", "clients", "orders", "invoices", "payments", "AiConversation.start"})
-    @ViewPolicy(viewIds = {"HomeView", "UserTask.list", "Client.list", "Order.list", "CategoryItem.detail", "Category.detail", "Client.detail", "Invoice.detail", "Invoice.list", "OrderItem.detail", "Order.detail", "Payment.detail", "Payment.list", "AddressFragment", "Contact.detail", "flowui_AddConditionView", "flowui_GroupFilterCondition.detail", "flowui_JpqlFilterCondition.detail", "flowui_PropertyFilterCondition.detail", "flowui_DateIntervalDialog", "AiConversation.list", "AiConversation.detail", "AiConversation.start"})
+    @ViewPolicy(viewIds = {"HomeView", "UserTask.list", "Client.list", "Order.list", "CategoryItem.detail", "Category.detail", "Client.detail", "Invoice.detail", "Invoice.list", "OrderItem.detail", "Order.detail", "Payment.detail", "Payment.list", "AddressFragment", "Contact.detail", "flowui_AddConditionView", "flowui_GroupFilterCondition.detail", "flowui_JpqlFilterCondition.detail", "flowui_PropertyFilterCondition.detail", "flowui_DateIntervalDialog", "AiConversation.detail", "AiConversation.start"})
     void views();
 
     @EntityAttributePolicy(entityClass = AiConversation.class, attributes = "*", action = EntityAttributePolicyAction.MODIFY)
