@@ -17,9 +17,7 @@ public class AiSideDialogHeader extends HorizontalLayout {
     public void setDialog(SideDialog sideDialog) {
         setJustifyContentMode(JustifyContentMode.END);
 
-        Button closeButton = new Button(VaadinIcon.CLOSE.create(), event -> sideDialog.close());
-        closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ICON);
-        add(closeButton);
+        addCloseButton(sideDialog);
     }
 
     public void setDialog(SideDialog sideDialog, String titleText) {
@@ -29,6 +27,10 @@ public class AiSideDialogHeader extends HorizontalLayout {
         titleSpan.addClassNames("font-semibold", "text-l");
         add(titleSpan);
 
+        addCloseButton(sideDialog);
+    }
+
+    private void addCloseButton(SideDialog sideDialog) {
         Button closeButton = new Button(VaadinIcon.CLOSE.create(), event -> sideDialog.close());
         closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ICON);
         add(closeButton);

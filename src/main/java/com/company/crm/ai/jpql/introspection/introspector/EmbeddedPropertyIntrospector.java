@@ -33,7 +33,7 @@ public class EmbeddedPropertyIntrospector implements MetaPropertyIntrospector {
         }
 
         return new AiPropertyDescriptor(
-                getPropertyCaption(property),
+                getPropertyCaption(property, messageTools),
                 metadataTools.getMetaAnnotationValue(property, Comment.class),
                 property.getType().name().toLowerCase(),
                 property.getRange().asClass().getName(),
@@ -44,9 +44,5 @@ public class EmbeddedPropertyIntrospector implements MetaPropertyIntrospector {
                 null,
                 null
         );
-    }
-
-    private String getPropertyCaption(MetaProperty property) {
-        return messageTools.getPropertyCaption(property.getDomain(), property.getName());
     }
 }

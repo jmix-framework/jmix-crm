@@ -56,8 +56,7 @@ public class AiConversationTitlePromptBuilder {
     }
 
     private boolean isSkipMarker(String title) {
-        return StringUtils.hasText(titleProperties.getSkipMarker())
-                && titleProperties.getSkipMarker().equalsIgnoreCase(title);
+        return AiTitleProperties.SKIP_MARKER.equalsIgnoreCase(title);
     }
 
     private boolean isSnippetMessage(ChatMessage message) {

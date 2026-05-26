@@ -92,7 +92,6 @@ class AiReportExecutionServiceTest extends AbstractTest {
                     null,
                     "HTML",
                     List.of("client-360-report"),
-                    null,
                     message.getId()
             );
 
@@ -145,7 +144,6 @@ class AiReportExecutionServiceTest extends AbstractTest {
                     null,
                     "HTML",
                     List.of("client-360-report"),
-                    null,
                     UUID.randomUUID()
             );
 

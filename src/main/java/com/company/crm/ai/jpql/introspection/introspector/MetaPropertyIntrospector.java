@@ -23,4 +23,15 @@ public interface MetaPropertyIntrospector {
      * @return true if this introspector can handle this property type
      */
     boolean supports(MetaProperty property);
+
+    /**
+     * Helper method to get the localized property caption.
+     *
+     * @param property the MetaProperty
+     * @param messageTools Jmix MessageTools bean
+     * @return the localized caption of the property
+     */
+    default String getPropertyCaption(MetaProperty property, io.jmix.core.MessageTools messageTools) {
+        return messageTools.getPropertyCaption(property.getDomain(), property.getName());
+    }
 }

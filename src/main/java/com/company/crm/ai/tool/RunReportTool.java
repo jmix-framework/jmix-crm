@@ -109,9 +109,8 @@ public class RunReportTool implements CrmAiTool {
                 return formatValidationError;
             }
 
-            UUID convUuid = resolveUuid(toolContext, "conversationId");
             UUID assistantMessageId = resolveUuid(toolContext, "assistantMessageId");
-            ReportExecutionResult result = executionService.executeReport(reportCode, parameters, templateCode, outputType, allowedReportCodes, convUuid, assistantMessageId);
+            ReportExecutionResult result = executionService.executeReport(reportCode, parameters, templateCode, outputType, allowedReportCodes, assistantMessageId);
             publishCompletion(toolContext, statusStart, reportCode, result);
             return result;
         } catch (Exception e) {

@@ -19,7 +19,6 @@ import com.company.crm.app.util.common.StreamUtils;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 
 @Component
@@ -56,7 +55,7 @@ public class ChatMessageAiInputMapper {
     }
 
     private Message mapTypeToMessage(String content, ChatMessageType type, Map<String, Object> metadata, List<Media> media) {
-        String messageContent = Objects.toString(content, "");
+        String messageContent = content != null ? content : "";
 
         if (type == null) {
             return new SystemMessage(messageContent);

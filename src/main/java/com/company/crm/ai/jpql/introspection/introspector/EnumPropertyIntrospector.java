@@ -40,7 +40,7 @@ public class EnumPropertyIntrospector implements MetaPropertyIntrospector {
             return null;
         }
         return AiPropertyDescriptor.enumProperty(
-                getPropertyCaption(property),
+                getPropertyCaption(property, messageTools),
                 metadataTools.getMetaAnnotationValue(property, Comment.class),
                 property.getJavaType().getSimpleName(),
                 enumValues(property.getJavaType())
@@ -52,23 +52,25 @@ public class EnumPropertyIntrospector implements MetaPropertyIntrospector {
         if (EnumClass.class.isAssignableFrom(enumClass)) {
             for (Object enumConstant : enumClass.getEnumConstants()) {
                 EnumClass<?> enumClassConstant = (EnumClass<?>) enumConstant;
-                String enumName = enumConstant.toString();
-                String enumDescription = messages.getMessage((Enum<?>) enumConstant);
-                String localizedDescription = !enumDescription.equals(enumName) ? enumDescription : null;
-                enums.put(enumName, new AiEnumValueDescriptor(enumClassConstant.getId(), localizedDescription));
+                enums.put(enumConstant.toString(), new AiEnumValueDescriptor(
+                        enumClassConstant.getId(),
+                        getLocalizedDescription(enumConstant)
+                ));
             }
         } else {
             for (Object enumConstant : enumClass.getEnumConstants()) {
-                String enumName = enumConstant.toString();
-                String enumDescription = messages.getMessage((Enum<?>) enumConstant);
-                String localizedDescription = !enumDescription.equals(enumName) ? enumDescription : null;
-                enums.put(enumName, new AiEnumValueDescriptor(((Enum<?>) enumConstant).ordinal(), localizedDescription));
+                enums.put(enumConstant.toString(), new AiEnumValueDescriptor(
+                        (((Enum<?>) enumConstant).ordinal()),
+                        getLocalizedDescription(enumConstant)
+                ));
             }
         }
         return enums;
     }
 
-    private String getPropertyCaption(MetaProperty property) {
-        return messageTools.getPropertyCaption(property.getDomain(), property.getName());
+    private String getLocalizedDescription(Object enumConstant) {
+        String enumName = enumConstant.toString();
+        String enumDescription = messages.getMessage((Enum<?>) enumConstant);
+        return !enumDescription.equals(enumName) ? enumDescription : null;
     }
 }

@@ -35,11 +35,6 @@ public class AiConversationContextCardFactory {
         return createContextCardsGrid(attachments, new ComponentRenderer<>(this::createAttachmentCard));
     }
 
-    public Component createEntityReferenceCardsGrid(List<ChatMessageEntityReference> entityReferences) {
-        return createContextCardsGrid(entityReferences, new ComponentRenderer<>(
-                reference -> createEntityReferenceCard(reference.getEntityReference())));
-    }
-
     public Component createEntityReferenceCardsGridFromIds(List<String> entityReferences) {
         return createContextCardsGrid(entityReferences, new ComponentRenderer<>(this::createEntityReferenceCard));
     }
@@ -58,14 +53,6 @@ public class AiConversationContextCardFactory {
             }
             return null;
         }));
-    }
-
-    public Component createPendingEntityReferenceCardsGrid(List<String> entityReferences, Consumer<String> onRemove) {
-        return createContextCardsGrid(entityReferences, new ComponentRenderer<>(entityReference -> createPendingEntityReferenceCard(entityReference, onRemove)));
-    }
-
-    public Component createPendingAttachmentCardsGrid(List<PendingAttachmentInput> attachments, Consumer<PendingAttachmentInput> onRemove) {
-        return createContextCardsGrid(attachments, new ComponentRenderer<>(pendingAttachment -> createPendingAttachmentCard(pendingAttachment, onRemove)));
     }
 
     public Component createPendingContextCardsGrid(List<String> entityReferences, Consumer<String> onRemoveEntity,

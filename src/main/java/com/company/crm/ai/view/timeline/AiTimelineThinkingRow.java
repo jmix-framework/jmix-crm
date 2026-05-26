@@ -1,7 +1,6 @@
 package com.company.crm.ai.view.timeline;
 
 import com.company.crm.ai.model.AiUiStatusUpdate;
-import com.company.crm.ai.model.ChatMessage;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
@@ -20,13 +19,12 @@ public class AiTimelineThinkingRow extends AbstractAiTimelineRow {
                             String assistantName,
                             String formattedTime,
                             String defaultThinkingIndicatorText) {
-        ChatMessage placeholder = item.message();
         List<AiUiStatusUpdate> statusUpdates = item.statusUpdates() != null ? item.statusUpdates() : List.of();
 
         initRow(true, assistantName, formattedTime);
 
-        Span thinkingText = buildStatusSpan(resolveActiveStatus(statusUpdates, defaultThinkingIndicatorText),
-                "ai-timeline-thinking-text");
+        Span thinkingText = buildStatusSpan(resolveActiveStatus(statusUpdates, defaultThinkingIndicatorText)
+        );
 
         Div shimmer = new Div();
         shimmer.addClassName("ai-timeline-thinking-shimmer");
@@ -51,8 +49,8 @@ public class AiTimelineThinkingRow extends AbstractAiTimelineRow {
         return statusList;
     }
 
-    private Span buildStatusSpan(AiUiStatusUpdate update, String mainClass) {
-        return buildStatusSpan(update, mainClass, false);
+    private Span buildStatusSpan(AiUiStatusUpdate update) {
+        return buildStatusSpan(update, "ai-timeline-thinking-text", false);
     }
 
     private Span buildStatusSpan(AiUiStatusUpdate update, String mainClass, boolean completedPrefix) {

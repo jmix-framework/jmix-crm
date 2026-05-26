@@ -11,7 +11,9 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 
+import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 @JmixEntity
 @Table(name = "AI_CONVERSATION")
@@ -31,6 +33,16 @@ public class AiConversation extends CreateAuditEntity {
 
     public List<ChatMessage> getMessages() {
         return messages;
+    }
+
+    public List<ChatMessage> getSortedMessages() {
+        return Optional.ofNullable(messages)
+                .orElse(List.of())
+                .stream()
+                .sorted(Comparator
+                        .comparing(ChatMessage::getCreatedDate, Comparator.nullsLast(Comparator.naturalOrder()))
+                        .thenComparing(ChatMessage::getId, Comparator.nullsLast(Comparator.naturalOrder())))
+                .toList();
     }
 
     public void setMessages(List<ChatMessage> messages) {

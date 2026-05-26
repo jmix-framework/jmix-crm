@@ -11,6 +11,7 @@ import io.jmix.core.IdSerialization;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
@@ -37,7 +38,7 @@ public class EntityReferenceContentResolver {
     }
 
     public String resolveContext(List<ChatMessageEntityReference> references) {
-        if (org.springframework.util.CollectionUtils.isEmpty(references)) {
+        if (CollectionUtils.isEmpty(references)) {
             return null;
         }
 

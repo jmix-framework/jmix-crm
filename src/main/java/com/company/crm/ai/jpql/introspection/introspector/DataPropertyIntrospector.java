@@ -33,7 +33,7 @@ public class DataPropertyIntrospector implements MetaPropertyIntrospector {
         }
 
         return AiPropertyDescriptor.dataProperty(
-                messageTools.getPropertyCaption(property.getDomain(), property.getName()),
+                getPropertyCaption(property, messageTools),
                 metadataTools.getMetaAnnotationValue(property, Comment.class),
                 property.getJavaType().getSimpleName(),
                 property.equals(metadataTools.getPrimaryKeyProperty(property.getDomain())) ? true : null

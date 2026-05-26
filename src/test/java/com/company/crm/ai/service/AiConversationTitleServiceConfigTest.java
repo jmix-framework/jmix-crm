@@ -47,12 +47,11 @@ class AiConversationTitleServiceConfigTest {
     @Test
     void systemPromptUsesConfiguredSkipMarker() {
         AiTitleProperties titleProperties = new AiTitleProperties();
-        titleProperties.setSkipMarker("NO_TITLE");
         ByteArrayResource prompt = new ByteArrayResource(
                 "Return {skipMarker} for vague messages.".getBytes(StandardCharsets.UTF_8));
 
         String renderedPrompt = AiConversationTitleService.renderSystemPrompt(prompt, titleProperties);
 
-        assertThat(renderedPrompt).isEqualTo("Return NO_TITLE for vague messages.");
+        assertThat(renderedPrompt).isEqualTo("Return NEW_CONVERSATION for vague messages.");
     }
 }

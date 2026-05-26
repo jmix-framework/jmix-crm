@@ -37,7 +37,6 @@ public class AiConversationTitleService {
     private final CrmAiConfig crmAiConfig;
     private final AiTitleProperties titleProperties;
     private final AiConversationTitlePromptBuilder titlePromptBuilder;
-    private final AiSmallModelProperties smallModelProperties;
 
     public AiConversationTitleService(
             UnconstrainedDataManager dataManager,
@@ -52,7 +51,6 @@ public class AiConversationTitleService {
         this.crmAiConfig = crmAiConfig;
         this.titleProperties = titleProperties;
         this.titlePromptBuilder = titlePromptBuilder;
-        this.smallModelProperties = smallModelProperties;
 
         this.chatClient = chatClientBuilder.clone()
                 .defaultSystem(renderSystemPrompt(systemPrompt, titleProperties))
@@ -159,11 +157,8 @@ public class AiConversationTitleService {
 
     static String renderSystemPrompt(Resource systemPrompt, AiTitleProperties titleProperties) {
         try {
-            String skipMarker = StringUtils.hasText(titleProperties.getSkipMarker())
-                    ? titleProperties.getSkipMarker()
-                    : "";
             return StreamUtils.copyToString(systemPrompt.getInputStream(), StandardCharsets.UTF_8)
-                    .replace("{skipMarker}", skipMarker);
+                    .replace("{skipMarker}", AiTitleProperties.SKIP_MARKER);
         } catch (IOException e) {
             throw new IllegalStateException("Failed to read AI conversation title system prompt", e);
         }

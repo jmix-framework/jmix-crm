@@ -9,6 +9,7 @@ import com.company.crm.ai.model.ChatMessageEntityReference;
 import com.company.crm.ai.model.ChatMessageType;
 import com.company.crm.model.catalog.category.Category;
 import io.jmix.core.DataManager;
+import io.jmix.core.FetchPlan;
 import io.jmix.core.FileRef;
 import io.jmix.core.Id;
 import io.jmix.core.IdSerialization;
@@ -81,9 +82,9 @@ public class ChatMessagePersistenceIntegrationTest extends AbstractTest {
         // then
         ChatMessage loadedMessage = dataManager.load(ChatMessage.class)
                 .id(message.getId())
-                .fetchPlan(fp -> fp.addFetchPlan(io.jmix.core.FetchPlan.BASE)
-                        .add("entityReferences", io.jmix.core.FetchPlan.BASE)
-                        .add("attachments", io.jmix.core.FetchPlan.BASE))
+                .fetchPlan(fp -> fp.addFetchPlan(FetchPlan.BASE)
+                        .add("entityReferences", FetchPlan.BASE)
+                        .add("attachments", FetchPlan.BASE))
                 .one();
 
         assertThat(loadedMessage.getEntityReferences()).hasSize(1);
@@ -203,9 +204,9 @@ public class ChatMessagePersistenceIntegrationTest extends AbstractTest {
     private ChatMessage loadMessageWithContext(UUID messageId) {
         return dataManager.load(ChatMessage.class)
                 .id(messageId)
-                .fetchPlan(fp -> fp.addFetchPlan(io.jmix.core.FetchPlan.BASE)
-                        .add("entityReferences", io.jmix.core.FetchPlan.BASE)
-                        .add("attachments", io.jmix.core.FetchPlan.BASE))
+                .fetchPlan(fp -> fp.addFetchPlan(FetchPlan.BASE)
+                        .add("entityReferences", FetchPlan.BASE)
+                        .add("attachments", FetchPlan.BASE))
                 .one();
     }
 

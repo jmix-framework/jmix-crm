@@ -10,11 +10,12 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "crm.ai.title")
 public class AiTitleProperties {
 
+    public static final String SKIP_MARKER = "NEW_CONVERSATION";
+
     private boolean enabled = true;
     private int maxLength = 80;
     private int maxContextMessages = 6;
     private int minUserMessages = 1;
-    private String skipMarker = "NEW_CONVERSATION";
 
     public boolean isEnabled() {
         return enabled;
@@ -46,13 +47,5 @@ public class AiTitleProperties {
 
     public void setMinUserMessages(int minUserMessages) {
         this.minUserMessages = minUserMessages;
-    }
-
-    public String getSkipMarker() {
-        return skipMarker;
-    }
-
-    public void setSkipMarker(String skipMarker) {
-        this.skipMarker = skipMarker;
     }
 }

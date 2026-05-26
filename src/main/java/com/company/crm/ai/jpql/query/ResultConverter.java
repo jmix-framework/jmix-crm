@@ -3,6 +3,7 @@ package com.company.crm.ai.jpql.query;
 import io.jmix.core.EntitySerialization;
 import io.jmix.core.entity.KeyValueEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -34,7 +35,7 @@ public class ResultConverter {
      * Uses Jmix EntitySerialization to handle entities safely
      */
     public List<Map<String, Object>> convertToMapList(List<KeyValueEntity> results, String[] propertyNames) {
-        if (org.springframework.util.CollectionUtils.isEmpty(results)) {
+        if (CollectionUtils.isEmpty(results)) {
             return new ArrayList<>();
         }
 

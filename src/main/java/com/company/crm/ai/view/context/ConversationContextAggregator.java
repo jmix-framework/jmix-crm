@@ -6,7 +6,6 @@ import com.company.crm.ai.model.AiConversationAttachment;
 import com.company.crm.ai.model.ChatMessage;
 import com.company.crm.ai.model.ChatMessageEntityReference;
 
-import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
@@ -19,13 +18,7 @@ public class ConversationContextAggregator {
             return ConversationContextItems.empty();
         }
 
-        List<ChatMessage> messages = Optional.ofNullable(conversation.getMessages())
-                .orElse(List.of())
-                .stream()
-                .sorted(Comparator
-                        .comparing(ChatMessage::getCreatedDate, Comparator.nullsLast(Comparator.naturalOrder()))
-                        .thenComparing(ChatMessage::getId, Comparator.nullsLast(Comparator.naturalOrder())))
-                .toList();
+        List<ChatMessage> messages = conversation.getSortedMessages();
 
         List<String> entityReferences = messages.stream()
                 .flatMap(message -> Optional.ofNullable(message.getEntityReferences()).orElse(List.of()).stream())

@@ -17,7 +17,17 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 class AiDomainModelDescriptorYamlWriterTest {
 
-    private final AiDomainModelDescriptorYamlWriter writer = new AiDomainModelDescriptorYamlWriter();
+    private final AiDomainModelDescriptorYamlWriter writer = new AiDomainModelDescriptorYamlWriter(createYamlMapper());
+
+    private static com.fasterxml.jackson.databind.ObjectMapper createYamlMapper() {
+        com.fasterxml.jackson.dataformat.yaml.YAMLFactory yamlFactory = new com.fasterxml.jackson.dataformat.yaml.YAMLFactory()
+                .disable(com.fasterxml.jackson.dataformat.yaml.YAMLGenerator.Feature.WRITE_DOC_START_MARKER)
+                .enable(com.fasterxml.jackson.dataformat.yaml.YAMLGenerator.Feature.MINIMIZE_QUOTES)
+                .enable(com.fasterxml.jackson.dataformat.yaml.YAMLGenerator.Feature.INDENT_ARRAYS_WITH_INDICATOR);
+        com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper(yamlFactory);
+        mapper.setDefaultPropertyInclusion(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY);
+        return mapper;
+    }
 
     @Test
     void shouldWritePropertiesStructure() {

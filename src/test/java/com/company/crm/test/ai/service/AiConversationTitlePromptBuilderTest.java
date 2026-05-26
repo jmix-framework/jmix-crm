@@ -45,12 +45,11 @@ class AiConversationTitlePromptBuilderTest {
     void sanitizesGeneratedTitles() {
         AiTitleProperties titleProperties = new AiTitleProperties();
         titleProperties.setMaxLength(12);
-        titleProperties.setSkipMarker("NO_TITLE");
         AiConversationTitlePromptBuilder builder = new AiConversationTitlePromptBuilder(titleProperties);
 
         assertThat(builder.sanitizeTitle("\"Revenue overview.\"")).isEqualTo("Revenue over");
-        assertThat(builder.sanitizeTitle("NO_TITLE")).isEmpty();
-        assertThat(builder.sanitizeTitle("\"NO_TITLE.\"")).isEmpty();
+        assertThat(builder.sanitizeTitle("NEW_CONVERSATION")).isEmpty();
+        assertThat(builder.sanitizeTitle("\"NEW_CONVERSATION.\"")).isEmpty();
         assertThat(builder.sanitizeTitle("   ")).isEmpty();
     }
 

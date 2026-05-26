@@ -5,7 +5,6 @@ import com.company.crm.ai.service.AiEntityReferenceResolver;
 import com.company.crm.ai.service.EntityReferenceViewData;
 import com.vaadin.flow.component.card.Card;
 import com.vaadin.flow.component.card.CardVariant;
-import io.jmix.core.Messages;
 
 import java.util.function.Consumer;
 
@@ -13,8 +12,7 @@ public class AiEntityReferenceCard extends Card {
 
     private final AiEntityReferenceResolver entityReferenceResolver;
 
-    public AiEntityReferenceCard(Messages messages,
-                                 AiEntityReferenceResolver entityReferenceResolver) {
+    public AiEntityReferenceCard(AiEntityReferenceResolver entityReferenceResolver) {
         this.entityReferenceResolver = entityReferenceResolver;
 
         setWidthFull();

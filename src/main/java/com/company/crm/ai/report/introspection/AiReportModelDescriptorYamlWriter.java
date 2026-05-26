@@ -1,10 +1,8 @@
 package com.company.crm.ai.report.introspection;
 
 import com.company.crm.ai.report.introspection.model.AiReportModelDescriptor;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 /**
@@ -16,14 +14,8 @@ public class AiReportModelDescriptorYamlWriter {
 
     private final ObjectMapper yamlMapper;
 
-    public AiReportModelDescriptorYamlWriter() {
-        YAMLFactory yamlFactory = new YAMLFactory()
-                .disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER)
-                .enable(YAMLGenerator.Feature.MINIMIZE_QUOTES)
-                .enable(YAMLGenerator.Feature.INDENT_ARRAYS_WITH_INDICATOR);
-
-        this.yamlMapper = new ObjectMapper(yamlFactory);
-        this.yamlMapper.setDefaultPropertyInclusion(JsonInclude.Include.NON_EMPTY);
+    public AiReportModelDescriptorYamlWriter(@Qualifier("aiYamlObjectMapper") ObjectMapper yamlMapper) {
+        this.yamlMapper = yamlMapper;
     }
 
     public String writeToYaml(AiReportModelDescriptor reportModel) {

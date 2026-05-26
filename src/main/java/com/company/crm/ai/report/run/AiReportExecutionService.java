@@ -4,6 +4,7 @@ import com.company.crm.ai.model.AiAttachmentOrigin;
 import com.company.crm.ai.model.AiConversationAttachment;
 import com.company.crm.ai.model.ChatMessage;
 import io.jmix.core.DataManager;
+import io.jmix.core.FetchPlan;
 import io.jmix.core.FileRef;
 import io.jmix.core.FileStorage;
 import io.jmix.core.Metadata;
@@ -25,6 +26,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 import static io.jmix.reports.entity.ReportOutputType.valueOf;
@@ -78,10 +80,6 @@ public class AiReportExecutionService {
         return executeReport(reportCode, parameters, templateCode, outputType, allowedReportCodes, null);
     }
 
-    public ReportExecutionResult executeReport(String reportCode, Map<String, Object> parameters, String templateCode, String outputType, Collection<String> allowedReportCodes, UUID conversationId) {
-        return executeReport(reportCode, parameters, templateCode, outputType, allowedReportCodes, conversationId, null);
-    }
-
     /**
      * Executes a report by its code with provided parameters and persists result if conversationId is provided.
      *
@@ -90,10 +88,9 @@ public class AiReportExecutionService {
      * @param templateCode       Optional template code. If null, default template is used.
      * @param outputType         Optional output type override.
      * @param allowedReportCodes Mandatory whitelist of allowed report codes.
-     * @param conversationId     Optional AI conversation ID to link the report to.
      * @return Execution result with content or error details
      */
-    public ReportExecutionResult executeReport(String reportCode, Map<String, Object> parameters, String templateCode, String outputType, Collection<String> allowedReportCodes, UUID conversationId, UUID assistantMessageId) {
+    public ReportExecutionResult executeReport(String reportCode, Map<String, Object> parameters, String templateCode, String outputType, Collection<String> allowedReportCodes, UUID assistantMessageId) {
         try {
             // 0. Mandatory Whitelist Guard
             if (allowedReportCodes == null || !allowedReportCodes.contains(reportCode)) {
@@ -192,8 +189,8 @@ public class AiReportExecutionService {
         try {
             ChatMessage assistantMessage = dataManager.load(ChatMessage.class)
                     .id(assistantMessageId)
-                    .fetchPlan(fp -> fp.addFetchPlan(io.jmix.core.FetchPlan.BASE)
-                            .add("conversation", io.jmix.core.FetchPlan.BASE))
+                    .fetchPlan(fp -> fp.addFetchPlan(FetchPlan.BASE)
+                            .add("conversation", FetchPlan.BASE))
                     .optional()
                     .orElse(null);
             if (assistantMessage == null) {
@@ -277,26 +274,19 @@ public class AiReportExecutionService {
     }
 
     private String resolvePrimaryEntityInstanceName(Map<String, Object> convertedParameters) {
-        if (convertedParameters.isEmpty()) {
-            return null;
-        }
-        for (Object value : convertedParameters.values()) {
-            if (value == null) {
-                continue;
-            }
-            MetaClass metaClass = metadata.findClass(value.getClass());
-            if (metaClass == null) {
-                continue;
-            }
-            try {
-                String name = metadataTools.getInstanceName(value);
-                if (StringUtils.hasText(name)) {
-                    return name;
-                }
-            } catch (Exception e) {
-                log.debug("Could not resolve instance name for parameter value {}", value, e);
-            }
-        }
-        return null;
+        return convertedParameters.values().stream()
+                .filter(Objects::nonNull)
+                .filter(value -> metadata.findClass(value.getClass()) != null)
+                .map(value -> {
+                    try {
+                        return metadataTools.getInstanceName(value);
+                    } catch (Exception e) {
+                        log.debug("Could not resolve instance name for parameter value {}", value, e);
+                        return null;
+                    }
+                })
+                .filter(StringUtils::hasText)
+                .findFirst()
+                .orElse(null);
     }
 }

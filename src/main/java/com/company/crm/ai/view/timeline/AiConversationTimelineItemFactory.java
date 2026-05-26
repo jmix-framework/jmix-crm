@@ -4,17 +4,12 @@ import com.company.crm.ai.model.AiConversation;
 import com.company.crm.ai.model.ChatMessage;
 import com.company.crm.ai.model.ChatMessageType;
 
-import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 
 public class AiConversationTimelineItemFactory {
 
     public List<TimelineItem> buildTimelineItems(AiConversation conversation) {
-        return Optional.ofNullable(conversation.getMessages()).orElse(List.of()).stream()
-                .sorted(Comparator
-                        .comparing(ChatMessage::getCreatedDate, Comparator.nullsLast(Comparator.naturalOrder()))
-                        .thenComparing(ChatMessage::getId, Comparator.nullsLast(Comparator.naturalOrder())))
+        return conversation.getSortedMessages().stream()
                 .map(this::createTimelineItem)
                 .toList();
     }

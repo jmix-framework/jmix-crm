@@ -167,10 +167,6 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
         submitUserMessage(submission.prompt(), submission.entityReferences(), submission.attachments());
     }
 
-    private void submitUserMessage(String userMessage) {
-        submitUserMessage(userMessage, composerFragment.entityReferences(), composerFragment.attachments());
-    }
-
     private void submitUserMessage(String userMessage,
                                    List<String> entityReferences,
                                    List<PendingAttachmentInput> attachments) {

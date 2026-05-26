@@ -226,10 +226,7 @@ public class AiConversationComposerFragment extends Fragment<VerticalLayout> {
         final TemporaryStorageFileData uploadedFileData = findUploadedFileData(event);
 
         if (uploadedFileData == null) {
-            attachmentUpload.clearFileList();
-            notifications.create(messageBundle.getMessage("attachmentUploadMissingFile"))
-                    .withType(Notifications.Type.ERROR)
-                    .show();
+            showMissingFileError();
             return;
         }
 
@@ -237,10 +234,7 @@ public class AiConversationComposerFragment extends Fragment<VerticalLayout> {
         final FileRef uploadedFileRef = putFileIntoStorage(uploadedFileData, uploadedFileName);
 
         if (uploadedFileRef == null) {
-            attachmentUpload.clearFileList();
-            notifications.create(messageBundle.getMessage("attachmentUploadMissingFile"))
-                    .withType(Notifications.Type.ERROR)
-                    .show();
+            showMissingFileError();
             return;
         }
 
@@ -264,6 +258,13 @@ public class AiConversationComposerFragment extends Fragment<VerticalLayout> {
                     .withType(Notifications.Type.ERROR)
                     .show();
         }
+    }
+
+    private void showMissingFileError() {
+        attachmentUpload.clearFileList();
+        notifications.create(messageBundle.getMessage("attachmentUploadMissingFile"))
+                .withType(Notifications.Type.ERROR)
+                .show();
     }
 
     private String resolveUploadedFileName(SucceededEvent event, TemporaryStorageFileData uploadedFileData) {

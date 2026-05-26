@@ -43,7 +43,7 @@ public class RelationPropertyIntrospector implements MetaPropertyIntrospector {
         }
 
         return AiPropertyDescriptor.relationProperty(
-                messageTools.getPropertyCaption(property.getDomain(), property.getName()),
+                getPropertyCaption(property, messageTools),
                 metadataTools.getMetaAnnotationValue(property, Comment.class),
                 property.getRange().getCardinality().name(),
                 property.getRange().asClass().getName(),
