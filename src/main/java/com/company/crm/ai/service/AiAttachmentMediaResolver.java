@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -82,21 +83,13 @@ public class AiAttachmentMediaResolver {
     }
 
     private String buildTextContext(String fileName, AiAttachmentMediaType mediaType, byte[] data) {
-        AiPromptContentBuilder builder = AiPromptContentBuilder.create()
-                .appendParagraph("""
-                        Attached file: %s
-                        MIME type: %s""".formatted(fileDisplayName(fileName), mediaType.mimeType()));
-
-        if (!mediaType.isTextContextReadable()) {
-            return builder
-                    .appendParagraph("Content: The file content is not text-readable in this chat context.")
-                    .build();
-        }
-
-        String text = trimTextContext(new String(data, StandardCharsets.UTF_8));
-
-        return builder
-                .appendSection("Content", text)
+        return AiPromptContentBuilder.create()
+                .appendFields(Map.of(
+                        "Attached file", fileDisplayName(fileName),
+                        "MIME type", mediaType.mimeType().toString()
+                ))
+                .appendParagraphIf(!mediaType.isTextContextReadable(), "Content: The file content is not text-readable in this chat context.")
+                .appendSectionIf(mediaType.isTextContextReadable(), "Content", () -> trimTextContext(new String(data, StandardCharsets.UTF_8)))
                 .build();
     }
 
@@ -105,7 +98,8 @@ public class AiAttachmentMediaResolver {
     }
 
     private String trimTextContext(String text) {
-        String normalized = text.strip();
+        String normalized = AiTextSanitizer.normalizeTextBlock(text, Integer.MAX_VALUE)
+                .orElse("");
         if (normalized.length() <= MAX_TEXT_CONTEXT_LENGTH) {
             return normalized;
         }

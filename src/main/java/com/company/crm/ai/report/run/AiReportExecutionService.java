@@ -17,6 +17,7 @@ import io.jmix.reports.yarg.reporting.ReportOutputDocument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
@@ -100,25 +101,21 @@ public class AiReportExecutionService {
             }
 
             // 1. Load report
-            Report report = reportRepository.getAllReports().stream()
-                    .filter(r -> reportCode.equals(r.getCode()))
-                    .findFirst()
-                    .orElse(null);
-
+            Report report = findReport(reportCode);
             if (report == null) {
                 return ReportExecutionResult.failed(reportCode, ReportExecutionErrorCode.REPORT_NOT_FOUND, "Report with code '" + reportCode + "' not found.");
             }
 
             // Reload to get all details (parameters, templates)
-            report = reportRepository.reloadForRunning(report);
+            Report runnableReport = reportRepository.reloadForRunning(report);
 
             // 3. Resolve Template
-            ReportTemplate template = resolveTemplate(report, templateCode);
+            ReportTemplate template = resolveTemplate(runnableReport, templateCode);
             if (templateCode != null && template == null) {
                 return ReportExecutionResult.failed(reportCode, ReportExecutionErrorCode.TEMPLATE_NOT_FOUND, "Template with code '" + templateCode + "' not found for this report.");
             }
             if (templateCode == null && outputType != null) {
-                ReportTemplate matchingOutputTemplate = resolveTemplateByOutputType(report, outputType);
+                ReportTemplate matchingOutputTemplate = resolveTemplateByOutputType(runnableReport, outputType);
                 if (matchingOutputTemplate != null) {
                     template = matchingOutputTemplate;
                 }
@@ -128,7 +125,7 @@ public class AiReportExecutionService {
             String effectiveOutputType = outputType != null ? outputType : (template != null && template.getReportOutputType() != null ? template.getReportOutputType().toString() : null);
 
             // 4. Convert and Validate Parameters
-            ReportParameterConversionResult conversionResult = parameterConverter.convertParameters(report.getInputParameters(), parameters);
+            ReportParameterConversionResult conversionResult = parameterConverter.convertParameters(runnableReport.getInputParameters(), parameters);
             if (!conversionResult.success()) {
                 if (conversionResult.hasConversionErrors()) {
                     return ReportExecutionResult.parameterConversionError(reportCode, conversionResult.errors());
@@ -149,7 +146,7 @@ public class AiReportExecutionService {
                 return ReportExecutionResult.failed(reportCode, ReportExecutionErrorCode.BINARY_OUTPUT_NOT_SUPPORTED_YET, "Binary output formats (like PDF, XLSX) are not yet supported for LLM analysis.");
             }
 
-            var runner = reportRunner.byReportEntity(report)
+            var runner = reportRunner.byReportEntity(runnableReport)
                     .withParams(conversionResult.convertedParameters());
 
             if (effectiveTemplateCode != null) {
@@ -173,7 +170,7 @@ public class AiReportExecutionService {
             // 7. Optional Persistence
             if (assistantMessageId != null) {
                 String primaryEntityName = resolvePrimaryEntityInstanceName(conversionResult.convertedParameters());
-                return persistReportResult(result, assistantMessageId, report.getName(), primaryEntityName);
+                return persistReportResult(result, assistantMessageId, runnableReport.getName(), primaryEntityName);
             }
 
             return result;
@@ -184,8 +181,14 @@ public class AiReportExecutionService {
         }
     }
 
+    private Report findReport(String reportCode) {
+        return reportRepository.getAllReports().stream()
+                .filter(report -> reportCode.equals(report.getCode()))
+                .findFirst()
+                .orElse(null);
+    }
+
     private ReportExecutionResult persistReportResult(ReportExecutionResult result, UUID assistantMessageId, String reportName, String primaryEntityName) {
-        FileRef fileRef = null;
         try {
             ChatMessage assistantMessage = dataManager.load(ChatMessage.class)
                     .id(assistantMessageId)
@@ -204,19 +207,20 @@ public class AiReportExecutionService {
             String fileName = String.format("report_%s_%s.%s", result.reportCode(), timestamp, extension);
 
             String content = result.content() != null ? result.content() : "";
-            fileRef = fileStorage.saveStream(fileName, new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8)));
+            FileRef fileRef = fileStorage.saveStream(fileName, new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8)));
 
-            AiConversationAttachment attachment = dataManager.create(AiConversationAttachment.class);
-            attachment.setMessage(assistantMessage);
-            attachment.setFile(fileRef);
-            attachment.setFileName(fileName);
-            String attachmentTitle = org.springframework.util.StringUtils.hasText(reportName) ? reportName : result.reportCode();
-            if (org.springframework.util.StringUtils.hasText(primaryEntityName)) {
-                attachmentTitle = attachmentTitle + " - " + primaryEntityName;
+            try {
+                AiConversationAttachment attachment = dataManager.create(AiConversationAttachment.class);
+                attachment.setMessage(assistantMessage);
+                attachment.setFile(fileRef);
+                attachment.setFileName(fileName);
+                attachment.setTitle(reportAttachmentTitle(result.reportCode(), reportName, primaryEntityName));
+                attachment.setOrigin(AiAttachmentOrigin.AI_GENERATED);
+                dataManager.save(attachment);
+            } catch (Exception e) {
+                cleanupReportFile(fileRef);
+                throw e;
             }
-            attachment.setTitle(attachmentTitle);
-            attachment.setOrigin(AiAttachmentOrigin.AI_GENERATED);
-            dataManager.save(attachment);
 
             String citation = String.format("\n\n[View Report Attachments](/ai-conversations/%s)", assistantMessage.getConversation().getId());
             return new ReportExecutionResult(
@@ -230,15 +234,24 @@ public class AiReportExecutionService {
                     result.validationErrors()
             );
         } catch (Exception e) {
-            if (fileRef != null) {
-                try {
-                    fileStorage.removeFile(fileRef);
-                } catch (Exception cleanupError) {
-                    log.warn("Failed to cleanup report file {} after persistence error", fileRef, cleanupError);
-                }
-            }
             log.error("Failed to persist report result for assistant message {}", assistantMessageId, e);
             return result;
+        }
+    }
+
+    private String reportAttachmentTitle(String reportCode, String reportName, String primaryEntityName) {
+        String attachmentTitle = StringUtils.hasText(reportName) ? reportName : reportCode;
+        if (StringUtils.hasText(primaryEntityName)) {
+            return attachmentTitle + " - " + primaryEntityName;
+        }
+        return attachmentTitle;
+    }
+
+    private void cleanupReportFile(FileRef fileRef) {
+        try {
+            fileStorage.removeFile(fileRef);
+        } catch (Exception cleanupError) {
+            log.warn("Failed to cleanup report file {} after persistence error", fileRef, cleanupError);
         }
     }
 
@@ -277,7 +290,7 @@ public class AiReportExecutionService {
             }
             try {
                 String name = metadataTools.getInstanceName(value);
-                if (org.springframework.util.StringUtils.hasText(name)) {
+                if (StringUtils.hasText(name)) {
                     return name;
                 }
             } catch (Exception e) {

@@ -71,7 +71,6 @@ public class ConversationContextPanelSupport {
         }
 
         new ConversationContextSidePanelRenderer(
-                uiComponents,
                 messageBundle,
                 contextAggregator,
                 contextCardFactory(origin, messageBundle)

@@ -74,15 +74,11 @@ public class ChatMessageAiInputMapper {
     }
 
     private String buildContent(ChatMessage chatMessage, List<ResolvedAttachmentInput> attachments) {
-        AiPromptContentBuilder builder = AiPromptContentBuilder.create()
+        return AiPromptContentBuilder.create()
                 .appendParagraph(chatMessage.getContent())
-                .appendParagraph(entityReferenceContentResolver.resolveContext(chatMessage.getEntityReferences()));
-
-        attachments.stream()
-                .map(ResolvedAttachmentInput::textContext)
-                .forEach(builder::appendParagraph);
-
-        return builder.build();
+                .appendParagraph(entityReferenceContentResolver.resolveContext(chatMessage.getEntityReferences()))
+                .appendParagraphs(attachments.stream().map(ResolvedAttachmentInput::textContext))
+                .build();
     }
 
     private List<ResolvedAttachmentInput> resolveAttachments(ChatMessage chatMessage) {

@@ -39,15 +39,17 @@ public class ResultConverter {
         }
 
         return results.stream()
-                .map(keyValueEntity -> {
-                    Map<String, Object> row = new LinkedHashMap<>();
-                    for (String propertyName : propertyNames) {
-                        Object value = keyValueEntity.getValue(propertyName);
-                        row.put(propertyName, convertToSerializableValue(value));
-                    }
-                    return row;
-                })
+                .map(keyValueEntity -> convertRow(keyValueEntity, propertyNames))
                 .toList();
+    }
+
+    private Map<String, Object> convertRow(KeyValueEntity keyValueEntity, String[] propertyNames) {
+        Map<String, Object> row = new LinkedHashMap<>();
+        for (String propertyName : propertyNames) {
+            Object value = keyValueEntity.getValue(propertyName);
+            row.put(propertyName, convertToSerializableValue(value));
+        }
+        return row;
     }
 
     /**

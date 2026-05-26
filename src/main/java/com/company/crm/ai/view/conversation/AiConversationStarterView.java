@@ -284,29 +284,7 @@ public class AiConversationStarterView extends StandardView {
         }
 
         composerFragment.clear();
-
-        if (parentSideDialog != null) {
-            parentSideDialog.close();
-            openDetailInSideDialog(conversation);
-        } else if (openedInDialog) {
-            close(StandardOutcome.CLOSE);
-            DialogWindow<AiConversationDetailView> detailDialog = dialogWindows.detail(this, AiConversation.class)
-                    .editEntity(conversation)
-                    .withViewClass(AiConversationDetailView.class)
-                    .build();
-
-            detailDialog.setModal(false);
-            detailDialog.setLeft("65%");
-            detailDialog.setResizable(true);
-            detailDialog.setTop("5%");
-            detailDialog.setWidth("35%");
-            detailDialog.setHeight("75%");
-            detailDialog.open();
-        } else {
-            viewNavigators.detailView(this, AiConversation.class)
-                    .editEntity(conversation)
-                    .navigate();
-        }
+        openConversationDetail(conversation);
     }
 
     private void showPromptSuggestionsGrid() {
@@ -449,6 +427,10 @@ public class AiConversationStarterView extends StandardView {
     }
 
     private void openConversation(AiConversation conversation) {
+        openConversationDetail(conversation);
+    }
+
+    private void openConversationDetail(AiConversation conversation) {
         if (parentSideDialog != null) {
             parentSideDialog.close();
             openDetailInSideDialog(conversation);

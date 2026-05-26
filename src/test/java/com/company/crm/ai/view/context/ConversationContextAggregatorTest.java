@@ -87,6 +87,34 @@ class ConversationContextAggregatorTest {
     }
 
     @Test
+    void duplicateEntityReferencesKeepFirstChronologicalOccurrenceWhenMessagesAreUnsorted() {
+        OffsetDateTime now = OffsetDateTime.now();
+
+        ChatMessage newerMessage = newMessage(now.plusMinutes(10));
+        newerMessage.setEntityReferences(List.of(
+                newEntityReference("crm$Client/new-only"),
+                newEntityReference("crm$Client/shared")
+        ));
+
+        ChatMessage olderMessage = newMessage(now);
+        olderMessage.setEntityReferences(List.of(
+                newEntityReference("crm$Client/shared"),
+                newEntityReference("crm$Client/old-only")
+        ));
+
+        AiConversation conversation = new AiConversation();
+        conversation.setMessages(new ArrayList<>(List.of(newerMessage, olderMessage)));
+
+        ConversationContextItems items = aggregator.aggregate(conversation);
+
+        assertThat(items.entityReferences()).containsExactly(
+                "crm$Client/shared",
+                "crm$Client/old-only",
+                "crm$Client/new-only"
+        );
+    }
+
+    @Test
     void blankAndNullEntityReferencesAreFiltered() {
         ChatMessage message = newMessage(OffsetDateTime.now());
         message.setEntityReferences(List.of(

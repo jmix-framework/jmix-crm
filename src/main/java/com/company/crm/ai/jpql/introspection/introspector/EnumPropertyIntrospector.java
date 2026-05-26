@@ -48,10 +48,6 @@ public class EnumPropertyIntrospector implements MetaPropertyIntrospector {
     }
 
     private Map<String, AiEnumValueDescriptor> enumValues(Class<?> enumClass) {
-        if (!enumClass.isEnum()) {
-            return Map.of();
-        }
-
         Map<String, AiEnumValueDescriptor> enums = new LinkedHashMap<>();
         if (EnumClass.class.isAssignableFrom(enumClass)) {
             for (Object enumConstant : enumClass.getEnumConstants()) {

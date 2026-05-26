@@ -65,7 +65,7 @@ public class AiConversationTitlePromptBuilder {
     }
 
     private String formatSnippetLine(ChatMessage message) {
-        String role = message.getType() == ChatMessageType.USER ? "User" : "Assistant";
+        String role = message.getType().promptLabel();
         return AiTextSanitizer.normalizeSingleLine(message.getContent(), MESSAGE_SNIPPET_MAX_LENGTH)
                 .map(content -> role + ": " + content)
                 .orElse("");

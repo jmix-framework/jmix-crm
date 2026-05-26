@@ -16,6 +16,13 @@ public final class AiTextSanitizer {
                 .map(value -> truncate(value, maxLength));
     }
 
+    public static Optional<String> normalizeTextBlock(String text, int maxLength) {
+        return Optional.ofNullable(text)
+                .filter(StringUtils::hasText)
+                .map(String::strip)
+                .map(value -> truncate(value, maxLength));
+    }
+
     public static String truncate(String text, int maxLength) {
         if (text.length() <= maxLength) {
             return text;

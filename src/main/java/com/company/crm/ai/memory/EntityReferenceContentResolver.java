@@ -48,7 +48,7 @@ public class EntityReferenceContentResolver {
         }
 
         return AiPromptContentBuilder.create()
-                .appendSection("Referenced CRM entities", String.join("\n\n", referenceBlocks))
+                .appendSection("Referenced CRM entities", referenceBlocks)
                 .build();
     }
 
@@ -74,7 +74,10 @@ public class EntityReferenceContentResolver {
     }
 
     private String formatReferenceBlock(String entityReference, String json) {
-        return "%s%n%s".formatted(entityReference, json);
+        return AiPromptContentBuilder.create()
+                .appendParagraph(entityReference)
+                .appendParagraph(json)
+                .build();
     }
 
     private String resolveReferenceJson(String entityReference) {

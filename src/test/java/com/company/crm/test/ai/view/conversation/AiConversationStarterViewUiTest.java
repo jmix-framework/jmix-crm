@@ -13,7 +13,6 @@ import com.company.crm.ai.view.conversation.composer.AiConversationComposerFragm
 import com.company.crm.ai.view.conversation.AiConversationDetailView;
 import com.company.crm.ai.view.conversation.AiConversationStarterView;
 import com.company.crm.model.catalog.category.Category;
-import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.ComponentUtil;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.messages.MessageInput;
@@ -37,7 +36,6 @@ import org.springframework.test.context.TestPropertySource;
 
 import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
 
@@ -73,7 +71,7 @@ public class AiConversationStarterViewUiTest extends AbstractUiTest {
 
         AiConversationStarterView starterView = UiTestUtils.getCurrentView();
         VerticalLayout composerCard = UiTestUtils.getComponent(starterView, "composerCard");
-        assertThat(findDescendant(composerCard, MessageInput.class))
+        assertThat(viewTestSupport.findDescendant(composerCard, MessageInput.class))
                 .as("composer must contain a MessageInput")
                 .isPresent();
 
@@ -438,27 +436,16 @@ public class AiConversationStarterViewUiTest extends AbstractUiTest {
         ComponentUtil.fireEvent(messageInput, new MessageInput.SubmitEvent(messageInput, false, value));
     }
 
-    private static MessageInput inputOf(AiConversationStarterView starterView) {
+    private MessageInput inputOf(AiConversationStarterView starterView) {
         VerticalLayout composerCard = UiTestUtils.getComponent(starterView, "composerCard");
-        return findDescendant(composerCard, MessageInput.class)
+        return viewTestSupport.findDescendant(composerCard, MessageInput.class)
                 .orElseThrow(() -> new AssertionError("MessageInput not found in composer"));
     }
 
-    private static AiConversationComposerFragment composerOf(AiConversationStarterView starterView) {
+    private AiConversationComposerFragment composerOf(AiConversationStarterView starterView) {
         VerticalLayout composerCard = UiTestUtils.getComponent(starterView, "composerCard");
-        return findDescendant(composerCard, AiConversationComposerFragment.class)
+        return viewTestSupport.findDescendant(composerCard, AiConversationComposerFragment.class)
                 .orElseThrow(() -> new AssertionError("Composer fragment not found"));
-    }
-
-    private static <T extends Component> Optional<T> findDescendant(Component component, Class<T> type) {
-        if (type.isInstance(component)) {
-            return Optional.of(type.cast(component));
-        }
-        return component.getChildren()
-                .map(child -> findDescendant(child, type))
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .findFirst();
     }
 
     private long countConversations() {

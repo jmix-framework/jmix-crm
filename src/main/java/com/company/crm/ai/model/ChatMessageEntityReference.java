@@ -3,6 +3,7 @@ package com.company.crm.ai.model;
 import com.company.crm.model.base.CreateAuditEntity;
 import io.jmix.core.DeletePolicy;
 import io.jmix.core.entity.annotation.OnDeleteInverse;
+import io.jmix.core.metamodel.annotation.InstanceName;
 import io.jmix.core.metamodel.annotation.JmixEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -26,6 +27,7 @@ public class ChatMessageEntityReference extends CreateAuditEntity {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     private ChatMessage message;
 
+    @InstanceName
     @NotNull
     @Column(name = "ENTITY_REFERENCE", nullable = false)
     private String entityReference;

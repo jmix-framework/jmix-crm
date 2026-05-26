@@ -23,7 +23,7 @@ public class AiReportModelDescriptorYamlWriter {
                 .enable(YAMLGenerator.Feature.INDENT_ARRAYS_WITH_INDICATOR);
 
         this.yamlMapper = new ObjectMapper(yamlFactory);
-        this.yamlMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+        this.yamlMapper.setDefaultPropertyInclusion(JsonInclude.Include.NON_EMPTY);
     }
 
     public String writeToYaml(AiReportModelDescriptor reportModel) {

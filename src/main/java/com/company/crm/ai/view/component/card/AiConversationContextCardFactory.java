@@ -44,6 +44,22 @@ public class AiConversationContextCardFactory {
         return createContextCardsGrid(entityReferences, new ComponentRenderer<>(this::createEntityReferenceCard));
     }
 
+    public Component createMessageContextCardsGrid(List<ChatMessageEntityReference> entityReferences,
+                                                   List<AiConversationAttachment> attachments) {
+        List<Object> combined = new java.util.ArrayList<>();
+        combined.addAll(entityReferences != null ? entityReferences : List.of());
+        combined.addAll(attachments != null ? attachments : List.of());
+
+        return createContextCardsGrid(combined, new ComponentRenderer<>(item -> {
+            if (item instanceof ChatMessageEntityReference entityReference) {
+                return createEntityReferenceCard(entityReference.getEntityReference());
+            } else if (item instanceof AiConversationAttachment attachment) {
+                return createAttachmentCard(attachment);
+            }
+            return null;
+        }));
+    }
+
     public Component createPendingEntityReferenceCardsGrid(List<String> entityReferences, Consumer<String> onRemove) {
         return createContextCardsGrid(entityReferences, new ComponentRenderer<>(entityReference -> createPendingEntityReferenceCard(entityReference, onRemove)));
     }

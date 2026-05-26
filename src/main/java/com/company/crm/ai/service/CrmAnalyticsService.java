@@ -147,7 +147,7 @@ public class CrmAnalyticsService {
                 .tools(crmAiToolFactory.builder()
                         .jpqlQueryExecutorTool()
                         .viewsDiscoveryTool()
-                        .entitiesDiscoveryTool(contextEntityRegistry.toolDefinitions())
+                        .entitiesDiscoveryTool(contextEntityRegistry.aiToolContextEntityDefinitions())
                         .reportsDiscoveryTool(ALLOWED_REPORT_CODES)
                         .runReportTool(ALLOWED_REPORT_CODES)
                         .buildToolsArray());

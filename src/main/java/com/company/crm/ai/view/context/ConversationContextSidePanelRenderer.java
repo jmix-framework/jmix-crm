@@ -21,16 +21,14 @@ import java.util.List;
 
 public class ConversationContextSidePanelRenderer {
 
-    private final UiComponents uiComponents;
     private final MessageBundle messageBundle;
     private final ConversationContextAggregator aggregator;
     private final AiConversationContextCardFactory cardFactory;
 
-    public ConversationContextSidePanelRenderer(UiComponents uiComponents,
+    public ConversationContextSidePanelRenderer(
                                          MessageBundle messageBundle,
                                          ConversationContextAggregator aggregator,
                                          AiConversationContextCardFactory cardFactory) {
-        this.uiComponents = uiComponents;
         this.messageBundle = messageBundle;
         this.aggregator = aggregator;
         this.cardFactory = cardFactory;

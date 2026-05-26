@@ -26,19 +26,10 @@ public class AiContextEntityRegistry {
     /**
      * Returns the CRM context entity definitions that AI tools are allowed to discover and search.
      */
-    public List<AiContextEntityDefinition> toolDefinitions() {
+    public List<AiContextEntityDefinition> aiToolContextEntityDefinitions() {
         return Arrays.stream(AiContextEntityDefinition.values())
                 .filter(AiContextEntityDefinition::toolsAllowed)
                 .toList();
-    }
-
-    /**
-     * Checks if the given CRM entity class is allowed to be used and discovered by AI tools.
-     */
-    public boolean isToolEntityAllowed(Class<?> entityClass) {
-        return findDefinition(entityClass)
-                .map(AiContextEntityDefinition::toolsAllowed)
-                .orElse(false);
     }
 
     public Optional<AiContextEntityDefinition> findDefinition(Class<?> entityClass) {

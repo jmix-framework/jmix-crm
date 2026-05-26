@@ -1,5 +1,7 @@
 package com.company.crm.ai.model;
 
+import org.springframework.util.StringUtils;
+
 public record AiUiStatusUpdate(String message, String resultSnippet) {
 
     public AiUiStatusUpdate(String message) {
@@ -7,6 +9,6 @@ public record AiUiStatusUpdate(String message, String resultSnippet) {
     }
 
     public boolean isCompleted() {
-        return org.springframework.util.StringUtils.hasText(resultSnippet);
+        return StringUtils.hasText(resultSnippet);
     }
 }
