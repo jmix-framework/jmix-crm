@@ -1,13 +1,12 @@
 package com.company.crm.ai.tool;
 
+import com.company.crm.ai.context.AiContextEntityDefinition;
 import com.company.crm.ai.jpql.introspection.exporter.AiDomainModelDescriptorYamlExporter;
 import com.company.crm.ai.jpql.query.AiJpqlQueryService;
 import com.company.crm.ai.report.introspection.AiReportModelDescriptorYamlExporter;
 import com.company.crm.ai.report.run.AiReportExecutionService;
-import com.company.crm.model.base.UuidEntity;
 import io.jmix.core.MetadataTools;
 import io.jmix.flowui.view.ViewRegistry;
-import org.jspecify.annotations.Nullable;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.stereotype.Component;
 
@@ -24,7 +23,7 @@ public class CrmAiToolFactory {
     private final ViewRegistry viewRegistry;
     private final AiReportModelDescriptorYamlExporter reportYamlExporter;
     private final AiReportExecutionService executionService;
-    private final AiToolUiStatus aiToolUiStatus;
+    private final AiToolStatusPublisher toolStatusPublisher;
 
     public CrmAiToolFactory(MetadataTools metadataTools,
                             AiDomainModelDescriptorYamlExporter yamlExporter,
@@ -33,7 +32,7 @@ public class CrmAiToolFactory {
                             ViewRegistry viewRegistry,
                             AiReportModelDescriptorYamlExporter reportYamlExporter,
                             AiReportExecutionService executionService,
-                            AiToolUiStatus aiToolUiStatus) {
+                            AiToolStatusPublisher toolStatusPublisher) {
         this.metadataTools = metadataTools;
         this.yamlExporter = yamlExporter;
         this.aiJpqlQueryService = aiJpqlQueryService;
@@ -41,7 +40,7 @@ public class CrmAiToolFactory {
         this.viewRegistry = viewRegistry;
         this.reportYamlExporter = reportYamlExporter;
         this.executionService = executionService;
-        this.aiToolUiStatus = aiToolUiStatus;
+        this.toolStatusPublisher = toolStatusPublisher;
     }
 
     public Builder builder() {
@@ -56,19 +55,19 @@ public class CrmAiToolFactory {
         }
 
         public Builder jpqlQueryExecutorTool() {
-            return tool(new JpqlExecutorTool(aiJpqlQueryService, aiToolUiStatus));
+            return tool(new JpqlExecutorTool(aiJpqlQueryService, toolStatusPublisher));
         }
 
-        public Builder entitiesDiscoveryTool(@Nullable Collection<Class<? extends UuidEntity>> whitelist) {
-            return tool(new EntitiesDiscoveryTool(metadataTools, yamlExporter, aiToolUiStatus, whitelist));
+        public Builder entitiesDiscoveryTool(Collection<AiContextEntityDefinition> toolDefinitions) {
+            return tool(new EntitiesDiscoveryTool(metadataTools, yamlExporter, toolStatusPublisher, toolDefinitions));
         }
 
         public Builder reportsDiscoveryTool(Collection<String> whitelist) {
-            return tool(new ReportsDiscoveryTool(reportYamlExporter, aiToolUiStatus, whitelist));
+            return tool(new ReportsDiscoveryTool(reportYamlExporter, toolStatusPublisher, whitelist));
         }
 
         public Builder runReportTool(Collection<String> allowedReportCodes) {
-            return tool(new RunReportTool(executionService, aiToolUiStatus, allowedReportCodes));
+            return tool(new RunReportTool(executionService, toolStatusPublisher, allowedReportCodes));
         }
 
         public Builder tool(CrmAiTool tool) {

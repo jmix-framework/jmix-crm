@@ -56,6 +56,48 @@ class AiConversationServiceTest extends AbstractTest {
     }
 
     @Test
+    void testCreateUserMessageAndEnsureStartedDoesNotMarkInvalidPromptAsStarted() {
+        systemAuthenticator.runWithSystem(() -> {
+            AiConversation conversation = aiConversationService.createNewConversation();
+
+            assertThatThrownBy(() -> aiConversationService.createUserMessageAndEnsureStarted(
+                    conversation,
+                    " ",
+                    List.of(),
+                    List.of()
+            )).isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("human message text");
+
+            AiConversation reloaded = dataManager.load(AiConversation.class)
+                    .id(conversation.getId())
+                    .one();
+
+            assertThat(reloaded.getFirstMessageSent()).isFalse();
+        });
+    }
+
+    @Test
+    void testCreateUserMessageAndEnsureStartedMarksConversationAsStarted() {
+        systemAuthenticator.runWithSystem(() -> {
+            AiConversation conversation = aiConversationService.createNewConversation();
+
+            ChatMessage message = aiConversationService.createUserMessageAndEnsureStarted(
+                    conversation,
+                    " Start this conversation ",
+                    List.of(),
+                    List.of()
+            );
+
+            AiConversation reloaded = dataManager.load(AiConversation.class)
+                    .id(conversation.getId())
+                    .one();
+
+            assertThat(message.getContent()).isEqualTo("Start this conversation");
+            assertThat(reloaded.getFirstMessageSent()).isTrue();
+        });
+    }
+
+    @Test
     void testCreateUserMessagePersistsTextReferencesAndAttachmentsTogether() {
         systemAuthenticator.runWithSystem(() -> {
             AiConversation conversation = aiConversationService.createNewConversation();

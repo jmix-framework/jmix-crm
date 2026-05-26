@@ -7,6 +7,6 @@ public record AiUiStatusUpdate(String message, String resultSnippet) {
     }
 
     public boolean isCompleted() {
-        return resultSnippet != null && !resultSnippet.isBlank();
+        return org.springframework.util.StringUtils.hasText(resultSnippet);
     }
 }

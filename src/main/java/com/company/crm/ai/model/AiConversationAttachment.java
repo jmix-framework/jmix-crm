@@ -43,15 +43,15 @@ public class AiConversationAttachment extends CreateAuditEntity {
     private String title;
 
     @NotNull
-    @Column(name = "TYPE_", nullable = false)
-    private String type;
+    @Column(name = "ORIGIN", nullable = false)
+    private String origin;
 
-    public AiAttachmentType getType() {
-        return type == null ? null : AiAttachmentType.fromId(type);
+    public AiAttachmentOrigin getOrigin() {
+        return origin == null ? null : AiAttachmentOrigin.fromId(origin);
     }
 
-    public void setType(AiAttachmentType type) {
-        this.type = type == null ? null : type.getId();
+    public void setOrigin(AiAttachmentOrigin origin) {
+        this.origin = origin == null ? null : origin.getId();
     }
 
     public String getFileName() {

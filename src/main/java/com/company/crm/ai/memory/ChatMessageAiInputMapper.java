@@ -3,6 +3,7 @@ package com.company.crm.ai.memory;
 import com.company.crm.ai.model.AiConversationAttachment;
 import com.company.crm.ai.model.ChatMessage;
 import com.company.crm.ai.model.ChatMessageType;
+import com.company.crm.ai.prompt.AiPromptContentBuilder;
 import com.company.crm.ai.service.AiAttachmentMediaResolver;
 import com.company.crm.ai.service.AiAttachmentMediaResolver.ResolvedAttachmentInput;
 import org.slf4j.Logger;
@@ -13,11 +14,13 @@ import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.content.Media;
 import org.springframework.stereotype.Component;
+import com.company.crm.app.util.common.StreamUtils;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 
 @Component
 public class ChatMessageAiInputMapper {
@@ -36,71 +39,66 @@ public class ChatMessageAiInputMapper {
     }
 
     public Message map(ChatMessage chatMessage) {
-        // TODO: reassigned local variable...
-        String content = chatMessage.getContent();
         ChatMessageType type = chatMessage.getType();
-        // TODO: reassigned local variable...
-        List<Media> media = List.of();
 
         log.debug("Mapping chat message to AI input: {} (type: {})", chatMessage.getId(), type);
 
         Map<String, Object> metadata = new HashMap<>();
         metadata.put(ENTITY_ID_METADATA_KEY, chatMessage.getId());
 
-        content = appendContentBlock(content,
-                entityReferenceContentResolver.resolveContext(chatMessage.getEntityReferences()));
-
-        // streams api?
-        for (AiConversationAttachment attachment : safeAttachments(chatMessage)) {
-            try {
-                ResolvedAttachmentInput resolvedAttachment = attachmentMediaResolver.resolve(attachment, null);
-                if (!resolvedAttachment.media().isEmpty()) {
-                    media = appendMedia(media, resolvedAttachment.media());
-                }
-                content = appendContentBlock(content, resolvedAttachment.textContext());
-            } catch (Exception e) {
-                log.warn("Failed to load attachment media {}: {}", attachment.getId(), e.getMessage());
-            }
-        }
+        List<ResolvedAttachmentInput> attachments = resolveAttachments(chatMessage);
+        String content = buildContent(chatMessage, attachments);
+        List<Media> media = attachments.stream()
+                .flatMap(attachment -> attachment.media().stream())
+                .toList();
 
         return mapTypeToMessage(content, type, metadata, media);
     }
 
     private Message mapTypeToMessage(String content, ChatMessageType type, Map<String, Object> metadata, List<Media> media) {
+        String messageContent = Objects.toString(content, "");
+
         if (type == null) {
-            return new SystemMessage(content != null ? content : "");
+            return new SystemMessage(messageContent);
         }
 
         return switch (type) {
             case USER -> UserMessage.builder()
-                    .text(content)
+                    .text(messageContent)
                     .media(media)
                     .metadata(metadata)
                     .build();
-            case ASSISTANT, TOOL -> AssistantMessage.builder().content(content).properties(metadata).build();
-            case SYSTEM -> SystemMessage.builder().text(content).metadata(metadata).build();
+            case ASSISTANT, TOOL -> AssistantMessage.builder().content(messageContent).properties(metadata).build();
+            case SYSTEM -> SystemMessage.builder().text(messageContent).metadata(metadata).build();
         };
     }
 
-    private List<AiConversationAttachment> safeAttachments(ChatMessage chatMessage) {
-        return chatMessage.getAttachments() != null ? chatMessage.getAttachments() : List.of();
+    private String buildContent(ChatMessage chatMessage, List<ResolvedAttachmentInput> attachments) {
+        AiPromptContentBuilder builder = AiPromptContentBuilder.create()
+                .appendParagraph(chatMessage.getContent())
+                .appendParagraph(entityReferenceContentResolver.resolveContext(chatMessage.getEntityReferences()));
+
+        attachments.stream()
+                .map(ResolvedAttachmentInput::textContext)
+                .forEach(builder::appendParagraph);
+
+        return builder.build();
     }
 
-    private List<Media> appendMedia(List<Media> existing, List<Media> additional) {
-        // TODO: gibts da nicht ein apache commons für / spring lib?
-        if (existing.isEmpty()) {
-            return additional;
-        }
-        List<Media> merged = new ArrayList<>(existing);
-        merged.addAll(additional);
-        return merged;
+    private List<ResolvedAttachmentInput> resolveAttachments(ChatMessage chatMessage) {
+        return StreamUtils.safeStream(chatMessage.getAttachments())
+                .map(this::resolveAttachment)
+                .flatMap(Optional::stream)
+                .toList();
     }
 
-    private String appendContentBlock(String content, String block) {
-        // TODO: das haben wir doch jetzt öfter schon mit diesem strings zusammenbauen für ein prompt. kannst du das in eine eigene klasse machen? siehe EntityReferenceContentResolver. Vielleicht mal bei Spring AI mit diesen Prompt objekten schauen?
-        if (block == null || block.isBlank()) {
-            return content;
+    private Optional<ResolvedAttachmentInput> resolveAttachment(AiConversationAttachment attachment) {
+        try {
+            return Optional.of(attachmentMediaResolver.resolve(attachment, null));
+        } catch (Exception e) {
+            log.warn("Failed to load attachment media {}: {}", attachment.getId(), e.getMessage());
+            return Optional.empty();
         }
-        return (content != null && !content.isBlank() ? content + "\n\n" : "") + block;
     }
+
 }

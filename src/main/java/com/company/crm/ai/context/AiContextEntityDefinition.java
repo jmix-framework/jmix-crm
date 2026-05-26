@@ -106,7 +106,11 @@ public enum AiContextEntityDefinition {
                     .add("client", FetchPlan.BASE)
                     .build()),
 
-    // TODO: kann glaube ich raus
+    /**
+     * Order items are useful for AI tools to query individual positions of an order,
+     * but are not directly select-able as a top-level chat context by the user in the UI.
+     * Therefore, we configure {@code addMenuVisible = false} and {@code toolsAllowed = true}.
+     */
     ORDER_ITEM(OrderItem.class, "orderItem", VaadinIcon.CART_O, "contextEntity.orderItems", false, true,
             fp -> fp.builder(OrderItem.class)
                     .addFetchPlan(FetchPlan.BASE)

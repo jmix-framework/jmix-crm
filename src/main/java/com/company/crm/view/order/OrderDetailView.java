@@ -1,6 +1,6 @@
 package com.company.crm.view.order;
 
-import com.company.crm.ai.view.aiconversation.AiChatAboutThisSupport;
+import com.company.crm.ai.view.context.AiChatAboutThisSupport;
 import com.company.crm.app.service.datetime.DateTimeService;
 import com.company.crm.app.ui.component.OrderStatusPipeline;
 import com.company.crm.app.util.constant.CrmConstants;

@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      title="msg://aiConversationStarterView.title">
+    <data>
+        <collection id="recentConversationsDc"
+                    class="com.company.crm.ai.model.AiConversation">
+            <fetchPlan extends="_base"/>
+            <loader id="recentConversationsDl" readOnly="true">
+                <query>
+                    <![CDATA[select e from AiConversation e where e.firstMessageSent = true order by e.createdDate desc]]>
+                </query>
+                <firstResult>0</firstResult>
+                <maxResults>6</maxResults>
+            </loader>
+        </collection>
+        <collection id="historyConversationsDc"
+                    class="com.company.crm.ai.model.AiConversation">
+            <fetchPlan extends="_base">
+                <property name="messages" fetchPlan="_base"/>
+            </fetchPlan>
+            <loader id="historyConversationsDl" readOnly="true">
+                <query>
+                    <![CDATA[select e from AiConversation e where e.firstMessageSent = true order by e.createdDate desc]]>
+                </query>
+            </loader>
+        </collection>
+        <collection id="promptSuggestionsDc"
+                    class="com.company.crm.ai.model.AiPromptSuggestion">
+            <fetchPlan extends="_base"/>
+        </collection>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+    </facets>
+    <layout padding="false"
+            classNames="ai-conversation-starter-view">
+        <sidePanelLayout id="historySidePanel"
+                         width="100%"
+                         height="100%"
+                         sidePanelPosition="RIGHT"
+                         sidePanelOverlay="true"
+                         sidePanelHorizontalSize="26rem"
+                         modal="false"
+                         closeOnOutsideClick="true"
+                         classNames="ai-conversation-starter-history-panel">
+            <vbox id="starterScrollArea"
+                  width="100%"
+                  height="100%"
+                  padding="false"
+                  spacing="false"
+                  classNames="ai-conversation-starter-scroll">
+                <vbox id="starterCanvas"
+                      width="100%"
+                      spacing="true"
+                      padding="false"
+                      classNames="ai-conversation-starter-canvas">
+
+                    <vbox id="starterHeading"
+                          width="100%"
+                          spacing="false"
+                          padding="false"
+                          alignItems="CENTER"
+                          classNames="ai-conversation-starter-heading">
+                        <div id="starterHeroIcon"
+                             classNames="ai-conversation-starter-hero-icon"/>
+                        <h2 id="starterTitle"
+                            text="msg://aiConversationStarterView.heading"
+                            classNames="m-0 ai-conversation-starter-title"/>
+                        <span id="starterSubtitle"
+                              text="msg://aiConversationStarterView.subheading"
+                              classNames="text-secondary text-m ai-conversation-starter-subtitle"/>
+                    </vbox>
+
+                    <vbox id="composerCard"
+                          width="100%"
+                          spacing="false"
+                          padding="false"
+                          classNames="ai-conversation-starter-composer"/>
+
+                    <hbox id="recentConversationsHeader"
+                          width="100%"
+                          alignItems="CENTER"
+                          spacing="false"
+                          classNames="ai-conversation-starter-section-header">
+                        <h4 id="recentConversationsHeading"
+                            text="msg://aiConversationStarterView.recentHeading"
+                            classNames="ai-conversation-starter-section-heading"/>
+                        <div id="recentConversationsSpacer"
+                             classNames="ai-conversation-starter-section-rule"/>
+                        <button id="showAllHistoryBtn"
+                                text="msg://aiConversationStarterView.showAll"
+                                themeNames="tertiary-inline small"/>
+                    </hbox>
+                    <gridLayout id="recentConversationsGridLayout"
+                                itemsContainer="recentConversationsDc"
+                                width="100%"
+                                columnMinWidth="20rem"
+                                gap="var(--lumo-space-s)"
+                                classNames="ai-conversation-starter-recent-grid"/>
+
+                    <hbox id="promptSuggestionsHeader"
+                          width="100%"
+                          alignItems="CENTER"
+                          spacing="false"
+                          classNames="ai-conversation-starter-section-header">
+                        <h4 id="promptSuggestionsHeading"
+                            text="msg://aiConversationStarterView.suggestionsHeading"
+                            classNames="ai-conversation-starter-section-heading"/>
+                        <div id="promptSuggestionsSpacer"
+                             classNames="ai-conversation-starter-section-rule"/>
+                    </hbox>
+                    <gridLayout id="promptSuggestionsGridLayout"
+                                itemsContainer="promptSuggestionsDc"
+                                width="100%"
+                                columnMinWidth="16rem"
+                                gap="var(--lumo-space-s)"
+                                classNames="ai-conversation-starter-suggestions-grid"/>
+                </vbox>
+            </vbox>
+
+            <vbox id="historySidePanelContent"
+                  width="100%"
+                  height="100%"
+                  padding="false"
+                  spacing="false"
+                  classNames="ai-conversation-starter-history-content">
+                <hbox id="historyPanelHeader"
+                      width="100%"
+                      alignItems="CENTER"
+                      spacing="true"
+                      classNames="ai-conversation-starter-history-header">
+                    <h3 id="historyPanelTitle"
+                        text="msg://aiConversationStarterView.historyTitle"
+                        classNames="m-0"/>
+                    <span id="historyPanelCount"
+                          classNames="text-secondary text-s ai-conversation-starter-history-count"/>
+                    <div id="historyHeaderSpacer"
+                         classNames="ai-conversation-starter-history-header-spacer"/>
+                    <button id="historyNewBtn"
+                            text="msg://aiConversationStarterView.newConversation"
+                            icon="PLUS"
+                            themeNames="tertiary small"/>
+                    <button id="historyCloseBtn"
+                            icon="CLOSE"
+                            themeNames="tertiary small icon"
+                            ariaLabel="msg://aiConversationStarterView.historyClose"/>
+                </hbox>
+                <textField id="historySearchField"
+                           valueChangeMode="EAGER"
+                           valueChangeTimeout="250"
+                           placeholder="msg://aiConversationStarterView.historySearchPlaceholder"
+                           clearButtonVisible="true"
+                           width="100%"
+                           classNames="ai-conversation-starter-history-search">
+                    <suffix>
+                        <icon icon="SEARCH"/>
+                    </suffix>
+                </textField>
+                <vbox id="historyListContainer"
+                      width="100%"
+                      padding="false"
+                      spacing="false"
+                      classNames="ai-conversation-starter-history-list"/>
+            </vbox>
+        </sidePanelLayout>
+    </layout>
+</view>

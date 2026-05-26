@@ -25,22 +25,22 @@ public class RunReportTool implements CrmAiTool {
     private static final Set<String> BLOCKED_TEMPLATE_CODES = Set.of("DOCX", "XLSX", "PDF");
 
     private final AiReportExecutionService executionService;
-    private final AiToolUiStatus aiToolUiStatus;
+    private final AiToolStatusPublisher toolStatusPublisher;
     private final Collection<String> allowedReportCodes;
 
     public static RunReportTool create(ApplicationContext applicationContext,
                                        Collection<String> allowedReportCodes) {
         return new RunReportTool(
                 applicationContext.getBean(AiReportExecutionService.class),
-                applicationContext.getBean(AiToolUiStatus.class),
+                applicationContext.getBean(AiToolStatusPublisher.class),
                 allowedReportCodes);
     }
 
     public RunReportTool(AiReportExecutionService executionService,
-                         AiToolUiStatus aiToolUiStatus,
+                         AiToolStatusPublisher toolStatusPublisher,
                          Collection<String> allowedReportCodes) {
         this.executionService = executionService;
-        this.aiToolUiStatus = aiToolUiStatus;
+        this.toolStatusPublisher = toolStatusPublisher;
         this.allowedReportCodes = allowedReportCodes;
     }
 
@@ -101,7 +101,7 @@ public class RunReportTool implements CrmAiTool {
     ) {
         String statusStart = "Running business report...";
         log.info("LLM Tool Call: runReport(reportCode='{}', templateCode='{}', outputType='{}')", reportCode, templateCode, outputType);
-        aiToolUiStatus.update(toolContext, statusStart);
+        toolStatusPublisher.update(toolContext, statusStart);
         try {
             ReportExecutionResult formatValidationError = validateRequestedFormat(reportCode, templateCode, outputType);
             if (formatValidationError != null) {
@@ -127,10 +127,10 @@ public class RunReportTool implements CrmAiTool {
         String humanReportName = reportCode.replace("-report", "").replace("-", " ");
         if (result.success()) {
             String statusText = String.format("Successfully executed report '%s'", humanReportName);
-            aiToolUiStatus.complete(toolContext, statusStart, statusText);
+            toolStatusPublisher.complete(toolContext, statusStart, statusText);
         } else {
             String statusText = String.format("Failed to execute report '%s': %s", humanReportName, result.errorMessage());
-            aiToolUiStatus.complete(toolContext, statusStart, statusText);
+            toolStatusPublisher.complete(toolContext, statusStart, statusText);
         }
     }
 

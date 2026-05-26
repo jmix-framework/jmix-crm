@@ -9,16 +9,18 @@ import io.jmix.core.UnconstrainedDataManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
-import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StreamUtils;
 import org.springframework.util.StringUtils;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -26,13 +28,6 @@ public class AiConversationTitleService {
 
     private static final Logger log = LoggerFactory.getLogger(AiConversationTitleService.class);
 
-    // TODO: kann man das nicht besser machen? Das nervt mich mit solchen hacks
-    private static final String SKIP_TITLE_MARKER = "NEW_CONVERSATION";
-
-    private static final int TITLE_MAX_LENGTH = 80;
-    private static final int MESSAGE_SNIPPET_MAX_LENGTH = 240;
-    private static final int TITLE_MIN_USER_MESSAGES = 1;
-    private static final int TITLE_MAX_CONTEXT_MESSAGES = 6;
     private static final double TITLE_TEMPERATURE = 0.0;
     private static final int TITLE_MAX_TOKENS = 32;
 
@@ -40,25 +35,28 @@ public class AiConversationTitleService {
     private final ChatClient chatClient;
     private final Messages messages;
     private final CrmAiConfig crmAiConfig;
-    private final Environment environment;
+    private final AiTitleProperties titleProperties;
+    private final AiConversationTitlePromptBuilder titlePromptBuilder;
+    private final AiSmallModelProperties smallModelProperties;
 
     public AiConversationTitleService(
             UnconstrainedDataManager dataManager,
             ChatClient.Builder chatClientBuilder,
             @Value("classpath:prompts/ai-conversation-title-system-prompt.st") Resource systemPrompt,
-            AiSmallModelOptionsFactory smallModelOptionsFactory,
+            AiTitleProperties titleProperties,
+            AiConversationTitlePromptBuilder titlePromptBuilder,
+            AiSmallModelProperties smallModelProperties,
             CrmAiConfig crmAiConfig,
-            Environment environment,
             Messages messages) {
         this.dataManager = dataManager;
         this.crmAiConfig = crmAiConfig;
-        this.environment = environment;
+        this.titleProperties = titleProperties;
+        this.titlePromptBuilder = titlePromptBuilder;
+        this.smallModelProperties = smallModelProperties;
+
         this.chatClient = chatClientBuilder.clone()
-                .defaultSystem(systemPrompt)
-                .defaultOptions(smallModelOptionsFactory.builder()
-                        .temperature(TITLE_TEMPERATURE)
-                        .maxCompletionTokens(TITLE_MAX_TOKENS)
-                        .build())
+                .defaultSystem(renderSystemPrompt(systemPrompt, titleProperties))
+                .defaultOptions(buildTitleOptions(smallModelProperties))
                 .build();
         this.messages = messages;
     }
@@ -85,12 +83,12 @@ public class AiConversationTitleService {
                     .parameter("userType", ChatMessageType.USER.getId())
                     .one();
 
-            if (userMessageCount < TITLE_MIN_USER_MESSAGES) {
+            if (userMessageCount < titleProperties.getMinUserMessages()) {
                 return;
             }
 
             List<ChatMessage> contextMessages = loadContextMessages(conversationId);
-            String conversationSnippet = buildConversationSnippet(contextMessages);
+            String conversationSnippet = titlePromptBuilder.buildConversationSnippet(contextMessages);
             if (!StringUtils.hasText(conversationSnippet)) {
                 return;
             }
@@ -121,7 +119,7 @@ public class AiConversationTitleService {
         List<ChatMessage> recentMessages = dataManager.load(ChatMessage.class)
                 .query("select m from ChatMessage m where m.conversation.id = :conversationId order by m.createdDate desc, m.id desc")
                 .parameter("conversationId", conversationId)
-                .maxResults(TITLE_MAX_CONTEXT_MESSAGES)
+                .maxResults(titleProperties.getMaxContextMessages())
                 .list();
 
         ArrayList<ChatMessage> orderedMessages = new ArrayList<>(recentMessages);
@@ -129,36 +127,15 @@ public class AiConversationTitleService {
         return orderedMessages;
     }
 
-    private String buildConversationSnippet(List<ChatMessage> messages) {
-        // TODO: was macht das hier. siehe TODO in EntityReferenceContentResolver mit Spring AI und Prompt Klasse usw.
-        return messages.stream()
-                .filter(message -> message.getType() == ChatMessageType.USER || message.getType() == ChatMessageType.ASSISTANT)
-                .map(message -> {
-                    String role = message.getType() == ChatMessageType.USER ? "User" : "Assistant";
-                    return role + ": " + safeContent(message.getContent());
-                })
-                .filter(StringUtils::hasText)
-                .reduce((left, right) -> left + "\n" + right)
-                .orElse("");
-    }
-
-    // TODO: siehe TODO in EntityReferenceContentResolver mit Spring AI und Prompt Klasse usw.
     public String generateTitle(String conversationSnippet) {
-        String prompt = """
-                Create one short title for this CRM conversation.
-                Conversation:
-                %s
-                """.formatted(conversationSnippet);
-
         return chatClient.prompt()
-                .user(prompt)
+                .user(titlePromptBuilder.buildTitlePrompt(conversationSnippet))
                 .call()
                 .content();
     }
 
     private boolean isEnabled() {
-        // TODO: nimm die Properties klasse, nicht environment
-        return environment.getProperty("crm.ai.title.enabled", Boolean.class, true);
+        return titleProperties.isEnabled();
     }
 
     private boolean hasAiTitle(String title) {
@@ -167,23 +144,28 @@ public class AiConversationTitleService {
     }
 
     public String sanitizeTitle(String title) {
-        // TODO: sanitizer klasse wenn es sein muss.
-        return normalize(title, TITLE_MAX_LENGTH)
-                .map(t -> t.replace("\"", ""))
-                .map(t -> t.endsWith(".") ? t.substring(0, t.length() - 1).trim() : t)
-                .filter(t -> !t.contains(SKIP_TITLE_MARKER))
-                .orElse("");
+        return titlePromptBuilder.sanitizeTitle(title);
     }
 
-    private String safeContent(String content) {
-        return normalize(content, MESSAGE_SNIPPET_MAX_LENGTH).orElse("");
+    static OpenAiChatOptions buildTitleOptions(AiSmallModelProperties smallModelProperties) {
+        OpenAiChatOptions.Builder optionsBuilder = OpenAiChatOptions.builder()
+                .temperature(TITLE_TEMPERATURE)
+                .maxCompletionTokens(TITLE_MAX_TOKENS);
+        if (StringUtils.hasText(smallModelProperties.getModelId())) {
+            optionsBuilder.model(smallModelProperties.getModelId());
+        }
+        return optionsBuilder.build();
     }
 
-    private Optional<String> normalize(String text, int maxLength) {
-        // TODO: was macht das hier. siehe TODO in EntityReferenceContentResolver mit Spring AI und Prompt Klasse usw.
-        return Optional.ofNullable(text)
-                .filter(StringUtils::hasText)
-                .map(t -> t.replaceAll("[\\n\\r]+", " ").trim())
-                .map(t -> t.length() > maxLength ? t.substring(0, maxLength).trim() : t);
+    static String renderSystemPrompt(Resource systemPrompt, AiTitleProperties titleProperties) {
+        try {
+            String skipMarker = StringUtils.hasText(titleProperties.getSkipMarker())
+                    ? titleProperties.getSkipMarker()
+                    : "";
+            return StreamUtils.copyToString(systemPrompt.getInputStream(), StandardCharsets.UTF_8)
+                    .replace("{skipMarker}", skipMarker);
+        } catch (IOException e) {
+            throw new IllegalStateException("Failed to read AI conversation title system prompt", e);
+        }
     }
 }

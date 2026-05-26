@@ -22,21 +22,21 @@ public class ReportsDiscoveryTool implements CrmAiTool {
     private static final Logger log = LoggerFactory.getLogger(ReportsDiscoveryTool.class);
 
     private final AiReportModelDescriptorYamlExporter yamlExporter;
-    private final AiToolUiStatus aiToolUiStatus;
+    private final AiToolStatusPublisher toolStatusPublisher;
     private final Collection<String> allowedReportCodes;
 
     public static ReportsDiscoveryTool create(ApplicationContext applicationContext, Collection<String> whitelist) {
         return new ReportsDiscoveryTool(
                 applicationContext.getBean(AiReportModelDescriptorYamlExporter.class),
-                applicationContext.getBean(AiToolUiStatus.class),
+                applicationContext.getBean(AiToolStatusPublisher.class),
                 whitelist);
     }
 
     ReportsDiscoveryTool(AiReportModelDescriptorYamlExporter yamlExporter,
-                         AiToolUiStatus aiToolUiStatus,
+                         AiToolStatusPublisher toolStatusPublisher,
                          Collection<String> allowedReportCodes) {
         this.yamlExporter = yamlExporter;
-        this.aiToolUiStatus = aiToolUiStatus;
+        this.toolStatusPublisher = toolStatusPublisher;
         this.allowedReportCodes = allowedReportCodes != null ? List.copyOf(allowedReportCodes) : Collections.emptyList();
     }
 
@@ -60,17 +60,17 @@ public class ReportsDiscoveryTool implements CrmAiTool {
     public String getAvailableReports(ToolContext toolContext) {
         String statusStart = "Looking up available business reports...";
         log.info("LLM Tool Call: getAvailableReports()");
-        aiToolUiStatus.update(toolContext, statusStart);
+        toolStatusPublisher.update(toolContext, statusStart);
         try {
             String yaml = allowedReportCodes.isEmpty() ? yamlExporter.export() : yamlExporter.export(allowedReportCodes);
             String text = allowedReportCodes.isEmpty()
                     ? "Discovered available business reports"
                     : String.format("Found %d authorized business report(s)", allowedReportCodes.size());
-            aiToolUiStatus.complete(toolContext, statusStart, text);
+            toolStatusPublisher.complete(toolContext, statusStart, text);
             return yaml;
         } catch (Exception e) {
             log.error("Failed to discover reports", e);
-            aiToolUiStatus.complete(toolContext, statusStart, "Failed to lookup available business reports");
+            toolStatusPublisher.complete(toolContext, statusStart, "Failed to lookup available business reports");
             return "Error: Failed to discover reports: " + e.getMessage();
         }
     }
@@ -88,23 +88,23 @@ public class ReportsDiscoveryTool implements CrmAiTool {
             ToolContext toolContext) {
         String statusStart = "Reading business report details...";
         log.info("LLM Tool Call: getReportsByCodes({})", reportCodes);
-        aiToolUiStatus.update(toolContext, statusStart);
+        toolStatusPublisher.update(toolContext, statusStart);
         try {
             List<String> authorizedCodes = allowedReportCodes.isEmpty() ? reportCodes :
                     reportCodes.stream().filter(allowedReportCodes::contains).collect(Collectors.toList());
 
             if (authorizedCodes.isEmpty() && !reportCodes.isEmpty()) {
-                aiToolUiStatus.complete(toolContext, statusStart, "No authorized reports requested");
+                toolStatusPublisher.complete(toolContext, statusStart, "No authorized reports requested");
                 return "Error: None of the requested report codes are authorized.";
             }
 
             String yaml = yamlExporter.export(authorizedCodes);
-            aiToolUiStatus.complete(toolContext, statusStart,
+            toolStatusPublisher.complete(toolContext, statusStart,
                     String.format("Loaded details for %d authorized business report(s)", authorizedCodes.size()));
             return yaml;
         } catch (Exception e) {
             log.error("Failed to discover reports", e);
-            aiToolUiStatus.complete(toolContext, statusStart, "Failed to read report details");
+            toolStatusPublisher.complete(toolContext, statusStart, "Failed to read report details");
             return "Error: Failed to discover requested reports: " + e.getMessage();
         }
     }

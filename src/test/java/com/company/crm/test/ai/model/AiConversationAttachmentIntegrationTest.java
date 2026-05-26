@@ -1,7 +1,7 @@
 package com.company.crm.test.ai.model;
 
 import com.company.crm.AbstractTest;
-import com.company.crm.ai.model.AiAttachmentType;
+import com.company.crm.ai.model.AiAttachmentOrigin;
 import com.company.crm.ai.model.AiConversation;
 import com.company.crm.ai.model.AiConversationAttachment;
 import com.company.crm.ai.model.ChatMessage;
@@ -38,7 +38,7 @@ class AiConversationAttachmentIntegrationTest extends AbstractTest {
                 "test-report.html",
                 fileRef,
                 "Test Report Title",
-                AiAttachmentType.AI_GENERATED
+                AiAttachmentOrigin.AI_GENERATED
         );
 
         // when
@@ -57,7 +57,7 @@ class AiConversationAttachmentIntegrationTest extends AbstractTest {
 
         assertThat(reloadedAttachment.getFileName()).isEqualTo("test-report.html");
         assertThat(reloadedAttachment.getTitle()).isEqualTo("Test Report Title");
-        assertThat(reloadedAttachment.getType()).isEqualTo(AiAttachmentType.AI_GENERATED);
+        assertThat(reloadedAttachment.getOrigin()).isEqualTo(AiAttachmentOrigin.AI_GENERATED);
         assertThat(reloadedAttachment.getFile()).isEqualTo(fileRef);
         assertThat(reloadedAttachment.getMessage().getId()).isEqualTo(message.getId());
     }
@@ -72,7 +72,7 @@ class AiConversationAttachmentIntegrationTest extends AbstractTest {
                 "missing-file.html",
                 null,
                 "Missing File",
-                AiAttachmentType.AI_GENERATED
+                AiAttachmentOrigin.AI_GENERATED
         );
 
         // when / then
@@ -92,7 +92,7 @@ class AiConversationAttachmentIntegrationTest extends AbstractTest {
                 null,
                 new FileRef("storage", "2026/02/22/file-only.html", "file-only.html"),
                 "Missing FileName",
-                AiAttachmentType.AI_GENERATED
+                AiAttachmentOrigin.AI_GENERATED
         );
 
         // when / then
@@ -114,13 +114,13 @@ class AiConversationAttachmentIntegrationTest extends AbstractTest {
                                                       String fileName,
                                                       FileRef fileRef,
                                                       String title,
-                                                      AiAttachmentType type) {
+                                                      AiAttachmentOrigin origin) {
         AiConversationAttachment attachment = dataManager.create(AiConversationAttachment.class);
         attachment.setMessage(message);
         attachment.setFileName(fileName);
         attachment.setFile(fileRef);
         attachment.setTitle(title);
-        attachment.setType(type);
+        attachment.setOrigin(origin);
         return attachment;
     }
 }

@@ -1,6 +1,5 @@
 package com.company.crm.ai.context;
 
-import com.company.crm.model.base.UuidEntity;
 import io.jmix.core.FetchPlan;
 import io.jmix.core.FetchPlans;
 import org.springframework.stereotype.Component;
@@ -8,8 +7,6 @@ import org.springframework.stereotype.Component;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Component
 public class AiContextEntityRegistry {
@@ -20,23 +17,28 @@ public class AiContextEntityRegistry {
         this.fetchPlans = fetchPlans;
     }
 
-    // TODO: remove
-    public List<AiContextEntityDefinition> definitions() {
-        return List.of(AiContextEntityDefinition.values());
-    }
-
     public List<AiContextEntityDefinition> addMenuDefinitions() {
         return Arrays.stream(AiContextEntityDefinition.values())
                 .filter(AiContextEntityDefinition::addMenuVisible)
                 .toList();
     }
 
-    // TODO: find why the set needs to be returned of if the answer can be answered within this enum?
-    public Set<Class<? extends UuidEntity>> toolEntityClasses() {
+    /**
+     * Returns the CRM context entity definitions that AI tools are allowed to discover and search.
+     */
+    public List<AiContextEntityDefinition> toolDefinitions() {
         return Arrays.stream(AiContextEntityDefinition.values())
                 .filter(AiContextEntityDefinition::toolsAllowed)
-                .map(AiContextEntityDefinition::entityClass)
-                .collect(Collectors.toUnmodifiableSet());
+                .toList();
+    }
+
+    /**
+     * Checks if the given CRM entity class is allowed to be used and discovered by AI tools.
+     */
+    public boolean isToolEntityAllowed(Class<?> entityClass) {
+        return findDefinition(entityClass)
+                .map(AiContextEntityDefinition::toolsAllowed)
+                .orElse(false);
     }
 
     public Optional<AiContextEntityDefinition> findDefinition(Class<?> entityClass) {

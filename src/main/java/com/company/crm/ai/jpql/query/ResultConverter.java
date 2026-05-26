@@ -34,21 +34,20 @@ public class ResultConverter {
      * Uses Jmix EntitySerialization to handle entities safely
      */
     public List<Map<String, Object>> convertToMapList(List<KeyValueEntity> results, String[] propertyNames) {
-        if (results == null || results.isEmpty()) {
+        if (org.springframework.util.CollectionUtils.isEmpty(results)) {
             return new ArrayList<>();
         }
 
-        List<Map<String, Object>> mapList = new ArrayList<>();
-        // TODO: to streams api?
-        for (KeyValueEntity keyValueEntity : results) {
-            Map<String, Object> row = new LinkedHashMap<>();
-            for (String propertyName : propertyNames) {
-                Object value = keyValueEntity.getValue(propertyName);
-                row.put(propertyName, convertToSerializableValue(value));
-            }
-            mapList.add(row);
-        }
-        return mapList;
+        return results.stream()
+                .map(keyValueEntity -> {
+                    Map<String, Object> row = new LinkedHashMap<>();
+                    for (String propertyName : propertyNames) {
+                        Object value = keyValueEntity.getValue(propertyName);
+                        row.put(propertyName, convertToSerializableValue(value));
+                    }
+                    return row;
+                })
+                .toList();
     }
 
     /**

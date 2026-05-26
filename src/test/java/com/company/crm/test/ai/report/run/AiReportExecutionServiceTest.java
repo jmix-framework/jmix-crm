@@ -1,7 +1,7 @@
 package com.company.crm.test.ai.report.run;
 
 import com.company.crm.AbstractTest;
-import com.company.crm.ai.model.AiAttachmentType;
+import com.company.crm.ai.model.AiAttachmentOrigin;
 import com.company.crm.ai.model.AiConversation;
 import com.company.crm.ai.model.AiConversationAttachment;
 import com.company.crm.ai.model.ChatMessage;
@@ -116,7 +116,7 @@ class AiReportExecutionServiceTest extends AbstractTest {
             assertThat(attachment.getFileName()).startsWith("report_client-360-report_");
             assertThat(attachment.getFileName()).endsWith(".html");
             assertThat(attachment.getTitle()).isEqualTo("Client 360 Report - Persistence Test Client");
-            assertThat(attachment.getType()).isEqualTo(AiAttachmentType.AI_GENERATED);
+            assertThat(attachment.getOrigin()).isEqualTo(AiAttachmentOrigin.AI_GENERATED);
 
             assertThat(attachment.getFile()).isNotNull();
             assertThat(fileStorage.fileExists(attachment.getFile())).isTrue();

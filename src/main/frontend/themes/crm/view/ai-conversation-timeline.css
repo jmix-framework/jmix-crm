@@ -213,9 +213,14 @@
     margin-top: 0;
     min-width: 0;
     width: 100% !important;
+}
+
+.ai-timeline-context-cards::part(items) {
     display: grid !important;
-    grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr)) !important;
+    grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)) !important;
     gap: var(--lumo-space-s) !important;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .ai-card-action-surface {

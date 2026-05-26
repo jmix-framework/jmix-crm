@@ -454,7 +454,7 @@
                 <constraints nullable="false"/>
             </column>
             <column name="TITLE" type="VARCHAR(255)"/>
-            <column name="TYPE_" type="VARCHAR(255)">
+            <column name="ORIGIN" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
             <column name="CREATED_BY" type="VARCHAR(255)"/>

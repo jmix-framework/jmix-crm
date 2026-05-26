@@ -1,7 +1,7 @@
 package com.company.crm.test.ai.model;
 
 import com.company.crm.AbstractTest;
-import com.company.crm.ai.model.AiAttachmentType;
+import com.company.crm.ai.model.AiAttachmentOrigin;
 import com.company.crm.ai.model.AiConversation;
 import com.company.crm.ai.model.AiConversationAttachment;
 import com.company.crm.ai.model.ChatMessage;
@@ -68,7 +68,7 @@ public class ChatMessagePersistenceIntegrationTest extends AbstractTest {
         attachment.setFileName("test.txt");
         attachment.setTitle("Test Attachment");
         attachment.setFile(new FileRef("storage", "test.txt", "test.txt"));
-        attachment.setType(AiAttachmentType.USER_UPLOADED);
+        attachment.setOrigin(AiAttachmentOrigin.USER_UPLOADED);
         attachments.add(attachment);
 
         message.setEntityReferences(entityReferences);
@@ -196,7 +196,7 @@ public class ChatMessagePersistenceIntegrationTest extends AbstractTest {
         attachment.setFileName(fileName);
         attachment.setTitle(fileName);
         attachment.setFile(new FileRef("storage", "path/" + fileName, fileName));
-        attachment.setType(AiAttachmentType.USER_UPLOADED);
+        attachment.setOrigin(AiAttachmentOrigin.USER_UPLOADED);
         return attachment;
     }
 

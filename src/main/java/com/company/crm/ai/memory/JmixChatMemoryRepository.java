@@ -65,7 +65,7 @@ public class JmixChatMemoryRepository implements ChatMemoryRepository {
 
     @Override
     public List<Message> findByConversationId(@NonNull String conversationId) {
-        UUID uuid = parseConversationId(conversationId);
+        UUID uuid = conversationUuid(conversationId);
         return dataManager.load(AiConversation.class)
                 .id(uuid)
                 .optional()
@@ -78,7 +78,7 @@ public class JmixChatMemoryRepository implements ChatMemoryRepository {
     @Override
     @Transactional
     public void saveAll(@NonNull String conversationId, List<Message> messages) {
-        UUID uuid = parseConversationId(conversationId);
+        UUID uuid = conversationUuid(conversationId);
         AiConversation conversation = findOrCreateConversation(uuid);
 
         SaveContext saveContext = new SaveContext();
@@ -107,7 +107,7 @@ public class JmixChatMemoryRepository implements ChatMemoryRepository {
     @Override
     @Transactional
     public void deleteByConversationId(@NonNull String conversationId) {
-        UUID uuid = parseConversationId(conversationId);
+        UUID uuid = conversationUuid(conversationId);
         dataManager.load(AiConversation.class)
                 .id(uuid)
                 .optional()
@@ -150,8 +150,7 @@ public class JmixChatMemoryRepository implements ChatMemoryRepository {
         };
     }
 
-    // TODO: was macht die methode wirklich? warum nicht direkt einfach UUID.fromString inlinen?
-    private UUID parseConversationId(String conversationId) {
+    private UUID conversationUuid(String conversationId) {
         try {
             return UUID.fromString(conversationId);
         } catch (IllegalArgumentException e) {

@@ -2,8 +2,8 @@ package com.company.crm.view.main;
 
 import com.company.crm.ai.model.AiConversation;
 import com.company.crm.ai.service.AiConversationService;
-import com.company.crm.ai.view.aiconversation.AiConversationDetailView;
-import com.company.crm.ai.view.aiconversation.AiConversationStarterView;
+import com.company.crm.ai.view.conversation.AiConversationDetailView;
+import com.company.crm.ai.view.conversation.AiConversationStarterView;
 import com.company.crm.app.online.OnlineDemoDataCreator;
 import com.company.crm.app.ui.component.CrmLoader;
 import com.company.crm.app.util.constant.CrmConstants;

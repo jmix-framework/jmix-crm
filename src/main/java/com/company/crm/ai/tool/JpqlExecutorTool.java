@@ -23,17 +23,17 @@ public class JpqlExecutorTool implements CrmAiTool {
     private static final Logger log = LoggerFactory.getLogger(JpqlExecutorTool.class);
 
     private final AiJpqlQueryService aiJpqlQueryService;
-    private final AiToolUiStatus aiToolUiStatus;
+    private final AiToolStatusPublisher toolStatusPublisher;
 
     public static JpqlExecutorTool create(ApplicationContext applicationContext) {
         return new JpqlExecutorTool(
                 applicationContext.getBean(AiJpqlQueryService.class),
-                applicationContext.getBean(AiToolUiStatus.class));
+                applicationContext.getBean(AiToolStatusPublisher.class));
     }
 
-    public JpqlExecutorTool(AiJpqlQueryService aiJpqlQueryService, AiToolUiStatus aiToolUiStatus) {
+    public JpqlExecutorTool(AiJpqlQueryService aiJpqlQueryService, AiToolStatusPublisher toolStatusPublisher) {
         this.aiJpqlQueryService = aiJpqlQueryService;
-        this.aiToolUiStatus = aiToolUiStatus;
+        this.toolStatusPublisher = toolStatusPublisher;
     }
 
     /**
@@ -211,17 +211,17 @@ public class JpqlExecutorTool implements CrmAiTool {
         String statusStart = "Querying CRM data...";
         try {
             log.info("LLM Tool Call: executeQuery(offset={}, limit={})", offset, limit);
-            aiToolUiStatus.update(toolContext, statusStart);
+            toolStatusPublisher.update(toolContext, statusStart);
 
             QueryExecutionResult result = aiJpqlQueryService.executeJpqlQuery(jpqlQuery, parameters, selectAliases, offset, limit);
             String snippet = String.format("Query successful (%d rows found)", result.rowCount());
-            aiToolUiStatus.complete(toolContext, statusStart, snippet);
+            toolStatusPublisher.complete(toolContext, statusStart, snippet);
             return result;
         } catch (Exception e) {
             log.error("Query Error: {} - {}", jpqlQuery, e.getMessage());
             QueryExecutionResult failed = QueryExecutionResult.failed("Error executing query: " + e.getMessage());
             String snippet = String.format("Query failed: %s", e.getMessage());
-            aiToolUiStatus.complete(toolContext, statusStart, snippet);
+            toolStatusPublisher.complete(toolContext, statusStart, snippet);
             return failed;
         }
     }

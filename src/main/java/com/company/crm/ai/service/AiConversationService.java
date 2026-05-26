@@ -1,6 +1,6 @@
 package com.company.crm.ai.service;
 
-import com.company.crm.ai.model.AiAttachmentType;
+import com.company.crm.ai.model.AiAttachmentOrigin;
 import com.company.crm.ai.model.AiConversation;
 import com.company.crm.ai.model.AiConversationAttachment;
 import com.company.crm.ai.model.ChatMessage;
@@ -9,16 +9,13 @@ import com.company.crm.ai.model.ChatMessageType;
 import io.jmix.core.DataManager;
 import io.jmix.core.Messages;
 import io.jmix.core.SaveContext;
-import io.jmix.core.TimeSource;
-import io.jmix.core.security.CurrentAuthentication;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import com.company.crm.app.util.common.StreamUtils;
 
-import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.IntStream;
 
 /**
  * Service for AI conversation lifecycle operations.
@@ -28,17 +25,11 @@ public class AiConversationService {
 
     private final DataManager dataManager;
     private final Messages messages;
-    private final TimeSource timeSource;
-    private final CurrentAuthentication currentAuthentication;
 
     public AiConversationService(DataManager dataManager,
-                                 Messages messages,
-                                 TimeSource timeSource,
-                                 CurrentAuthentication currentAuthentication) {
+                                 Messages messages) {
         this.dataManager = dataManager;
         this.messages = messages;
-        this.timeSource = timeSource;
-        this.currentAuthentication = currentAuthentication;
     }
 
     /**
@@ -53,27 +44,48 @@ public class AiConversationService {
         return dataManager.save(conversation);
     }
 
+    public StartedConversation startConversation(String prompt,
+                                                 List<String> entityReferences,
+                                                 List<PendingAttachmentInput> attachments) {
+        String trimmedPrompt = requirePrompt(prompt);
+
+        AiConversation conversation = createNewConversation();
+        ChatMessage firstUserMessage = createUserMessageAndEnsureStarted(
+                conversation,
+                trimmedPrompt,
+                entityReferences,
+                attachments
+        );
+
+        return new StartedConversation(conversation, firstUserMessage);
+    }
+
+    public ChatMessage createUserMessageAndEnsureStarted(AiConversation conversation,
+                                                         String prompt,
+                                                         List<String> entityReferences,
+                                                         List<PendingAttachmentInput> attachments) {
+        String trimmedPrompt = requirePrompt(prompt);
+
+        ensureFirstMessageSent(conversation);
+
+        return createUserMessage(
+                conversation,
+                trimmedPrompt,
+                entityReferences,
+                attachments
+        );
+    }
+
     public ChatMessage createUserMessage(AiConversation conversation,
                                          String text,
                                          List<String> entityReferences,
                                          List<PendingAttachmentInput> attachments) {
-        if (conversation == null || conversation.getId() == null) {
-            throw new IllegalArgumentException("Conversation is required to create a chat message.");
-        }
-        if (!StringUtils.hasText(text)) {
-            throw new IllegalArgumentException("A human message text is required.");
-        }
+        String trimmedText = requirePrompt(text);
 
         ChatMessage message = dataManager.create(ChatMessage.class);
         message.setConversation(conversation);
         message.setType(ChatMessageType.USER);
-        message.setContent(text.trim());
-
-
-        // TODO: macht Jmix automatisch...
-        message.setCreatedDate(now());
-        // TODO: macht Jmix automatisch...
-        message.setCreatedBy(currentAuthentication.getUser().getUsername());
+        message.setContent(trimmedText);
 
         List<ChatMessageEntityReference> referenceEntities = createEntityReferences(message, entityReferences);
         List<AiConversationAttachment> attachmentEntities = createAttachments(message, attachments);
@@ -90,14 +102,9 @@ public class AiConversationService {
     }
 
     private List<ChatMessageEntityReference> createEntityReferences(ChatMessage message, List<String> entityReferences) {
-        // TODO: sowas hackiges... geht das nicht schöner?
-        List<String> distinctReferences = new LinkedHashSet<>(
-                entityReferences != null ? entityReferences : List.of()
-        ).stream()
-                .filter(StringUtils::hasText)
-                .toList();
+        List<String> distinctReferences = distinctEntityReferences(entityReferences);
 
-        return java.util.stream.IntStream.range(0, distinctReferences.size())
+        return IntStream.range(0, distinctReferences.size())
                 .mapToObj(i -> {
                     ChatMessageEntityReference reference = dataManager.create(ChatMessageEntityReference.class);
                     reference.setMessage(message);
@@ -109,7 +116,7 @@ public class AiConversationService {
     }
 
     private List<AiConversationAttachment> createAttachments(ChatMessage message, List<PendingAttachmentInput> attachments) {
-        return (attachments != null ? attachments : List.<PendingAttachmentInput>of()).stream()
+        return StreamUtils.safeStream(attachments)
                 .filter(Objects::nonNull)
                 .filter(attachment -> attachment.fileRef() != null)
                 .map(attachment -> createAttachment(message, attachment))
@@ -117,27 +124,38 @@ public class AiConversationService {
     }
 
     private AiConversationAttachment createAttachment(ChatMessage message, PendingAttachmentInput pendingAttachment) {
+        String fileName = pendingAttachment.resolvedFileName();
+
         AiConversationAttachment attachment = dataManager.create(AiConversationAttachment.class);
         attachment.setMessage(message);
         attachment.setFile(pendingAttachment.fileRef());
-        attachment.setFileName(resolveFileName(pendingAttachment));
-        attachment.setTitle(resolveFileName(pendingAttachment));
-        attachment.setType(AiAttachmentType.USER_UPLOADED);
+        attachment.setFileName(fileName);
+        attachment.setTitle(fileName);
+        attachment.setOrigin(AiAttachmentOrigin.USER_UPLOADED);
         return attachment;
     }
 
-    private String resolveFileName(PendingAttachmentInput attachment) {
-        // TODO: schon wieder irgendeine filename scheisse... warum all over the place?
-        if (StringUtils.hasText(attachment.fileName())) {
-            return attachment.fileName();
-        }
-        if (attachment.fileRef() != null && StringUtils.hasText(attachment.fileRef().getFileName())) {
-            return attachment.fileRef().getFileName();
-        }
-        return "uploaded-file";
+    private List<String> distinctEntityReferences(List<String> entityReferences) {
+        return StreamUtils.safeStream(entityReferences)
+                .filter(StringUtils::hasText)
+                .distinct()
+                .toList();
     }
 
-    private OffsetDateTime now() {
-        return timeSource.now().toOffsetDateTime();
+
+    private void ensureFirstMessageSent(AiConversation conversation) {
+        if (Boolean.TRUE.equals(conversation.getFirstMessageSent())) {
+            return;
+        }
+
+        conversation.setFirstMessageSent(true);
+        dataManager.save(conversation);
+    }
+
+    private String requirePrompt(String prompt) {
+        if (!StringUtils.hasText(prompt)) {
+            throw new IllegalArgumentException("A human message text is required.");
+        }
+        return prompt.trim();
     }
 }

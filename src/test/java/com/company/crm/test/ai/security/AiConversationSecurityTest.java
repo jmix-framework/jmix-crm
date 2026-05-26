@@ -7,7 +7,7 @@ import com.company.crm.ai.model.ChatMessage;
 import com.company.crm.ai.model.ChatMessageEntityReference;
 import com.company.crm.ai.service.AiConversationService;
 import com.company.crm.ai.service.PendingAttachmentInput;
-import com.company.crm.ai.view.aiconversation.AiChatAboutThisSupport;
+import com.company.crm.ai.view.context.AiChatAboutThisSupport;
 import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.model.client.Client;
 import com.company.crm.security.role.ManagerRole;

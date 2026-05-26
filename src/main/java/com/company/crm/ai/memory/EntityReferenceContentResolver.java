@@ -2,6 +2,7 @@ package com.company.crm.ai.memory;
 
 import com.company.crm.ai.context.AiContextEntityRegistry;
 import com.company.crm.ai.model.ChatMessageEntityReference;
+import com.company.crm.ai.prompt.AiPromptContentBuilder;
 import io.jmix.core.DataManager;
 import io.jmix.core.EntitySerialization;
 import io.jmix.core.FetchPlan;
@@ -13,7 +14,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
-import java.util.Objects;
+import java.util.Optional;
 
 @Component
 public class EntityReferenceContentResolver {
@@ -36,38 +37,47 @@ public class EntityReferenceContentResolver {
     }
 
     public String resolveContext(List<ChatMessageEntityReference> references) {
-        if (references == null || references.isEmpty()) {
+        if (org.springframework.util.CollectionUtils.isEmpty(references)) {
             return null;
         }
 
-        // TODO: extract method
-        List<String> resolvedJsons = references.stream()
-                .filter(ref -> ref != null && StringUtils.hasText(ref.getEntityReference()))
-                .map(ref -> {
-                    try {
-                        String json = resolveEntityJson(ref.getEntityReference());
-                        return """
-                                %s
-                                %s""".formatted(ref.getEntityReference(), json);
-                    } catch (Exception e) {
-                        log.warn("Failed to load entity for context {}: {}", ref.getEntityReference(), e.getMessage());
-                    }
-                    return null;
-                })
-                .filter(Objects::nonNull)
-                .toList();
+        List<String> referenceBlocks = resolveReferenceBlocks(references);
 
-        if (resolvedJsons.isEmpty()) {
+        if (referenceBlocks.isEmpty()) {
             return null;
         }
 
-        return """
-               Referenced CRM entities:
-
-               %s""".formatted(String.join("\n\n", resolvedJsons));
+        return AiPromptContentBuilder.create()
+                .appendSection("Referenced CRM entities", String.join("\n\n", referenceBlocks))
+                .build();
     }
 
-    private String resolveEntityJson(String entityReference) {
+    private List<String> resolveReferenceBlocks(List<ChatMessageEntityReference> references) {
+        return references.stream()
+                .map(this::resolveReferenceBlock)
+                .flatMap(Optional::stream)
+                .toList();
+    }
+
+    private Optional<String> resolveReferenceBlock(ChatMessageEntityReference reference) {
+        if (reference == null || !StringUtils.hasText(reference.getEntityReference())) {
+            return Optional.empty();
+        }
+
+        String entityReference = reference.getEntityReference();
+        try {
+            return Optional.of(formatReferenceBlock(entityReference, resolveReferenceJson(entityReference)));
+        } catch (Exception e) {
+            log.warn("Failed to load entity for context {}: {}", entityReference, e.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    private String formatReferenceBlock(String entityReference, String json) {
+        return "%s%n%s".formatted(entityReference, json);
+    }
+
+    private String resolveReferenceJson(String entityReference) {
         Id<Object> id = idSerialization.stringToId(entityReference);
         FetchPlan fetchPlan = contextEntityRegistry.findFetchPlan(id.getEntityClass()).orElseThrow();
         Object entity = dataManager.load(id)

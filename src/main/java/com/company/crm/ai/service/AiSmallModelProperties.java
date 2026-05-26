@@ -8,8 +8,6 @@ import org.springframework.stereotype.Component;
 public class AiSmallModelProperties {
 
     private String modelId;
-    // TODO: remove
-    private String serviceTier;
 
     public String getModelId() {
         return modelId;
@@ -17,13 +15,5 @@ public class AiSmallModelProperties {
 
     public void setModelId(String modelId) {
         this.modelId = modelId;
-    }
-
-    public String getServiceTier() {
-        return serviceTier;
-    }
-
-    public void setServiceTier(String serviceTier) {
-        this.serviceTier = serviceTier;
     }
 }

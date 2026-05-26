@@ -1,6 +1,6 @@
 package com.company.crm.view.client;
 
-import com.company.crm.ai.view.aiconversation.AiChatAboutThisSupport;
+import com.company.crm.ai.view.context.AiChatAboutThisSupport;
 import com.company.crm.app.feature.queryparameters.tab.TabIndexUrlQueryParameterBinder;
 import com.company.crm.app.service.client.ClientService;
 import com.company.crm.app.service.client.CompletedOrdersByDateRangeInfo;

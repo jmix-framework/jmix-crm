@@ -9,7 +9,12 @@ import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
-// TODO: javadoc
+/**
+ * Resolver that parses serialized Jmix entity references (e.g. from entity IDs/links)
+ * and resolves them into rich {@link EntityReferenceViewData} for rendering.
+ * Provides a robust fallback representation in case the reference is empty,
+ * invalid, or the underlying entity is not found.
+ */
 @Component
 public class AiEntityReferenceResolver {
 
@@ -63,9 +68,8 @@ public class AiEntityReferenceResolver {
 
     private EntityReferenceViewData fallback() {
         return new EntityReferenceViewData(
-                // TODO: getMessage(getClass(), ...)
-                messages.getMessage("com.company.crm.ai.view.aiconversation", "entityReferenceFallbackTitle"),
-                messages.getMessage("com.company.crm.ai.view.aiconversation", "entityReferenceUnavailable"),
+                messages.getMessage(getClass(), "entityReferenceFallbackTitle"),
+                messages.getMessage(getClass(), "entityReferenceUnavailable"),
                 VaadinIcon.DATABASE
         );
     }

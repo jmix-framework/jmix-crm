@@ -1,6 +1,6 @@
 package com.company.crm.ai.report.run;
 
-import com.company.crm.ai.model.AiAttachmentType;
+import com.company.crm.ai.model.AiAttachmentOrigin;
 import com.company.crm.ai.model.AiConversationAttachment;
 import com.company.crm.ai.model.ChatMessage;
 import io.jmix.core.DataManager;
@@ -210,12 +210,12 @@ public class AiReportExecutionService {
             attachment.setMessage(assistantMessage);
             attachment.setFile(fileRef);
             attachment.setFileName(fileName);
-            String attachmentTitle = reportName != null && !reportName.isBlank() ? reportName : result.reportCode();
-            if (primaryEntityName != null && !primaryEntityName.isBlank()) {
+            String attachmentTitle = org.springframework.util.StringUtils.hasText(reportName) ? reportName : result.reportCode();
+            if (org.springframework.util.StringUtils.hasText(primaryEntityName)) {
                 attachmentTitle = attachmentTitle + " - " + primaryEntityName;
             }
             attachment.setTitle(attachmentTitle);
-            attachment.setType(AiAttachmentType.AI_GENERATED);
+            attachment.setOrigin(AiAttachmentOrigin.AI_GENERATED);
             dataManager.save(attachment);
 
             String citation = String.format("\n\n[View Report Attachments](/ai-conversations/%s)", assistantMessage.getConversation().getId());
@@ -264,7 +264,7 @@ public class AiReportExecutionService {
     }
 
     private String resolvePrimaryEntityInstanceName(Map<String, Object> convertedParameters) {
-        if (convertedParameters == null || convertedParameters.isEmpty()) {
+        if (convertedParameters.isEmpty()) {
             return null;
         }
         for (Object value : convertedParameters.values()) {
@@ -277,7 +277,7 @@ public class AiReportExecutionService {
             }
             try {
                 String name = metadataTools.getInstanceName(value);
-                if (name != null && !name.isBlank()) {
+                if (org.springframework.util.StringUtils.hasText(name)) {
                     return name;
                 }
             } catch (Exception e) {
