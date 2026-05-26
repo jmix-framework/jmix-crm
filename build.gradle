@@ -130,6 +130,7 @@ tasks.register("testPreparing", Delete) {
 test {
     dependsOn(testPreparing)
     useJUnitPlatform()
+    maxHeapSize = "1536m"
 }
 
 idea {
