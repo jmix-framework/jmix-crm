@@ -1,8 +1,8 @@
 package com.company.crm.ai.report.introspection;
 
+import com.company.crm.ai.config.YamlObjectMapperFactory;
 import com.company.crm.ai.report.introspection.model.AiReportModelDescriptor;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 /**
@@ -12,10 +12,9 @@ import org.springframework.stereotype.Component;
 @Component
 public class AiReportModelDescriptorYamlWriter {
 
-    private final ObjectMapper yamlMapper;
+    private final ObjectMapper yamlMapper = YamlObjectMapperFactory.createYamlObjectMapper();
 
-    public AiReportModelDescriptorYamlWriter(@Qualifier("aiYamlObjectMapper") ObjectMapper yamlMapper) {
-        this.yamlMapper = yamlMapper;
+    public AiReportModelDescriptorYamlWriter() {
     }
 
     public String writeToYaml(AiReportModelDescriptor reportModel) {

@@ -1,8 +1,8 @@
 package com.company.crm.ai.jpql.introspection.writer;
 
+import com.company.crm.ai.config.YamlObjectMapperFactory;
 import com.company.crm.ai.jpql.introspection.model.AiDomainModelDescriptor;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 /**
@@ -11,10 +11,9 @@ import org.springframework.stereotype.Component;
 @Component
 public class AiDomainModelDescriptorYamlWriter {
 
-    private final ObjectMapper yamlMapper;
+    private final ObjectMapper yamlMapper = YamlObjectMapperFactory.createYamlObjectMapper();
 
-    public AiDomainModelDescriptorYamlWriter(@Qualifier("aiYamlObjectMapper") ObjectMapper yamlMapper) {
-        this.yamlMapper = yamlMapper;
+    public AiDomainModelDescriptorYamlWriter() {
     }
 
     public String writeToYaml(AiDomainModelDescriptor domainModel) {
