@@ -77,6 +77,7 @@
                 <button id="editButton" action="clientsDataGrid.editAction"/>
                 <button id="removeButton" action="clientsDataGrid.removeAction"/>
                 <button id="excelExport" action="clientsDataGrid.excelExport"/>
+                <button id="chatAboutThisButton" action="clientsDataGrid.chatAboutThis"/>
             </startSlot>
             <endSlot>
                 <simplePagination id="pagination" dataLoader="clientsDl" autoLoad="true"
@@ -97,6 +98,7 @@
                 <action id="editAction" type="list_edit"/>
                 <action id="removeAction" type="list_remove"/>
                 <action id="excelExport" type="grdexp_excelExport"/>
+                <action id="chatAboutThis" type="ai_chatAboutThis" text="msg://chatAboutThis" icon="crm:sparkles"/>
             </actions>
             <columns resizable="true" sortable="true">
                 <column key="itemDetails" frozen="true" flexGrow="0" autoWidth="true" sortable="false"/>

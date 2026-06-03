@@ -1,17 +1,17 @@
 package com.company.crm.test.ai.jpql.query;
 
+import com.company.crm.ai.jpql.query.JpqlNamedParameterParser;
+import com.company.crm.ai.jpql.query.JpqlParameter;
+import com.company.crm.ai.jpql.query.JpqlParameters;
 import org.junit.jupiter.api.Test;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 class AiJpqlQueryServiceParameterExtractionTest {
 
-    private static final Pattern NAMED_PARAMETER_PATTERN = Pattern.compile("(?<!:):([A-Za-z_][A-Za-z0-9_]*)");
+    private final JpqlNamedParameterParser parser = new JpqlNamedParameterParser();
 
     @Test
     void shouldExtractClientIdParameterFromQuery() {
@@ -19,7 +19,7 @@ class AiJpqlQueryServiceParameterExtractionTest {
         String jpqlQuery = "SELECT c.name AS clientName FROM Client c WHERE c.id = :clientId";
 
         // when
-        Set<String> parameterNames = extractNamedParameters(jpqlQuery);
+        var parameterNames = parser.extractNames(jpqlQuery);
 
         // then
         assertThat(parameterNames).containsExactly("clientId");
@@ -31,7 +31,7 @@ class AiJpqlQueryServiceParameterExtractionTest {
         String jpqlQuery = "SELECT c.name AS clientName FROM Client c WHERE c.id = :clientId AND c.status = :status";
 
         // when
-        Set<String> parameterNames = extractNamedParameters(jpqlQuery);
+        var parameterNames = parser.extractNames(jpqlQuery);
 
         // then
         assertThat(parameterNames).containsExactlyInAnyOrder("clientId", "status");
@@ -43,21 +43,31 @@ class AiJpqlQueryServiceParameterExtractionTest {
         String jpqlQuery = "SELECT c.name AS clientName FROM Client c WHERE c.id = :clientId AND c.created > ::timestamp";
 
         // when
-        Set<String> parameterNames = extractNamedParameters(jpqlQuery);
+        var parameterNames = parser.extractNames(jpqlQuery);
 
         // then
         assertThat(parameterNames).containsExactly("clientId");
     }
 
-    private Set<String> extractNamedParameters(String jpqlQuery) {
-        Set<String> names = new HashSet<>();
-        if (jpqlQuery == null || jpqlQuery.isBlank()) {
-            return names;
-        }
-        Matcher matcher = NAMED_PARAMETER_PATTERN.matcher(jpqlQuery);
-        while (matcher.find()) {
-            names.add(matcher.group(1));
-        }
-        return names;
+    @Test
+    void shouldCheckAndRemoveParametersByName() {
+        JpqlParameters parameters = new JpqlParameters(List.of(
+                new JpqlParameter("clientId", "1"),
+                new JpqlParameter("status", "ACTIVE")
+        ));
+
+        assertThat(parser.contains(parameters, "clientId")).isTrue();
+        assertThat(parser.contains(parameters, "missing")).isFalse();
+        assertThat(parser.without(parameters, "status").parameters())
+                .extracting(JpqlParameter::parameterName)
+                .containsExactly("clientId");
+    }
+
+    @Test
+    void shouldExtractUnknownParameterNameFromQueryError() {
+        String errorMessage = "Query argument strayParam not found in the list of parameters provided during query execution.";
+
+        assertThat(parser.extractUnknownParameterName(errorMessage)).isEqualTo("strayParam");
+        assertThat(parser.extractUnknownParameterName("Different error")).isNull();
     }
 }

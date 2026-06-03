@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      title="msg://aiConversationListView.title"
+      focusComponent="aiConversationsDataGrid">
+    <data>
+        <collection id="aiConversationsDc"
+                    class="com.company.crm.ai.model.AiConversation">
+            <fetchPlan extends="_base"/>
+            <loader id="aiConversationsDl" readOnly="true">
+                <query>
+                    <![CDATA[select e from AiConversation e where e.firstMessageSent = true order by e.createdDate desc]]>
+                </query>
+            </loader>
+        </collection>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+        <urlQueryParameters>
+            <pagination component="pagination"/>
+        </urlQueryParameters>
+    </facets>
+    <actions>
+        <action id="selectAction" type="lookup_select"/>
+        <action id="discardAction" type="lookup_discard"/>
+    </actions>
+    <layout>
+        <hbox id="buttonsPanel" classNames="buttons-panel">
+            <startSlot>
+                <button id="readButton" action="aiConversationsDataGrid.readAction"/>
+            </startSlot>
+            <endSlot>
+                <simplePagination id="pagination" dataLoader="aiConversationsDl"/>
+            </endSlot>
+        </hbox>
+        <dataGrid id="aiConversationsDataGrid"
+                  width="100%"
+                  minHeight="20em"
+                  dataContainer="aiConversationsDc"
+                  columnReorderingAllowed="true">
+            <actions>
+                <action id="readAction" type="list_read" text="msg://aiConversationListView.readAction.text"/>
+            </actions>
+            <columns resizable="true">
+                <column property="title" width="50%"/>
+                <column property="createdBy" width="25%"/>
+                <column property="createdDate" width="25%"/>
+            </columns>
+        </dataGrid>
+        <hbox id="lookupActions" visible="false">
+            <button id="selectButton" action="selectAction"/>
+            <button id="discardButton" action="discardAction"/>
+        </hbox>
+    </layout>
+</view>

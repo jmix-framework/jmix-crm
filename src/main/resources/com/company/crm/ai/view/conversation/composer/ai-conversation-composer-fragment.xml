@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<fragment xmlns="http://jmix.io/schema/flowui/fragment">
+    <content>
+        <vbox id="composerRoot"
+              width="100%"
+              padding="false"
+              spacing="true"
+              classNames="ai-conversation-composer-fragment">
+            <vbox id="pendingContextLayout"
+                  width="100%"
+                  padding="false"
+                  spacing="true"
+                  visible="false"/>
+            <hbox id="inputBar"
+                  width="100%"
+                  spacing="true"
+                  alignItems="CENTER">
+                <upload id="attachmentUpload"
+                        classNames="ai-timeline-attachment-upload"
+                        acceptedFileTypes=".pdf,.csv,.doc,.docx,.xls,.xlsx,.html,.htm,.txt,.md,.png,.jpg,.jpeg,.gif,.webp"
+                        uploadText="msg://com.company.crm.ai.view.conversation/attachmentUploadField.uploadText"
+                        dropAllowed="false"
+                        receiverType="MULTI_FILE_TEMPORARY_STORAGE_BUFFER"
+                        maxFileSize="26214400"
+                        maxFiles="10"/>
+            </hbox>
+        </vbox>
+    </content>
+</fragment>

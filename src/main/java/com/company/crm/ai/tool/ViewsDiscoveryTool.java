@@ -28,9 +28,9 @@ public class ViewsDiscoveryTool implements CrmAiTool {
                 applicationContext.getBean(MetadataTools.class));
     }
 
-    private ViewsDiscoveryTool(ServerProperties serverProperties,
-                               ViewRegistry viewRegistry,
-                               MetadataTools metadataTools) {
+    public ViewsDiscoveryTool(ServerProperties serverProperties,
+                              ViewRegistry viewRegistry,
+                              MetadataTools metadataTools) {
         this.serverProperties = serverProperties;
         this.viewRegistry = viewRegistry;
         this.metadataTools = metadataTools;
@@ -60,13 +60,7 @@ public class ViewsDiscoveryTool implements CrmAiTool {
     public String getEntityListViewRoute(
             @ToolParam(description = "Name of the entity for which to retrieve the list view route")
             String entityName) {
-        return metadataTools.getAllJpaEntityMetaClasses().stream()
-                .filter(metaClass -> Objects.equals(metaClass.getName(), entityName))
-                .findFirst()
-                .flatMap(metaClass -> viewRegistry.findViewInfo(
-                                viewRegistry.getListViewId(metaClass))
-                        .map(this::getRoute))
-                .orElse(null);
+        return getEntityViewRoute(entityName, viewRegistry::getListViewId);
     }
 
     @Tool(description = """
@@ -79,11 +73,15 @@ public class ViewsDiscoveryTool implements CrmAiTool {
     public String getEntityDetailViewRoute(
             @ToolParam(description = "Name of the entity for which to retrieve the detail (edit) view route")
             String entityName) {
+        return getEntityViewRoute(entityName, viewRegistry::getDetailViewId);
+    }
+
+    @Nullable
+    private String getEntityViewRoute(String entityName, java.util.function.Function<io.jmix.core.metamodel.model.MetaClass, String> viewIdProvider) {
         return metadataTools.getAllJpaEntityMetaClasses().stream()
                 .filter(metaClass -> Objects.equals(metaClass.getName(), entityName))
                 .findFirst()
-                .flatMap(metaClass -> viewRegistry.findViewInfo(
-                                viewRegistry.getDetailViewId(metaClass))
+                .flatMap(metaClass -> viewRegistry.findViewInfo(viewIdProvider.apply(metaClass))
                         .map(this::getRoute))
                 .orElse(null);
     }

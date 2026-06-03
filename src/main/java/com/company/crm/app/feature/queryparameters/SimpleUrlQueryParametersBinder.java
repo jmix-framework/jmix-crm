@@ -39,7 +39,6 @@ public class SimpleUrlQueryParametersBinder extends AbstractUrlQueryParametersBi
             return;
         }
 
-        // TODO: how to remove empty qp? via RouteSupport?
         view.getUI().ifPresent(ui ->
                 fireQueryParametersChanged(new UrlQueryParametersChangeEvent(this, parametersUpdater.get())));
     }

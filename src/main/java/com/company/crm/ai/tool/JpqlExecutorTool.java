@@ -5,10 +5,10 @@ import com.company.crm.ai.jpql.query.JpqlParameters;
 import com.company.crm.ai.jpql.query.QueryExecutionResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.context.ApplicationContext;
-
 import java.util.List;
 
 /**
@@ -17,34 +17,23 @@ import java.util.List;
  * <p>This component provides AI systems with the ability to execute JPQL queries and retrieve
  * data from the database. It serves as the primary data access interface for AI-powered
  * business intelligence and analytics features.
- *
- * <h3>Key Features</h3>
- * <ul>
- *   <li>Automatic parameter type conversion for AI-generated queries</li>
- *   <li>Safe result serialization for AI consumption</li>
- *   <li>Support for entity relationships and complex JPQL constructs</li>
- *   <li>Comprehensive error handling and validation</li>
- * </ul>
- *
- * <h3>Usage Pattern</h3>
- * <p>AI systems should first call domain model introspection tools to understand
- * the available entities and their properties, then construct appropriate JPQL queries
- * using this tool for execution.
- *
- * @see AiJpqlQueryService
  */
 public class JpqlExecutorTool implements CrmAiTool {
 
     private static final Logger log = LoggerFactory.getLogger(JpqlExecutorTool.class);
 
     private final AiJpqlQueryService aiJpqlQueryService;
+    private final AiToolStatusPublisher toolStatusPublisher;
 
     public static JpqlExecutorTool create(ApplicationContext applicationContext) {
-        return new JpqlExecutorTool(applicationContext.getBean(AiJpqlQueryService.class));
+        return new JpqlExecutorTool(
+                applicationContext.getBean(AiJpqlQueryService.class),
+                applicationContext.getBean(AiToolStatusPublisher.class));
     }
 
-    private JpqlExecutorTool(AiJpqlQueryService aiJpqlQueryService) {
+    public JpqlExecutorTool(AiJpqlQueryService aiJpqlQueryService, AiToolStatusPublisher toolStatusPublisher) {
         this.aiJpqlQueryService = aiJpqlQueryService;
+        this.toolStatusPublisher = toolStatusPublisher;
     }
 
     /**
@@ -217,14 +206,23 @@ public class JpqlExecutorTool implements CrmAiTool {
             @ToolParam(description = "Query parameters. Provide named parameters for :parameterName placeholders in the JPQL query. Leave empty if no parameters needed.") JpqlParameters parameters,
             @ToolParam(description = "List of aliases used in SELECT clause, in order (e.g., ['clientName', 'orderCount'])") List<String> selectAliases,
             @ToolParam(description = "Optional: Starting row index (default: 0)") Integer offset,
-            @ToolParam(description = "Optional: Maximum number of rows to return (default: 50, max: 200)") Integer limit) {
+            @ToolParam(description = "Optional: Maximum number of rows to return (default: 50, max: 200)") Integer limit,
+            ToolContext toolContext) {
+        String statusStart = "Querying CRM data...";
         try {
             log.info("LLM Tool Call: executeQuery(offset={}, limit={})", offset, limit);
+            toolStatusPublisher.update(toolContext, statusStart);
 
-            return aiJpqlQueryService.executeJpqlQuery(jpqlQuery, parameters, selectAliases, offset, limit);
+            QueryExecutionResult result = aiJpqlQueryService.executeJpqlQuery(jpqlQuery, parameters, selectAliases, offset, limit);
+            String snippet = String.format("Query successful (%d rows found)", result.rowCount());
+            toolStatusPublisher.complete(toolContext, statusStart, snippet);
+            return result;
         } catch (Exception e) {
             log.error("Query Error: {} - {}", jpqlQuery, e.getMessage());
-            return QueryExecutionResult.failed("Error executing query: " + e.getMessage());
+            QueryExecutionResult failed = QueryExecutionResult.failed("Error executing query: " + e.getMessage());
+            String snippet = String.format("Query failed: %s", e.getMessage());
+            toolStatusPublisher.complete(toolContext, statusStart, snippet);
+            return failed;
         }
     }
 }

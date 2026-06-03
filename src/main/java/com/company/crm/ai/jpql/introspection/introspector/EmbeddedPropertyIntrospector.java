@@ -32,16 +32,17 @@ public class EmbeddedPropertyIntrospector implements MetaPropertyIntrospector {
             return null;
         }
 
-        String javaType = property.getRange().asClass().getName();
-        String type = property.getType().name().toLowerCase();
-        Boolean embedded = true;
-        String comment = metadataTools.getMetaAnnotationValue(property, Comment.class);
-        String caption = getPropertyCaption(property);
-
-        return new AiPropertyDescriptor(caption, comment, type, javaType, null, embedded, null, null, null, null);
-    }
-
-    private String getPropertyCaption(MetaProperty property) {
-        return messageTools.getPropertyCaption(property.getDomain(), property.getName());
+        return new AiPropertyDescriptor(
+                getPropertyCaption(property, messageTools),
+                metadataTools.getMetaAnnotationValue(property, Comment.class),
+                property.getType().name().toLowerCase(),
+                property.getRange().asClass().getName(),
+                null,
+                true,
+                null,
+                null,
+                null,
+                null
+        );
     }
 }

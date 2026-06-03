@@ -47,6 +47,7 @@ public final class CrmConstants {
 
         public static final String AI_CONVERSATION_LIST = "AiConversation.list";
         public static final String AI_CONVERSATION_DETAIL = "AiConversation.detail";
+        public static final String AI_CONVERSATION_STARTER = "AiConversation.start";
 
         private ViewIds() {
         }

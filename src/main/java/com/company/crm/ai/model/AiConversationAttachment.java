@@ -18,16 +18,16 @@ import jakarta.validation.constraints.NotNull;
 
 @JmixEntity
 @Table(name = "AI_CONVERSATION_ATTACHMENT", indexes = {
-        @Index(name = "IDX_AI_CONV_ATTACH_CONV", columnList = "CONVERSATION_ID")
+        @Index(name = "IDX_AI_CONV_ATTACH_MESSAGE", columnList = "MESSAGE_ID")
 })
 @Entity
 public class AiConversationAttachment extends CreateAuditEntity {
 
     @OnDeleteInverse(DeletePolicy.CASCADE)
     @NotNull
-    @JoinColumn(name = "CONVERSATION_ID", nullable = false)
+    @JoinColumn(name = "MESSAGE_ID", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    private AiConversation conversation;
+    private ChatMessage message;
 
     @NotNull
     @Column(name = "FILE_", nullable = false, length = 1024)
@@ -43,15 +43,15 @@ public class AiConversationAttachment extends CreateAuditEntity {
     private String title;
 
     @NotNull
-    @Column(name = "TYPE_", nullable = false)
-    private String type;
+    @Column(name = "ORIGIN", nullable = false)
+    private String origin;
 
-    public AiAttachmentType getType() {
-        return type == null ? null : AiAttachmentType.fromId(type);
+    public AiAttachmentOrigin getOrigin() {
+        return origin == null ? null : AiAttachmentOrigin.fromId(origin);
     }
 
-    public void setType(AiAttachmentType type) {
-        this.type = type == null ? null : type.getId();
+    public void setOrigin(AiAttachmentOrigin origin) {
+        this.origin = origin == null ? null : origin.getId();
     }
 
     public String getFileName() {
@@ -78,12 +78,12 @@ public class AiConversationAttachment extends CreateAuditEntity {
         this.file = file;
     }
 
-    public AiConversation getConversation() {
-        return conversation;
+    public ChatMessage getMessage() {
+        return message;
     }
 
-    public void setConversation(AiConversation conversation) {
-        this.conversation = conversation;
+    public void setMessage(ChatMessage message) {
+        this.message = message;
     }
 
 }

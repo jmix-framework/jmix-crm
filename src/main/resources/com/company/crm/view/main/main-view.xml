@@ -44,7 +44,7 @@
                         </suffix>
                     </textField>
                 </div>
-                <button id="chatButton" icon="MAGIC" themeNames="icon tertiary" classNames="me-l"/>
+                <button id="chatButton" icon="crm:sparkles" themeNames="icon tertiary" classNames="me-l"/>
                 <button id="notificationsButton" icon="BELL_O" themeNames="tertiary" classNames="me-l"
                         css="background-color: var(--lumo-shade-5pct);"/>
 

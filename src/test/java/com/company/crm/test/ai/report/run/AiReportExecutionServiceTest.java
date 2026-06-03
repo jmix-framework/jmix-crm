@@ -1,9 +1,11 @@
 package com.company.crm.test.ai.report.run;
 
 import com.company.crm.AbstractTest;
-import com.company.crm.ai.model.AiAttachmentType;
+import com.company.crm.ai.model.AiAttachmentOrigin;
 import com.company.crm.ai.model.AiConversation;
 import com.company.crm.ai.model.AiConversationAttachment;
+import com.company.crm.ai.model.ChatMessage;
+import com.company.crm.ai.model.ChatMessageType;
 import com.company.crm.ai.report.run.AiReportExecutionService;
 import com.company.crm.ai.report.run.ReportExecutionErrorCode;
 import com.company.crm.ai.report.run.ReportExecutionResult;
@@ -22,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -65,10 +68,16 @@ class AiReportExecutionServiceTest extends AbstractTest {
     }
 
     @Test
-    void testExecuteReport_withConversationId_persistsAttachment() {
+    void testExecuteReport_withAssistantMessageId_persistsAttachment() {
         systemAuthenticator.runWithSystem(() -> {
             // given
-            AiConversation conversation = aiConversationService.createNewConversation("Test Persistence");
+            AiConversation conversation = aiConversationService.createNewConversation();
+            ChatMessage message = dataManager.create(ChatMessage.class);
+            message.setConversation(conversation);
+            message.setType(ChatMessageType.ASSISTANT);
+            message.setCreatedDate(OffsetDateTime.now());
+            dataManager.save(message);
+
             Client client = entities.client("Persistence Test Client");
             Map<String, Object> parameters = Map.of(
                     "client", client.getId().toString(),
@@ -83,7 +92,7 @@ class AiReportExecutionServiceTest extends AbstractTest {
                     null,
                     "HTML",
                     List.of("client-360-report"),
-                    conversation.getId()
+                    message.getId()
             );
 
             // then
@@ -94,15 +103,19 @@ class AiReportExecutionServiceTest extends AbstractTest {
 
             AiConversation reloadedConv = dataManager.load(AiConversation.class)
                     .id(conversation.getId())
-                    .fetchPlan(fp -> fp.add("attachments", sub -> sub.addFetchPlan(FetchPlan.BASE)))
+                    .fetchPlan(fp -> fp.add("messages", sub -> sub.add("attachments", attSub -> attSub.addFetchPlan(FetchPlan.BASE))))
                     .one();
 
-            assertThat(reloadedConv.getAttachments()).hasSize(1);
-            AiConversationAttachment attachment = reloadedConv.getAttachments().getFirst();
+            List<AiConversationAttachment> attachments = reloadedConv.getMessages().stream()
+                    .flatMap(m -> m.getAttachments().stream())
+                    .toList();
+
+            assertThat(attachments).hasSize(1);
+            AiConversationAttachment attachment = attachments.getFirst();
             assertThat(attachment.getFileName()).startsWith("report_client-360-report_");
             assertThat(attachment.getFileName()).endsWith(".html");
-            assertThat(attachment.getTitle()).isEqualTo("Client 360 Report");
-            assertThat(attachment.getType()).isEqualTo(AiAttachmentType.AI_GENERATED);
+            assertThat(attachment.getTitle()).isEqualTo("Client 360 Report - Persistence Test Client");
+            assertThat(attachment.getOrigin()).isEqualTo(AiAttachmentOrigin.AI_GENERATED);
 
             assertThat(attachment.getFile()).isNotNull();
             assertThat(fileStorage.fileExists(attachment.getFile())).isTrue();
@@ -110,14 +123,14 @@ class AiReportExecutionServiceTest extends AbstractTest {
     }
 
     @Test
-    void testExecuteReport_withUnknownConversationId_doesNotPersistAttachment() {
+    void testExecuteReport_withUnknownAssistantMessageId_doesNotPersistAttachment() {
         systemAuthenticator.runWithSystem(() -> {
             // given
             long attachmentsBefore = dataManager
                     .loadValue("select count(a) from AiConversationAttachment a", Long.class)
                     .one();
 
-            Client client = entities.client("Unknown Conversation Client");
+            Client client = entities.client("Unknown Message Client");
             Map<String, Object> parameters = Map.of(
                     "client", client.getId().toString(),
                     "fromDate", LocalDate.now().minusDays(30).toString(),

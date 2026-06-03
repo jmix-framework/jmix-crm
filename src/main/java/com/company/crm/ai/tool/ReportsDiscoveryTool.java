@@ -3,6 +3,7 @@ package com.company.crm.ai.tool;
 import com.company.crm.ai.report.introspection.AiReportModelDescriptorYamlExporter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.context.ApplicationContext;
@@ -21,17 +22,21 @@ public class ReportsDiscoveryTool implements CrmAiTool {
     private static final Logger log = LoggerFactory.getLogger(ReportsDiscoveryTool.class);
 
     private final AiReportModelDescriptorYamlExporter yamlExporter;
+    private final AiToolStatusPublisher toolStatusPublisher;
     private final Collection<String> allowedReportCodes;
 
     public static ReportsDiscoveryTool create(ApplicationContext applicationContext, Collection<String> whitelist) {
-        return new ReportsDiscoveryTool(applicationContext.getBean(AiReportModelDescriptorYamlExporter.class), whitelist);
+        return new ReportsDiscoveryTool(
+                applicationContext.getBean(AiReportModelDescriptorYamlExporter.class),
+                applicationContext.getBean(AiToolStatusPublisher.class),
+                whitelist);
     }
 
-    /**
-     * Creates a report discovery tool with an optional whitelist of authorized report codes.
-     */
-    private ReportsDiscoveryTool(AiReportModelDescriptorYamlExporter yamlExporter, Collection<String> allowedReportCodes) {
+    ReportsDiscoveryTool(AiReportModelDescriptorYamlExporter yamlExporter,
+                         AiToolStatusPublisher toolStatusPublisher,
+                         Collection<String> allowedReportCodes) {
         this.yamlExporter = yamlExporter;
+        this.toolStatusPublisher = toolStatusPublisher;
         this.allowedReportCodes = allowedReportCodes != null ? List.copyOf(allowedReportCodes) : Collections.emptyList();
     }
 
@@ -52,12 +57,20 @@ public class ReportsDiscoveryTool implements CrmAiTool {
             
             CRITICAL: Always call this tool first before using any report execution tools.
             """)
-    public String getAvailableReports() {
+    public String getAvailableReports(ToolContext toolContext) {
+        String statusStart = "Looking up available business reports...";
         log.info("LLM Tool Call: getAvailableReports()");
+        toolStatusPublisher.update(toolContext, statusStart);
         try {
-            return allowedReportCodes.isEmpty() ? yamlExporter.export() : yamlExporter.export(allowedReportCodes);
+            String yaml = allowedReportCodes.isEmpty() ? yamlExporter.export() : yamlExporter.export(allowedReportCodes);
+            String text = allowedReportCodes.isEmpty()
+                    ? "Discovered available business reports"
+                    : String.format("Found %d authorized business report(s)", allowedReportCodes.size());
+            toolStatusPublisher.complete(toolContext, statusStart, text);
+            return yaml;
         } catch (Exception e) {
             log.error("Failed to discover reports", e);
+            toolStatusPublisher.complete(toolContext, statusStart, "Failed to lookup available business reports");
             return "Error: Failed to discover reports: " + e.getMessage();
         }
     }
@@ -71,19 +84,27 @@ public class ReportsDiscoveryTool implements CrmAiTool {
     @Tool(description = "Get detailed structure for specific reports by their unique codes.")
     public String getReportsByCodes(
             @ToolParam(description = "List of report codes to include (e.g., [\"client-360-report\"])")
-            List<String> reportCodes) {
+            List<String> reportCodes,
+            ToolContext toolContext) {
+        String statusStart = "Reading business report details...";
         log.info("LLM Tool Call: getReportsByCodes({})", reportCodes);
+        toolStatusPublisher.update(toolContext, statusStart);
         try {
             List<String> authorizedCodes = allowedReportCodes.isEmpty() ? reportCodes :
                     reportCodes.stream().filter(allowedReportCodes::contains).collect(Collectors.toList());
 
             if (authorizedCodes.isEmpty() && !reportCodes.isEmpty()) {
+                toolStatusPublisher.complete(toolContext, statusStart, "No authorized reports requested");
                 return "Error: None of the requested report codes are authorized.";
             }
 
-            return yamlExporter.export(authorizedCodes);
+            String yaml = yamlExporter.export(authorizedCodes);
+            toolStatusPublisher.complete(toolContext, statusStart,
+                    String.format("Loaded details for %d authorized business report(s)", authorizedCodes.size()));
+            return yaml;
         } catch (Exception e) {
             log.error("Failed to discover reports", e);
+            toolStatusPublisher.complete(toolContext, statusStart, "Failed to read report details");
             return "Error: Failed to discover requested reports: " + e.getMessage();
         }
     }

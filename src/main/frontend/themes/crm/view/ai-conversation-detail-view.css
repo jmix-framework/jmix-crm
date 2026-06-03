@@ -1,110 +1,41 @@
-.ai-conversation-message-list vaadin-message.attachment-event {
-    position: relative;
-    margin: var(--lumo-space-s) 0;
+/* Detail view shell and centered timeline canvas
+   ----------------------------------------------
+   The detail view is a full-height flex layout. The outer view owns clipping and
+   page padding; the canvas applies the single readable max-width for header,
+   timeline, composer, and prompt suggestions. */
+.ai-conversation-timeline-view {
+    box-sizing: border-box;
+    min-height: 0;
+    overflow: hidden;
+    padding: 0 var(--lumo-space-m) var(--lumo-space-m);
 }
 
-.ai-conversation-message-list vaadin-message.attachment-event::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 50%;
-    border-top: 1px solid var(--lumo-contrast-20pct);
-    transform: translateY(-50%);
-}
-
-.ai-conversation-message-list vaadin-message.attachment-event > vaadin-avatar {
-    display: none;
-}
-
-.ai-conversation-message-list vaadin-message.attachment-event::part(content) {
-    position: relative;
-    z-index: 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+/* Single centered canvas that imposes the 68rem max-width.
+   Every child inside just uses width: 100% - no per-component max-width needed. */
+.ai-timeline-canvas {
+    box-sizing: border-box;
+    align-self: center;
+    flex: 1 1 auto;
+    margin: 0 auto;
+    max-width: 68rem;
+    min-height: 0;
+    padding-top: var(--lumo-space-m);
     width: 100%;
-    max-width: 100%;
-    padding: 0;
-    margin: 0;
-    background: transparent;
-    box-shadow: none;
 }
 
-.ai-conversation-message-list vaadin-message.attachment-event::part(header) {
-    display: none;
+.ai-timeline-content {
+    box-sizing: border-box;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
 }
 
-.ai-conversation-message-list vaadin-message.attachment-event::part(message) {
-    position: relative;
-    display: inline-block;
-    background: var(--lumo-base-color);
-    color: var(--lumo-secondary-text-color);
-    font-size: var(--lumo-font-size-xs);
-    font-weight: 500;
-    line-height: 1.3;
-    text-align: center;
-    margin: 0;
-    padding: 0 calc(var(--lumo-space-m) + 0.95rem + var(--lumo-space-xs)) 0 calc(var(--lumo-space-m) + 0.95rem + var(--lumo-space-xs));
-    border: 0;
+.ai-conversation-title-layout {
+    border-bottom: 1px solid var(--lumo-contrast-10pct);
+    box-sizing: border-box;
+    padding-bottom: var(--lumo-space-s);
 }
 
-.ai-conversation-message-list vaadin-message.attachment-event::part(message)::before {
-    content: var(--lumo-icons-upload);
-    font-family: lumo-icons;
-    font-size: 0.95rem;
-    line-height: 1;
-    color: var(--lumo-secondary-text-color);
-    position: absolute;
-    left: var(--lumo-space-m);
-    top: 50%;
-    transform: translateY(-50%);
-}
-
-vaadin-upload.attachments-dropzone {
-    margin-top: auto;
-    min-height: 8rem;
-    border: 1px dashed var(--lumo-contrast-30pct);
-    border-radius: var(--lumo-border-radius-m);
-    background: var(--lumo-contrast-5pct);
-    padding: var(--lumo-space-s);
-}
-
-vaadin-upload.attachments-dropzone::part(drop-label) {
-    color: var(--lumo-secondary-text-color);
-    font-size: var(--lumo-font-size-xs);
-    display: block;
-    width: 100%;
-    text-align: center;
-    white-space: normal;
-    margin-top: var(--lumo-space-xs);
-}
-
-vaadin-upload.attachments-dropzone::part(primary-buttons) {
-    width: 100%;
-    min-height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    gap: var(--lumo-space-xs);
-}
-
-.attachment-card-meta {
-    gap: var(--lumo-space-s);
-}
-
-.attachment-card-meta-separator {
-    opacity: 0.8;
-}
-
-.attachment-card-source-icon {
-    width: 0.75rem;
-    height: 0.75rem;
-    color: var(--lumo-secondary-text-color);
-}
-
-.attachment-card-source-text {
-    font-size: 0.7rem;
+.ai-conversation-context-side-panel-dialog {
+    --jmix-side-panel-layout-vertical-size: 22rem;
 }

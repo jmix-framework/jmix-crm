@@ -125,6 +125,53 @@ class AiJpqlQueryServiceTest extends AbstractTest {
     }
 
     @Test
+    void testUnknownExtraParameterIsIgnored() {
+        // given
+        var client = entities.client("Extra Param Client");
+        String jpql = "SELECT c.name AS clientName FROM Client c WHERE c.name = :clientName";
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("clientName", client.getName());
+        parameters.put("unusedParameter", "not referenced by the JPQL");
+
+        // when
+        var result = aiJpqlQueryService.executeJpqlQuery(
+                jpql,
+                JpqlParameters.fromMap(parameters),
+                List.of("clientName"),
+                0,
+                10
+        );
+
+        // then
+        assertThat(result.success()).isTrue();
+        assertThat(result.data().stream().map(row -> row.get("clientName")).toList())
+                .containsExactly("Extra Param Client");
+    }
+
+    @Test
+    void testKnownWronglyTypedParameterFallsBackToOriginalValue() {
+        // given
+        var client = entities.client("2024-01-15");
+        String jpql = "SELECT c.name AS clientName FROM Client c WHERE c.name = :clientName";
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("clientName", client.getName());
+
+        // when
+        var result = aiJpqlQueryService.executeJpqlQuery(
+                jpql,
+                JpqlParameters.fromMap(parameters),
+                List.of("clientName"),
+                0,
+                10
+        );
+
+        // then
+        assertThat(result.success()).isTrue();
+        assertThat(result.data().stream().map(row -> row.get("clientName")).toList())
+                .containsExactly("2024-01-15");
+    }
+
+    @Test
     void testParameterConversion_MixedTypes() {
         // given
         var client = entities.client("Mixed Param Client");

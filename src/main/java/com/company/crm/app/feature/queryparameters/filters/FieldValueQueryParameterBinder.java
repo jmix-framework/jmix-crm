@@ -82,10 +82,9 @@ public class FieldValueQueryParameterBinder extends AbstractUrlQueryParametersBi
                     for (ComponentValueBinder binder : binders) {
                         String parameterKey = QP_PREFIX + binder.componentId();
                         String parameterValue = binder.serializedValue();
-                        // TODO: should we add check for empty value?
-                        //  if(isBlank(parameterValue)) {
-                        parameters = parameters.merging(parameterKey, parameterValue);
-                        // }
+                        if (isNotBlank(parameterValue)) {
+                            parameters = parameters.merging(parameterKey, parameterValue);
+                        }
                     }
                     return parameters;
                 },

@@ -9,3 +9,8 @@
 @import url('view/main-view-top-menu.css');
 @import url('view/login-view.css');
 @import url('view/ai-conversation-detail-view.css');
+@import url('view/ai-conversation-timeline.css');
+@import url('view/ai-conversation-composer.css');
+@import url('view/ai-conversation-context-panel.css');
+@import url('view/ai-conversation-starter-view.css');
+@import url('view/ai-conversation-starter-history.css');

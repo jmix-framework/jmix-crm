@@ -3,6 +3,7 @@ package com.company.crm.util.extenstion;
 import com.company.crm.ai.model.AiConversation;
 import com.company.crm.ai.model.AiConversationAttachment;
 import com.company.crm.ai.model.ChatMessage;
+import com.company.crm.ai.model.ChatMessageEntityReference;
 import com.company.crm.model.base.UuidEntity;
 import com.company.crm.model.catalog.category.Category;
 import com.company.crm.model.catalog.item.CategoryItem;
@@ -36,8 +37,9 @@ import static org.springframework.test.jdbc.JdbcTestUtils.deleteFromTables;
 public class DataCleaner implements AfterAllCallback, AfterEachCallback {
 
     private static final List<Class<? extends UuidEntity>> ENTITIES_REMOVING_ORDER = List.of(
-            ChatMessage.class,
+            ChatMessageEntityReference.class,
             AiConversationAttachment.class,
+            ChatMessage.class,
             AiConversation.class,
             ClientUserActivity.class,
             UserProfileUserActivity.class,

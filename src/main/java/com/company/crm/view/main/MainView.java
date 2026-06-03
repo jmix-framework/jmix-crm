@@ -2,7 +2,8 @@ package com.company.crm.view.main;
 
 import com.company.crm.ai.model.AiConversation;
 import com.company.crm.ai.service.AiConversationService;
-import com.company.crm.ai.view.aiconversation.AiConversationDetailView;
+import com.company.crm.ai.view.conversation.AiConversationDetailView;
+import com.company.crm.ai.view.conversation.AiConversationStarterView;
 import com.company.crm.app.online.OnlineDemoDataCreator;
 import com.company.crm.app.ui.component.CrmLoader;
 import com.company.crm.app.util.constant.CrmConstants;
@@ -30,6 +31,11 @@ import io.jmix.core.Metadata;
 import io.jmix.core.security.CurrentAuthentication;
 import io.jmix.core.usersubstitution.CurrentUserSubstitution;
 import io.jmix.flowui.DialogWindows;
+import io.jmix.flowui.Dialogs;
+import io.jmix.flowui.Views;
+import io.jmix.flowui.component.sidedialog.SideDialog;
+import io.jmix.flowui.kit.component.sidedialog.SideDialogPosition;
+import com.vaadin.flow.component.button.Button;
 import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.ViewNavigators;
 import io.jmix.flowui.accesscontext.UiShowViewContext;
@@ -75,6 +81,10 @@ public class MainView extends StandardMainView {
     private ClientRepository clientRepository;
     @Autowired
     private DialogWindows dialogWindows;
+    @Autowired
+    private Dialogs dialogs;
+    @Autowired
+    private Views views;
     @Autowired
     private CurrentAuthentication currentAuthentication;
     @Autowired
@@ -197,21 +207,38 @@ public class MainView extends StandardMainView {
 
     @Subscribe(id = "chatButton", subject = "clickListener")
     private void onChatButtonClick(final ClickEvent<JmixButton> event) {
-        String welcomeMessage = messages.getMessage("aiConversation.welcomeMessage");
-        final AiConversation savedConversation = aiConversationService.createNewConversation(welcomeMessage);
+        AiConversationStarterView starterView = views.create(AiConversationStarterView.class);
+        starterView.setOpenedInDialog(true);
 
-        DialogWindow<AiConversationDetailView> dialogWindow = dialogWindows.detail(this, AiConversation.class)
-                .editEntity(savedConversation)
-                .withViewClass(AiConversationDetailView.class)
+        SideDialog sideDialog = dialogs.createSideDialog()
+                .withSideDialogPosition(SideDialogPosition.RIGHT)
+                .withHorizontalSize("35%")
+                .withModal(false)
+                .withContentComponents(starterView)
+                .withHeaderProvider(sd -> createChatSideDialogHeader(sd, messages.getMessage(AiConversationStarterView.class, "aiConversationStarterView.title")))
                 .build();
 
-        dialogWindow.setModal(false);
-        dialogWindow.setLeft("65%");
-        dialogWindow.setResizable(true);
-        dialogWindow.setTop("5%");
-        dialogWindow.setWidth("35%");
-        dialogWindow.setHeight("75%");
-        dialogWindow.open();
+        starterView.setParentSideDialog(sideDialog);
+        sideDialog.open();
+        starterView.activateStarterView();
+    }
+
+    private Component createChatSideDialogHeader(SideDialog sideDialog, String title) {
+        HorizontalLayout header = uiComponents.create(HorizontalLayout.class);
+        header.setWidthFull();
+        header.setAlignItems(FlexComponent.Alignment.CENTER);
+        header.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
+
+        Span titleSpan = uiComponents.create(Span.class);
+        titleSpan.setText(title);
+        titleSpan.addClassNames("font-semibold", "text-l");
+        header.add(titleSpan);
+
+        Button closeButton = new Button(VaadinIcon.CLOSE.create(), event -> sideDialog.close());
+        closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ICON);
+        header.add(closeButton);
+
+        return header;
     }
 
     private Avatar createAvatar(String fullName) {

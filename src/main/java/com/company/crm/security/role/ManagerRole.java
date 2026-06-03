@@ -3,6 +3,7 @@ package com.company.crm.security.role;
 import com.company.crm.ai.model.AiConversation;
 import com.company.crm.ai.model.AiConversationAttachment;
 import com.company.crm.ai.model.ChatMessage;
+import com.company.crm.ai.model.ChatMessageEntityReference;
 import com.company.crm.model.address.Address;
 import com.company.crm.model.catalog.category.Category;
 import com.company.crm.model.catalog.item.CategoryItem;
@@ -35,8 +36,8 @@ public interface ManagerRole extends UiMinimalRole, ReportsRunRole {
     String CODE = "manager";
     String NAME = "Manager";
 
-    @MenuPolicy(menuIds = {"home", "tasks", "clients", "orders", "invoices", "payments", "AiConversation.list"})
-    @ViewPolicy(viewIds = {"HomeView", "UserTask.list", "Client.list", "Order.list", "CategoryItem.detail", "Category.detail", "Client.detail", "Invoice.detail", "Invoice.list", "OrderItem.detail", "Order.detail", "Payment.detail", "Payment.list", "AddressFragment", "Contact.detail", "flowui_AddConditionView", "flowui_GroupFilterCondition.detail", "flowui_JpqlFilterCondition.detail", "flowui_PropertyFilterCondition.detail", "flowui_DateIntervalDialog", "FragmentRenderer", "AiConversation.list", "AiConversation.detail", "AiAttachmentCardFragmentRenderer"})
+    @MenuPolicy(menuIds = {"home", "tasks", "clients", "orders", "invoices", "payments", "AiConversation.start"})
+    @ViewPolicy(viewIds = {"HomeView", "UserTask.list", "Client.list", "Order.list", "CategoryItem.detail", "Category.detail", "Client.detail", "Invoice.detail", "Invoice.list", "OrderItem.detail", "Order.detail", "Payment.detail", "Payment.list", "AddressFragment", "Contact.detail", "flowui_AddConditionView", "flowui_GroupFilterCondition.detail", "flowui_JpqlFilterCondition.detail", "flowui_PropertyFilterCondition.detail", "flowui_DateIntervalDialog", "AiConversation.detail", "AiConversation.start"})
     void views();
 
     @EntityAttributePolicy(entityClass = AiConversation.class, attributes = "*", action = EntityAttributePolicyAction.MODIFY)
@@ -115,4 +116,8 @@ public interface ManagerRole extends UiMinimalRole, ReportsRunRole {
     @EntityAttributePolicy(entityClass = AiConversationAttachment.class, attributes = "*", action = EntityAttributePolicyAction.MODIFY)
     @EntityPolicy(entityClass = AiConversationAttachment.class, actions = EntityPolicyAction.ALL)
     void aiConversationAttachment();
+
+    @EntityAttributePolicy(entityClass = ChatMessageEntityReference.class, attributes = "*", action = EntityAttributePolicyAction.MODIFY)
+    @EntityPolicy(entityClass = ChatMessageEntityReference.class, actions = EntityPolicyAction.ALL)
+    void chatMessageEntityReference();
 }

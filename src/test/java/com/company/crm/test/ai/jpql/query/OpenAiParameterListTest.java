@@ -1,11 +1,9 @@
 package com.company.crm.test.ai.jpql.query;
 
-import com.company.crm.AbstractTest;
+import com.company.crm.AbstractAiTest;
 import com.company.crm.ai.jpql.query.JpqlParameter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
@@ -13,10 +11,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 /**
  * Test to verify that OpenAI can handle List<JpqlParameter> correctly
  */
-class OpenAiParameterListTest extends AbstractTest {
+class OpenAiParameterListTest extends AbstractAiTest {
 
     @Autowired
     private ChatClient.Builder chatClientBuilder;
@@ -51,7 +51,13 @@ class OpenAiParameterListTest extends AbstractTest {
                 .content();
 
         // then
-        System.out.println("LLM Response: " + response);
+        assertThat(response).isNotBlank();
+        assertThat(parameterListTool.getParameters())
+                .extracting(JpqlParameter::parameterName, JpqlParameter::parameterValue)
+                .containsExactly(
+                        org.assertj.core.groups.Tuple.tuple("clientId", "550e8400-e29b-41d4-a716-446655440000"),
+                        org.assertj.core.groups.Tuple.tuple("status", "active")
+                );
     }
 
     /**
@@ -59,29 +65,18 @@ class OpenAiParameterListTest extends AbstractTest {
      */
     public static class ParameterListTool {
 
-        private static final Logger log = LoggerFactory.getLogger(ParameterListTool.class);
+        private List<JpqlParameter> parameters = List.of();
 
         @Tool(description = "Test tool to verify parameter list handling")
         public String testParameterList(
                 @ToolParam(description = "List of parameters") List<JpqlParameter> parameters) {
-
-            log.info("=== PARAMETER LIST TOOL CALLED ===");
-            log.info("parameters: '{}' (type: {})", parameters, parameters != null ? parameters.getClass().getSimpleName() : "null");
-
-            if (parameters != null) {
-                log.info("parameters size: {}", parameters.size());
-                for (int i = 0; i < parameters.size(); i++) {
-                    JpqlParameter param = parameters.get(i);
-                    log.info("  parameters[{}] = name:'{}', value:'{}' (value type: {})",
-                            i, param.parameterName(), param.parameterValue(),
-                            param.parameterValue() != null ? param.parameterValue().getClass().getSimpleName() : "null");
-                }
-            }
-
-            log.info("=== END PARAMETER LIST TOOL ===");
-
+            this.parameters = parameters != null ? List.copyOf(parameters) : List.of();
             return String.format("Received %d parameters: %s",
-                    parameters != null ? parameters.size() : 0, parameters);
+                    this.parameters.size(), this.parameters);
+        }
+
+        private List<JpqlParameter> getParameters() {
+            return parameters;
         }
     }
 }

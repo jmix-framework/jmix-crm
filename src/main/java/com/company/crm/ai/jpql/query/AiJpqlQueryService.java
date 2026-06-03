@@ -13,12 +13,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,7 +25,6 @@ public class AiJpqlQueryService {
 
     public static final int DEFAULT_LIMIT = 50;
     public static final int MAX_LIMIT = 200;
-    private static final Pattern NAMED_PARAMETER_PATTERN = Pattern.compile("(?<!:):([A-Za-z_][A-Za-z0-9_]*)");
 
     private final Metadata metadata;
     private final DataManager dataManager;
@@ -36,19 +32,22 @@ public class AiJpqlQueryService {
     private final ResultConverter resultConverter;
     private final AiJpqlParameterConverter parameterConverter;
     private final QueryTransformerFactory queryTransformerFactory;
+    private final JpqlNamedParameterParser namedParameterParser;
 
     public AiJpqlQueryService(DataManager dataManager,
                               AiJpqlParameterConverter parameterConverter,
                               ResultConverter resultConverter,
                               AccessManager accessManager,
                               QueryTransformerFactory queryTransformerFactory,
-                              Metadata metadata) {
+                              Metadata metadata,
+                              JpqlNamedParameterParser namedParameterParser) {
         this.dataManager = dataManager;
         this.parameterConverter = parameterConverter;
         this.resultConverter = resultConverter;
         this.accessManager = accessManager;
         this.queryTransformerFactory = queryTransformerFactory;
         this.metadata = metadata;
+        this.namedParameterParser = namedParameterParser;
     }
 
     /**
@@ -63,7 +62,7 @@ public class AiJpqlQueryService {
      */
     public QueryExecutionResult executeJpqlQuery(String jpqlQuery, JpqlParameters parameters, List<String> selectAliases, Integer offset, Integer limit) {
         int effectiveOffset = (offset != null) ? Math.max(0, offset) : 0;
-        int effectiveLimit = (limit != null) ? Math.min(MAX_LIMIT, Math.max(1, limit)) : DEFAULT_LIMIT;
+        int effectiveLimit = (limit != null) ? Math.clamp(limit, 1, MAX_LIMIT) : DEFAULT_LIMIT;
         ensureQueryIsPermitted(jpqlQuery);
 
         // First attempt: try with converted parameters
@@ -100,22 +99,22 @@ public class AiJpqlQueryService {
         try {
             long startTime = System.currentTimeMillis();
             var loadValuesBuilder = dataManager.loadValues(jpqlQuery);
-            Set<String> queryParameterNames = extractNamedParameters(jpqlQuery);
+            Set<String> queryParameterNames = namedParameterParser.extractNames(jpqlQuery);
 
             log.debug("JPQL Query: {}", jpqlQuery);
             log.debug("Extracted parameter names: {}", queryParameterNames);
             log.debug("Provided parameters: {}", parameters);
 
             // Convert JpqlParameters to Map for processing
-            Map<String, Object> parameterMap = converted && parameters != null ?
+            Map<String, Object> parameterMap = converted ?
                     parameterConverter.convertParameters(parameters.parameters()) :
                     convertJpqlParametersToMap(parameters);
 
-            if (parameterMap != null && !parameterMap.isEmpty()) {
+            if (!parameterMap.isEmpty()) {
                 for (Map.Entry<String, Object> entry : parameterMap.entrySet()) {
                     log.debug("Processing parameter '{}' with value '{}' (type: {})",
-                            entry.getKey(), entry.getValue(),
-                            entry.getValue() != null ? entry.getValue().getClass().getSimpleName() : "null");
+                             entry.getKey(), entry.getValue(),
+                             entry.getValue() != null ? entry.getValue().getClass().getSimpleName() : "null");
                     // Ignore extra parameters that are not referenced in the JPQL.
                     if (queryParameterNames.contains(entry.getKey())) {
                         log.debug("Setting parameter '{}' to value '{}'", entry.getKey(), entry.getValue());
@@ -126,7 +125,7 @@ public class AiJpqlQueryService {
                 }
             }
 
-            String[] propertyNames = selectAliases != null ? selectAliases.toArray(new String[0]) : new String[0];
+            String[] propertyNames = propertyNames(selectAliases);
             if (propertyNames.length > 0) {
                 loadValuesBuilder.properties(propertyNames);
             }
@@ -150,10 +149,10 @@ public class AiJpqlQueryService {
 
         } catch (Exception e) {
             log.debug("Query failed with {} parameters: {}", converted ? "converted" : "original", e.getMessage());
-            if (retryUnknownParameter && parameters != null) {
-                String unknownParameter = extractUnknownParameterName(e.getMessage());
-                if (unknownParameter != null && containsParameter(parameters, unknownParameter)) {
-                    JpqlParameters filteredParameters = filterOutParameter(parameters, unknownParameter);
+            if (retryUnknownParameter) {
+                String unknownParameter = namedParameterParser.extractUnknownParameterName(e.getMessage());
+                if (unknownParameter != null && namedParameterParser.contains(parameters, unknownParameter)) {
+                    JpqlParameters filteredParameters = namedParameterParser.without(parameters, unknownParameter);
                     log.debug("Retrying query without unknown parameter '{}'", unknownParameter);
                     return executeJpqlQueryWithParameters(jpqlQuery, filteredParameters, selectAliases, offset, limit, converted, false);
                 }
@@ -173,51 +172,8 @@ public class AiJpqlQueryService {
                 ));
     }
 
-    private boolean containsParameter(JpqlParameters parameters, String parameterName) {
-        if (parameters == null || parameters.parameters().isEmpty()) {
-            return false;
-        }
-        return parameters.parameters().stream()
-                .anyMatch(param -> param.parameterName().equals(parameterName));
-    }
-
-    private JpqlParameters filterOutParameter(JpqlParameters parameters, String parameterName) {
-        if (parameters == null) {
-            return JpqlParameters.empty();
-        }
-        List<JpqlParameter> filteredList = parameters.parameters().stream()
-                .filter(param -> !param.parameterName().equals(parameterName))
-                .toList();
-        return new JpqlParameters(filteredList);
-    }
-
-    private Set<String> extractNamedParameters(String jpqlQuery) {
-        Set<String> names = new HashSet<>();
-        if (jpqlQuery == null || jpqlQuery.isBlank()) {
-            return names;
-        }
-        Matcher matcher = NAMED_PARAMETER_PATTERN.matcher(jpqlQuery);
-        while (matcher.find()) {
-            names.add(matcher.group(1));
-        }
-        return names;
-    }
-
-    private String extractUnknownParameterName(String errorMessage) {
-        if (errorMessage == null) {
-            return null;
-        }
-        String marker = "Query argument ";
-        int start = errorMessage.indexOf(marker);
-        if (start < 0) {
-            return null;
-        }
-        int from = start + marker.length();
-        int to = errorMessage.indexOf(' ', from);
-        if (to < 0) {
-            return null;
-        }
-        return errorMessage.substring(from, to).trim();
+    private String[] propertyNames(List<String> selectAliases) {
+        return selectAliases != null ? selectAliases.toArray(new String[0]) : new String[0];
     }
 
     private void ensureQueryIsPermitted(String jpqlQuery) {

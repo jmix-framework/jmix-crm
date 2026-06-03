@@ -4,6 +4,7 @@ import com.company.crm.ai.model.AiConversation;
 import com.company.crm.ai.model.ChatMessage;
 import com.company.crm.ai.model.ChatMessageType;
 import io.jmix.core.DataManager;
+import io.jmix.core.FetchPlan;
 import io.jmix.core.SaveContext;
 import io.jmix.core.Sort;
 import io.jmix.core.querycondition.PropertyCondition;
@@ -20,7 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -29,16 +29,7 @@ import java.util.stream.Collectors;
  * Jmix-based implementation of Spring AI ChatMemoryRepository.
  *
  * <p>This repository provides persistent storage for AI chat conversations using Jmix data management capabilities.
- * It stores chat messages and conversation history in the database through Jmix entities, enabling:
- * <ul>
- *   <li>Persistent conversation memory across application restarts</li>
- *   <li>Multi-user conversation support with proper isolation</li>
- *   <li>Full integration with Jmix security and data access patterns</li>
- *   <li>Transactional consistency for chat operations</li>
- * </ul>
- *
- * <p>The implementation handles conversion between Spring AI message types (UserMessage, AssistantMessage, SystemMessage)
- * and Jmix ChatMessage entities, maintaining message ordering and conversation context.
+ * It stores chat messages and conversation history in the database through Jmix entities.
  *
  * @see ChatMemoryRepository
  * @see AiConversation
@@ -48,15 +39,14 @@ import java.util.stream.Collectors;
 public class JmixChatMemoryRepository implements ChatMemoryRepository {
 
     private static final Logger log = LoggerFactory.getLogger(JmixChatMemoryRepository.class);
-    private static final String ENTITY_ID_METADATA_KEY = "jmixEntityId";
-    private static final String CRM_MESSAGE_TYPE_METADATA_KEY = "crmMessageType";
-    private static final String ATTACHMENT_METADATA_VALUE = "ATTACHMENT";
-    private static final String USER_UPLOAD_METADATA_VALUE = "USER_UPLOAD";
 
     private final DataManager dataManager;
+    private final ChatMessageAiInputMapper chatMessageAiInputMapper;
 
-    public JmixChatMemoryRepository(DataManager dataManager) {
+    public JmixChatMemoryRepository(DataManager dataManager,
+                                    ChatMessageAiInputMapper chatMessageAiInputMapper) {
         this.dataManager = dataManager;
+        this.chatMessageAiInputMapper = chatMessageAiInputMapper;
     }
 
     @Override
@@ -75,8 +65,7 @@ public class JmixChatMemoryRepository implements ChatMemoryRepository {
 
     @Override
     public List<Message> findByConversationId(@NonNull String conversationId) {
-
-        UUID uuid = parseConversationId(conversationId);
+        UUID uuid = conversationUuid(conversationId);
         return dataManager.load(AiConversation.class)
                 .id(uuid)
                 .optional()
@@ -84,14 +73,12 @@ public class JmixChatMemoryRepository implements ChatMemoryRepository {
                         .map(this::mapEntityToMessage)
                         .toList())
                 .orElse(Collections.emptyList());
-
     }
 
     @Override
     @Transactional
     public void saveAll(@NonNull String conversationId, List<Message> messages) {
-
-        UUID uuid = parseConversationId(conversationId);
+        UUID uuid = conversationUuid(conversationId);
         AiConversation conversation = findOrCreateConversation(uuid);
 
         SaveContext saveContext = new SaveContext();
@@ -110,19 +97,17 @@ public class JmixChatMemoryRepository implements ChatMemoryRepository {
 
         messages.stream()
                 .filter(message -> {
-                    UUID entityId = (UUID) message.getMetadata().get(ENTITY_ID_METADATA_KEY);
+                    UUID entityId = (UUID) message.getMetadata().get(ChatMessageAiInputMapper.ENTITY_ID_METADATA_KEY);
                     return entityId == null || !existingEntityIds.contains(entityId);
                 })
                 .map(newMessage -> mapMessageToEntity(newMessage, conversation))
                 .forEach(saveContext::saving);
     }
 
-
     @Override
     @Transactional
     public void deleteByConversationId(@NonNull String conversationId) {
-
-        UUID uuid = parseConversationId(conversationId);
+        UUID uuid = conversationUuid(conversationId);
         dataManager.load(AiConversation.class)
                 .id(uuid)
                 .optional()
@@ -134,7 +119,6 @@ public class JmixChatMemoryRepository implements ChatMemoryRepository {
                     saveContext.setDiscardSaved(true);
                     dataManager.save(saveContext);
                 });
-
     }
 
     private AiConversation findOrCreateConversation(UUID conversationId) {
@@ -149,19 +133,16 @@ public class JmixChatMemoryRepository implements ChatMemoryRepository {
         chatMessage.setConversation(conversation);
         chatMessage.setContent(message.getText());
         chatMessage.setType(mapMessageToType(message));
+
         return chatMessage;
     }
 
     private Message mapEntityToMessage(ChatMessage chatMessage) {
-        String content = chatMessage.getContent();
-        ChatMessageType type = chatMessage.getType();
-        return mapTypeToMessage(content, type, chatMessage.getId());
+        return chatMessageAiInputMapper.map(chatMessage);
     }
 
     private ChatMessageType mapMessageToType(Message message) {
         return switch (message) {
-            case UserMessage userMessage when isAttachmentMessage(userMessage) -> ChatMessageType.ATTACHMENT;
-            case UserMessage userMessage when isUserUploadMessage(userMessage) -> ChatMessageType.USER_UPLOAD;
             case UserMessage ignored -> ChatMessageType.USER;
             case AssistantMessage ignored -> ChatMessageType.ASSISTANT;
             case SystemMessage ignored -> ChatMessageType.SYSTEM;
@@ -169,40 +150,7 @@ public class JmixChatMemoryRepository implements ChatMemoryRepository {
         };
     }
 
-    private Message mapTypeToMessage(String content, ChatMessageType type, UUID entityId) {
-        if (type == null) {
-            return new SystemMessage(content != null ? content : "");
-        }
-
-        final Map<String, Object> metadata = switch (type) {
-            case ATTACHMENT -> Map.of(
-                    ENTITY_ID_METADATA_KEY, entityId,
-                    CRM_MESSAGE_TYPE_METADATA_KEY, ATTACHMENT_METADATA_VALUE
-            );
-            case USER_UPLOAD -> Map.of(
-                    ENTITY_ID_METADATA_KEY, entityId,
-                    CRM_MESSAGE_TYPE_METADATA_KEY, USER_UPLOAD_METADATA_VALUE
-            );
-            default -> Map.of(ENTITY_ID_METADATA_KEY, entityId);
-        };
-        return switch (type) {
-            case USER, USER_UPLOAD, ATTACHMENT -> UserMessage.builder().text(content).metadata(metadata).build();
-            case ASSISTANT, TOOL -> AssistantMessage.builder().content(content).properties(metadata).build();
-            case SYSTEM -> SystemMessage.builder().text(content).metadata(metadata).build();
-        };
-    }
-
-    private boolean isUserUploadMessage(UserMessage userMessage) {
-        Object rawMessageType = userMessage.getMetadata().get(CRM_MESSAGE_TYPE_METADATA_KEY);
-        return USER_UPLOAD_METADATA_VALUE.equals(rawMessageType);
-    }
-
-    private boolean isAttachmentMessage(UserMessage userMessage) {
-        Object rawMessageType = userMessage.getMetadata().get(CRM_MESSAGE_TYPE_METADATA_KEY);
-        return ATTACHMENT_METADATA_VALUE.equals(rawMessageType);
-    }
-
-    private UUID parseConversationId(String conversationId) {
+    private UUID conversationUuid(String conversationId) {
         try {
             return UUID.fromString(conversationId);
         } catch (IllegalArgumentException e) {
@@ -214,6 +162,9 @@ public class JmixChatMemoryRepository implements ChatMemoryRepository {
     private List<ChatMessage> loadChatMessages(UUID conversationId) {
         return dataManager.load(ChatMessage.class)
                 .condition(PropertyCondition.equal("conversation.id", conversationId))
+                .fetchPlan(fp -> fp.addFetchPlan(FetchPlan.BASE)
+                        .add("entityReferences", FetchPlan.BASE)
+                        .add("attachments", FetchPlan.BASE))
                 .sort(Sort.by(Sort.Order.asc("createdDate"), Sort.Order.asc("id")))
                 .list();
     }

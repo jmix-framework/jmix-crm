@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      title="msg://aiConversationDetailView.title">
+    <data>
+        <instance id="aiConversationDc"
+                  class="com.company.crm.ai.model.AiConversation">
+            <fetchPlan extends="_base">
+                <property name="messages" fetchPlan="_base">
+                    <property name="attachments" fetchPlan="_base"/>
+                    <property name="entityReferences" fetchPlan="_base"/>
+                </property>
+            </fetchPlan>
+            <loader id="aiConversationDl"/>
+        </instance>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+    </facets>
+    <layout>
+        <sidePanelLayout id="contextSidePanel"
+                         width="100%"
+                         height="100%"
+                         sidePanelPosition="RIGHT"
+                         sidePanelOverlay="true"
+                         sidePanelHorizontalSize="24rem"
+                         modal="false"
+                         closeOnOutsideClick="true"
+                         classNames="ai-conversation-context-side-panel">
+            <vbox id="timelineRoot"
+                  width="100%"
+                  height="100%"
+                  spacing="false"
+                  padding="false"
+                  classNames="ai-conversation-timeline-view">
+                <vbox id="timelineCanvas"
+                      width="100%"
+                      height="100%"
+                      spacing="true"
+                      padding="false"
+                      classNames="ai-timeline-canvas">
+                    <hbox id="conversationTitleLayout"
+                          width="100%"
+                          spacing="false"
+                          alignItems="CENTER"
+                          expand="titleWrapper"
+                          classNames="ai-conversation-title-layout">
+                        <hbox id="titleWrapper"
+                              spacing="false"
+                              alignItems="CENTER">
+                            <h3 id="conversationTitle"
+                                dataContainer="aiConversationDc"
+                                property="title"
+                                classNames="m-0"/>
+                            <button id="editConversationTitleBtn"
+                                    icon="PENCIL"
+                                    themeNames="tertiary-inline small icon"
+                                    classNames="ms-xs"
+                                    ariaLabel="msg://editConversationTitleAction"/>
+                        </hbox>
+                        <button id="attachmentsToggleBtn"
+                                icon="PAPERCLIP"
+                                themeNames="tertiary"
+                                classNames="ai-conversation-attachments-toggle"
+                                ariaLabel="msg://attachmentsToggleAction"/>
+                    </hbox>
+                    <vbox id="timelineContentLayout"
+                          width="100%"
+                          height="100%"
+                          spacing="true"
+                          padding="false"
+                          classNames="ai-timeline-content">
+                        <vbox id="composerContainer"
+                              width="100%"
+                              spacing="true"
+                              padding="false"
+                              classNames="ai-timeline-composer"/>
+                    </vbox>
+                </vbox>
+            </vbox>
+            <vbox id="contextSidePanelContent"
+                  width="100%"
+                  height="100%"
+                  spacing="false"
+                  padding="false"
+                  classNames="ai-conversation-context-side-panel-content"/>
+        </sidePanelLayout>
+    </layout>
+</view>

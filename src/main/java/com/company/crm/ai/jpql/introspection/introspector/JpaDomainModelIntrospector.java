@@ -7,12 +7,14 @@ import io.jmix.core.MessageTools;
 import io.jmix.core.MetadataTools;
 import io.jmix.core.metamodel.annotation.Comment;
 import io.jmix.core.metamodel.model.MetaClass;
+import io.jmix.core.metamodel.model.MetaProperty;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Introspects Jmix metadata and converts it to domain model DTOs.
@@ -64,12 +66,20 @@ public class JpaDomainModelIntrospector {
         return metaClass.getProperties().stream()
                 .filter(metadataTools::isJpa)
                 .collect(LinkedHashMap::new,
-                        (map, property) -> introspectors.stream()
-                                .filter(introspector -> introspector.supports(property))
-                                .findFirst()
-                                .map(introspector -> introspector.introspect(property))
+                        (map, property) -> introspectProperty(property)
                                 .ifPresent(propertyModel -> map.put(property.getName(), propertyModel)),
                         Map::putAll);
+    }
+
+    private Optional<AiPropertyDescriptor> introspectProperty(MetaProperty property) {
+        return findIntrospector(property)
+                .map(introspector -> introspector.introspect(property));
+    }
+
+    private Optional<MetaPropertyIntrospector> findIntrospector(MetaProperty property) {
+        return introspectors.stream()
+                .filter(introspector -> introspector.supports(property))
+                .findFirst();
     }
 
 }

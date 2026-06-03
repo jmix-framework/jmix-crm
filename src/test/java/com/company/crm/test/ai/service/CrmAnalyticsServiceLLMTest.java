@@ -2,6 +2,7 @@ package com.company.crm.test.ai.service;
 
 import com.company.crm.AbstractAiTest;
 import com.company.crm.ai.model.AiConversation;
+import com.company.crm.ai.service.AiConversationService;
 import com.company.crm.ai.service.CrmAnalyticsService;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.invoice.Invoice;
@@ -37,9 +38,12 @@ class CrmAnalyticsServiceLLMTest extends AbstractAiTest {
     private LLMJudgeBuilder llmJudgeBuilder;
     @Autowired
     private CrmAnalyticsService analyticsService;
+    @Autowired
+    private AiConversationService aiConversationService;
 
     private LLMJudge llmJudge;
     private String conversationId;
+    private AiConversation conversation;
 
     @BeforeEach
     void setUp() {
@@ -50,9 +54,9 @@ class CrmAnalyticsServiceLLMTest extends AbstractAiTest {
     private static final String DEFAULT_TITLE = "New AI Conversation";
 
     private void setupTestConversation() {
-        AiConversation conversation = dataManager.create(AiConversation.class);
-        conversation.setTitle(DEFAULT_TITLE);
-        dataManager.saveWithoutReload(conversation);
+        AiConversation newConversation = dataManager.create(AiConversation.class);
+        newConversation.setTitle(DEFAULT_TITLE);
+        conversation = dataManager.save(newConversation);
         conversationId = conversation.getId().toString();
         log.info("Created test conversation with ID: {}", conversationId);
     }
@@ -253,6 +257,9 @@ class CrmAnalyticsServiceLLMTest extends AbstractAiTest {
                     
                     1) total segment ORDER amount and
                     2) average ORDER amount per client.
+                    
+                    Important: "per client" means segment total ORDER amount divided by
+                    the number of clients in that segment. It does not mean average order value.
                     
                     In this demo dataset, use ORDER totals as profitability proxy (invoices may be missing).
                     
@@ -676,7 +683,9 @@ class CrmAnalyticsServiceLLMTest extends AbstractAiTest {
     }
 
     private String askBusinessQuestion(String question) {
-        return analyticsService.processBusinessQuestion(question, conversationId);
+        com.company.crm.ai.model.ChatMessage userMessage = aiConversationService.createUserMessage(
+                conversation, question, java.util.List.of(), java.util.List.of());
+        return analyticsService.processUserMessage(userMessage.getId());
     }
 
     private long totalClientCount() {

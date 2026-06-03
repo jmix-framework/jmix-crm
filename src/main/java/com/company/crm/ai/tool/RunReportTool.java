@@ -25,15 +25,22 @@ public class RunReportTool implements CrmAiTool {
     private static final Set<String> BLOCKED_TEMPLATE_CODES = Set.of("DOCX", "XLSX", "PDF");
 
     private final AiReportExecutionService executionService;
+    private final AiToolStatusPublisher toolStatusPublisher;
     private final Collection<String> allowedReportCodes;
 
     public static RunReportTool create(ApplicationContext applicationContext,
                                        Collection<String> allowedReportCodes) {
-        return new RunReportTool(applicationContext.getBean(AiReportExecutionService.class), allowedReportCodes);
+        return new RunReportTool(
+                applicationContext.getBean(AiReportExecutionService.class),
+                applicationContext.getBean(AiToolStatusPublisher.class),
+                allowedReportCodes);
     }
 
-    private RunReportTool(AiReportExecutionService executionService, Collection<String> allowedReportCodes) {
+    public RunReportTool(AiReportExecutionService executionService,
+                         AiToolStatusPublisher toolStatusPublisher,
+                         Collection<String> allowedReportCodes) {
         this.executionService = executionService;
+        this.toolStatusPublisher = toolStatusPublisher;
         this.allowedReportCodes = allowedReportCodes;
     }
 
@@ -92,18 +99,37 @@ public class RunReportTool implements CrmAiTool {
             @ToolParam(description = "Optional output type override, prefer text types like 'CSV' or 'HTML'; avoid binary types like 'XLSX'/'PDF' for AI analysis") String outputType,
             ToolContext toolContext
     ) {
+        String statusStart = "Running business report...";
         log.info("LLM Tool Call: runReport(reportCode='{}', templateCode='{}', outputType='{}')", reportCode, templateCode, outputType);
+        toolStatusPublisher.update(toolContext, statusStart);
         try {
             ReportExecutionResult formatValidationError = validateRequestedFormat(reportCode, templateCode, outputType);
             if (formatValidationError != null) {
+                publishCompletion(toolContext, statusStart, reportCode, formatValidationError);
                 return formatValidationError;
             }
 
-            UUID convUuid = resolveConversationId(toolContext);
-            return executionService.executeReport(reportCode, parameters, templateCode, outputType, allowedReportCodes, convUuid);
+            UUID assistantMessageId = resolveUuid(toolContext, "assistantMessageId");
+            ReportExecutionResult result = executionService.executeReport(reportCode, parameters, templateCode, outputType, allowedReportCodes, assistantMessageId);
+            publishCompletion(toolContext, statusStart, reportCode, result);
+            return result;
         } catch (Exception e) {
             log.error("Report Tool Error: {} - {}", reportCode, e.getMessage());
-            return ReportExecutionResult.failed(reportCode, ReportExecutionErrorCode.EXECUTION_ERROR, "Error executing report tool: " + e.getMessage());
+            ReportExecutionResult failed = ReportExecutionResult.failed(reportCode, ReportExecutionErrorCode.EXECUTION_ERROR, "Error executing report tool: " + e.getMessage());
+            publishCompletion(toolContext, statusStart, reportCode, failed);
+            return failed;
+        }
+    }
+
+    private void publishCompletion(ToolContext toolContext, String statusStart, String reportCode,
+                                   ReportExecutionResult result) {
+        String humanReportName = reportCode.replace("-report", "").replace("-", " ");
+        if (result.success()) {
+            String statusText = String.format("Successfully executed report '%s'", humanReportName);
+            toolStatusPublisher.complete(toolContext, statusStart, statusText);
+        } else {
+            String statusText = String.format("Failed to execute report '%s': %s", humanReportName, result.errorMessage());
+            toolStatusPublisher.complete(toolContext, statusStart, statusText);
         }
     }
 
@@ -133,26 +159,26 @@ public class RunReportTool implements CrmAiTool {
         return null;
     }
 
-    private UUID resolveConversationId(ToolContext toolContext) {
-        if (toolContext == null || !toolContext.getContext().containsKey("conversationId")) {
+    private UUID resolveUuid(ToolContext toolContext, String key) {
+        if (toolContext == null || !toolContext.getContext().containsKey(key)) {
             return null;
         }
 
-        Object conversationId = toolContext.getContext().get("conversationId");
-        if (conversationId instanceof UUID uuid) {
+        Object rawValue = toolContext.getContext().get(key);
+        if (rawValue instanceof UUID uuid) {
             return uuid;
         }
 
-        if (conversationId instanceof String conversationIdString) {
+        if (rawValue instanceof String uuidString) {
             try {
-                return UUID.fromString(conversationIdString);
+                return UUID.fromString(uuidString);
             } catch (IllegalArgumentException e) {
-                log.warn("Ignoring invalid conversationId in tool context: {}", conversationIdString);
+                log.warn("Ignoring invalid {} in tool context: {}", key, uuidString);
                 return null;
             }
         }
 
-        log.warn("Ignoring unsupported conversationId type in tool context: {}", conversationId.getClass().getName());
+        log.warn("Ignoring unsupported {} type in tool context: {}", key, rawValue.getClass().getName());
         return null;
     }
 }

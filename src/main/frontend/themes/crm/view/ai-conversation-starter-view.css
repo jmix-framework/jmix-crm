@@ -1,0 +1,194 @@
+/* Starter view shell and canvas
+   -----------------------------
+   This is the pre-conversation screen. It uses the same centered-canvas pattern
+   as the detail view, but with a narrower max-width and more top breathing room
+   because the composer is the primary first action. */
+.ai-conversation-starter-view {
+    box-sizing: border-box;
+    min-height: 0;
+    padding: 0 var(--lumo-space-m) var(--lumo-space-m);
+}
+
+.ai-conversation-starter-scroll {
+    box-sizing: border-box;
+    overflow-y: auto;
+}
+
+.ai-conversation-starter-canvas {
+    align-self: center;
+    box-sizing: border-box;
+    margin: 0 auto;
+    max-width: 56rem;
+    padding: 8rem 0 var(--lumo-space-l);
+    width: 100%;
+}
+
+/* Hero heading
+   ------------
+   Compact product-like intro above the composer. The icon uses the shared
+   "magic" theme tokens so it matches the assistant avatar in the timeline. */
+.ai-conversation-starter-heading {
+    padding: var(--lumo-space-l) 0 var(--lumo-space-m);
+    text-align: center;
+}
+
+.ai-conversation-starter-hero-icon {
+    align-items: center;
+    background-color: var(--jx-magic-soft, rgba(95, 56, 250, 0.12));
+    border-radius: var(--lumo-border-radius-l);
+    box-sizing: border-box;
+    display: inline-flex;
+    height: 3rem;
+    justify-content: center;
+    margin-bottom: var(--lumo-space-m);
+    width: 3rem;
+}
+
+.ai-conversation-starter-hero-icon-glyph {
+    color: var(--jx-magic, var(--lumo-primary-color));
+    height: 1.5rem;
+    width: 1.5rem;
+}
+
+.ai-conversation-starter-title {
+    font-size: var(--lumo-font-size-xxl);
+    font-weight: 600;
+    line-height: 1.2;
+    margin: 0;
+}
+
+.ai-conversation-starter-subtitle {
+    margin-top: var(--lumo-space-xs);
+}
+
+/* First-message composer
+   ----------------------
+   The fragment inside this wrapper is the same composer used by the detail
+   timeline. The wrapper adds the starter-specific bordered focus treatment. */
+.ai-conversation-starter-composer {
+    background: var(--lumo-base-color);
+    border: 1px solid var(--jx-magic, var(--lumo-primary-color));
+    border-radius: var(--lumo-border-radius-l);
+    box-shadow: 0 0 28px -6px rgba(95, 56, 250, 0.22);
+    box-sizing: border-box;
+    padding: var(--lumo-space-xs) var(--lumo-space-s);
+}
+
+.ai-conversation-starter-input-bar {
+    min-width: 0;
+    width: 100%;
+}
+
+.ai-conversation-starter-input-bar vaadin-message-input {
+    flex: 1 1 auto;
+    min-width: 0;
+    --vaadin-input-field-default-width: 0;
+}
+
+.ai-conversation-starter-pending-context {
+    box-sizing: border-box;
+    padding: var(--lumo-space-xs) 0;
+}
+
+/* Recent conversations and prompt suggestions
+   -------------------------------------------
+   The two sections share the same header treatment: uppercase label, flexible
+   rule, and optional action link on the right. */
+.ai-conversation-starter-section-header {
+    align-items: center;
+    gap: var(--lumo-space-m);
+    margin-top: var(--lumo-space-l);
+    min-height: 0;
+}
+
+.ai-conversation-starter-section-heading {
+    color: var(--lumo-tertiary-text-color);
+    flex: 0 0 auto;
+    font-size: var(--lumo-font-size-xs);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    line-height: 1;
+    margin: var(--lumo-space-l) 0 var(--lumo-space-s);
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.ai-conversation-starter-section-header .ai-conversation-starter-section-heading {
+    margin: 0;
+}
+
+/* Hair-line separator between the section heading and the right-aligned "Show all" link,
+   matching the mockup's "PICK UP WHERE YOU LEFT OFF ────── Show all →" rule. */
+.ai-conversation-starter-section-rule {
+    border-top: 1px solid var(--lumo-contrast-10pct);
+    flex: 1 1 auto;
+    height: 1px;
+}
+
+.ai-conversation-starter-conversation-card {
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.ai-conversation-starter-conversation-card-icon {
+    flex-shrink: 0;
+}
+
+.ai-conversation-starter-conversation-card-title {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ai-conversation-starter-suggestion-card {
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.ai-conversation-starter-suggestion-card-icon {
+    color: var(--lumo-primary-color);
+    flex-shrink: 0;
+}
+
+.ai-conversation-starter-suggestion-card-title {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ai-conversation-starter-suggestion-card-prompt {
+    display: -webkit-box;
+    line-height: 1.4;
+    max-height: 2.8em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
+/* Force 2 columns for recents and suggestions on the centered canvas.
+   Jmix grid-layout is a Web Component; the real grid lives in [part="items"] inside
+   the shadow DOM, so we target it via ::part(items). */
+.ai-conversation-starter-recent-grid::part(items),
+.ai-conversation-starter-suggestions-grid::part(items) {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+@media (max-width: 720px) {
+    .ai-conversation-starter-recent-grid::part(items),
+    .ai-conversation-starter-suggestions-grid::part(items) {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* Custom styles for starter view when opened inside a dialog */
+.opened-in-dialog .ai-conversation-starter-canvas {
+    padding-top: var(--lumo-space-l);
+}
+
+.opened-in-dialog .ai-conversation-starter-recent-grid::part(items),
+.opened-in-dialog .ai-conversation-starter-suggestions-grid::part(items) {
+    grid-template-columns: 1fr !important;
+}

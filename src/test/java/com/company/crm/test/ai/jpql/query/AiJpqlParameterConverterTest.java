@@ -2,10 +2,9 @@ package com.company.crm.test.ai.jpql.query;
 
 import com.company.crm.ai.jpql.query.AiJpqlParameterConverter;
 import com.company.crm.ai.jpql.query.JpqlParameters;
-import com.company.crm.app.annotation.TestProfile;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.convert.ApplicationConversionService;
 import org.springframework.core.convert.ConversionService;
 
 import java.time.LocalDate;
@@ -16,16 +15,18 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Integration tests for {@link AiJpqlParameterConverter} that verify parameter conversion functionality.
+ * Unit tests for {@link AiJpqlParameterConverter} that verify parameter conversion functionality.
  * Tests focus on the converter's ability to handle basic parameter types and transformations
  * required for AI-assisted JPQL query processing.
  */
-@SpringBootTest
-@TestProfile
 class AiJpqlParameterConverterTest {
 
-    @Autowired
     private ConversionService conversionService;
+
+    @BeforeEach
+    void setUp() {
+        conversionService = new ApplicationConversionService();
+    }
 
     @Test
     void testBooleanStringConversion() {

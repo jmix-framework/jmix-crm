@@ -4,10 +4,18 @@ import com.company.crm.ai.jpql.introspection.model.AiPropertyDescriptor;
 import io.jmix.core.MessageTools;
 import io.jmix.core.MetadataTools;
 import io.jmix.core.metamodel.annotation.Comment;
+import io.jmix.core.metamodel.annotation.Composition;
 import io.jmix.core.metamodel.model.MetaProperty;
 import io.jmix.core.metamodel.model.Range;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
+
+import java.util.stream.Stream;
 
 /**
  * Introspects ASSOCIATION and COMPOSITION MetaProperties into AiProperty objects.
@@ -34,32 +42,28 @@ public class RelationPropertyIntrospector implements MetaPropertyIntrospector {
             return null;
         }
 
-        Range range = property.getRange();
-        Range.Cardinality cardinality = range.getCardinality();
-
-        String javaType = range.asClass().getName();
-        String type = cardinality.name();
-        String target = range.asClass().getName();
-        Boolean optional = isOptionalRelation(property) ? null : false;
-        String mappedBy = getMappedByValue(property);
-        String comment = metadataTools.getMetaAnnotationValue(property, Comment.class);
-
-        String caption = messageTools.getPropertyCaption(property.getDomain(), property.getName());
-        return AiPropertyDescriptor.relationProperty(caption, comment, type, javaType, target, optional, mappedBy);
+        return AiPropertyDescriptor.relationProperty(
+                getPropertyCaption(property, messageTools),
+                metadataTools.getMetaAnnotationValue(property, Comment.class),
+                property.getRange().getCardinality().name(),
+                property.getRange().asClass().getName(),
+                property.getRange().asClass().getName(),
+                isOptionalRelation(property) ? null : false,
+                getMappedByValue(property)
+        );
     }
-
 
     private boolean isOptionalRelation(MetaProperty property) {
         if (property.isMandatory()) {
             return false;
         }
 
-        jakarta.persistence.ManyToOne manyToOne = property.getAnnotatedElement().getAnnotation(jakarta.persistence.ManyToOne.class);
+        ManyToOne manyToOne = property.getAnnotatedElement().getAnnotation(ManyToOne.class);
         if (manyToOne != null) {
             return manyToOne.optional();
         }
 
-        jakarta.persistence.OneToOne oneToOne = property.getAnnotatedElement().getAnnotation(jakarta.persistence.OneToOne.class);
+        OneToOne oneToOne = property.getAnnotatedElement().getAnnotation(OneToOne.class);
         if (oneToOne != null) {
             return oneToOne.optional();
         }
@@ -68,26 +72,34 @@ public class RelationPropertyIntrospector implements MetaPropertyIntrospector {
     }
 
     private String getMappedByValue(MetaProperty property) {
-        jakarta.persistence.OneToMany oneToMany = property.getAnnotatedElement().getAnnotation(jakarta.persistence.OneToMany.class);
-        if (oneToMany != null && !oneToMany.mappedBy().isBlank()) {
-            return oneToMany.mappedBy();
-        }
+        return Stream.of(
+                        mappedByFromOneToMany(property),
+                        mappedByFromOneToOne(property),
+                        mappedByFromManyToMany(property),
+                        mappedByFromComposition(property)
+                )
+                .filter(StringUtils::hasText)
+                .findFirst()
+                .orElse(null);
+    }
 
-        jakarta.persistence.OneToOne oneToOne = property.getAnnotatedElement().getAnnotation(jakarta.persistence.OneToOne.class);
-        if (oneToOne != null && !oneToOne.mappedBy().isBlank()) {
-            return oneToOne.mappedBy();
-        }
+    private String mappedByFromOneToMany(MetaProperty property) {
+        OneToMany ann = property.getAnnotatedElement().getAnnotation(OneToMany.class);
+        return ann != null && StringUtils.hasText(ann.mappedBy()) ? ann.mappedBy() : null;
+    }
 
-        jakarta.persistence.ManyToMany manyToMany = property.getAnnotatedElement().getAnnotation(jakarta.persistence.ManyToMany.class);
-        if (manyToMany != null && !manyToMany.mappedBy().isBlank()) {
-            return manyToMany.mappedBy();
-        }
+    private String mappedByFromOneToOne(MetaProperty property) {
+        OneToOne ann = property.getAnnotatedElement().getAnnotation(OneToOne.class);
+        return ann != null && StringUtils.hasText(ann.mappedBy()) ? ann.mappedBy() : null;
+    }
 
-        io.jmix.core.metamodel.annotation.Composition composition = property.getAnnotatedElement().getAnnotation(io.jmix.core.metamodel.annotation.Composition.class);
-        if (composition != null && !composition.inverse().isBlank()) {
-            return composition.inverse();
-        }
+    private String mappedByFromManyToMany(MetaProperty property) {
+        ManyToMany ann = property.getAnnotatedElement().getAnnotation(ManyToMany.class);
+        return ann != null && StringUtils.hasText(ann.mappedBy()) ? ann.mappedBy() : null;
+    }
 
-        return null;
+    private String mappedByFromComposition(MetaProperty property) {
+        Composition ann = property.getAnnotatedElement().getAnnotation(Composition.class);
+        return ann != null && StringUtils.hasText(ann.inverse()) ? ann.inverse() : null;
     }
 }

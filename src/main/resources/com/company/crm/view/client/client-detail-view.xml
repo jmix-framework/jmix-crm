@@ -58,6 +58,7 @@
         <action id="saveCloseAction" type="detail_saveClose" text="msg:///actions.Save"/>
         <action id="closeAction" type="detail_close" text="msg:///actions.Close" icon="vaadin:close"/>
         <action id="downloadProfile" text="msg://downloadProfile" icon="vaadin:download-alt"/>
+        <action id="chatAboutThis" text="msg://chatAboutThis" icon="crm:sparkles"/>
     </actions>
     <layout>
         <hbox padding="true" width="100%" justifyContent="BETWEEN" alignItems="CENTER">
@@ -66,6 +67,7 @@
                 <button id="saveAndCloseButton" action="saveCloseAction"/>
                 <button id="closeButton" action="closeAction"/>
                 <button id="downloadProfileButton" action="downloadProfile" themeNames="contrast"/>
+                <button id="chatAboutThisButton" action="chatAboutThis" themeNames="contrast"/>
             </hbox>
         </hbox>
         <scroller width="100%" height="100%">

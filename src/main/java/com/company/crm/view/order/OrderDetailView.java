@@ -1,5 +1,6 @@
 package com.company.crm.view.order;
 
+import com.company.crm.ai.view.context.AiChatAboutThisSupport;
 import com.company.crm.app.service.datetime.DateTimeService;
 import com.company.crm.app.ui.component.OrderStatusPipeline;
 import com.company.crm.app.util.constant.CrmConstants;
@@ -96,6 +97,8 @@ public class OrderDetailView extends StandardDetailView<Order> {
     private DateTimeService dateTimeService;
     @Autowired
     private DatatypeFormatter datatypeFormatter;
+    @Autowired
+    private AiChatAboutThisSupport aiChatAboutThisSupport;
 
     @ViewComponent
     private MessageBundle messageBundle;
@@ -219,9 +222,13 @@ public class OrderDetailView extends StandardDetailView<Order> {
     @Subscribe("downloadAction")
     @SuppressWarnings({"rawtypes", "unchecked"})
     private void onDownloadAction(final ActionPerformedEvent event) {
-        // TODO: download custom design-time report
         Grid itemsGrid = orderItemsGrid;
         excelExporter.exportDataGrid(downloader, itemsGrid, ExportMode.CURRENT_PAGE);
+    }
+
+    @Subscribe("chatAboutThis")
+    private void onChatAboutThis(final ActionPerformedEvent event) {
+        aiChatAboutThisSupport.openChatAbout(getEditedEntity());
     }
 
     @Subscribe("cloneAction")

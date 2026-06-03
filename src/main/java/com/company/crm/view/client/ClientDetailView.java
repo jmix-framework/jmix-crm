@@ -1,5 +1,6 @@
 package com.company.crm.view.client;
 
+import com.company.crm.ai.view.context.AiChatAboutThisSupport;
 import com.company.crm.app.feature.queryparameters.tab.TabIndexUrlQueryParameterBinder;
 import com.company.crm.app.service.client.ClientService;
 import com.company.crm.app.service.client.CompletedOrdersByDateRangeInfo;
@@ -63,6 +64,7 @@ import io.jmix.flowui.component.formlayout.JmixFormLayout;
 import io.jmix.flowui.component.tabsheet.JmixTabSheet;
 import io.jmix.flowui.component.textarea.JmixTextArea;
 import io.jmix.flowui.data.EntityValueSource;
+import io.jmix.flowui.kit.action.ActionPerformedEvent;
 import io.jmix.flowui.kit.component.button.JmixButton;
 import io.jmix.flowui.model.DataContext;
 import io.jmix.flowui.model.InstancePropertyContainer;
@@ -129,6 +131,8 @@ public class ClientDetailView extends StandardDetailView<Client> {
     private UiReportRunner uiReportRunner;
     @Autowired
     private DatatypeFormatter datatypeFormatter;
+    @Autowired
+    private AiChatAboutThisSupport aiChatAboutThisSupport;
 
     @ViewComponent
     private JmixTabSheet tabSheet;
@@ -198,6 +202,11 @@ public class ClientDetailView extends StandardDetailView<Client> {
                 .addParam("fromDate", fromDate)
                 .addParam("toDate", toDate)
                 .runAndShow();
+    }
+
+    @Subscribe("chatAboutThis")
+    private void onChatAboutThis(final ActionPerformedEvent event) {
+        aiChatAboutThisSupport.openChatAbout(getEditedEntity());
     }
 
     @Install(to = "clientDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")

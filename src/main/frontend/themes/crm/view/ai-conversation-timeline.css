@@ -1,0 +1,331 @@
+/* Timeline list and message rows
+   ------------------------------
+   Vaadin's virtual list exposes its inner scroller through ::part(items).
+   Row-level classes below keep message rendering independent from the list
+   implementation details. */
+.ai-conversation-timeline-list {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+}
+
+.ai-conversation-timeline-list::part(items) {
+    box-sizing: border-box;
+    padding: var(--lumo-space-s) var(--lumo-space-m) var(--lumo-space-l) var(--lumo-space-m);
+}
+
+.ai-timeline-message-row {
+    box-sizing: border-box;
+    padding: var(--lumo-space-s) 0;
+    width: 100%;
+}
+
+/* Marks the assistant reply that just finished streaming. Set by the Java
+   renderer for exactly one timeline item per submit; cleared on the next
+   submit. The row is freshly mounted by DataProvider.refreshItem(...) when the
+   thinking placeholder transitions to the resolved assistant reply, so the
+   animation triggers reliably on first paint.
+
+   The reveal effect is a soft-edged gradient mask whose cutoff scrolls from
+   top (0%) to bottom (112%) over the row, so the text appears top-down rather
+   than the whole block fading uniformly. The mask cutoff is driven by the
+   --ai-timeline-row-reveal custom property; @property registration is what
+   lets the browser interpolate the gradient stop percentages smoothly. */
+@property --ai-timeline-row-reveal {
+    syntax: "<percentage>";
+    inherits: false;
+    initial-value: 0%;
+}
+
+.ai-timeline-message-row-fresh {
+    --ai-timeline-row-reveal: 0%;
+    -webkit-mask-image: linear-gradient(180deg,
+        black 0%,
+        black calc(var(--ai-timeline-row-reveal) - 12%),
+        transparent var(--ai-timeline-row-reveal));
+    mask-image: linear-gradient(180deg,
+        black 0%,
+        black calc(var(--ai-timeline-row-reveal) - 12%),
+        transparent var(--ai-timeline-row-reveal));
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    animation: ai-timeline-message-row-fresh-reveal 900ms ease-out forwards;
+}
+
+@keyframes ai-timeline-message-row-fresh-reveal {
+    0% {
+        --ai-timeline-row-reveal: 0%;
+    }
+    100% {
+        --ai-timeline-row-reveal: 112%;
+    }
+}
+
+/* Message identity and text body */
+.ai-timeline-avatar {
+    flex: 0 0 auto;
+}
+
+.ai-timeline-avatar-assistant {
+    align-items: center;
+    background-color: var(--jx-magic-soft);
+    border-radius: 50%;
+    box-sizing: border-box;
+    display: inline-flex;
+    height: 1.875rem;
+    justify-content: center;
+    width: 1.875rem;
+}
+
+.ai-timeline-avatar-assistant vaadin-icon {
+    color: var(--jx-magic);
+    height: 1.125rem;
+    width: 1.125rem;
+}
+
+.ai-timeline-message-body {
+    min-width: 0;
+}
+
+.ai-timeline-message-header {
+    color: var(--lumo-secondary-text-color);
+    font-size: var(--lumo-font-size-xs);
+    margin-bottom: var(--lumo-space-xs);
+}
+
+.ai-timeline-message-actor {
+    color: var(--lumo-body-text-color);
+    font-weight: 700;
+}
+
+.ai-timeline-message-time {
+    color: var(--lumo-tertiary-text-color);
+}
+
+.ai-timeline-user-text {
+    display: block;
+    white-space: pre-wrap;
+    line-height: 1.45;
+}
+
+/* Markdown output
+   ---------------
+   Assistant messages can include tables, links, and headings. The rules here
+   constrain generated markdown so wide report tables scroll horizontally and
+   document-style headings do not overpower the chat timeline. */
+.ai-timeline-markdown {
+    box-sizing: border-box;
+    display: block;
+    line-height: 1.45;
+    max-width: 100%;
+    min-width: 0;
+    overflow: hidden;
+    width: 100%;
+}
+
+.ai-timeline-markdown table {
+    border-collapse: separate;
+    border-spacing: 0;
+    display: block;
+    font-size: var(--lumo-font-size-s);
+    margin: var(--lumo-space-m) 0;
+    max-width: 100%;
+    overflow-x: auto;
+    width: 100%;
+}
+
+.ai-timeline-markdown thead {
+    background: var(--lumo-contrast-5pct);
+}
+
+.ai-timeline-markdown th,
+.ai-timeline-markdown td {
+    border-bottom: 1px solid var(--lumo-contrast-10pct);
+    box-sizing: border-box;
+    padding: var(--lumo-space-xs) var(--lumo-space-s);
+    text-align: left;
+    vertical-align: top;
+    white-space: nowrap;
+}
+
+.ai-timeline-markdown th {
+    color: var(--lumo-header-text-color);
+    font-weight: 700;
+}
+
+.ai-timeline-markdown th[align="right"],
+.ai-timeline-markdown td[align="right"] {
+    text-align: right;
+}
+
+.ai-timeline-markdown th:last-child,
+.ai-timeline-markdown td:last-child {
+    min-width: 24rem;
+    white-space: normal;
+}
+
+.ai-timeline-markdown a {
+    white-space: nowrap;
+}
+
+.ai-timeline-markdown p:first-child {
+    margin-top: 0;
+}
+
+.ai-timeline-markdown p:last-child {
+    margin-bottom: 0;
+}
+
+/* Dial down the default heading sizes - the LLM uses h2/h3 generously and the
+   Lumo defaults are tuned for stand-alone document headings, which looks
+   oversized inside the chat bubble. */
+.ai-timeline-markdown h1 {
+    font-size: var(--lumo-font-size-l);
+}
+
+.ai-timeline-markdown h2 {
+    font-size: var(--lumo-font-size-l);
+}
+
+.ai-timeline-markdown h3 {
+    font-size: var(--lumo-font-size-m);
+}
+
+.ai-timeline-markdown h4 {
+    font-size: var(--lumo-font-size-s);
+}
+
+/* Inline context and attachments
+   ------------------------------
+   Context cards are shown under the user message that supplied them. Attachment
+   labels are intentionally single-line with ellipsis so filenames cannot widen
+   the message column. */
+.ai-timeline-message-row-context {
+    padding-bottom: var(--lumo-space-m);
+}
+
+.ai-timeline-pending-context {
+    box-sizing: border-box;
+}
+
+.ai-timeline-context-cards {
+    box-sizing: border-box;
+    margin-top: 0;
+    min-width: 0;
+    width: 100% !important;
+}
+
+.ai-timeline-context-cards::part(items) {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)) !important;
+    gap: var(--lumo-space-s) !important;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.ai-card-action-surface {
+    cursor: pointer;
+    min-width: 0;
+}
+
+.ai-timeline-context-card {
+    box-sizing: border-box;
+    min-width: 0;
+    max-width: 28rem;
+}
+
+.ai-timeline-pending-card {
+    max-width: 28rem;
+}
+
+.ai-timeline-attachment-icon {
+    flex: 0 0 auto;
+    color: var(--lumo-primary-color);
+}
+
+.ai-timeline-attachment-text {
+    min-width: 0;
+}
+
+.ai-timeline-attachment-title {
+    display: block;
+    overflow: hidden;
+    color: var(--lumo-body-text-color);
+    font-size: var(--lumo-font-size-s);
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ai-timeline-attachment-meta {
+    overflow: hidden;
+    color: var(--lumo-secondary-text-color);
+    font-size: var(--lumo-font-size-xs);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Thinking indicator
+   ------------------
+   Replaces the old ProgressBar with text shimmer plus a thin moving bar. Tool
+   status lines are appended under the shimmer as deterministic work completes. */
+.ai-timeline-thinking-text {
+    background: linear-gradient(90deg, var(--jx-magic) 0%, var(--lumo-secondary-text-color) 50%, var(--jx-magic) 100%);
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    display: inline-block;
+    font-size: var(--lumo-font-size-s);
+    font-weight: 500;
+    animation: ai-timeline-thinking-text-shimmer 2s linear infinite;
+}
+
+.ai-timeline-thinking-shimmer {
+    background-color: var(--lumo-contrast-10pct);
+    border-radius: var(--lumo-border-radius-s);
+    height: 2px;
+    margin-top: var(--lumo-space-xs);
+    overflow: hidden;
+    position: relative;
+    width: 12rem;
+    max-width: 100%;
+}
+
+.ai-timeline-thinking-shimmer::after {
+    background: linear-gradient(90deg, transparent 0%, var(--jx-magic) 50%, transparent 100%);
+    content: "";
+    height: 100%;
+    left: 0;
+    position: absolute;
+    top: 0;
+    width: 35%;
+    animation: ai-timeline-thinking-shimmer 1.2s linear infinite;
+}
+
+.ai-timeline-thinking-status-list {
+    gap: 0.125rem;
+    margin-top: var(--lumo-space-xs);
+}
+
+.ai-timeline-thinking-status-item {
+    color: var(--lumo-secondary-text-color);
+    font-size: var(--lumo-font-size-xs);
+    line-height: 1.3;
+}
+
+.ai-timeline-thinking-status-result {
+    opacity: 0.7;
+    font-style: italic;
+}
+
+@keyframes ai-timeline-thinking-text-shimmer {
+    0% { background-position: 100% 0; }
+    100% { background-position: -100% 0; }
+}
+
+@keyframes ai-timeline-thinking-shimmer {
+    0% { left: -35%; }
+    100% { left: 100%; }
+}

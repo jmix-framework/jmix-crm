@@ -20,7 +20,6 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.client.ResponseErrorHandler;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.reactive.function.client.WebClient;
-
 import java.util.List;
 
 @Configuration(proxyBeanMethods = false)

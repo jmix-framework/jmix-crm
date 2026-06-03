@@ -4,8 +4,8 @@
     <item view="HomeView" id="home" description="msg:///menu_config.home.description"
           title="msg:///menu_config.home.title" icon="vaadin:home"/>
 
-    <item view="AiConversation.list"
-          title="msg://com.company.crm.ai.view.aiconversation/aiConversationListView.title" icon="vaadin:magic"/>
+    <item view="AiConversation.start"
+          title="msg://com.company.crm.ai.view.conversation/aiConversationStarterView.menuTitle" icon="crm:sparkles"/>
 
     <separator/>
 
@@ -37,6 +37,8 @@
               title="msg://io.jmix.dynattrflowui.panel/category" icon="vaadin:table"/>
         <item view="appSettings.view" id="app_settings"
               title="msg://io.jmix.appsettingsflowui.view.appsettings/appSettingsEntityView.menu" icon="vaadin:wrench"/>
+        <item view="AiConversation.list" id="ai_conversations"
+              title="msg://com.company.crm.ai.view.conversation/aiConversationListView.title" icon="vaadin:comments"/>
         <menu id="reports" title="msg://io.jmix.reportsflowui/menu.reports.title" icon="vaadin:modal-list">
             <item view="report_Report.list" title="msg://io.jmix.reportsflowui/reportListView.menu"/>
             <item view="report_ReportGroup.list" title="msg://io.jmix.reportsflowui/reportGroupListView.menu"/>

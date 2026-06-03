@@ -77,8 +77,12 @@
             <column name="CLIENT_ID"/>
         </createIndex>
 
-        <createIndex indexName="IDX_AI_CONV_ATTACH_CONV" tableName="AI_CONVERSATION_ATTACHMENT">
-            <column name="CONVERSATION_ID"/>
+        <createIndex indexName="IDX_AI_CONV_ATTACH_MESSAGE" tableName="AI_CONVERSATION_ATTACHMENT">
+            <column name="MESSAGE_ID"/>
+        </createIndex>
+
+        <createIndex indexName="IDX_CHAT_MSG_ENTITY_REF_MESSAGE" tableName="CHAT_MESSAGE_ENTITY_REFERENCE">
+            <column name="MESSAGE_ID"/>
         </createIndex>
 
         <createIndex indexName="IDX_CHAT_MESSAGE" tableName="CHAT_MESSAGE">
@@ -189,9 +193,13 @@
                                  referencedColumnNames="ID"
                                  referencedTableName="USER_"/>
 
-        <addForeignKeyConstraint baseColumnNames="CONVERSATION_ID" baseTableName="AI_CONVERSATION_ATTACHMENT"
-                                 constraintName="FK_AI_CONVERSATION_ATTACHMENT_ON_CONVERSATION" onDelete="CASCADE"
-                                 referencedColumnNames="ID" referencedTableName="AI_CONVERSATION"/>
+        <addForeignKeyConstraint baseColumnNames="MESSAGE_ID" baseTableName="AI_CONVERSATION_ATTACHMENT"
+                                 constraintName="FK_AI_CONVERSATION_ATTACHMENT_ON_MESSAGE" onDelete="CASCADE"
+                                 referencedColumnNames="ID" referencedTableName="CHAT_MESSAGE"/>
+
+        <addForeignKeyConstraint baseColumnNames="MESSAGE_ID" baseTableName="CHAT_MESSAGE_ENTITY_REFERENCE"
+                                 constraintName="FK_CHAT_MESSAGE_ENTITY_REFERENCE_ON_MESSAGE" onDelete="CASCADE"
+                                 referencedColumnNames="ID" referencedTableName="CHAT_MESSAGE"/>
 
         <addForeignKeyConstraint baseColumnNames="CONVERSATION_ID" baseTableName="CHAT_MESSAGE"
                                  constraintName="FK_CHAT_MESSAGE_ON_CONVERSATION" onDelete="CASCADE"

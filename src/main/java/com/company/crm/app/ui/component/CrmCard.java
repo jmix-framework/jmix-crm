@@ -4,7 +4,6 @@ import com.company.crm.app.util.date.Period;
 import com.company.crm.app.util.date.range.LocalDateRange;
 import com.company.crm.app.util.ui.CrmUiUtils;
 import com.vaadin.flow.component.Component;
-import com.vaadin.flow.component.HasStyle;
 import com.vaadin.flow.component.HasText;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
@@ -32,6 +31,8 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.function.Function;
@@ -44,6 +45,14 @@ public class CrmCard extends JmixCard implements ApplicationContextAware {
     private static final DateTimeFormatter DATE_WITH_YEAR = DateTimeFormatter.ofPattern("dd MMM yyyy");
 
     private static final String PREVIOUS_RANGE_DELTA_COMPONENT_ID = "delta-value-component";
+    private static final String BACKGROUND_SUCCESS_CLASS = "crm-card-background-success";
+    private static final String BACKGROUND_ERROR_CLASS = "crm-card-background-error";
+    private static final String BACKGROUND_DEFAULT_CLASS = "crm-card-background-default";
+    private static final List<String> BACKGROUND_CLASSES = List.of(
+            BACKGROUND_SUCCESS_CLASS,
+            BACKGROUND_ERROR_CLASS,
+            BACKGROUND_DEFAULT_CLASS
+    );
 
     private Component title = new Span("");
     private boolean withoutBackground = false;
@@ -160,7 +169,7 @@ public class CrmCard extends JmixCard implements ApplicationContextAware {
 
     public CrmCard withoutBackground(boolean withoutBackground) {
         this.withoutBackground = withoutBackground;
-        getStyle().setBackground(null);
+        clearBackgroundClassNames();
         updateBackground();
         return this;
     }
@@ -224,8 +233,7 @@ public class CrmCard extends JmixCard implements ApplicationContextAware {
     }
 
     private void addDropdownItems(Messages messages, DropdownButton dropdownButton) {
-        Period[] periods = Period.values();
-        for (Period period : periods) {
+        Arrays.stream(Period.values()).forEach(period -> {
             String localizedMessage = messages.getMessage(period);
             DropdownButtonItem item = dropdownButton.addItem(period.name(), localizedMessage);
             item.addClickListener(e -> {
@@ -235,7 +243,7 @@ public class CrmCard extends JmixCard implements ApplicationContextAware {
                     dropdownButton.setText(localizedMessage);
                 }
             });
-        }
+        });
         dropdownButton.setText(messages.getMessage(Period.MONTH));
     }
 
@@ -256,6 +264,8 @@ public class CrmCard extends JmixCard implements ApplicationContextAware {
     }
 
     private void updateBackground() {
+        clearBackgroundClassNames();
+
         if (withoutBackground) {
             return;
         }
@@ -271,13 +281,13 @@ public class CrmCard extends JmixCard implements ApplicationContextAware {
         String spanThemeName = CrmUiUtils.BADGE_THEME_NAME;
         if (delta.startsWith("↑")) {
             spanThemeName += " " + CrmUiUtils.SUCCESS_BADGE;
-            setLinearGradient("var(--lumo-primary-color-10pct)");
+            addClassName(BACKGROUND_SUCCESS_CLASS);
         } else if (delta.startsWith("↓")) {
             spanThemeName += " " + CrmUiUtils.ERROR_BADGE;
-            setLinearGradient("var(--lumo-error-color-10pct)");
+            addClassName(BACKGROUND_ERROR_CLASS);
         } else {
             spanThemeName += " " + CrmUiUtils.DEFAULT_BADGE;
-            setLinearGradient("var(--lumo-contrast-10pct)");
+            addClassName(BACKGROUND_DEFAULT_CLASS);
         }
 
         if (deltaComponent instanceof Span span) {
@@ -285,12 +295,8 @@ public class CrmCard extends JmixCard implements ApplicationContextAware {
         }
     }
 
-    private void setLinearGradient(String color) {
-        setLinearGradient(this, 45, "var(--lumo-base-color)", color);
-    }
-
-    private static void setLinearGradient(HasStyle component, int deg, String color1, String color2) {
-        component.getStyle().set("background", "linear-gradient(%ddeg, %s, %s)".formatted(deg, color1, color2));
+    private void clearBackgroundClassNames() {
+        BACKGROUND_CLASSES.forEach(this::removeClassName);
     }
 
     @Override

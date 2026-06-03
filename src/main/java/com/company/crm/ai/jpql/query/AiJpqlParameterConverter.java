@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 /**
  * Smart converter for JPQL query parameters using Spring's ConversionService.
@@ -43,6 +44,7 @@ import java.util.UUID;
 public class AiJpqlParameterConverter {
 
     private static final Logger log = LoggerFactory.getLogger(AiJpqlParameterConverter.class);
+    private static final Pattern NUMERIC_PATTERN = Pattern.compile("^[+-]?\\d+(?:\\.\\d+)?$");
 
     private final ConversionService conversionService;
 
@@ -143,19 +145,7 @@ public class AiJpqlParameterConverter {
     }
 
     private boolean isLikelyNumeric(String s) {
-        if (s == null || s.isEmpty()) return false;
-        int dotCount = 0;
-        for (int i = 0; i < s.length(); i++) {
-            char c = s.charAt(i);
-            if (Character.isDigit(c)) continue;
-            if (c == '.' && dotCount == 0) {
-                dotCount++;
-                continue;
-            }
-            if (i == 0 && (c == '-' || c == '+')) continue;
-            return false;
-        }
-        return Character.isDigit(s.charAt(s.length() - 1)); // Must end with digit
+        return NUMERIC_PATTERN.matcher(s).matches();
     }
 
     /**

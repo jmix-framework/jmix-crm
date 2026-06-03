@@ -1,0 +1,60 @@
+/* Starter history side panel
+   --------------------------
+   Drawer content for the full conversation history. It is scrollable on its own
+   so opening the drawer does not move the starter canvas underneath. */
+.ai-conversation-starter-history-content {
+    background: var(--lumo-base-color);
+    box-sizing: border-box;
+    overflow-y: auto;
+}
+
+.ai-conversation-starter-history-header {
+    box-sizing: border-box;
+    padding: var(--lumo-space-m) var(--lumo-space-m) var(--lumo-space-s);
+}
+
+.ai-conversation-starter-history-count {
+    background-color: var(--lumo-contrast-10pct);
+    border-radius: var(--lumo-border-radius-s);
+    color: var(--lumo-secondary-text-color);
+    font-size: var(--lumo-font-size-xs);
+    font-weight: 600;
+    padding: 0.125rem var(--lumo-space-xs);
+}
+
+.ai-conversation-starter-history-header-spacer {
+    flex: 1 1 auto;
+}
+
+.ai-conversation-starter-history-search {
+    box-sizing: border-box;
+    padding: 0 var(--lumo-space-m) var(--lumo-space-s);
+}
+
+.ai-conversation-starter-history-list {
+    box-sizing: border-box;
+    padding: 0 var(--lumo-space-m) var(--lumo-space-m);
+}
+
+.ai-conversation-starter-history-group {
+    gap: var(--lumo-space-s);
+    margin-top: var(--lumo-space-m);
+}
+
+.ai-conversation-starter-history-group-header {
+    padding: 0 0 var(--lumo-space-xs);
+}
+
+.ai-conversation-starter-history-bucket {
+    letter-spacing: 0.04em;
+}
+
+.ai-conversation-starter-history-group-count {
+    margin-left: var(--lumo-space-s);
+}
+
+.ai-conversation-starter-history-empty {
+    display: block;
+    padding: var(--lumo-space-m) 0;
+    text-align: center;
+}

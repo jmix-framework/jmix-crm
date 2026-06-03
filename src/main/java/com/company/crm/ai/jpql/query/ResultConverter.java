@@ -3,6 +3,7 @@ package com.company.crm.ai.jpql.query;
 import io.jmix.core.EntitySerialization;
 import io.jmix.core.entity.KeyValueEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -34,20 +35,22 @@ public class ResultConverter {
      * Uses Jmix EntitySerialization to handle entities safely
      */
     public List<Map<String, Object>> convertToMapList(List<KeyValueEntity> results, String[] propertyNames) {
-        if (results == null || results.isEmpty()) {
+        if (CollectionUtils.isEmpty(results)) {
             return new ArrayList<>();
         }
 
-        List<Map<String, Object>> mapList = new ArrayList<>();
-        for (KeyValueEntity keyValueEntity : results) {
-            Map<String, Object> row = new LinkedHashMap<>();
-            for (String propertyName : propertyNames) {
-                Object value = keyValueEntity.getValue(propertyName);
-                row.put(propertyName, convertToSerializableValue(value));
-            }
-            mapList.add(row);
+        return results.stream()
+                .map(keyValueEntity -> convertRow(keyValueEntity, propertyNames))
+                .toList();
+    }
+
+    private Map<String, Object> convertRow(KeyValueEntity keyValueEntity, String[] propertyNames) {
+        Map<String, Object> row = new LinkedHashMap<>();
+        for (String propertyName : propertyNames) {
+            Object value = keyValueEntity.getValue(propertyName);
+            row.put(propertyName, convertToSerializableValue(value));
         }
-        return mapList;
+        return row;
     }
 
     /**

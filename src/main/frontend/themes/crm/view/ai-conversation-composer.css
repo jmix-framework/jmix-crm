@@ -1,0 +1,94 @@
+/* Composer and add-context controls
+   ---------------------------------
+   Shared by the detail view and the starter view through the composer fragment.
+   The input and upload controls must be allowed to shrink, because the fragment
+   also appears inside narrower inline chat containers. */
+.ai-timeline-composer {
+    border-top: 1px solid var(--lumo-contrast-10pct);
+    box-sizing: border-box;
+    flex: 0 0 auto;
+    min-height: 0;
+    padding-top: var(--lumo-space-m);
+    width: 100%;
+}
+
+.ai-timeline-prompt-suggestions {
+    box-sizing: border-box;
+    margin-top: var(--lumo-space-xs);
+    padding-bottom: var(--lumo-space-xs);
+}
+
+.ai-timeline-prompt-suggestions-heading {
+    color: var(--lumo-header-text-color);
+    font-size: var(--lumo-font-size-l);
+    font-weight: 700;
+    line-height: 1.25;
+    margin: var(--lumo-space-l) 0 0;
+}
+
+.ai-timeline-input-bar {
+    box-sizing: border-box;
+    min-width: 0;
+    width: 100%;
+}
+
+.ai-timeline-input-bar vaadin-message-input {
+    /* Let the message input shrink inside narrow containers so that the Send
+       button is never clipped. */
+    min-width: 0;
+    --vaadin-input-field-default-width: 0;
+}
+
+.ai-timeline-add-menu {
+    flex: 0 0 auto;
+}
+
+.ai-timeline-add-menu-item {
+    box-sizing: border-box;
+    color: var(--lumo-body-text-color);
+    min-width: 11rem;
+}
+
+.ai-timeline-add-menu-item-icon {
+    color: var(--lumo-secondary-text-color);
+    flex: 0 0 auto;
+    height: var(--lumo-icon-size-s);
+    width: var(--lumo-icon-size-s);
+}
+
+.ai-timeline-add-menu-item-label {
+    font-size: var(--lumo-font-size-s);
+    font-weight: 500;
+}
+
+vaadin-upload.ai-timeline-attachment-upload {
+    flex: 0 0 auto;
+    width: auto;
+}
+
+vaadin-upload.ai-timeline-menu-upload {
+    width: 100%;
+}
+
+vaadin-upload.ai-timeline-attachment-upload::part(drop-label),
+vaadin-upload.ai-timeline-menu-upload::part(drop-label) {
+    display: none;
+}
+
+vaadin-upload.ai-timeline-attachment-upload::part(file-list),
+vaadin-upload.ai-timeline-menu-upload::part(file-list) {
+    display: none;
+}
+
+/* Hide failed / rejected upload rows - error feedback comes via toast notifications instead. */
+vaadin-upload.ai-timeline-attachment-upload vaadin-upload-file[error],
+vaadin-upload.ai-timeline-menu-upload vaadin-upload-file[error],
+vaadin-upload.ai-timeline-attachment-upload vaadin-upload-file[errorMessage],
+vaadin-upload.ai-timeline-menu-upload vaadin-upload-file[errorMessage] {
+    display: none !important;
+}
+
+vaadin-upload.ai-timeline-attachment-upload::part(primary-buttons) {
+    margin: 0;
+    min-height: auto;
+}

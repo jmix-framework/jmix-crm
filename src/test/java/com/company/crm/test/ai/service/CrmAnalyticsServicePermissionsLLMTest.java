@@ -7,11 +7,10 @@ import com.company.crm.security.role.UiMinimalRole;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -127,6 +126,7 @@ class CrmAnalyticsServicePermissionsLLMTest extends AbstractAiTest {
                 chatClient.prompt()
                         .user(prompt)
                         .tools(jpqlExecutorTool, collectorTool)
+                        .toolContext(Map.of("testProbe", true))
                         .call()
                         .content();
 

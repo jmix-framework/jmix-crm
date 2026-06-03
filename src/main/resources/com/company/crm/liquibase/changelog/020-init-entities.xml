@@ -444,7 +444,7 @@
             <column name="ID" type="UUID">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="PK_AI_CONVERSATION_ATTACHMENT"/>
             </column>
-            <column name="CONVERSATION_ID" type="UUID">
+            <column name="MESSAGE_ID" type="UUID">
                 <constraints nullable="false"/>
             </column>
             <column name="FILE_" type="VARCHAR(1024)">
@@ -454,9 +454,23 @@
                 <constraints nullable="false"/>
             </column>
             <column name="TITLE" type="VARCHAR(255)"/>
-            <column name="TYPE_" type="VARCHAR(255)">
+            <column name="ORIGIN" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
+            <column name="CREATED_BY" type="VARCHAR(255)"/>
+            <column name="CREATED_DATE" type="timestamp with time zone"/>
+        </createTable>
+        <createTable tableName="CHAT_MESSAGE_ENTITY_REFERENCE">
+            <column name="ID" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_CHAT_MESSAGE_ENTITY_REFERENCE"/>
+            </column>
+            <column name="MESSAGE_ID" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ENTITY_REFERENCE" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="SORT_ORDER" type="INT"/>
             <column name="CREATED_BY" type="VARCHAR(255)"/>
             <column name="CREATED_DATE" type="timestamp with time zone"/>
         </createTable>

@@ -3,6 +3,7 @@ package com.company.crm.util;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasEnabled;
 import com.vaadin.flow.component.HasValue;
+import com.vaadin.flow.component.html.Span;
 import io.jmix.flowui.ViewNavigators;
 import io.jmix.flowui.kit.component.button.JmixButton;
 import io.jmix.flowui.testassist.UiTestUtils;
@@ -10,7 +11,10 @@ import io.jmix.flowui.view.StandardDetailView;
 import io.jmix.flowui.view.View;
 import org.springframework.boot.test.context.TestComponent;
 
+import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 @TestComponent
 public class ViewTestSupport {
@@ -139,5 +143,33 @@ public class ViewTestSupport {
         } else {
             component.getElement().executeJs("this.click()");
         }
+    }
+
+    public <T extends Component> Optional<T> findDescendant(Component root, Class<T> type) {
+        return descendants(root, type).findFirst();
+    }
+
+    public <T extends Component> Stream<T> descendants(Component root, Class<T> type) {
+        Stream<T> self = type.isInstance(root) ? Stream.of(type.cast(root)) : Stream.empty();
+        Stream<T> children = root.getChildren()
+                .flatMap(child -> descendants(child, type));
+        return Stream.concat(self, children);
+    }
+
+    public Optional<String> textByClassName(Component root, String className) {
+        return textsByClassName(root, className).stream().findFirst();
+    }
+
+    public List<String> textsByClassName(Component root, String className) {
+        return descendants(root, Span.class)
+                .filter(span -> span.getClassNames().contains(className))
+                .map(Span::getText)
+                .toList();
+    }
+
+    public <T extends Component> List<String> texts(Component root, Class<T> type) {
+        return descendants(root, type)
+                .map(component -> component.getElement().getText())
+                .toList();
     }
 }
