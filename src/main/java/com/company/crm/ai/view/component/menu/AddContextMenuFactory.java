@@ -34,7 +34,7 @@ public class AddContextMenuFactory {
         MenuBar menuBar = new MenuBar();
         menuBar.addThemeVariants(MenuBarVariant.LUMO_ICON);
         menuBar.addClassName("ai-timeline-add-menu");
-        menuBar.setOverlayClassName("ai-timeline-add-menu-overlay");
+        // menuBar.setOverlayClassName("ai-timeline-add-menu-overlay");
 
         Icon addIcon = VaadinIcon.PLUS.create();
         addIcon.setSize("var(--lumo-icon-size-s)");

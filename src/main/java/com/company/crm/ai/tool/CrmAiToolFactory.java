@@ -7,7 +7,7 @@ import com.company.crm.ai.report.introspection.AiReportModelDescriptorYamlExport
 import com.company.crm.ai.report.run.AiReportExecutionService;
 import io.jmix.core.MetadataTools;
 import io.jmix.flowui.view.ViewRegistry;
-import org.springframework.boot.autoconfigure.web.ServerProperties;
+import org.springframework.boot.web.server.autoconfigure.ServerProperties;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;

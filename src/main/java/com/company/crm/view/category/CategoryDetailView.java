@@ -5,8 +5,8 @@ import com.company.crm.model.catalog.category.Category;
 import com.company.crm.model.catalog.category.CategoryRepository;
 import com.company.crm.view.main.MainView;
 import com.vaadin.flow.router.Route;
-import io.jmix.core.FetchPlan;
 import io.jmix.core.SaveContext;
+import io.jmix.core.repository.JmixDataRepositoryContext;
 import io.jmix.flowui.view.EditedEntityContainer;
 import io.jmix.flowui.view.Install;
 import io.jmix.flowui.view.StandardDetailView;
@@ -29,8 +29,8 @@ public class CategoryDetailView extends StandardDetailView<Category> {
     private CategoryRepository categoryRepository;
 
     @Install(to = "categoryDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
-    private Optional<Category> loadDelegate(UUID id, FetchPlan fetchPlan) {
-        return categoryRepository.findById(id, fetchPlan);
+    private Optional<Category> loadDelegate(UUID id, JmixDataRepositoryContext context) {
+        return categoryRepository.findById(id, context.fetchPlan());
     }
 
     @Install(target = Target.DATA_CONTEXT)

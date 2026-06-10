@@ -8,10 +8,10 @@ import com.vaadin.flow.component.AbstractField;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.streams.DownloadHandler;
 import com.vaadin.flow.server.streams.DownloadResponse;
-import io.jmix.core.FetchPlan;
 import io.jmix.core.FileRef;
 import io.jmix.core.FileStorage;
 import io.jmix.core.SaveContext;
+import io.jmix.core.repository.JmixDataRepositoryContext;
 import io.jmix.flowui.component.image.JmixImage;
 import io.jmix.flowui.component.upload.FileStorageUploadField;
 import io.jmix.flowui.view.EditedEntityContainer;
@@ -59,8 +59,8 @@ public class CategoryItemDetailView extends StandardDetailView<CategoryItem> {
     }
 
     @Install(to = "categoryItemDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
-    private Optional<CategoryItem> loadDelegate(UUID id, FetchPlan fetchPlan) {
-        return itemRepository.findByIdWithDynamicAttributes(id, fetchPlan);
+    private Optional<CategoryItem> loadDelegate(UUID id, JmixDataRepositoryContext context) {
+        return itemRepository.findByIdWithDynamicAttributes(id, context.fetchPlan());
     }
 
     @Install(target = Target.DATA_CONTEXT)

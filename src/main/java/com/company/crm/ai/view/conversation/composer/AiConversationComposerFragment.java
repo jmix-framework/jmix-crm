@@ -1,10 +1,12 @@
 package com.company.crm.ai.view.conversation.composer;
 
-import com.company.crm.ai.view.component.card.AiConversationContextCardFactory;
-import com.company.crm.ai.view.component.menu.AddContextMenuFactory;
 import com.company.crm.ai.context.AiContextEntityRegistry;
 import com.company.crm.ai.model.AiConversationAttachment;
 import com.company.crm.ai.service.PendingAttachmentInput;
+import com.company.crm.ai.view.component.card.AiConversationContextCardFactory;
+import com.company.crm.ai.view.component.menu.AddContextMenuFactory;
+import com.company.crm.app.service.storage.CrmFileStorage;
+import com.company.crm.app.util.common.StreamUtils;
 import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.messages.MessageInput;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -12,23 +14,22 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.upload.FailedEvent;
 import com.vaadin.flow.component.upload.FileRejectedEvent;
 import com.vaadin.flow.component.upload.SucceededEvent;
-import io.jmix.core.IdSerialization;
-import io.jmix.core.Metadata;
-import io.jmix.flowui.Notifications;
-import io.jmix.flowui.component.upload.JmixUpload;
 import io.jmix.core.FileRef;
 import io.jmix.core.FileStorage;
 import io.jmix.core.FileStorageLocator;
-import io.jmix.flowui.upload.TemporaryStorage;
-import io.jmix.flowui.component.upload.receiver.MultiFileTemporaryStorageBuffer;
-import io.jmix.flowui.component.upload.receiver.FileTemporaryStorageBuffer;
-import io.jmix.flowui.component.upload.receiver.TemporaryStorageFileData;
-import io.jmix.flowui.DialogWindows;
 import io.jmix.core.Id;
-import com.company.crm.app.service.storage.CrmFileStorage;
+import io.jmix.core.IdSerialization;
+import io.jmix.core.Metadata;
+import io.jmix.flowui.DialogWindows;
+import io.jmix.flowui.Notifications;
+import io.jmix.flowui.component.upload.JmixUpload;
+import io.jmix.flowui.component.upload.receiver.FileTemporaryStorageBuffer;
+import io.jmix.flowui.component.upload.receiver.MultiFileTemporaryStorageBuffer;
+import io.jmix.flowui.component.upload.receiver.TemporaryStorageFileData;
 import io.jmix.flowui.fragment.Fragment;
 import io.jmix.flowui.fragment.FragmentDescriptor;
 import io.jmix.flowui.fragment.FragmentUtils;
+import io.jmix.flowui.upload.TemporaryStorage;
 import io.jmix.flowui.view.MessageBundle;
 import io.jmix.flowui.view.Subscribe;
 import io.jmix.flowui.view.ViewComponent;
@@ -36,7 +37,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
-import com.company.crm.app.util.common.StreamUtils;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -60,6 +60,7 @@ public class AiConversationComposerFragment extends Fragment<VerticalLayout> {
     private HorizontalLayout inputBar;
     @ViewComponent
     private VerticalLayout pendingContextLayout;
+    // FIXME: Jmix 3.0: JmixUpload is now generic — specify the type, e.g. JmixUpload<byte[]> or JmixUpload<FileRef>
     @ViewComponent
     private JmixUpload attachmentUpload;
     @ViewComponent

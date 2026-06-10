@@ -8,7 +8,6 @@ import com.company.crm.model.payment.Payment;
 import com.company.crm.model.payment.PaymentRepository;
 import com.company.crm.view.main.MainView;
 import com.vaadin.flow.router.Route;
-import io.jmix.core.FetchPlan;
 import io.jmix.core.SaveContext;
 import io.jmix.core.repository.JmixDataRepositoryContext;
 import io.jmix.flowui.DialogWindows;
@@ -61,8 +60,8 @@ public class PaymentDetailView extends StandardDetailView<Payment> {
     }
 
     @Install(to = "paymentDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
-    private Optional<Payment> loadDelegate(UUID id, FetchPlan fetchPlan) {
-        return paymentRepository.findById(id, fetchPlan);
+    private Optional<Payment> loadDelegate(UUID id, JmixDataRepositoryContext context) {
+        return paymentRepository.findById(id, context.fetchPlan());
     }
 
     @Install(target = Target.DATA_CONTEXT)

@@ -35,7 +35,7 @@
                 <button id="editButton" action="usersDataGrid.editAction"/>
                 <button id="removeButton" action="usersDataGrid.removeAction"/>
                 <button id="showRoleAssignmentsButton" action="usersDataGrid.showRoleAssignmentsAction"/>
-                <dropdownButton id="additionalButton" text="msg://additionalMenu" icon="COG">
+                <dropdownButton id="additionalButton" text="msg://additionalMenu" icon="COG" themeNames="contained">
                     <items>
                         <actionItem id="changePasswordItem" ref="usersDataGrid.changePasswordAction"/>
                         <actionItem id="resetPasswordItem" ref="usersDataGrid.resetPasswordAction"/>

@@ -5,8 +5,8 @@ import com.company.crm.model.contact.Contact;
 import com.company.crm.model.contact.ContactRepository;
 import com.company.crm.view.main.MainView;
 import com.vaadin.flow.router.Route;
-import io.jmix.core.FetchPlan;
 import io.jmix.core.SaveContext;
+import io.jmix.core.repository.JmixDataRepositoryContext;
 import io.jmix.flowui.component.combobox.EntityComboBox;
 import io.jmix.flowui.view.DialogMode;
 import io.jmix.flowui.view.EditedEntityContainer;
@@ -41,8 +41,8 @@ public class ContactDetailView extends StandardDetailView<Contact> {
     }
 
     @Install(to = "contactDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
-    private Optional<Contact> loadDelegate(UUID id, FetchPlan fetchPlan) {
-        return repository.findById(id, fetchPlan);
+    private Optional<Contact> loadDelegate(UUID id, JmixDataRepositoryContext context) {
+        return repository.findById(id, context.fetchPlan());
     }
 
     @Install(target = Target.DATA_CONTEXT)

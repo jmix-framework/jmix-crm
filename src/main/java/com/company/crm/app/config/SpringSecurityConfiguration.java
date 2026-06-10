@@ -8,8 +8,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 
 /**
- * This configuration complements standard security configurations that come from Jmix modules (security-flowui, oidc,
- * authserver).
+ * This configuration complements standard security configurations that come from Jmix modules (security-flowui, oidc, authserver).
  * <p>
  * You can configure custom API endpoints security by defining {@link SecurityFilterChain} beans in this class.
  * In most cases, custom SecurityFilterChain must be applied first, so the proper
@@ -39,12 +38,19 @@ public class SpringSecurityConfiguration {
     /// @see com.company.crm.app.listener.HealthCheckServiceInitListener
     @Bean
     @Order(JmixSecurityFilterChainOrder.CUSTOM)
-    SecurityFilterChain publicFilterChain(HttpSecurity http) throws Exception {
-        http.securityMatcher("/healthcheck")
-                .authorizeHttpRequests(authorize ->
-                        authorize.anyRequest().permitAll()
-                );
+    SecurityFilterChain healthCheckFilterChain(HttpSecurity http) {
+        return http
+                .securityMatcher("/healthcheck")
+                .authorizeHttpRequests(authorize -> authorize.anyRequest().permitAll())
+                .build();
+    }
 
-        return http.build();
+    @Bean
+    @Order(JmixSecurityFilterChainOrder.CUSTOM)
+    SecurityFilterChain iconsFilterChain(HttpSecurity http) {
+        return http
+                .securityMatcher("/icons/**", "/images/**")
+                .authorizeHttpRequests(authorize -> authorize.anyRequest().authenticated())
+                .build();
     }
 }

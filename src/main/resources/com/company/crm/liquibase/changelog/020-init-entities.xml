@@ -412,6 +412,8 @@
                              primaryKey="true"
                              primaryKeyName="PK_CRM_SETTINGS"/>
             </column>
+            <column name="TENANT_ID"
+                    type="VARCHAR(255)"/>
             <column name="CREATED_BY"
                     type="VARCHAR(255)"/>
             <column name="CREATED_DATE"

@@ -1,4 +1,3 @@
 {
-  "parent": "jmix-lumo",
-  "lumoImports":["typography","color","spacing","badge","utility"]
+  "parent": "jmix-lumo"
 }

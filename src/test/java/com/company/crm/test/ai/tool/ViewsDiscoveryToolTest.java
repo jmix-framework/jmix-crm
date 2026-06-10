@@ -4,7 +4,7 @@ import com.company.crm.AbstractTest;
 import com.company.crm.ai.tool.ViewsDiscoveryTool;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.web.ServerProperties;
+import org.springframework.boot.web.server.autoconfigure.ServerProperties;
 
 import java.util.List;
 

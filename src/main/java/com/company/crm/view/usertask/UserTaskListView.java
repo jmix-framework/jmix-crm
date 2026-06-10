@@ -211,7 +211,7 @@ public class UserTaskListView extends StandardListView<UserTask> {
             }
         });
         userTasksDataGrid.getActions().forEach(action -> {
-            if (action instanceof SecuredBaseAction secured) {
+            if (action instanceof SecuredBaseAction<?> secured) {
                 secured.addEnabledRule(() -> listLayout.isEnabled());
             }
         });
@@ -320,7 +320,7 @@ public class UserTaskListView extends StandardListView<UserTask> {
             editor.setValue(userTask.getIsCompleted());
             editor.addValueChangeListener(e -> {
                 userTask.setIsCompleted(e.getValue());
-                dataManager.save(userTask);
+                dataManager.saveWithoutReload(userTask);
                 reloadData();
             });
 
@@ -334,6 +334,9 @@ public class UserTaskListView extends StandardListView<UserTask> {
 
     @Install(to = "userTaskDl", target = Target.DATA_LOADER)
     private UserTask detailLoadDelegate(LoadContext<UserTask> context) {
+        if (context.getId() == null) {
+            return null;
+        }
         return userTaskRepository.getById(extractEntityId(context), context.getFetchPlan());
     }
 

@@ -107,13 +107,13 @@ public final class CrmUiUtils {
                 .withActions(
                         InputDialogAction.action("sendEmail")
                                 .withText(messages.getMessage("send"))
-                                .withIcon(VaadinIcon.MAILBOX)
+                                .withIcon(VaadinIcon.MAILBOX.create())
                                 .withVariant(ActionVariant.SUCCESS)
                                 .withHandler(CrmUiUtils::onSendEmail),
 
                         InputDialogAction.action("close")
                                 .withText(messages.getMessage("actions.Close"))
-                                .withIcon(VaadinIcon.CLOSE)
+                                .withIcon(VaadinIcon.CLOSE.create())
                                 .withHandler(CrmUiUtils::closeEmailDialog))
                 .build()
                 .open();

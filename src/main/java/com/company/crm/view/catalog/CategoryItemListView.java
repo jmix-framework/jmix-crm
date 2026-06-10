@@ -119,7 +119,7 @@ public class CategoryItemListView extends StandardListView<CategoryItem> {
     }
 
     @Subscribe("updateCatalogField")
-    public void onImportCatalogFieldFileUploadSucceeded(FileUploadSucceededEvent<FileUploadField> event) {
+    public void onImportCatalogFieldFileUploadSucceeded(FileUploadSucceededEvent<FileUploadField, byte[]> event) {
         byte[] content = updateCatalogField.getValue();
         if (content != null) {
             ByteArrayInputStream inputStream = new ByteArrayInputStream(content);

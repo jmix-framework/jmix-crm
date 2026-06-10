@@ -10,8 +10,8 @@ import com.company.crm.view.main.MainView;
 import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.router.Route;
 import io.jmix.core.EntityStates;
-import io.jmix.core.FetchPlan;
 import io.jmix.core.SaveContext;
+import io.jmix.core.repository.JmixDataRepositoryContext;
 import io.jmix.flowui.component.checkbox.Switch;
 import io.jmix.flowui.component.textfield.JmixBigDecimalField;
 import io.jmix.flowui.component.textfield.TypedTextField;
@@ -114,8 +114,8 @@ public class OrderItemDetailView extends StandardDetailView<OrderItem> {
     }
 
     @Install(to = "orderItemDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
-    private Optional<OrderItem> loadDelegate(UUID id, FetchPlan fetchPlan) {
-        return itemRepository.findById(id, fetchPlan);
+    private Optional<OrderItem> loadDelegate(UUID id, JmixDataRepositoryContext context) {
+        return itemRepository.findById(id, context.fetchPlan());
     }
 
     @Install(target = Target.DATA_CONTEXT)

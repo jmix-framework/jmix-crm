@@ -152,7 +152,7 @@ vaadin-menu-bar[jmix-role='jmix-user-menu']:not([theme~='substituted']) .user-me
     color: var(--lumo-body-text-color);
 }
 
-.jmix-list-menu a[highlight][class*='jmix-menu-item-link'] {
+.jmix-list-menu a[highlight][class*='jmix-menu-item'] {
     background-color: var(--lumo-primary-color);
     color: var(--lumo-primary-contrast-color);
     border-radius: 10px;
@@ -160,7 +160,7 @@ vaadin-menu-bar[jmix-role='jmix-user-menu']:not([theme~='substituted']) .user-me
 
 /* Selected CRM AI menu item — magic purple background to match the New Chat
    button. Text stays white via the contrast color inherited from the base rule. */
-.jmix-list-menu a[highlight].jmix-menu-item-link:has(vaadin-icon[icon="crm:sparkles"]) {
+.jmix-list-menu a[highlight].jmix-menu-item:has(vaadin-icon[icon="crm:sparkles"]) {
     background-color: var(--jx-magic);
 }
 
@@ -177,15 +177,15 @@ vaadin-menu-bar[jmix-role='jmix-user-menu']:not([theme~='substituted']) .user-me
     color: var(--lumo-primary-text-color);
 }
 
-.jmix-menu-item-link {
+.jmix-menu-item {
     padding: 0.75rem 0.25rem 0.75rem 0.75rem !important;
 }
 
-.jmix-menu-item-link span {
+.jmix-menu-item span {
     font-weight: 700 !important;
 }
 
-.jmix-menu-item-link:hover {
+.jmix-menu-item:hover {
     background-color: var(--lumo-primary-color-10pct);
     color: var(--lumo-primary-text-color);
     border-radius: 10px;
@@ -194,12 +194,12 @@ vaadin-menu-bar[jmix-role='jmix-user-menu']:not([theme~='substituted']) .user-me
 /* Hover over the CRM AI menu item (identified by the sparkles icon) uses the
    magic-purple palette to match the brand. Skipped when the item is already
    selected (blue highlight). */
-.jmix-list-menu a.jmix-menu-item-link:not([highlight]):has(vaadin-icon[icon="crm:sparkles"]):hover {
+.jmix-list-menu a.jmix-menu-item:not([highlight]):has(vaadin-icon[icon="crm:sparkles"]):hover {
     background-color: var(--jx-magic-soft);
     color: var(--jx-magic-dark);
 }
 
-.jmix-menu-item-link:focus {
+.jmix-menu-item:focus {
     background-color: var(--lumo-primary-color-50pct);
     color: var(--lumo-primary-contrast-color);
     border-radius: 10px;

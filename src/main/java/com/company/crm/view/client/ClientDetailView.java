@@ -48,11 +48,11 @@ import io.jmix.chartsflowui.kit.component.model.legend.Legend;
 import io.jmix.chartsflowui.kit.component.model.series.SeriesType;
 import io.jmix.chartsflowui.kit.data.chart.ListChartItems;
 import io.jmix.core.AccessManager;
-import io.jmix.core.FetchPlan;
 import io.jmix.core.Messages;
 import io.jmix.core.MetadataTools;
 import io.jmix.core.SaveContext;
 import io.jmix.core.metamodel.datatype.DatatypeFormatter;
+import io.jmix.core.repository.JmixDataRepositoryContext;
 import io.jmix.flowui.Fragments;
 import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.accesscontext.UiEntityAttributeContext;
@@ -210,8 +210,8 @@ public class ClientDetailView extends StandardDetailView<Client> {
     }
 
     @Install(to = "clientDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
-    private Optional<Client> loadDelegate(UUID id, FetchPlan fetchPlan) {
-        return clientRepository.findByIdWithDynamicAttributes(id, fetchPlan);
+    private Optional<Client> loadDelegate(UUID id, JmixDataRepositoryContext context) {
+        return clientRepository.findByIdWithDynamicAttributes(id, context.fetchPlan());
     }
 
     @Install(target = Target.DATA_CONTEXT)

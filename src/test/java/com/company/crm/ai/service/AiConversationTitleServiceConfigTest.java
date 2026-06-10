@@ -26,7 +26,7 @@ class AiConversationTitleServiceConfigTest {
         AiSmallModelProperties smallModelProperties = new AiSmallModelProperties();
         smallModelProperties.setModelId("gpt-test-small");
 
-        OpenAiChatOptions options = AiConversationTitleService.buildTitleOptions(smallModelProperties);
+        OpenAiChatOptions options = AiConversationTitleService.buildTitleOptions(smallModelProperties).build();
 
         assertThat(options.getModel()).isEqualTo("gpt-test-small");
         assertThat(options.getTemperature()).isEqualTo(0.0);
@@ -36,7 +36,7 @@ class AiConversationTitleServiceConfigTest {
 
     @Test
     void titleOptionsDoNotSetModelWhenUnset() {
-        OpenAiChatOptions options = AiConversationTitleService.buildTitleOptions(new AiSmallModelProperties());
+        OpenAiChatOptions options = AiConversationTitleService.buildTitleOptions(new AiSmallModelProperties()).build();
 
         assertThat(options.getModel()).isNull();
         assertThat(options.getTemperature()).isEqualTo(0.0);
