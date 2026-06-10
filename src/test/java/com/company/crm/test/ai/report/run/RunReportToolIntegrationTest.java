@@ -10,8 +10,6 @@ import com.company.crm.ai.report.run.ReportExecutionResult;
 import com.company.crm.ai.service.AiConversationService;
 import com.company.crm.ai.tool.RunReportTool;
 import com.company.crm.model.client.Client;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jmix.core.FetchPlan;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,6 +17,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.beans.factory.annotation.Autowired;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 import java.time.LocalDate;
 import java.util.List;

@@ -4,13 +4,14 @@ import com.company.crm.AbstractAiTest;
 import com.company.crm.ai.tool.JpqlExecutorTool;
 import com.company.crm.model.client.Client;
 import com.company.crm.security.role.UiMinimalRole;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
+import org.springframework.beans.factory.annotation.Autowired;
+import tools.jackson.databind.ObjectMapper;
+
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
