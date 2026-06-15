@@ -2,7 +2,7 @@ package com.company.crm.app.util.date.range;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 
 public record LocalDateRange(LocalDate startDate, LocalDate endDate) implements DateRange {
 
@@ -15,8 +15,9 @@ public record LocalDateRange(LocalDate startDate, LocalDate endDate) implements 
     }
 
     public OffsetDateTimeRange asOffsetDateTimeRange() {
-        var offsetStartDate = startDate.atStartOfDay().atOffset(ZoneOffset.UTC);
-        var offsetEndDate = endDate.atStartOfDay().atOffset(ZoneOffset.UTC);
+        var zoneId = ZoneId.systemDefault();
+        var offsetStartDate = startDate.atStartOfDay(zoneId).toOffsetDateTime();
+        var offsetEndDate = endDate.atStartOfDay(zoneId).toOffsetDateTime();
 
         if (startDate.equals(endDate)) {
             offsetEndDate = endOfDay(offsetEndDate);
