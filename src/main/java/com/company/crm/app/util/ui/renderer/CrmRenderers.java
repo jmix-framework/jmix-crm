@@ -34,6 +34,7 @@ import com.vaadin.flow.component.popover.Popover;
 import com.vaadin.flow.component.shared.Tooltip;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.Renderer;
+import com.vaadin.flow.function.ValueProvider;
 import com.vaadin.flow.spring.annotation.SpringComponent;
 import com.vaadin.flow.theme.lumo.LumoUtility.IconSize;
 import io.jmix.core.Messages;
@@ -41,14 +42,18 @@ import io.jmix.core.MetadataTools;
 import io.jmix.core.metamodel.datatype.DatatypeFormatter;
 import io.jmix.flowui.DialogWindows;
 import io.jmix.flowui.UiComponents;
+import io.jmix.flowui.ViewNavigators;
 import io.jmix.flowui.asynctask.UiAsyncTasks;
 import io.jmix.flowui.component.grid.DataGrid;
-import io.jmix.flowui.kit.component.button.JmixButton;
+import io.jmix.flowui.component.grid.renderer.DetailButtonRenderer;
+import io.jmix.flowui.view.OpenMode;
 import io.jmix.flowui.view.StandardDetailView;
 import io.jmix.flowui.view.StandardListView;
 import io.jmix.flowui.view.StandardOutcome;
 import io.jmix.flowui.view.View;
 import io.jmix.flowui.view.ViewControllerUtils;
+import io.jmix.flowui.view.builder.DetailWindowBuilder;
+import org.jspecify.annotations.Nullable;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -68,9 +73,12 @@ import static io.jmix.flowui.component.UiComponentUtils.getCurrentView;
 @SpringComponent
 public class CrmRenderers {
 
+    private static final String LINK_BUTTON_THEME = "tertiary-inline";
+
     private final Messages messages;
     private final UiAsyncTasks uiAsyncTasks;
     private final UiComponents uiComponents;
+    private final ViewNavigators viewNavigators;
     private final MetadataTools metadataTools;
     private final DialogWindows dialogWindows;
     private final DateTimeService dateTimeService;
@@ -78,7 +86,7 @@ public class CrmRenderers {
 
     public CrmRenderers(UiComponents uiComponents, DialogWindows dialogWindows, Messages messages,
                         DatatypeFormatter datatypeFormatter, DateTimeService dateTimeService,
-                        UiAsyncTasks uiAsyncTasks, MetadataTools metadataTools) {
+                        UiAsyncTasks uiAsyncTasks, MetadataTools metadataTools, ViewNavigators viewNavigators) {
         this.messages = messages;
         this.uiComponents = uiComponents;
         this.dialogWindows = dialogWindows;
@@ -86,6 +94,7 @@ public class CrmRenderers {
         this.dateTimeService = dateTimeService;
         this.uiAsyncTasks = uiAsyncTasks;
         this.metadataTools = metadataTools;
+        this.viewNavigators = viewNavigators;
     }
 
     public <T> Renderer<T> itemDetailsColumnRenderer(DataGrid<T> grid) {
@@ -175,33 +184,63 @@ public class CrmRenderers {
         });
     }
 
-    public <E extends UuidEntity, LINK extends UuidEntity> Renderer<E> entityLink(Function<E, LINK> linkGetter) {
-        return entityLink(linkGetter, metadataTools::getInstanceName);
+    public <E> Renderer<E> detailLink(DataGrid<E> grid) {
+        return detailLink(grid, metadataTools::getInstanceName, null);
     }
 
-    public <E extends UuidEntity, LINK extends UuidEntity> Renderer<E> entityLink(Function<E, LINK> linkGetter,
-                                                                                  Function<LINK, String> textProvider) {
-        return entityLink(linkGetter, textProvider, false);
+    public <E> Renderer<E> detailLink(DataGrid<E> grid, ValueProvider<E, String> textProvider,
+                                      @Nullable Class<? extends View<?>> detailViewClass) {
+        return new DetailButtonRenderer<>(uiComponents, viewNavigators, dialogWindows, grid, textProvider)
+                .withOpenMode(OpenMode.DIALOG)
+                .withViewClass(detailViewClass)
+                .withThemeNames(LINK_BUTTON_THEME);
     }
 
-    public <E extends UuidEntity, LINK extends UuidEntity> Renderer<E> entityLink(Function<E, LINK> linkGetter,
-                                                                                  Function<LINK, String> textProvider,
-                                                                                  boolean readOnly) {
-        return new ComponentRenderer<>(entity -> {
-            LINK link = linkGetter.apply(entity);
-            JmixButton button = entityLinkButton(link, textProvider, textProvider);
-            button.addClickListener(e -> {
-                //noinspection unchecked
-                dialogWindows.detail(getCurrentView(), ((Class<LINK>) link.getClass()))
-                        .editEntity(link)
-                        .withViewConfigurer(v -> {
-                            if (v instanceof StandardDetailView<?> detailView) {
-                                detailView.setReadOnly(readOnly);
-                            }
-                        }).open();
-            });
-            return button;
-        });
+    public <E, L extends UuidEntity> Renderer<E> entityLink(DataGrid<E> grid, Function<E, L> linkGetter) {
+        return entityLink(grid, linkGetter, metadataTools::getInstanceName);
+    }
+
+    public <E, L extends UuidEntity> Renderer<E> entityLink(DataGrid<E> grid, Function<E, L> linkGetter,
+                                                            Function<L, String> textProvider) {
+        return relatedDetailLink(grid, linkGetter, textProvider, null, false);
+    }
+
+    private <E, L extends UuidEntity> Renderer<E> relatedDetailLink(DataGrid<E> grid, Function<E, L> linkGetter,
+                                                                    Function<L, String> textProvider,
+                                                                    @Nullable Class<? extends View<?>> detailViewClass,
+                                                                    boolean readOnly) {
+        return new DetailButtonRenderer<>(uiComponents, viewNavigators, dialogWindows, grid,
+                item -> {
+                    L link = linkGetter.apply(item);
+                    return link != null ? textProvider.apply(link) : "";
+                })
+                .withThemeNames(LINK_BUTTON_THEME)
+                .withClickHandler(item -> {
+                    L link = linkGetter.apply(item);
+                    if (link != null) {
+                        openDetailDialog(link, detailViewClass, readOnly);
+                    }
+                });
+    }
+
+    public Renderer<Invoice> invoiceClientLink(DataGrid<Invoice> grid) {
+        return relatedDetailLink(grid, Invoice::getClient, Client::getName, ClientDetailView.class, false);
+    }
+
+    public Renderer<Order> orderClientLink(DataGrid<Order> grid) {
+        return relatedDetailLink(grid, Order::getClient, Client::getName, ClientDetailView.class, false);
+    }
+
+    public Renderer<Invoice> invoiceOrderLink(DataGrid<Invoice> grid) {
+        return relatedDetailLink(grid, Invoice::getOrder, metadataTools::getInstanceName, OrderDetailView.class, false);
+    }
+
+    public Renderer<Client> accountManagerLink(DataGrid<Client> grid) {
+        return relatedDetailLink(grid, Client::getAccountManager, User::getDisplayName, UserDetailView.class, true);
+    }
+
+    public Renderer<Client> clientNameLink(DataGrid<Client> grid) {
+        return detailLink(grid, Client::getName, ClientDetailView.class);
     }
 
     public <E extends UuidEntity> Renderer<E> uniqueNumber(Function<E, String> numberProvider) {
@@ -213,26 +252,6 @@ public class CrmRenderers {
             button.addClickListener(e -> copyToClipboard(numberProvider.apply(entity)));
             return button;
         });
-    }
-
-    public Renderer<Invoice> invoiceClientLink() {
-        return new ComponentRenderer<>(invoice -> clientLinkButton(invoice.getClient()));
-    }
-
-    public Renderer<Order> orderClientLink() {
-        return new ComponentRenderer<>(order -> clientLinkButton(order.getClient()));
-    }
-
-    public Renderer<Invoice> invoiceOrderLink() {
-        return new ComponentRenderer<>(invoice -> orderLinkButton(invoice.getOrder()));
-    }
-
-    public Renderer<Client> accountManagerLink() {
-        return new ComponentRenderer<>(this::accountManagerLinkButton);
-    }
-
-    public Renderer<Client> clientNameLink() {
-        return new ComponentRenderer<>(this::clientLinkButton);
     }
 
     public Renderer<Client> clientType() {
@@ -375,69 +394,36 @@ public class CrmRenderers {
         return badge;
     }
 
-    private JmixButton clientLinkButton(Client client) {
-        JmixButton button =
-                entityLinkButton(client, Client::getName, Client::getFullName);
-        button.addClickListener(event ->
-                openDetailDialog(client, Client.class, ClientDetailView.class));
-        return button;
-    }
-
-    private JmixButton orderLinkButton(Order order) {
-        JmixButton button =
-                entityLinkButton(order, metadataTools::getInstanceName, metadataTools::getInstanceName);
-        button.addClickListener(event ->
-                openDetailDialog(order, Order.class, OrderDetailView.class));
-        return button;
-    }
-
-    private JmixButton accountManagerLinkButton(Client client) {
-        JmixButton button =
-                entityLinkButton(client.getAccountManager(), User::getDisplayName, User::getFullName);
-        button.addClickListener(event ->
-                openDetailDialog(client.getAccountManager(), User.class, UserDetailView.class, true));
-        return button;
-    }
-
-    private <E extends UuidEntity> JmixButton entityLinkButton(E entity,
-                                                               Function<E, String> textProvider,
-                                                               Function<E, String> tooltipProvider) {
-        JmixButton button = uiComponents.create(JmixButton.class);
-        if (entity != null) {
-            button.setText(textProvider.apply(entity));
-            button.setTooltipText(tooltipProvider.apply(entity));
-        } else {
-            button.setText("");
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private <E extends UuidEntity> void openDetailDialog(E entity,
+                                                         @Nullable Class<? extends View<?>> detailViewClass,
+                                                         boolean readOnly) {
+        DetailWindowBuilder<E, View<?>> builder = dialogWindows.detail(getCurrentView(), (Class<E>) entity.getClass());
+        if (detailViewClass != null) {
+            builder = builder.withViewClass((Class) detailViewClass);
         }
-        button.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
-        return button;
-    }
-
-    private <E extends UuidEntity, V extends StandardDetailView<E>> void openDetailDialog(E entity,
-                                                                                          Class<E> entityClass,
-                                                                                          Class<V> detailClass) {
-        openDetailDialog(entity, entityClass, detailClass, false);
-    }
-
-    private <E extends UuidEntity, V extends StandardDetailView<E>> void openDetailDialog(E entity,
-                                                                                          Class<E> entityClass,
-                                                                                          Class<V> detailClass,
-                                                                                          boolean readOnly) {
-        dialogWindows.detail(getCurrentView(), entityClass)
-                .withViewClass(detailClass)
-                .editEntity(entity)
-                .withViewConfigurer(v -> v.setReadOnly(readOnly))
-                .withAfterCloseListener(e -> {
-                    if (e.closedWith(StandardOutcome.SAVE)) {
-                        try {
-                            // try to refresh data on the list view
-                            View<?> currentView = getCurrentView();
-                            if (currentView instanceof StandardListView<?> listView) {
-                                ViewControllerUtils.getViewData(listView).loadAll();
-                            }
-                        } catch (Throwable ignored) {}
+        builder.editEntity(entity)
+                .withViewConfigurer(view -> {
+                    if (view instanceof StandardDetailView<?> detailView) {
+                        detailView.setReadOnly(readOnly);
+                    }
+                })
+                .withAfterCloseListener(closeEvent -> {
+                    if (closeEvent.closedWith(StandardOutcome.SAVE)) {
+                        reloadCurrentListView();
                     }
                 })
                 .open();
+    }
+
+    private void reloadCurrentListView() {
+        try {
+            // try to refresh data on the list view
+            View<?> currentView = getCurrentView();
+            if (currentView instanceof StandardListView<?> listView) {
+                ViewControllerUtils.getViewData(listView).loadAll();
+            }
+        } catch (Throwable ignored) {
+        }
     }
 }

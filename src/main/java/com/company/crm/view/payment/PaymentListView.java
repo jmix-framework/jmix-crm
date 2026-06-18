@@ -122,17 +122,17 @@ public class PaymentListView extends StandardListView<Payment> {
 
     @Supply(to = "paymentsDataGrid.[order.client]", subject = "renderer")
     private Renderer<Payment> paymentsDataGridOrderClientRenderer() {
-        return crmRenderers.entityLink(p -> p.getOrder().getClient());
+        return crmRenderers.entityLink(paymentsDataGrid, p -> p.getOrder().getClient());
     }
 
     @Supply(to = "paymentsDataGrid.order", subject = "renderer")
     private Renderer<Payment> paymentsDataGridOrderRenderer() {
-        return crmRenderers.entityLink(Payment::getOrder);
+        return crmRenderers.entityLink(paymentsDataGrid, Payment::getOrder);
     }
 
     @Supply(to = "paymentsDataGrid.invoice", subject = "renderer")
     private Renderer<Payment> paymentsDataGridInvoiceRenderer() {
-        return crmRenderers.entityLink(Payment::getInvoice);
+        return crmRenderers.entityLink(paymentsDataGrid, Payment::getInvoice);
     }
 
     private void installGridDefaultSorting() {

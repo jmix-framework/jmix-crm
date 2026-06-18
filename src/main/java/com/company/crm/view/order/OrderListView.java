@@ -164,7 +164,7 @@ public class OrderListView extends StandardListView<Order> {
 
     @Supply(to = "ordersDataGrid.client", subject = "renderer")
     private Renderer<Order> ordersDataGridClientRenderer() {
-        return crmRenderers.orderClientLink();
+        return crmRenderers.orderClientLink(ordersDataGrid);
     }
 
     @Supply(to = "ordersDataGrid.status", subject = "renderer")
@@ -212,7 +212,7 @@ public class OrderListView extends StandardListView<Order> {
 
     private void configureGrid() {
         addColumnHeaderCurrencySuffix(ordersDataGrid, "total", "invoiced", "paid", "leftOver");
-        addRowSelectionInMultiSelectMode(ordersDataGrid, "number");
+        addRowSelectionInMultiSelectMode(ordersDataGrid, "itemDetails", "number");
         ordersDataGrid.setItemDetailsRenderer(crmRenderers.orderDetails());
         ordersDataGrid.setDetailsVisibleOnClick(false);
     }

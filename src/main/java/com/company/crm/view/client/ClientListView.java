@@ -208,12 +208,12 @@ public class ClientListView extends StandardListView<Client> {
 
     @Supply(to = "clientsDataGrid.accountManager", subject = "renderer")
     private Renderer<Client> clientsDataGridAccountManagerRenderer() {
-        return crmRenderers.accountManagerLink();
+        return crmRenderers.accountManagerLink(clientsDataGrid);
     }
 
     @Supply(to = "clientsDataGrid.name", subject = "renderer")
     private Renderer<Client> clientsDataGridNameRenderer() {
-        return crmRenderers.clientNameLink();
+        return crmRenderers.clientNameLink(clientsDataGrid);
     }
 
     @Supply(to = "clientsDataGrid.type", subject = "renderer")

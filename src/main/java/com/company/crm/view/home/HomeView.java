@@ -296,7 +296,7 @@ public class HomeView extends StandardView {
                 dialogWindows.detail(this, Invoice.class).editEntity(e.getItem()).open());
 
         var clientColumn = grid.addColumn("client", metadata.getClass(Invoice.class).getPropertyPath("client"));
-        clientColumn.setRenderer(crmRenderers.invoiceClientLink());
+        clientColumn.setRenderer(crmRenderers.invoiceClientLink(grid));
         clientColumn.setHeader(messages.getMessage(Client.class, "Client"));
         clientColumn.setFilterable(true);
         clientColumn.setSortable(true);

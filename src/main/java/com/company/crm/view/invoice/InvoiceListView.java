@@ -166,7 +166,7 @@ public class InvoiceListView extends StandardListView<Invoice> {
 
     @Supply(to = "invoicesDataGrid.[order.number]", subject = "renderer")
     private Renderer<Invoice> invoicesDataGridOrderNumberRenderer() {
-        return crmRenderers.invoiceOrderLink();
+        return crmRenderers.invoiceOrderLink(invoicesDataGrid);
     }
 
     @Supply(to = "invoicesDataGrid.number", subject = "renderer")
@@ -176,7 +176,7 @@ public class InvoiceListView extends StandardListView<Invoice> {
 
     @Supply(to = "invoicesDataGrid.client", subject = "renderer")
     private Renderer<Invoice> invoicesDataGridClientRenderer() {
-        return crmRenderers.invoiceClientLink();
+        return crmRenderers.invoiceClientLink(invoicesDataGrid);
     }
 
     @Install(to = "invoicesDataGrid.emailAction", subject = "enabledRule")
@@ -247,7 +247,7 @@ public class InvoiceListView extends StandardListView<Invoice> {
     }
 
     private void configureGrid() {
-        addRowSelectionInMultiSelectMode(invoicesDataGrid, "number");
+        addRowSelectionInMultiSelectMode(invoicesDataGrid, "itemDetails", "number");
         invoicesDataGrid.setItemDetailsRenderer(crmRenderers.invoiceDetails());
         invoicesDataGrid.setDetailsVisibleOnClick(false);
     }

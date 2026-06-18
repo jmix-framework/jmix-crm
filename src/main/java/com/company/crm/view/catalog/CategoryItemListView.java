@@ -39,7 +39,6 @@ import org.springframework.data.domain.Pageable;
 import java.io.ByteArrayInputStream;
 import java.util.Collection;
 import java.util.List;
-import java.util.function.Function;
 
 import static com.company.crm.app.util.ui.CrmUiUtils.addRowSelectionInMultiSelectMode;
 import static com.company.crm.app.util.ui.CrmUiUtils.setSearchHintPopover;
@@ -105,12 +104,12 @@ public class CategoryItemListView extends StandardListView<CategoryItem> {
 
     @Supply(to = "categoryItemsDataGrid.name", subject = "renderer")
     private Renderer<CategoryItem> categoryItemsDataGridNameRenderer() {
-        return crmRenderers.entityLink(Function.identity());
+        return crmRenderers.detailLink(categoryItemsDataGrid);
     }
 
     @Supply(to = "categoryItemsDataGrid.category", subject = "renderer")
     private Renderer<CategoryItem> categoryItemsDataGridCategoryRenderer() {
-        return crmRenderers.entityLink(CategoryItem::getCategory);
+        return crmRenderers.entityLink(categoryItemsDataGrid, CategoryItem::getCategory);
     }
 
     @Supply(to = "categoryItemsDataGrid.code", subject = "renderer")
