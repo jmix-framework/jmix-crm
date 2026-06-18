@@ -1,6 +1,6 @@
 plugins {
     id 'java'
-    id 'io.jmix' version '3.0.0-M5'
+    id 'io.jmix' version '3.0.0-RC1'
     id 'org.jetbrains.gradle.plugin.idea-ext' version '1.4.1'
 }
 
@@ -8,10 +8,10 @@ apply plugin: 'com.vaadin'
 apply plugin: 'org.springframework.boot'
 
 group = 'com.company'
-version = '0.0.1-SNAPSHOT'
+version = '1.0.0'
 
 jmix {
-    bomVersion = '3.0.999-SNAPSHOT'
+    bomVersion = '3.0.0-RC1'
 }
 
 vaadin {
@@ -99,7 +99,6 @@ dependencies {
     // For online mode
     implementation 'org.apache.commons:commons-dbcp2'
 
-
     //              --- [ TESTS ] ---
     testImplementation('org.springframework.boot:spring-boot-starter-test') {
         exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
@@ -131,7 +130,6 @@ tasks.register("testPreparing", Delete) {
 test {
     dependsOn(testPreparing)
     useJUnitPlatform()
-    maxHeapSize = "1536m"
 }
 
 idea {

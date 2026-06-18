@@ -60,9 +60,8 @@ public class AiConversationComposerFragment extends Fragment<VerticalLayout> {
     private HorizontalLayout inputBar;
     @ViewComponent
     private VerticalLayout pendingContextLayout;
-    // FIXME: Jmix 3.0: JmixUpload is now generic — specify the type, e.g. JmixUpload<byte[]> or JmixUpload<FileRef>
     @ViewComponent
-    private JmixUpload attachmentUpload;
+    private JmixUpload<?> attachmentUpload;
     @ViewComponent
     private MessageBundle messageBundle;
     @Autowired
