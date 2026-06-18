@@ -252,7 +252,6 @@ public class ClientListView extends StandardListView<Client> {
     private void initialize() {
         initializeStatsBlock();
         initializeFilterFields();
-        addDetachListener(e -> asyncTasksRegistry.cancelAll());
         configureGrid();
     }
 
@@ -318,7 +317,8 @@ public class ClientListView extends StandardListView<Client> {
         SupplierConfigurer<?> task = uiAsyncTasks.supplierConfigurer(() -> calculateOrdersTotalSum(clients))
                 .withExceptionHandler(e -> SkeletonStyler.remove(ordersTotalSumCard))
                 .withResultHandler(ordersTotalSum ->
-                        fillStatCard(messages.getMessage("ordersTotal"), ordersTotalSumCard, ordersTotalSum));
+                        fillStatCard(messages.getMessage("ordersTotal"), ordersTotalSumCard, ordersTotalSum))
+                .withOwner(this);
         asyncTasksRegistry.placeTask("ordersTotalSumTask", task);
     }
 
@@ -326,14 +326,16 @@ public class ClientListView extends StandardListView<Client> {
         SupplierConfigurer<BigDecimal> taskConfigurer = uiAsyncTasks.supplierConfigurer(() -> calculatePaymentsTotalSum(clients))
                 .withExceptionHandler(e -> SkeletonStyler.remove(paymentsTotalSumCard))
                 .withResultHandler(paymentsTotalSum ->
-                        fillStatCard(messages.getMessage("paymentsTotal"), paymentsTotalSumCard, paymentsTotalSum));
+                        fillStatCard(messages.getMessage("paymentsTotal"), paymentsTotalSumCard, paymentsTotalSum))
+                .withOwner(this);
         asyncTasksRegistry.placeTask("paymentsTotalSumTask", taskConfigurer);
     }
 
     private void scheduleAverageBillCalculating(Client... clients) {
         SupplierConfigurer<?> task = uiAsyncTasks.supplierConfigurer(() -> calculateAverageBill(clients))
                 .withExceptionHandler(e -> SkeletonStyler.remove(averageBillCard))
-                .withResultHandler(averageBill -> fillStatCard(messages.getMessage("averageBill"), averageBillCard, averageBill));
+                .withResultHandler(averageBill -> fillStatCard(messages.getMessage("averageBill"), averageBillCard, averageBill))
+                .withOwner(this);
         asyncTasksRegistry.placeTask("averageBillTask", task);
     }
 

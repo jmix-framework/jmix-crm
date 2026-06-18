@@ -8,7 +8,6 @@ import com.company.crm.app.service.datetime.DateTimeService;
 import com.company.crm.app.ui.component.CrmCard;
 import com.company.crm.app.ui.component.CrmLoader;
 import com.company.crm.app.ui.component.RecentActivitiesBlock;
-import com.company.crm.app.util.AsyncTasksRegistry;
 import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.app.util.date.range.LocalDateRange;
 import com.company.crm.app.util.ui.chart.ChartsUtils;
@@ -58,7 +57,6 @@ import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.accesscontext.UiEntityAttributeContext;
 import io.jmix.flowui.action.view.DetailSaveCloseAction;
 import io.jmix.flowui.asynctask.UiAsyncTasks;
-import io.jmix.flowui.asynctask.UiAsyncTasks.SupplierConfigurer;
 import io.jmix.flowui.component.combobox.EntityComboBox;
 import io.jmix.flowui.component.formlayout.JmixFormLayout;
 import io.jmix.flowui.component.tabsheet.JmixTabSheet;
@@ -163,7 +161,6 @@ public class ClientDetailView extends StandardDetailView<Client> {
 
     @SuppressWarnings("FieldCanBeLocal")
     private final int loadStatsForLastYearsAmount = 3;
-    private final AsyncTasksRegistry asyncTasksRegistry = AsyncTasksRegistry.newInstance();
     private final Map<Integer, List<CompletedOrdersByDateRangeInfo>> ordersInfoForLastYears = new HashMap<>();
 
     @Override
@@ -175,7 +172,6 @@ public class ClientDetailView extends StandardDetailView<Client> {
     @Subscribe
     private void onInit(final InitEvent event) {
         TabIndexUrlQueryParameterBinder.register(this, tabSheet);
-        addDetachListener(e -> asyncTasksRegistry.cancelAll());
     }
 
     @Subscribe
@@ -347,17 +343,19 @@ public class ClientDetailView extends StandardDetailView<Client> {
         Client client = getEditedEntity();
         outstandingBalanceValue.setText("...");
 
-        SupplierConfigurer<BigDecimal> taskConfigurer = uiAsyncTasks
+        uiAsyncTasks
                 .supplierConfigurer(() -> calculateOutstandingBalance(client))
                 .withExceptionHandler(e -> outstandingBalanceValue.setText("-"))
-                .withResultHandler(total -> outstandingBalanceValue.setText(PriceDataType.defaultFormat(total, datatypeFormatter)));
-        asyncTasksRegistry.placeTask("outstandingBalanceTask", taskConfigurer);
+                .withResultHandler(total -> outstandingBalanceValue.setText(PriceDataType.defaultFormat(total, datatypeFormatter)))
+                .withOwner(this)
+                .supplyAsync();
     }
 
     private void initializeAnalyticsBlock() {
-        asyncTasksRegistry.placeTask("loadOrdersInfoForLastYears",
-                uiAsyncTasks.runnableConfigurer(this::loadOrdersInfoForLastYears)
-                        .withResultHandler(this::initializeCharts));
+        uiAsyncTasks.runnableConfigurer(this::loadOrdersInfoForLastYears)
+                .withResultHandler(this::initializeCharts)
+                .withOwner(this)
+                .runAsync();
     }
 
     private void installCardLoader(CrmCard card) {
@@ -371,27 +369,30 @@ public class ClientDetailView extends StandardDetailView<Client> {
     }
 
     private void scheduleOrdersTotalSumCalculating(Client client) {
-        SupplierConfigurer<BigDecimal> taskConfigurer = uiAsyncTasks
+        uiAsyncTasks
                 .supplierConfigurer(() -> calculateOrdersTotalSum(client))
                 .withExceptionHandler(e -> SkeletonStyler.remove(ordersTotalSumCard))
-                .withResultHandler(total -> fillSummaryCard(messages.getMessage("ordersTotal"), ordersTotalSumCard, total));
-        asyncTasksRegistry.placeTask("ordersTotalSumTask", taskConfigurer);
+                .withResultHandler(total -> fillSummaryCard(messages.getMessage("ordersTotal"), ordersTotalSumCard, total))
+                .withOwner(this)
+                .supplyAsync();
     }
 
     private void schedulePaymentsTotalSumCalculating(Client client) {
-        SupplierConfigurer<BigDecimal> taskConfigurer = uiAsyncTasks
+        uiAsyncTasks
                 .supplierConfigurer(() -> calculatePaymentsTotalSum(client))
                 .withExceptionHandler(e -> SkeletonStyler.remove(paymentsTotalSumCard))
-                .withResultHandler(total -> fillSummaryCard(messages.getMessage("paymentsTotal"), paymentsTotalSumCard, total));
-        asyncTasksRegistry.placeTask("paymentsTotalSumTask", taskConfigurer);
+                .withResultHandler(total -> fillSummaryCard(messages.getMessage("paymentsTotal"), paymentsTotalSumCard, total))
+                .withOwner(this)
+                .supplyAsync();
     }
 
     private void scheduleAverageBillCalculating(Client client) {
-        SupplierConfigurer<BigDecimal> taskConfigurer = uiAsyncTasks
+        uiAsyncTasks
                 .supplierConfigurer(() -> calculateAverageBill(client))
                 .withExceptionHandler(e -> SkeletonStyler.remove(averageBillCard))
-                .withResultHandler(average -> fillSummaryCard(messages.getMessage("averageBill"), averageBillCard, average));
-        asyncTasksRegistry.placeTask("averageBillTask", taskConfigurer);
+                .withResultHandler(average -> fillSummaryCard(messages.getMessage("averageBill"), averageBillCard, average))
+                .withOwner(this)
+                .supplyAsync();
     }
 
     private BigDecimal calculateOrdersTotalSum(Client client) {
