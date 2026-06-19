@@ -1,68 +1,66 @@
-# ![CRM](../src/main/resources/META-INF/resources/images/logo.svg) B2B CRM
+# ![CRM](src/main/resources/META-INF/resources/images/logo.svg) B2B CRM
 
-Језици: [English](../README.md) | [Русский](README_ru.md) | [Deutsch](README_de.md) | [Italiano](README_it.md) | [Español](README_es.md) | [Tiếng Việt](README_vi.md) | [Српски](README_sr.md)
+Jezici: [English](README.md) | [Русский](README_ru.md) | [Deutsch](README_de.md) | [Italiano](README_it.md) | [Español](README_es.md) | [Srpski](README_srb.md) | [Tiếng Việt](README_vi.md)i.md)
 
-`B2B CRM` је демо апликација корпоративног нивоа изграђена помоћу Jmix-а која показује како развити пословне системе **спремне за продукцију**
-укључујући `клијенте`, `поруџбине`, `фактурисање`, `финансије` и `аналитику`. <br>Одражава реалне **ERP/CRM** сценарије и демонстрира
-најбоље праксе у моделовању домена, корисничком интерфејсу, безбедности и имплементацији пословне логике.
+`B2B CRM` je poslovna demonstraciona aplikacija razvijena pomoću Jmix platforme koja prikazuje kako se grade **produkcijski spremni** poslovni sistemi, uključujući `kupce`, `porudžbine`, `fakturisanje`, `finansije` i `analitiku`. <br>
+Aplikacija odražava stvarne **ERP/CRM** scenarije i demonstrira najbolje prakse u modeliranju domena, korisničkom interfejsu, bezbjednosti i implementaciji poslovne logike.
 
-## 📑 Садржај
+## 📑 Sadržaj
 
-- [Преглед](#-преглед)
-- [Технолошки стек](#-технолошки-стек)
-- [Коришћени додаци](#-додаци)
-- [Изградња и покретање](#-изградња-и-покретање)
-- [AI асистент](#-ai-асистент)
-- [Демо подаци](#-демо-подаци)
-- [Налози](#-налози-апликације)
-- [Модел домена](#-модел-домена)
-- [Модел улога](#-модел-улога)
+- [Pregled](#-pregled)
+- [Tehnički stek](#-tehnički-stek)
+- [Korišćeni dodaci](#-korišćeni-dodaci)
+- [Pokretanje aplikacije](#-pokretanje-aplikacije)
+- [AI asistent](#-ai-asistent)
+- [Demo podaci](#-demo-podaci)
+- [Nalozi](#-nalozi-aplikacije)
+- [Model domena](#-model-domena)
+- [Model uloga](#-model-uloga)
 
-## 📖 Преглед
+## 📖 Pregled
 
-Овај пројекат моделује типичан B2B продајни процес:
+Ovaj projekat modeluje tipičan B2B prodajni proces:
 
-- Управљање каталогом производа и категорија
-- Одржавање клијената и контаката
-- Праћење поруџбина и ставки поруџбина
-- Издавање фактура и евидентирање уплата
-- Постављање пословних питања AI асистенту
-- Праћење задатака и недавних активности
-- Преглед продајне аналитике
+- Upravljanje katalogom proizvoda i kategorija
+- Održavanje podataka o klijentima i kontaktima
+- Praćenje porudžbina i stavki porudžbina
+- Izdavanje faktura i evidentiranje uplata
+- Postavljanje poslovnih pitanja AI asistentu
+- Praćenje zadataka i nedavnih aktivnosti
+- Analiza prodajnih rezultata
 
-## 🛠️ Технолошки стек
+## 🛠️ Tehnički stek
 
 - Java 21
-- Jmix 2.8
-- Spring Boot 3
+- Jmix (Spring Boot + Vaadin)
 - HSQLDB
 
-## 🧩 Додаци
+## 🧩 Dodaci
 
 - Audit
-- Application settings
-- Charts
-- Data tools
-- Dynamic attributes
-- Grid export
-- Local file storage
-- Reports (укључује шаблон фактуре)
+- Podešavanja aplikacije
+- Grafikoni
+- Alati za podatke
+- Dinamički atributi
+- Izvoz tabela
+- Lokalno skladištenje datoteka
+- Izvještaji (uključuje šablon fakture)
 
-## 🚀 Изградња и покретање
+## 🚀 Pokretanje i izvršavanje aplikacije
 
-Предуслови: Java 21+
+Preduslovi: Java 21+
 
-### Покретање пројекта
+### Pokretanje projekta
 
-1. Покрените Jmix конфигурацију [B2B CRM](../.run/crm-app.run.xml) или извршите
+1. Pokrenite Jmix konfiguraciju za pokretanje [B2B CRM](.run/crm-app.run.xml) ili izvršite:
 
    ```bash
    ./gradlew bootRun
    ```
 
-2. [Отворите URL апликације](http://localhost:8080/b2b-crm)
+2. [Otvorite URL aplikacije](http://localhost:8080/b2b-crm)
 
-### Покретање преко JAR-а
+### Pokretanje putem JAR datoteke
 
 ```bash
 ./gradlew bootJar -Pvaadin.productionMode
@@ -72,7 +70,7 @@
 java -jar build/libs/crm.jar
 ```
 
-### Покретање преко Docker-а
+### Pokretanje putem Docker-a
 
 ```bash
 docker build -t jmix-crm .
@@ -82,50 +80,51 @@ docker build -t jmix-crm .
 docker run --rm -p 8080:8080 jmix-crm
 ```
 
-### Покретање преко Docker Compose-а
+### Pokretanje putem Docker Compose-a
 
 ```bash
 docker-compose up
 ```
 
-## 🤖 AI асистент
 
-Апликација укључује уграђени `CRM AI` радни простор за анализу CRM података у природном језику.
+## 🤖 AI Asistent
 
-Кључне могућности:
+Aplikacija uključuje ugrađeni radni prostor `CRM AI` za analizu CRM podataka korišćenjem prirodnog jezika.
 
-- Постављање пословних питања о клијентима, поруџбинама, фактурама, уплатама и продајном учинку
-- Поштовање дозвола приступа подацима тренутног корисника и одржавање разговора приватним за њиховог аутора
-- Коришћење уграђених пословних извештаја као што су `Client 360 Report` и `Category Cashflow Risk Allocation Report`
-- Чување историје разговора са аутоматски генерисаним насловима чета
-- Отпремање датотека у разговор и омогућавање асистенту да анализира подржане документе и слике
-- Генерисање интерактивних веза до CRM записа директно у одговорима
+Ključne mogućnosti:
 
-Подешавање:
+- Postavljanje poslovnih pitanja o klijentima, porudžbinama, fakturama, uplatama i rezultatima prodaje
+- Poštovanje prava pristupa podacima trenutnog korisnika i čuvanje privatnosti razgovora
+- Korišćenje ugrađenih poslovnih izvještaja kao što su `Client 360 Report` i `Category Cashflow Risk Allocation Report`
+- Čuvanje istorije razgovora sa automatski generisanim naslovima razgovora
+- Otpremanje datoteka u razgovor i analiza podržanih dokumenata i slika
+- Generisanje interaktivnih linkova ka CRM zapisima direktno u odgovorima
 
-- Поставите `spring.ai.openai.api-key` у [application.properties](src/main/resources/application.properties) или обезбедите променљиву окружења `SPRING_AI_OPENAI_APIKEY`
+Konfiguracija:
 
-Када је омогућено, отворите ставку `CRM AI` у главном менију да започнете нови разговор.
+- Postavite `spring.ai.openai.api-key` u datoteci [application.properties](src/main/resources/application.properties) ili obezbijedite promenljivu okruženja `SPRING_AI_OPENAI_APIKEY`
 
-## 🎲 Демо подаци
+Kada je funkcionalnost omogućena, otvorite stavku `CRM AI` u glavnom meniju da biste započeli novi razgovor.
 
-Локални профил генерише демо податке при покретању апликације:
+## 🎲 Demo podaci
 
-- Можете онемогућити генерисање демо података помоћу својства `crm.generateDemoData`
-  у [application.properties](../src/main/resources/application.properties)
-- Каталог се увози из [catalog.xlsx](../src/main/resources/demo-data/catalog.xlsx)
+Lokalni profil generiše demo podatke prilikom pokretanja aplikacije:
 
-## 👥 Налози апликације
+- Generisanje demo podataka možete onemogućiti pomoću svojstva `crm.generateDemoData`
+  u [datoteci application.properties](src/main/resources/application.properties)
+- Katalog se uvozi iz datoteke [catalog.xlsx](src/main/resources/demo-data/catalog.xlsx)
 
-| Положај         | Корисничко име | Лозинка | Приступ                                              |
-|-----------------|----------------|---------|------------------------------------------------------|
-| Administrator   | ```admin```    | admin   | Пун приступ свим подацима и подешавањима             |
-| Supervisor      | ```james```    | james   | Manager + управљање каталогом + додела налога        |
-| Manager         | ```manager```  | manager | Пун приступ свим клијентима и поруџбинама            |
-| Account Manager | ```alice```    | alice   | Види само клијенте додељене Alice Brown              |
-| Account Manager | ```robert```   | robert  | Види само клијенте додељене Robert Taylor            |
+## 👥 Korisnički nalozi aplikacije
 
-## ⚙️ Модел домена
+| Pozicija        | Korisničko ime     | Lozinka  | Pristup                                           |
+|-----------------|--------------------|----------|---------------------------------------------------|
+| Administrator   | ```admin```        | admin    | Potpun pristup svim podacima i podešavanjima      |
+| Supervisor      | ```james```        | james    | Menadžer + upravljanje katalogom + dodjela naloga |
+| Manager         | ```manager```      | manager  | Potpun pristup svim klijentima i porudžbinama     |
+| Account Manager | ```alice```        | alice    | Vidi samo klijente dodijeljene Alice Brown.       |
+| Account Manager | ```robert```       | robert   | Vidi samo klijente dodijeljene Robert Taylor      |
+
+## ⚙️ Model domena
 
 ```mermaid
 classDiagram
@@ -142,16 +141,16 @@ classDiagram
     Invoice o-- Payment
 ```
 
-## 🔐 Модел улога
+## 🔐 Model uloga
 
-Апликација користи хијерархијски модел улога:
+Aplikacija koristi hijerarhijski model uloga:
 
-- `Administrator`: пун приступ свим функцијама апликације, ентитетима и подешавањима.
-- `Supervisor`: проширује улогу Manager-а додатним административним могућностима:
-    - Управљање каталогом производа (Categories и Category Items).
-    - Додела Account Managers за Clients.
-- `Manager`: примарна улога за продајне операције.
-    - Пун приступ Clients, Contacts, Orders, Invoices и Payments.
-    - Приступ само за читање каталогу производа.
-    - Управљање сопственим Tasks.
-- `UI Minimal`: минимални приступ који омогућава пријаву и основну навигацију.
+- `Administrator`: Potpun pristup svim funkcionalnostima aplikacije, entitetima i podešavanjima.
+- `Supervisor`: Proširuje ulogu Menadžera dodatnim administrativnim mogućnostima:
+    - Upravljanje katalogom proizvoda (kategorije i artikli).
+    - Dodjeljivanje menadžera klijenata klijentima.
+- `Manager`: Osnovna uloga za prodajne aktivnosti.
+    - Potpun pristup klijentima, kontaktima, porudžbinama, fakturama i uplatama.
+    - Pristup katalogu proizvoda samo za čitanje.
+    - Upravljanje sopstvenim zadacima.
+- `UI Minimal`: Minimalan pristup koji omogućava prijavu u sistem i osnovnu navigaciju.
