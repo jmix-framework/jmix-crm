@@ -1,68 +1,68 @@
-# ![CRM](../src/main/resources/META-INF/resources/images/logo.svg) B2B CRM
+# ![CRM](src/main/resources/META-INF/resources/images/logo.svg) B2B CRM
 
-Ngôn ngữ: [English](../README.md) | [Русский](README_ru.md) | [Deutsch](README_de.md) | [Italiano](README_it.md) | [Español](README_es.md) | [Tiếng Việt](README_vi.md) | [Српски](README_sr.md)
+Ngôn ngữ: [English](README.md) | [Русский](README_ru.md) | [Deutsch](README_de.md) | [Italiano](README_it.md) | [Español](README_es.md) | [Srpski](README_srb.md) | [Tiếng Việt](README_vi.md)
 
-`B2B CRM` là một ứng dụng demo doanh nghiệp được xây dựng bằng Jmix, minh họa cách phát triển các hệ thống nghiệp vụ **sẵn sàng cho môi trường sản xuất**
-bao gồm `khách hàng`, `đơn hàng`, `lập hóa đơn`, `tài chính` và `phân tích`. <br>Nó phản ánh các kịch bản **ERP/CRM** thực tế và minh họa
-các phương pháp tốt nhất trong mô hình hóa miền, UI, bảo mật và triển khai logic nghiệp vụ.
+`B2B CRM` là ứng dụng doanh nghiệp mẫu được xây dựng bằng nền tảng Jmix, minh họa cách phát triển các hệ thống kinh doanh **sẵn sàng cho môi trường sản xuất**, bao gồm `khách hàng`, `đơn hàng`, `hóa đơn`, `tài chính` và `phân tích dữ liệu`.
+Ứng dụng phản ánh các kịch bản **ERP/CRM** thực tế và trình bày các thực tiễn tốt nhất về mô hình hóa nghiệp vụ, giao diện người dùng, bảo mật và triển khai logic nghiệp vụ.
 
 ## 📑 Mục lục
 
 - [Tổng quan](#-tổng-quan)
-- [Stack công nghệ](#-stack-công-nghệ)
-- [Add-on được sử dụng](#-add-on)
-- [Build và chạy](#-build-và-chạy)
+- [Ngăn xếp công nghệ](#-ngăn-xếp-công-nghệ)
+- [Các add-on được sử dụng](#-các-add-on-được-sử-dụng)
+- [Xây dựng và chạy ứng dụng](#-xây-dựng-và-chạy-ứng-dụng)
 - [Trợ lý AI](#-trợ-lý-ai)
-- [Dữ liệu demo](#-dữ-liệu-demo)
-- [Tài khoản](#-tài-khoản-ứng-dụng)
+- [Dữ liệu mẫu](#-dữ-liệu-mẫu)
+- [Tài khoản ứng dụng](#-tài-khoản-ứng-dụng)
 - [Mô hình miền](#-mô-hình-miền)
 - [Mô hình vai trò](#-mô-hình-vai-trò)
 
 ## 📖 Tổng quan
 
-Dự án này mô hình hóa một quy trình bán hàng B2B điển hình:
+Dự án này mô phỏng quy trình bán hàng B2B điển hình:
 
-- Quản lý danh mục sản phẩm và phân loại
-- Duy trì khách hàng và liên hệ
-- Theo dõi đơn hàng và mặt hàng đơn hàng
+- Quản lý danh mục sản phẩm và nhóm sản phẩm
+- Quản lý khách hàng và thông tin liên hệ
+- Theo dõi đơn hàng và các dòng sản phẩm trong đơn hàng
 - Phát hành hóa đơn và ghi nhận thanh toán
-- Yêu cầu trợ lý AI cung cấp thông tin chi tiết về kinh doanh
-- Giám sát nhiệm vụ và hoạt động gần đây
-- Xem phân tích bán hàng
+- Đặt câu hỏi kinh doanh cho trợ lý AI
+- Theo dõi công việc và các hoạt động gần đây
+- Xem phân tích doanh số bán hàng
 
-## 🛠️ Stack công nghệ
+## 🛠️ Ngăn xếp công nghệ
 
 - Java 21
-- Jmix 2.8
-- Spring Boot 3
+- Jmix (Spring Boot + Vaadin)
 - HSQLDB
 
-## 🧩 Add-on
+## 🧩 Các add-on được sử dụng
 
 - Audit
-- Application settings
+- Application Settings
 - Charts
-- Data tools
-- Dynamic attributes
-- Grid export
-- Local file storage
+- Data Tools
+- Dynamic Attributes
+- Grid Export
+- Local File Storage
 - Reports (bao gồm mẫu hóa đơn)
 
-## 🚀 Build và chạy
+## 🚀 Xây dựng và chạy ứng dụng
 
-Yêu cầu: Java 21+
+Điều kiện tiên quyết: Java 21+
 
 ### Chạy dự án
 
-1. Chạy cấu hình Jmix [B2B CRM](../.run/crm-app.run.xml) hoặc thực thi
+1. Chạy cấu hình Jmix cho [B2B CRM](.run/crm-app.run.xml) hoặc thực thi:
 
-   ```bash
-   ./gradlew bootRun
-   ```
+```bash
+./gradlew bootRun
+```
 
-2. [Mở URL ứng dụng](http://localhost:8080/b2b-crm)
+2. Mở ứng dụng tại:
 
-### Chạy qua JAR
+http://localhost:8080/b2b-crm
+
+### Chạy bằng JAR
 
 ```bash
 ./gradlew bootJar -Pvaadin.productionMode
@@ -72,7 +72,7 @@ Yêu cầu: Java 21+
 java -jar build/libs/crm.jar
 ```
 
-### Chạy qua Docker
+### Chạy bằng Docker
 
 ```bash
 docker build -t jmix-crm .
@@ -82,7 +82,7 @@ docker build -t jmix-crm .
 docker run --rm -p 8080:8080 jmix-crm
 ```
 
-### Chạy qua Docker Compose
+### Chạy bằng Docker Compose
 
 ```bash
 docker-compose up
@@ -90,40 +90,39 @@ docker-compose up
 
 ## 🤖 Trợ lý AI
 
-Ứng dụng bao gồm một không gian làm việc `CRM AI` tích hợp sẵn để phân tích dữ liệu CRM bằng ngôn ngữ tự nhiên.
+Ứng dụng bao gồm không gian làm việc `CRM AI` được tích hợp sẵn để phân tích dữ liệu CRM bằng ngôn ngữ tự nhiên.
 
-Khả năng chính:
+Các khả năng chính:
 
 - Đặt câu hỏi kinh doanh về khách hàng, đơn hàng, hóa đơn, thanh toán và hiệu suất bán hàng
-- Tôn trọng quyền truy cập dữ liệu của người dùng hiện tại và giữ các cuộc trò chuyện riêng tư cho tác giả của chúng
-- Sử dụng các báo cáo kinh doanh tích hợp sẵn như `Client 360 Report` và `Category Cashflow Risk Allocation Report`
-- Lưu lịch sử cuộc trò chuyện với các tiêu đề chat được tạo tự động
-- Tải tệp lên cuộc trò chuyện và để trợ lý phân tích các tài liệu và hình ảnh được hỗ trợ
-- Tạo liên kết tương tác đến các bản ghi CRM trực tiếp trong phản hồi
+- Tôn trọng quyền truy cập dữ liệu của người dùng hiện tại và giữ riêng tư các cuộc trò chuyện
+- Sử dụng các báo cáo nghiệp vụ tích hợp như `Client 360 Report` và `Category Cashflow Risk Allocation Report`
+- Lưu lịch sử hội thoại với tiêu đề được tạo tự động
+- Tải tệp lên cuộc trò chuyện và cho phép trợ lý phân tích tài liệu và hình ảnh được hỗ trợ
+- Tạo liên kết tương tác đến các bản ghi CRM trực tiếp trong câu trả lời
 
 Cấu hình:
 
-- Đặt `spring.ai.openai.api-key` trong [application.properties](../src/main/resources/application.properties) hoặc cung cấp biến môi trường `SPRING_AI_OPENAI_APIKEY`
+- Thiết lập `spring.ai.openai.api-key` trong [application.properties](src/main/resources/application.properties) hoặc cung cấp biến môi trường `SPRING_AI_OPENAI_APIKEY`
 
-Khi đã bật, mở mục `CRM AI` trong menu chính để bắt đầu một cuộc trò chuyện mới.
+Sau khi được kích hoạt, hãy mở mục `CRM AI` trong menu chính để bắt đầu một cuộc trò chuyện mới.
 
-## 🎲 Dữ liệu demo
+## 🎲 Dữ liệu mẫu
 
-Profile local tạo dữ liệu demo khi khởi động ứng dụng:
+Hồ sơ cục bộ sẽ tạo dữ liệu mẫu khi ứng dụng khởi động:
 
-- Bạn có thể tắt tạo dữ liệu demo với thuộc tính `crm.generateDemoData`
-  trong [application.properties](../src/main/resources/application.properties)
-- Danh mục được nhập từ [catalog.xlsx](../src/main/resources/demo-data/catalog.xlsx)
+- Bạn có thể tắt việc tạo dữ liệu mẫu bằng thuộc tính `crm.generateDemoData` trong [application.properties](src/main/resources/application.properties)
+- Danh mục sản phẩm được nhập từ [catalog.xlsx](src/main/resources/demo-data/catalog.xlsx)
 
 ## 👥 Tài khoản ứng dụng
 
-| Vị trí          | Tên đăng nhập | Mật khẩu | Quyền truy cập                                          |
-|-----------------|---------------|----------|---------------------------------------------------------|
-| Administrator   | ```admin```   | admin    | Truy cập đầy đủ vào tất cả dữ liệu và cài đặt           |
-| Supervisor      | ```james```   | james    | Manager + quản lý danh mục + chỉ định tài khoản         |
-| Manager         | ```manager``` | manager  | Truy cập đầy đủ vào tất cả khách hàng và đơn hàng       |
-| Account Manager | ```alice```   | alice    | Chỉ thấy khách hàng được chỉ định cho Alice Brown       |
-| Account Manager | ```robert```  | robert   | Chỉ thấy khách hàng được chỉ định cho Robert Taylor     |
+| Vai trò | Tên đăng nhập | Mật khẩu | Quyền truy cập |
+|----------|----------|----------|----------|
+| Administrator | `admin` | admin | Toàn quyền truy cập dữ liệu và cấu hình |
+| Supervisor | `james` | james | Manager + quản lý danh mục + phân công tài khoản |
+| Manager | `manager` | manager | Toàn quyền truy cập khách hàng và đơn hàng |
+| Account Manager | `alice` | alice | Chỉ xem khách hàng được gán cho Alice Brown |
+| Account Manager | `robert` | robert | Chỉ xem khách hàng được gán cho Robert Taylor |
 
 ## ⚙️ Mô hình miền
 
@@ -146,12 +145,12 @@ classDiagram
 
 Ứng dụng sử dụng mô hình vai trò phân cấp:
 
-- `Administrator`: Truy cập đầy đủ vào tất cả các tính năng ứng dụng, thực thể và cài đặt.
+- `Administrator`: Toàn quyền truy cập tất cả tính năng, thực thể và cấu hình của ứng dụng.
 - `Supervisor`: Mở rộng vai trò Manager với các khả năng quản trị bổ sung:
     - Quản lý danh mục sản phẩm (Categories và Category Items).
-    - Chỉ định Account Managers cho Clients.
-- `Manager`: Vai trò chính cho các hoạt động bán hàng.
-    - Truy cập đầy đủ vào Clients, Contacts, Orders, Invoices và Payments.
-    - Truy cập chỉ đọc vào danh mục sản phẩm.
-    - Quản lý Tasks của riêng mình.
-- `UI Minimal`: Truy cập tối thiểu, cho phép đăng nhập và điều hướng cơ bản.
+    - Gán Account Manager cho khách hàng.
+- `Manager`: Vai trò chính cho hoạt động bán hàng.
+    - Toàn quyền truy cập Clients, Contacts, Orders, Invoices và Payments.
+    - Chỉ có quyền xem danh mục sản phẩm.
+    - Quản lý các Task của chính mình.
+- `UI Minimal`: Quyền tối thiểu, cho phép đăng nhập và điều hướng cơ bản.
