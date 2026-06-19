@@ -1,6 +1,6 @@
 # ![CRM](../src/main/resources/META-INF/resources/images/logo.svg) B2B CRM
 
-Lingue: [English](../README.md) | [Русский](README_ru.md) | [Deutsch](README_de.md) | [Italiano](README_it.md) | [Español](README_es.md) | [Tiếng Việt](README_vi.md) | [Српски](README_sr.md)
+Lingue: [English](../README.md) | [Русский](README_ru.md) | [Deutsch](README_de.md) | [Italiano](README_it.md) | [Español](README_es.md) | [Tiếng Việt](README_vi.md) | [Srpski](README_sr.md)
 
 `B2B CRM` è un'applicazione demo sviluppata con Jmix che mostra come creare sistemi aziendali **pronti per la produzione**
 per lavorare con `clienti`, `ordini`, `fatture`, `finanza` e `analitica`. <br>Rappresenta scenari reali **ERP/CRM** e dimostra
