@@ -116,13 +116,13 @@ Hồ sơ cục bộ sẽ tạo dữ liệu mẫu khi ứng dụng khởi động
 
 ## 👥 Tài khoản ứng dụng
 
-| Vai trò | Tên đăng nhập | Mật khẩu | Quyền truy cập |
-|----------|----------|----------|----------|
-| Administrator | `admin` | admin | Toàn quyền truy cập dữ liệu và cấu hình |
-| Supervisor | `james` | james | Manager + quản lý danh mục + phân công tài khoản |
-| Manager | `manager` | manager | Toàn quyền truy cập khách hàng và đơn hàng |
-| Account Manager | `alice` | alice | Chỉ xem khách hàng được gán cho Alice Brown |
-| Account Manager | `robert` | robert | Chỉ xem khách hàng được gán cho Robert Taylor |
+| Vai trò         | Tên đăng nhập | Mật khẩu | Quyền truy cập                                         |
+|-----------------|---------------|----------|--------------------------------------------------------|
+| Administrator   | `admin`       | admin    | Toàn quyền truy cập dữ liệu và cấu hình                |
+| Supervisor      | `james`       | james    | Manager + quản lý danh mục + phân công tài khoản       |
+| Manager         | `manager`     | manager  | Toàn quyền truy cập khách hàng và đơn hàng             |
+| Account Manager | `alice`       | alice    | Chỉ xem khách hàng được gán cho Alice Brown            |
+| Account Manager | `robert`      | robert   | Chỉ xem khách hàng được gán cho Robert Taylor          |
 
 ## ⚙️ Mô hình miền
 
