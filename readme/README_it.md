@@ -1,6 +1,6 @@
-# ![CRM](src/main/resources/META-INF/resources/images/logo.svg) B2B CRM
+# ![CRM](../src/main/resources/META-INF/resources/images/logo.svg) B2B CRM
 
-Lingue: [English](README.md) | [Русский](README_ru.md) | [Deutsch](README_de.md) | [Italiano](README_it.md) | [Español](README_es.md)
+Lingue: [English](../README.md) | [Русский](README_ru.md) | [Deutsch](README_de.md) | [Italiano](README_it.md) | [Español](README_es.md) | [Tiếng Việt](README_vi.md) | [Srpski](README_sr.md)
 
 `B2B CRM` è un'applicazione demo sviluppata con Jmix che mostra come creare sistemi aziendali **pronti per la produzione**
 per lavorare con `clienti`, `ordini`, `fatture`, `finanza` e `analitica`. <br>Rappresenta scenari reali **ERP/CRM** e dimostra
@@ -54,7 +54,7 @@ Prerequisiti: Java 21+
 
 ### Esecuzione del progetto
 
-1. Avvia la configurazione Jmix [B2B CRM](.run/crm-app.run.xml) oppure esegui
+1. Avvia la configurazione Jmix [B2B CRM](../.run/crm-app.run.xml) oppure esegui
 
    ```bash
    ./gradlew bootRun
@@ -103,7 +103,7 @@ Funzionalità principali:
 
 Configurazione:
 
-- Imposta `spring.ai.openai.api-key` in [application.properties](src/main/resources/application.properties) oppure fornisci la variabile d'ambiente `SPRING_AI_OPENAI_APIKEY`
+- Imposta `spring.ai.openai.api-key` in [application.properties](../src/main/resources/application.properties) oppure fornisci la variabile d'ambiente `SPRING_AI_OPENAI_APIKEY`
 
 Dopo l'avvio apri la voce `CRM AI` nel menu principale per iniziare una nuova conversazione.
 
@@ -112,8 +112,8 @@ Dopo l'avvio apri la voce `CRM AI` nel menu principale per iniziare una nuova co
 Il profilo locale genera dati demo all'avvio dell'applicazione:
 
 - Puoi disabilitare la generazione dei dati demo con la proprietà `crm.generateDemoData`
-  in [application.properties](src/main/resources/application.properties)
-- Il catalogo viene importato da [catalog.xlsx](src/main/resources/demo-data/catalog.xlsx)
+  in [application.properties](../src/main/resources/application.properties)
+- Il catalogo viene importato da [catalog.xlsx](../src/main/resources/demo-data/catalog.xlsx)
 
 ## 👥 Account dell'applicazione
 
