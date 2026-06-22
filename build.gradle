@@ -128,6 +128,7 @@ tasks.register("testPreparing", Delete) {
 }
 
 test {
+    maxHeapSize = "2g"
     dependsOn(testPreparing)
     useJUnitPlatform()
 }
