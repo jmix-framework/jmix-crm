@@ -49,8 +49,8 @@ public class SpringSecurityConfiguration {
     @Order(JmixSecurityFilterChainOrder.CUSTOM)
     SecurityFilterChain iconsFilterChain(HttpSecurity http) {
         return http
-                .securityMatcher("/icons/**", "/images/**")
-                .authorizeHttpRequests(authorize -> authorize.anyRequest().authenticated())
+                .securityMatcher("/public/**", "/icons/**", "/images/**")
+                .authorizeHttpRequests(authorize -> authorize.anyRequest().permitAll())
                 .build();
     }
 }

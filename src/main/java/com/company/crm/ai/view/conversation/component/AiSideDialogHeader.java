@@ -32,7 +32,7 @@ public class AiSideDialogHeader extends HorizontalLayout {
 
     private void addCloseButton(SideDialog sideDialog) {
         Button closeButton = new Button(VaadinIcon.CLOSE.create(), event -> sideDialog.close());
-        closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ICON);
+        closeButton.addThemeVariants(ButtonVariant.TERTIARY);
         add(closeButton);
     }
 }

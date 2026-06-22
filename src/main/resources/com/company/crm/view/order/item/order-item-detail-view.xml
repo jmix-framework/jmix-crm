@@ -51,10 +51,10 @@
             <textField id="unitPriceField" property="unitPrice" readOnly="true"/>
             <bigDecimalField id="quantityField" property="quantity" clearButtonVisible="true">
                 <prefix>
-                    <button id="minusQuantityButton" icon="MINUS" themeNames="icon contrast small tertiary-inline"/>
+                    <button id="minusQuantityButton" icon="MINUS" themeNames="icon contrast small tertiary"/>
                 </prefix>
                 <suffix>
-                    <button id="plusQuantityButton" icon="PLUS" themeNames="icon contrast small tertiary-inline"/>
+                    <button id="plusQuantityButton" icon="PLUS" themeNames="icon contrast small tertiary"/>
                 </suffix>
             </bigDecimalField>
             <textField id="netPriceField" property="netPrice" readOnly="true"/>

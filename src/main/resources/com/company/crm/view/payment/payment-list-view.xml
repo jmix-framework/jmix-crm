@@ -71,7 +71,8 @@
                 </entityComboBox>
             </formLayout>
             <genericFilter id="payments_AdvancedFilter" dataLoader="paymentsDl" maxWidth="60em"
-                           opened="false" summaryText="msg:///advanced" themeNames="filled">
+                           opened="false" summaryText="msg:///advanced"
+                           themeNames="filled" classNames="mt-m mb-m">
                 <properties include="(number)|(date)|(order)|(order.client)|(invoice)|(amount)"/>
             </genericFilter>
         </div>
@@ -86,7 +87,7 @@
             <endSlot>
                 <simplePagination id="payments_pagination" dataLoader="paymentsDl" itemsPerPageVisible="true"/>
                 <gridColumnVisibility dataGrid="paymentsDataGrid" icon="COG_O"
-                                      themeNames="tertiary-inline" hideAllEnabled="false"/>
+                                      themeNames="tertiary" hideAllEnabled="false"/>
             </endSlot>
         </hbox>
         <dataGrid id="paymentsDataGrid"

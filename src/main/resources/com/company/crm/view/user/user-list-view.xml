@@ -25,8 +25,7 @@
         </urlQueryParameters>
     </facets>
     <layout>
-        <genericFilter id="genericFilter"
-                       dataLoader="usersDl">
+        <genericFilter id="genericFilter" dataLoader="usersDl" maxWidth="48em">
             <properties include="(username)|(firstName)|(lastName)|(email)"/>
         </genericFilter>
         <hbox id="buttonsPanel" classNames="buttons-panel">
@@ -46,7 +45,7 @@
             <endSlot>
                 <simplePagination id="pagination" dataLoader="usersDl" itemsPerPageVisible="true"/>
                 <gridColumnVisibility dataGrid="usersDataGrid" icon="COG_O"
-                                      themeNames="tertiary-inline" hideAllEnabled="false"/>
+                                      themeNames="tertiary" hideAllEnabled="false"/>
             </endSlot>
         </hbox>
         <dataGrid id="usersDataGrid" dataContainer="usersDc"

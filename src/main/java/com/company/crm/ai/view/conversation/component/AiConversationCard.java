@@ -1,7 +1,7 @@
 package com.company.crm.ai.view.conversation.component;
 
-import com.company.crm.ai.view.component.support.AiContextCardActionSurface;
 import com.company.crm.ai.model.AiConversation;
+import com.company.crm.ai.view.component.support.AiContextCardActionSurface;
 import com.company.crm.app.icons.CrmIcons;
 import com.vaadin.flow.component.card.Card;
 import com.vaadin.flow.component.card.CardVariant;
@@ -16,7 +16,7 @@ public class AiConversationCard extends Card {
     public AiConversationCard() {
         setWidthFull();
         addClassName("ai-conversation-starter-conversation-card");
-        addThemeVariants(CardVariant.LUMO_OUTLINED);
+        addThemeVariants(CardVariant.OUTLINED);
     }
 
     public void setConversation(AiConversation conversation,

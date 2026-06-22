@@ -3,6 +3,7 @@ package com.company.crm.app.util.ui.renderer;
 import com.company.crm.app.service.datetime.DateTimeService;
 import com.company.crm.app.util.common.ThreadUtils;
 import com.company.crm.app.util.ui.CrmUiUtils;
+import com.company.crm.app.util.ui.theme.CrmStyleUtility;
 import com.company.crm.model.base.UuidEntity;
 import com.company.crm.model.catalog.category.Category;
 import com.company.crm.model.catalog.item.CategoryItem;
@@ -36,7 +37,6 @@ import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.function.ValueProvider;
 import com.vaadin.flow.spring.annotation.SpringComponent;
-import com.vaadin.flow.theme.lumo.LumoUtility.IconSize;
 import io.jmix.core.Messages;
 import io.jmix.core.MetadataTools;
 import io.jmix.core.metamodel.datatype.DatatypeFormatter;
@@ -73,8 +73,6 @@ import static io.jmix.flowui.component.UiComponentUtils.getCurrentView;
 @SpringComponent
 public class CrmRenderers {
 
-    private static final String LINK_BUTTON_THEME = "tertiary-inline";
-
     private final Messages messages;
     private final UiAsyncTasks uiAsyncTasks;
     private final UiComponents uiComponents;
@@ -102,7 +100,7 @@ public class CrmRenderers {
             boolean isDetailsVisible = grid.isDetailsVisible(item);
             Icon icon = isDetailsVisible ? CHEVRON_DOWN_SMALL.create() : CHEVRON_RIGHT_SMALL.create();
             CrmUiUtils.setClickableCursor(icon);
-            icon.addClassNames(IconSize.SMALL);
+            icon.addClassNames(CrmStyleUtility.IconSize.SMALL);
             icon.addClickListener(e -> {
                 if (!grid.isDetailsVisibleOnClick()) {
                     grid.setDetailsVisible(item, !isDetailsVisible);
@@ -119,7 +117,7 @@ public class CrmRenderers {
 
             //noinspection unchecked
             DataGrid<Order> ordersGrid = uiComponents.create(DataGrid.class);
-            ordersGrid.addThemeVariants(GridVariant.LUMO_NO_BORDER, GridVariant.LUMO_COMPACT, GridVariant.LUMO_ROW_STRIPES);
+            ordersGrid.addThemeVariants(GridVariant.NO_BORDER, GridVariant.ROW_STRIPES);
             ordersGrid.setMaxHeight(15, Unit.EM);
             ordersGrid.addColumn(Order::getNumber)
                     .setRenderer(uniqueNumber(Order::getNumber))
@@ -143,7 +141,7 @@ public class CrmRenderers {
 
             //noinspection unchecked
             DataGrid<Payment> paymentsGrid = uiComponents.create(DataGrid.class);
-            paymentsGrid.addThemeVariants(GridVariant.LUMO_NO_BORDER, GridVariant.LUMO_COMPACT, GridVariant.LUMO_ROW_STRIPES);
+            paymentsGrid.addThemeVariants(GridVariant.NO_BORDER, GridVariant.ROW_STRIPES);
             paymentsGrid.setMaxHeight(15, Unit.EM);
             paymentsGrid.addColumn(Payment::getNumber)
                     .setRenderer(uniqueNumber(Payment::getNumber))
@@ -167,7 +165,7 @@ public class CrmRenderers {
 
             //noinspection unchecked
             DataGrid<Invoice> invoicesGrid = uiComponents.create(DataGrid.class);
-            invoicesGrid.addThemeVariants(GridVariant.LUMO_NO_BORDER, GridVariant.LUMO_COMPACT, GridVariant.LUMO_ROW_STRIPES);
+            invoicesGrid.addThemeVariants(GridVariant.NO_BORDER, GridVariant.ROW_STRIPES);
             invoicesGrid.setMaxHeight(15, Unit.EM);
             invoicesGrid.addColumn(Invoice::getNumber)
                     .setRenderer(uniqueNumber(Invoice::getNumber))
@@ -193,7 +191,7 @@ public class CrmRenderers {
         return new DetailButtonRenderer<>(uiComponents, viewNavigators, dialogWindows, grid, textProvider)
                 .withOpenMode(OpenMode.DIALOG)
                 .withViewClass(detailViewClass)
-                .withThemeNames(LINK_BUTTON_THEME);
+                .withThemeNames(ButtonVariant.TERTIARY.getVariantName());
     }
 
     public <E, L extends UuidEntity> Renderer<E> entityLink(DataGrid<E> grid, Function<E, L> linkGetter) {
@@ -214,7 +212,7 @@ public class CrmRenderers {
                     L link = linkGetter.apply(item);
                     return link != null ? textProvider.apply(link) : "";
                 })
-                .withThemeNames(LINK_BUTTON_THEME)
+                .withThemeNames(ButtonVariant.TERTIARY.getVariantName())
                 .withClickHandler(item -> {
                     L link = linkGetter.apply(item);
                     if (link != null) {
@@ -247,9 +245,8 @@ public class CrmRenderers {
         return new ComponentRenderer<>(entity -> {
             var button = new Button(numberProvider.apply(entity));
             button.setTooltipText(messages.getMessage("copy"));
-            button.addThemeVariants(ButtonVariant.LUMO_ICON, ButtonVariant.LUMO_SMALL,
-                    ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_CONTRAST);
-            button.addClickListener(e -> copyToClipboard(numberProvider.apply(entity)));
+            button.addThemeVariants(ButtonVariant.SMALL, ButtonVariant.TERTIARY);
+            button.addClickListener(e -> copyToClipboardWithNotification(numberProvider.apply(entity), button));
             return button;
         });
     }
@@ -382,16 +379,24 @@ public class CrmRenderers {
         Span badge = createBadge(text, "contrast");
         Tooltip.forComponent(badge).setText(messages.getMessage("copy"));
         CrmUiUtils.setClickableCursor(badge);
-        badge.addClickListener(e -> {
-            copyToClipboard(text);
-            Popover popover = new Popover(new Text(messages.getMessage("copied")));
-            popover.setTarget(badge);
-            popover.open();
-            uiAsyncTasks.runnableConfigurer(() -> ThreadUtils.trySleep(1_000))
-                    .withResultHandler(popover::close)
-                    .runAsync();
-        });
+        badge.addClickListener(e -> copyToClipboardWithNotification(text, badge));
         return badge;
+    }
+
+    private void copyToClipboardWithNotification(String text, Component component) {
+        copyToClipboard(text);
+        showCopiedNotification(component);
+    }
+
+    private void showCopiedNotification(Component component) {
+        Popover popover = new Popover(new Text(messages.getMessage("copied")));
+        popover.setTarget(component);
+        popover.open();
+
+        uiAsyncTasks.runnableConfigurer(() -> ThreadUtils.trySleep(1_000))
+                .withResultHandler(popover::close)
+                .withOwner(component)
+                .runAsync();
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})

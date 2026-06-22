@@ -1,0 +1,69 @@
+/* Spacing — padding */
+.p-m { padding: var(--vaadin-padding-m); }
+.pt-m { padding-top: var(--vaadin-padding-m); }
+.pt-l { padding-top: var(--vaadin-padding-l); }
+.pb-s { padding-bottom: var(--vaadin-padding-s); }
+.pb-m { padding-bottom: var(--vaadin-padding-m); }
+.pb-l { padding-bottom: var(--vaadin-padding-l); }
+.pl-m { padding-left: var(--vaadin-padding-m); }
+.pr-m { padding-right: var(--vaadin-padding-m); }
+.px-m { padding-inline: var(--vaadin-padding-m); }
+.py-s { padding-block: var(--vaadin-padding-s); }
+
+/* Spacing — margin */
+.m-0 { margin: 0; }
+.m-auto { margin: auto; }
+.mt-s { margin-top: var(--vaadin-gap-s); }
+.mt-m { margin-top: var(--vaadin-gap-m); }
+.mt-l { margin-top: var(--vaadin-gap-l); }
+.mb-xs { margin-bottom: var(--vaadin-gap-xs); }
+.mb-s { margin-bottom: var(--vaadin-gap-s); }
+.mb-m { margin-bottom: var(--vaadin-gap-m); }
+.mr-l { margin-right: var(--vaadin-gap-l); }
+.ml-m { margin-left: var(--vaadin-gap-m); }
+.ml-auto { margin-left: auto; }
+.ms-xs { margin-inline-start: var(--vaadin-gap-xs); }
+
+/* Typography — size (Aura tokens so they scale with --aura-base-font-size) */
+.text-xs { font-size: var(--aura-font-size-xs); }
+.text-s { font-size: var(--aura-font-size-s); }
+.text-m { font-size: var(--aura-font-size-m); }
+.text-l { font-size: var(--aura-font-size-l); }
+
+/* Typography — weight */
+.font-thin { font-weight: 200; }
+.font-light { font-weight: 300; }
+.font-medium { font-weight: 500; }
+.font-semibold { font-weight: 600; }
+.font-bold { font-weight: 700; }
+
+/* Text color */
+.text-primary { color: var(--aura-accent-text-color); }
+.text-secondary { color: var(--vaadin-text-color-secondary); }
+.text-tertiary { color: var(--vaadin-text-color-secondary); }
+.text-body { color: var(--vaadin-text-color); }
+.text-primary-contrast { color: var(--aura-accent-contrast-color); }
+
+/* Overflow / wrapping */
+.overflow-hidden { overflow: hidden; }
+.overflow-auto { overflow: auto; }
+.text-ellipsis { text-overflow: ellipsis; }
+.whitespace-nowrap { white-space: nowrap; }
+
+/* Layout */
+.flex-grow { flex-grow: 1; }
+.rounded-l { border-radius: var(--vaadin-radius-l); }
+.rounded-full { border-radius: 9999px; }
+.border { border: 1px solid var(--vaadin-border-color); }
+
+/* Icon sizing */
+.icon-s { width: 1.25rem; height: 1.25rem; font-size: 1.25rem; }
+
+/* Backgrounds (status pipeline, cards) */
+.bg-transparent { background-color: transparent; }
+.bg-contrast-5 { background-color: var(--vaadin-background-container); }
+.bg-contrast-10 { background-color: var(--vaadin-background-container-strong); }
+.bg-primary { background-color: var(--aura-accent-color); }
+.bg-success { background-color: var(--crm-success-color); }
+.bg-warning { background-color: var(--crm-warning-color); }
+.bg-error-10 { background-color: color-mix(in srgb, var(--crm-error-color) 10%, transparent); }

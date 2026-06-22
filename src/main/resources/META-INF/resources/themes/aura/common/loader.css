@@ -1,4 +1,4 @@
-.crm-loader {
+.loader {
   transition: opacity 200ms ease;
 }
 
@@ -6,8 +6,8 @@
   animation: loader-pulse 1.1s ease-in-out infinite;
 }
 
-.crm-loader-message {
-  color: var(--lumo-secondary-text-color);
+.loader-message {
+  color: var(--vaadin-text-color-secondary);
   letter-spacing: 0.02em;
 }
 
@@ -15,8 +15,8 @@
   gap: 0.5rem;
   padding: 2.5rem 3rem;
   border-radius: 1.25rem;
-  background: linear-gradient(135deg, var(--lumo-base-color), var(--lumo-contrast-5pct));
-  border: 1px solid var(--lumo-contrast-10pct);
+  background: linear-gradient(135deg, var(--vaadin-background-color), var(--vaadin-background-container));
+  border: 1px solid var(--vaadin-background-container-strong);
   box-shadow: 0 22px 60px rgba(15, 23, 42, 0.18);
   min-width: 22rem;
 }

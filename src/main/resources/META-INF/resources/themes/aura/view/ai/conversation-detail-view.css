@@ -7,7 +7,7 @@
     box-sizing: border-box;
     min-height: 0;
     overflow: hidden;
-    padding: 0 var(--lumo-space-m) var(--lumo-space-m);
+    padding: 0 var(--vaadin-gap-m) var(--vaadin-gap-m);
 }
 
 /* Single centered canvas that imposes the 68rem max-width.
@@ -19,7 +19,7 @@
     margin: 0 auto;
     max-width: 68rem;
     min-height: 0;
-    padding-top: var(--lumo-space-m);
+    padding-top: var(--vaadin-gap-m);
     width: 100%;
 }
 
@@ -31,9 +31,9 @@
 }
 
 .ai-conversation-title-layout {
-    border-bottom: 1px solid var(--lumo-contrast-10pct);
+    border-bottom: 1px solid var(--vaadin-background-container-strong);
     box-sizing: border-box;
-    padding-bottom: var(--lumo-space-s);
+    padding-bottom: var(--vaadin-gap-s);
 }
 
 .ai-conversation-context-side-panel-dialog {

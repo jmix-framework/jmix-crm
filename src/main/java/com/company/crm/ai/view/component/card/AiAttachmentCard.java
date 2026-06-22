@@ -1,11 +1,11 @@
 package com.company.crm.ai.view.component.card;
 
-import com.company.crm.ai.view.component.support.AiContextCardActionSurface;
-import com.company.crm.ai.view.component.support.AiContextPendingCardLayout;
-import com.company.crm.ai.view.component.support.AiContextRemoveButton;
 import com.company.crm.ai.model.AiAttachmentOrigin;
 import com.company.crm.ai.model.AiConversationAttachment;
 import com.company.crm.ai.service.AiAttachmentMediaType;
+import com.company.crm.ai.view.component.support.AiContextCardActionSurface;
+import com.company.crm.ai.view.component.support.AiContextPendingCardLayout;
+import com.company.crm.ai.view.component.support.AiContextRemoveButton;
 import com.vaadin.flow.component.card.Card;
 import com.vaadin.flow.component.card.CardVariant;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -32,7 +32,7 @@ public class AiAttachmentCard extends Card {
         this.messages = messages;
 
         setWidthFull();
-        addThemeVariants(CardVariant.LUMO_OUTLINED);
+        addThemeVariants(CardVariant.OUTLINED);
         addClassName("ai-timeline-context-card");
     }
 

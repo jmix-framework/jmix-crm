@@ -70,7 +70,8 @@
                         emptySelectionAllowed="true" emptySelectionCaption="msg://allInvoices"/>
             </formLayout>
             <genericFilter id="invoices_AdvancedFilter" dataLoader="invoicesDl" maxWidth="60em"
-                           opened="false" summaryText="msg:///advanced" themeNames="filled">
+                           opened="false" summaryText="msg:///advanced"
+                           themeNames="filled" classNames="mt-m mb-m">
                 <properties include="(number)|(date)|(order)|(client)|(invoice)|(amount)|(date)|(dueDate)|(vat)|(subTotal)|(total)"/>
             </genericFilter>
         </div>
@@ -89,7 +90,7 @@
             <endSlot>
                 <simplePagination id="invoices_pagination" dataLoader="invoicesDl" itemsPerPageVisible="true"/>
                 <gridColumnVisibility dataGrid="invoicesDataGrid" icon="COG_O"
-                                      themeNames="tertiary-inline" hideAllEnabled="false"/>
+                                      themeNames="tertiary" hideAllEnabled="false"/>
             </endSlot>
         </hbox>
         <dataGrid id="invoicesDataGrid" dataContainer="invoicesDc"

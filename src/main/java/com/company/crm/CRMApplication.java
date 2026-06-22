@@ -4,10 +4,11 @@ import com.company.crm.app.annotation.NotOnlineProfile;
 import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.component.dependency.StyleSheet;
 import com.vaadin.flow.component.page.AppShellConfigurator;
+import com.vaadin.flow.component.page.ColorScheme;
 import com.vaadin.flow.component.page.Push;
 import com.vaadin.flow.server.PWA;
-import com.vaadin.flow.theme.Theme;
-import com.vaadin.flow.theme.lumo.Lumo;
+import com.vaadin.flow.theme.aura.Aura;
+import io.jmix.flowui.theme.aura.JmixAura;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -18,11 +19,12 @@ import org.springframework.context.annotation.Primary;
 import javax.sql.DataSource;
 
 @Push
-@Theme(value = "crm")
-@PWA(name = "CRM", shortName = "CRM", offline = false)
+@ColorScheme(ColorScheme.Value.LIGHT_DARK)
+@StyleSheet(Aura.STYLESHEET)
+@StyleSheet(JmixAura.STYLESHEET)
+@StyleSheet("themes/aura/styles.css")
 @JsModule("./src/theme/color-scheme-switching-support.js")
-@StyleSheet(Lumo.UTILITY_STYLESHEET)
-@StyleSheet(Lumo.COMPACT_STYLESHEET)
+@PWA(name = "CRM", shortName = "CRM", offline = false)
 @SpringBootApplication
 public class CRMApplication implements AppShellConfigurator {
 

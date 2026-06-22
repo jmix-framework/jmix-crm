@@ -3,6 +3,7 @@ package com.company.crm.app.ui.component;
 import com.company.crm.app.util.date.Period;
 import com.company.crm.app.util.date.range.LocalDateRange;
 import com.company.crm.app.util.ui.CrmUiUtils;
+import com.company.crm.app.util.ui.theme.CrmStyleUtility;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasText;
 import com.vaadin.flow.component.UI;
@@ -17,7 +18,6 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.di.Instantiator;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 import io.jmix.core.Messages;
 import io.jmix.core.security.CurrentAuthentication;
 import io.jmix.flowui.UiComponents;
@@ -45,9 +45,9 @@ public class CrmCard extends JmixCard implements ApplicationContextAware {
     private static final DateTimeFormatter DATE_WITH_YEAR = DateTimeFormatter.ofPattern("dd MMM yyyy");
 
     private static final String PREVIOUS_RANGE_DELTA_COMPONENT_ID = "delta-value-component";
-    private static final String BACKGROUND_SUCCESS_CLASS = "crm-card-background-success";
-    private static final String BACKGROUND_ERROR_CLASS = "crm-card-background-error";
-    private static final String BACKGROUND_DEFAULT_CLASS = "crm-card-background-default";
+    private static final String BACKGROUND_SUCCESS_CLASS = "card-background-success";
+    private static final String BACKGROUND_ERROR_CLASS = "card-background-error";
+    private static final String BACKGROUND_DEFAULT_CLASS = "card-background-default";
     private static final List<String> BACKGROUND_CLASSES = List.of(
             BACKGROUND_SUCCESS_CLASS,
             BACKGROUND_ERROR_CLASS,
@@ -66,7 +66,7 @@ public class CrmCard extends JmixCard implements ApplicationContextAware {
     private ApplicationContext applicationContext;
 
     {
-        addThemeVariants(CardVariant.LUMO_ELEVATED, CardVariant.LUMO_OUTLINED);
+        addThemeVariants(CardVariant.ELEVATED, CardVariant.OUTLINED);
         updateBackground();
     }
 
@@ -150,7 +150,7 @@ public class CrmCard extends JmixCard implements ApplicationContextAware {
                         DATE_WITHOUT_YEAR.withLocale(currentLocale).format(range.startDate()),
                         DATE_WITH_YEAR.withLocale(currentLocale).format(range.endDate()));
                 var dateRangeComponent = new Span(dateRangeString);
-                dateRangeComponent.addClassNames(LumoUtility.FontSize.XSMALL, LumoUtility.FontWeight.LIGHT);
+                dateRangeComponent.addClassNames(CrmStyleUtility.FontSize.XSMALL, CrmStyleUtility.FontWeight.LIGHT);
                 horizontalLayout.add(dateRangeComponent);
 
                 var previousRangeDeltaComponent = new Span(info.previousRangeDelta());
@@ -197,7 +197,7 @@ public class CrmCard extends JmixCard implements ApplicationContextAware {
 
     private static H4 createDefaultTitleComponent(String title) {
         var titleComponent = new H4(title);
-        titleComponent.addClassNames(LumoUtility.Margin.Right.LARGE, LumoUtility.Whitespace.NOWRAP);
+        titleComponent.addClassNames(CrmStyleUtility.Margin.Right.LARGE, CrmStyleUtility.Whitespace.NOWRAP);
         return titleComponent;
     }
 
@@ -214,16 +214,15 @@ public class CrmCard extends JmixCard implements ApplicationContextAware {
 
         if (hasPeriodFilter) {
             var periodFilter = uiComponents.create(DropdownButton.class);
-            periodFilter.addThemeVariants(DropdownButtonVariant.LUMO_CONTRAST, DropdownButtonVariant.LUMO_SMALL);
-            periodFilter.addClassName(LumoUtility.Margin.Left.AUTO);
+            periodFilter.addThemeVariants(DropdownButtonVariant.SMALL);
+            periodFilter.addClassName(CrmStyleUtility.Margin.Left.AUTO);
             addDropdownItems(messages, periodFilter);
             horizontalLayout.add(periodFilter);
         }
 
         if (hasEllipsisButton) {
             Button settingsButton = new Button(VaadinIcon.ELLIPSIS_DOTS_V.create());
-            settingsButton.addThemeVariants(ButtonVariant.LUMO_CONTRAST,
-                    ButtonVariant.LUMO_TERTIARY_INLINE, ButtonVariant.LUMO_SMALL);
+            settingsButton.addThemeVariants(ButtonVariant.TERTIARY, ButtonVariant.SMALL);
             horizontalLayout.add(settingsButton);
         }
 

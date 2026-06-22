@@ -12,6 +12,7 @@ import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.app.util.role.RoleUtils;
 import com.company.crm.app.util.ui.CrmUiUtils;
 import com.company.crm.app.util.ui.renderer.CrmRenderers;
+import com.company.crm.app.util.ui.theme.CrmStyleUtility;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.client.ClientRepository;
 import com.company.crm.model.client.ClientType;
@@ -36,12 +37,6 @@ import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.data.selection.SelectionEvent;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.theme.lumo.LumoUtility;
-import com.vaadin.flow.theme.lumo.LumoUtility.FontSize;
-import com.vaadin.flow.theme.lumo.LumoUtility.FontWeight;
-import com.vaadin.flow.theme.lumo.LumoUtility.Overflow;
-import com.vaadin.flow.theme.lumo.LumoUtility.TextOverflow;
-import com.vaadin.flow.theme.lumo.LumoUtility.Whitespace;
 import io.jmix.core.Messages;
 import io.jmix.core.metamodel.datatype.DatatypeFormatter;
 import io.jmix.core.querycondition.LogicalCondition;
@@ -243,7 +238,7 @@ public class ClientListView extends StandardListView<Client> {
             Span span = new Span(websitePreview);
             CrmUiUtils.setClickableCursor(span);
             span.setTitle(website);
-            span.addClassNames(LumoUtility.TextColor.PRIMARY, LumoUtility.TextColor.SECONDARY, TextOverflow.ELLIPSIS);
+            span.addClassNames(CrmStyleUtility.TextColor.PRIMARY, CrmStyleUtility.TextColor.SECONDARY, CrmStyleUtility.TextOverflow.ELLIPSIS);
             span.addClickListener(e -> openLink(website));
             return span;
         });
@@ -399,12 +394,12 @@ public class ClientListView extends StandardListView<Client> {
         var contentComponent = new H1(PriceDataType.defaultFormat(content, datatypeFormatter));
         contentComponent.setWidthFull();
         contentComponent.setMaxWidth(12, Unit.EM);
-        contentComponent.addClassNames(Overflow.HIDDEN, TextOverflow.ELLIPSIS, Whitespace.NOWRAP);
+        contentComponent.addClassNames(CrmStyleUtility.Overflow.HIDDEN, CrmStyleUtility.TextOverflow.ELLIPSIS, CrmStyleUtility.Whitespace.NOWRAP);
 
         VerticalLayout component = new VerticalLayout(contentComponent);
         component.setWidthFull();
         component.setPadding(false);
-        component.addClassNames(Overflow.HIDDEN);
+        component.addClassNames(CrmStyleUtility.Overflow.HIDDEN);
         component.add(createStatCardFooter());
 
         card.fillAsStaticCard(title, component);
@@ -441,12 +436,12 @@ public class ClientListView extends StandardListView<Client> {
         }
 
         CrmUiUtils.setBadge(mainText, badge);
-        mainText.addClassNames(FontSize.LARGE, FontWeight.MEDIUM);
-        mainText.addClassNames(Overflow.HIDDEN, TextOverflow.ELLIPSIS, Whitespace.NOWRAP);
+        mainText.addClassNames(CrmStyleUtility.FontSize.LARGE, CrmStyleUtility.FontWeight.MEDIUM);
+        mainText.addClassNames(CrmStyleUtility.Overflow.HIDDEN, CrmStyleUtility.TextOverflow.ELLIPSIS, CrmStyleUtility.Whitespace.NOWRAP);
         mainText.setWidthFull();
 
         Span hintText = new Span(messageBundle.getMessage("cardHintText"));
-        hintText.addClassNames(FontSize.XSMALL, FontWeight.THIN);
+        hintText.addClassNames(CrmStyleUtility.FontSize.XSMALL, CrmStyleUtility.FontWeight.THIN);
 
         VerticalLayout layout = new VerticalLayout(mainText, hintText);
         layout.setWidthFull();

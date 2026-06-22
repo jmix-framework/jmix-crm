@@ -4,26 +4,26 @@
    The input and upload controls must be allowed to shrink, because the fragment
    also appears inside narrower inline chat containers. */
 .ai-timeline-composer {
-    border-top: 1px solid var(--lumo-contrast-10pct);
+    border-top: 1px solid var(--vaadin-background-container-strong);
     box-sizing: border-box;
     flex: 0 0 auto;
     min-height: 0;
-    padding-top: var(--lumo-space-m);
+    padding-top: var(--vaadin-gap-m);
     width: 100%;
 }
 
 .ai-timeline-prompt-suggestions {
     box-sizing: border-box;
-    margin-top: var(--lumo-space-xs);
-    padding-bottom: var(--lumo-space-xs);
+    margin-top: var(--vaadin-gap-xs);
+    padding-bottom: var(--vaadin-gap-xs);
 }
 
 .ai-timeline-prompt-suggestions-heading {
-    color: var(--lumo-header-text-color);
-    font-size: var(--lumo-font-size-l);
+    color: var(--vaadin-text-color);
+    font-size: 1.125rem;
     font-weight: 700;
     line-height: 1.25;
-    margin: var(--lumo-space-l) 0 0;
+    margin: var(--vaadin-gap-l) 0 0;
 }
 
 .ai-timeline-input-bar {
@@ -45,19 +45,19 @@
 
 .ai-timeline-add-menu-item {
     box-sizing: border-box;
-    color: var(--lumo-body-text-color);
+    color: var(--vaadin-text-color);
     min-width: 11rem;
 }
 
 .ai-timeline-add-menu-item-icon {
-    color: var(--lumo-secondary-text-color);
+    color: var(--vaadin-text-color-secondary);
     flex: 0 0 auto;
-    height: var(--lumo-icon-size-s);
-    width: var(--lumo-icon-size-s);
+    height: 1.25rem;
+    width: 1.25rem;
 }
 
 .ai-timeline-add-menu-item-label {
-    font-size: var(--lumo-font-size-s);
+    font-size: 0.875rem;
     font-weight: 500;
 }
 

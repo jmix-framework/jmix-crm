@@ -1,0 +1,39 @@
+html {
+    --vaadin-clickable-cursor: pointer;
+
+    --aura-font-family: 'Montserrat', var(--aura-font-family-system);
+
+    --aura-accent-color-dark: oklch(0.563 0.224 259.535);
+    --aura-accent-color-light: oklch(0.563 0.224 259.535);
+    --aura-background-color-dark: oklch(0.201 0.002 17.289);
+    --aura-background-color-light: oklch(1 0 none);
+
+    --aura-base-radius: 4;
+    --aura-contrast-level: 2;
+    --aura-surface-level: 1.5;
+    --aura-app-layout-inset: 0px;
+    --aura-overlay-surface-opacity: 1;
+
+    --vaadin-button-shadow: none;
+    --vaadin-button-border-color: var(--vaadin-border-color);
+}
+
+.clickable {
+    cursor: pointer;
+}
+
+.sortable-grab-handle {
+    cursor: grab;
+}
+
+.card-background-success {
+    background-image: linear-gradient(45deg, transparent 40%, color-mix(in srgb, var(--aura-accent-color) 14%, transparent)) !important;
+}
+
+.card-background-error {
+    background-image: linear-gradient(45deg, transparent 40%, color-mix(in srgb, var(--crm-error-color) 14%, transparent)) !important;
+}
+
+.card-background-default {
+    background-image: linear-gradient(45deg, transparent 40%, var(--vaadin-background-container-strong)) !important;
+}

@@ -38,7 +38,6 @@ import io.jmix.flowui.action.SecuredBaseAction;
 import io.jmix.flowui.component.UiComponentUtils;
 import io.jmix.flowui.component.checkbox.JmixCheckbox;
 import io.jmix.flowui.component.formlayout.JmixFormLayout;
-import io.jmix.flowui.component.genericfilter.GenericFilter;
 import io.jmix.flowui.component.grid.DataGrid;
 import io.jmix.flowui.component.textfield.TypedTextField;
 import io.jmix.flowui.component.validation.ValidationErrors;
@@ -139,8 +138,6 @@ public class UserTaskListView extends StandardListView<UserTask> {
     private HorizontalLayout buttonsPanel;
     @ViewComponent
     private JmixFormLayout layoutWrapper;
-    @ViewComponent
-    private GenericFilter genericFilter;
 
     private boolean modifiedAfterEdit;
 
@@ -191,7 +188,6 @@ public class UserTaskListView extends StandardListView<UserTask> {
         listLayout.setHeight(getContent().getHeight());
         listLayout.setMaxHeight(getContent().getMaxHeight());
 
-        genericFilter.setVisible(false);
         detailsLayout.setVisible(!gridOnly);
         buttonsPanel.setVisible(!gridOnly);
 

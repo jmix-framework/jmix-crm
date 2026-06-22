@@ -8,7 +8,6 @@ import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.menubar.MenuBar;
-import com.vaadin.flow.component.menubar.MenuBarVariant;
 import io.jmix.flowui.component.upload.JmixUpload;
 import io.jmix.flowui.view.MessageBundle;
 
@@ -32,12 +31,10 @@ public class AddContextMenuFactory {
         configureAttachmentUploadForMenu(attachmentUpload);
 
         MenuBar menuBar = new MenuBar();
-        menuBar.addThemeVariants(MenuBarVariant.LUMO_ICON);
         menuBar.addClassName("ai-timeline-add-menu");
-        // menuBar.setOverlayClassName("ai-timeline-add-menu-overlay");
 
         Icon addIcon = VaadinIcon.PLUS.create();
-        addIcon.setSize("var(--lumo-icon-size-s)");
+        addIcon.setSize("20px");
 
         MenuItem addItem = menuBar.addItem(addIcon);
         addItem.setAriaLabel(messageBundle.getMessage("addContextAction"));

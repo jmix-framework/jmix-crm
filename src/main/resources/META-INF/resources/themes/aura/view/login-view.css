@@ -1,10 +1,18 @@
-/* Predefined styles for the LoginView */
+/* Predefined styles */
+
+.jmix-login-main-layout jmix-login-form::part(form) {
+    --vaadin-login-form-border-radius: var(--vaadin-radius-l);
+    --vaadin-login-form-background: var(--aura-surface-color);
+
+    box-shadow: var(--aura-shadow-s);
+    border: 1px solid var(--vaadin-border-color);
+}
 
 .login-form-wrapper {
-    max-width: calc(var(--lumo-size-m) * 12);
+    max-width: calc(2.25rem * 12);
     background: transparent;
-    padding: var(--lumo-space-l);
-    border-radius: var(--lumo-border-radius-m);
+    padding: var(--vaadin-gap-l);
+    border-radius: var(--vaadin-radius-m);
     align-items: stretch;
 }
 
@@ -18,28 +26,30 @@
     --vaadin-input-field-label-color: #D1CFCFFF;
     --vaadin-input-field-focused-label-color: white;
     --vaadin-input-field-hovered-label-color: white;
+
+    --vaadin-focus-ring-color: var(--aura-accent-contrast-color);
+    --vaadin-focus-ring-width: 2px;
 }
 
 .login-form-error-message {
-    background-color: var(--lumo-error-color-10pct);
-    padding: var(--lumo-space-m);
-    padding-left: var(--lumo-size-m);
-    border-radius: var(--lumo-border-radius-m);
-    margin-top: var(--lumo-space-m);
-    margin-bottom: var(--lumo-space-s);
-    color: var(--lumo-error-text-color);
+    background-color: white;
+    padding: var(--vaadin-gap-m);
+    padding-left: 2.25rem;
+    border-radius: var(--vaadin-radius-m);
+    margin-top: var(--vaadin-gap-m);
+    margin-bottom: var(--vaadin-gap-s);
+    color: var(--crm-error-text-color);
 }
 
 .login-form-error-message:before {
-    content: var(--lumo-icons-error);
-    font-family: lumo-icons;
-    font-size: var(--lumo-icon-size-m);
+    content: '⚠️';
+    font-size: var(--vaadin-icon-size);
     position: absolute;
-    width: var(--lumo-size-m);
+    width: 2.25rem;
     height: 1em;
     line-height: 1;
     text-align: center;
-    margin-left: calc(var(--lumo-size-m) * -0.95);
+    margin-left: calc(2.25rem * -0.95);
 }
 
 .login-form-error-message-title {
@@ -48,8 +58,9 @@
 }
 
 .login-form-error-message-description {
-    font-size: var(--lumo-font-size-s);
-    line-height: var(--lumo-line-height-s);
+    color: black;
+    font-size: 0.875rem;
+    line-height: 1.375;
     margin: 0;
     opacity: 0.9;
 }
@@ -88,7 +99,7 @@
 
 .login-panel {
     flex: 0 0 clamp(360px, 36vw, 520px);
-    background: var(--lumo-primary-color);
+    background: var(--aura-accent-color);
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -98,15 +109,17 @@
 }
 
 .login-brand-icon {
-    width: 48px;
-    height: 48px;
-    background-image: url("../images/logo.svg");
+    width: 40px;
+    height: 40px;
+    background-image: url("../../../images/logo.svg");
     background-repeat: no-repeat;
     filter: brightness(0) invert(1);
 }
 
 .login-brand-text {
-    font-size: 20px;
+    align-self: center;
+    justify-self: center;
+    font-size: 22px;
     font-weight: 800;
     color: white;
 }
@@ -115,7 +128,7 @@
     flex: 1 1 clamp(520px, 64vw, 1200px);
     height: 100%;
     padding: clamp(1.5rem, 4vw, 4rem) clamp(1rem, 3vw, 3rem);
-    background-image: url("../images/welcome.svg");
+    background-image: url("../../../images/welcome.svg");
     background-repeat: no-repeat;
     background-position: center;
     background-size: contain;
@@ -126,12 +139,13 @@
 }
 
 .usage-scenarios-btn {
-    color: rgba(255, 255, 255, 0.8) !important;
-    font-size: var(--lumo-font-size-s);
+    color: rgb(255 255 255) !important;
+    font-size: 0.875rem;
+    font-weight: 600;
 }
 
 .usage-scenarios-btn:hover {
-    color: white !important;
+    color: rgb(224 221 221 / 0.95) !important;
 }
 
 @media (max-width: 1100px) {

@@ -1,5 +1,6 @@
 package com.company.crm.app.ui.component;
 
+import com.company.crm.app.util.ui.theme.CrmStyleUtility;
 import com.company.crm.model.order.OrderStatus;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.formlayout.FormLayout;
@@ -7,13 +8,6 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.dom.ThemeList;
 import com.vaadin.flow.shared.Registration;
-import com.vaadin.flow.theme.lumo.LumoUtility;
-import com.vaadin.flow.theme.lumo.LumoUtility.Background;
-import com.vaadin.flow.theme.lumo.LumoUtility.FontSize;
-import com.vaadin.flow.theme.lumo.LumoUtility.FontWeight;
-import com.vaadin.flow.theme.lumo.LumoUtility.TextColor;
-import com.vaadin.flow.theme.lumo.LumoUtility.TextOverflow;
-import com.vaadin.flow.theme.lumo.LumoUtility.Whitespace;
 import io.jmix.core.Messages;
 import org.jspecify.annotations.Nullable;
 import org.springframework.beans.BeansException;
@@ -137,14 +131,14 @@ public class OrderStatusPipeline extends FormLayout implements ApplicationContex
         public OrderStatusComponent(OrderStatus status) {
             Span titleComponent = new Span(messages.getMessage(status));
             titleComponent.addClassNames(
-                    FontSize.LARGE, FontWeight.SEMIBOLD,
-                    TextOverflow.ELLIPSIS, Whitespace.NOWRAP,
-                    Background.TRANSPARENT);
+                    CrmStyleUtility.FontSize.LARGE, CrmStyleUtility.FontWeight.SEMIBOLD,
+                    CrmStyleUtility.TextOverflow.ELLIPSIS, CrmStyleUtility.Whitespace.NOWRAP,
+                    CrmStyleUtility.Background.TRANSPARENT);
 
             this.status = status;
             this.titleComponent = titleComponent;
 
-            addClassNames(LumoUtility.Margin.Bottom.XSMALL);
+            addClassNames(CrmStyleUtility.Margin.Bottom.XSMALL);
             add(titleComponent);
             installSize();
             installItemPositioning();
@@ -196,9 +190,9 @@ public class OrderStatusPipeline extends FormLayout implements ApplicationContex
         private void setActualTextColor(boolean selected) {
             if (List.of(OrderStatus.ACCEPTED, OrderStatus.DONE).contains(status)) {
                 if (selected) {
-                    titleComponent.addClassName(TextColor.PRIMARY_CONTRAST);
+                    titleComponent.addClassName(CrmStyleUtility.TextColor.PRIMARY_CONTRAST);
                 } else {
-                    titleComponent.removeClassName(TextColor.PRIMARY_CONTRAST);
+                    titleComponent.removeClassName(CrmStyleUtility.TextColor.PRIMARY_CONTRAST);
                 }
             }
         }

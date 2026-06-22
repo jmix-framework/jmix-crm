@@ -1,8 +1,8 @@
 package com.company.crm.ai.view.component.card;
 
-import com.company.crm.ai.view.component.support.AiContextCardActionSurface;
 import com.company.crm.ai.service.AiEntityReferenceResolver;
 import com.company.crm.ai.service.EntityReferenceViewData;
+import com.company.crm.ai.view.component.support.AiContextCardActionSurface;
 import com.vaadin.flow.component.card.Card;
 import com.vaadin.flow.component.card.CardVariant;
 
@@ -16,7 +16,7 @@ public class AiEntityReferenceCard extends Card {
         this.entityReferenceResolver = entityReferenceResolver;
 
         setWidthFull();
-        addThemeVariants(CardVariant.LUMO_OUTLINED);
+        addThemeVariants(CardVariant.OUTLINED);
         addClassName("ai-timeline-context-card");
     }
 

@@ -49,7 +49,8 @@
                 <datePicker id="toDatePicker" placeholder="msg:///toDatePicker.label" clearButtonVisible="true"/>
             </formLayout>
             <genericFilter id="advancedFilter" dataLoader="ordersDl" maxWidth="48em"
-                           opened="false" summaryText="msg:///advanced" themeNames="filled">
+                           opened="false" summaryText="msg:///advanced"
+                           themeNames="filled" classNames="mt-m mb-m">
                 <properties include="(number)|(client)|(date)|(status)|(total)"/>
             </genericFilter>
         </div>
@@ -66,7 +67,7 @@
             <endSlot>
                 <simplePagination id="pagination" dataLoader="ordersDl" itemsPerPageVisible="true"/>
                 <gridColumnVisibility dataGrid="ordersDataGrid" icon="COG_O"
-                                      themeNames="tertiary-inline" hideAllEnabled="false"/>
+                                      themeNames="tertiary" hideAllEnabled="false"/>
             </endSlot>
         </hbox>
         <component id="pipeLineFilter" class="com.company.crm.app.ui.component.OrderStatusPipeline"/>

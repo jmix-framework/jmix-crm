@@ -1,6 +1,7 @@
 package com.company.crm.app.util.ui;
 
 import com.company.crm.app.ui.component.GridEmptyStateComponent;
+import com.company.crm.app.util.ui.theme.CrmStyleUtility;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasStyle;
 import com.vaadin.flow.component.HasValue;
@@ -18,7 +19,6 @@ import com.vaadin.flow.data.validator.EmailValidator;
 import com.vaadin.flow.di.Instantiator;
 import com.vaadin.flow.dom.ThemeList;
 import com.vaadin.flow.router.QueryParameters;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 import io.jmix.chartsflowui.component.Chart;
 import io.jmix.chartsflowui.kit.component.model.shared.Color;
 import io.jmix.core.Messages;
@@ -163,7 +163,7 @@ public final class CrmUiUtils {
     }
 
     public static void setBackgroundTransparent(HasStyle component) {
-        component.addClassNames(LumoUtility.Background.TRANSPARENT);
+        component.addClassNames(CrmStyleUtility.Background.TRANSPARENT);
     }
 
     public static void openLink(String link) {

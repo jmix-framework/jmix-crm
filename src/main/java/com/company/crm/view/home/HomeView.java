@@ -11,6 +11,7 @@ import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.app.util.date.Period;
 import com.company.crm.app.util.ui.chart.ChartsUtils;
 import com.company.crm.app.util.ui.renderer.CrmRenderers;
+import com.company.crm.app.util.ui.theme.CrmStyleUtility;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.datatype.PriceDataType;
 import com.company.crm.model.invoice.Invoice;
@@ -31,7 +32,6 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.theme.lumo.LumoUtility.Margin;
 import io.jmix.chartsflowui.component.Chart;
 import io.jmix.chartsflowui.kit.component.model.DataSet;
 import io.jmix.chartsflowui.kit.component.model.Grid;
@@ -193,7 +193,7 @@ public class HomeView extends StandardView {
 
         var newTaskButton = new Button(messageBundle.getMessage("newTask"));
         newTaskButton.setIcon(VaadinIcon.PLUS.create());
-        newTaskButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        newTaskButton.addThemeVariants(ButtonVariant.PRIMARY);
         newTaskButton.addClickListener(clickEvent ->
                 dialogWindows.view(this, UserTaskListView.class)
                         .withViewConfigurer(UserTaskListView::detailOnly)
@@ -232,7 +232,7 @@ public class HomeView extends StandardView {
 
     private void doCreateCards(List<JmixCard> cards, JmixFormLayout form) {
         for (JmixCard card : cards) {
-            card.addClassNames(Margin.Top.MEDIUM, Margin.Bottom.MEDIUM);
+            card.addClassNames(CrmStyleUtility.Margin.Top.MEDIUM, CrmStyleUtility.Margin.Bottom.MEDIUM);
             form.add(card);
         }
     }
@@ -288,7 +288,7 @@ public class HomeView extends StandardView {
         @SuppressWarnings("unchecked")
         DataGrid<Invoice> grid = uiComponents.create(DataGrid.class);
         grid.setDataProvider(gridItems);
-        grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+        grid.addThemeVariants(GridVariant.ROW_STRIPES);
         grid.setMinHeight(10, Unit.EM);
         grid.setMaxHeight(15, Unit.EM);
         setDefaultEmptyStateComponent(grid);

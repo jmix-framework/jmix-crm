@@ -5,8 +5,8 @@
   color: transparent !important;
   pointer-events: none;
   user-select: none;
-  background-color: var(--lumo-contrast-10pct);
-  border-radius: var(--lumo-border-radius-m);
+  background-color: var(--vaadin-background-container-strong);
+  border-radius: var(--vaadin-radius-m);
   overflow: hidden;
 }
 
@@ -21,11 +21,11 @@
       rgba(255, 255, 255, 0) 100%
   );
   transform: translateX(-100%);
-  animation: crm-skeleton-shimmer 1.2s infinite;
+  animation: skeleton-shimmer 1.2s infinite;
   mix-blend-mode: overlay;
 }
 
-@keyframes crm-skeleton-shimmer {
+@keyframes skeleton-shimmer {
   100% {
     transform: translateX(100%);
   }

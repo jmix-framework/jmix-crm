@@ -1,9 +1,9 @@
 package com.company.crm.app.util.ui.color;
 
+import com.company.crm.app.util.ui.theme.CrmStyleUtility;
 import com.company.crm.model.client.ClientType;
 import com.company.crm.model.invoice.InvoiceStatus;
 import com.company.crm.model.order.OrderStatus;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 
 import static com.company.crm.app.util.ui.CrmUiUtils.CONTRAST_BADGE;
 import static com.company.crm.app.util.ui.CrmUiUtils.DEFAULT_BADGE;
@@ -15,10 +15,10 @@ public final class EnumClassColors {
 
     public static String getBackgroundClass(OrderStatus status) {
         return switch (status) {
-            case NEW -> LumoUtility.Background.ERROR_10;
-            case ACCEPTED -> LumoUtility.Background.PRIMARY;
-            case IN_PROGRESS -> LumoUtility.Background.WARNING;
-            case DONE -> LumoUtility.Background.SUCCESS;
+            case NEW -> CrmStyleUtility.Background.ERROR_10;
+            case ACCEPTED -> CrmStyleUtility.Background.PRIMARY;
+            case IN_PROGRESS -> CrmStyleUtility.Background.WARNING;
+            case DONE -> CrmStyleUtility.Background.SUCCESS;
         };
     }
 

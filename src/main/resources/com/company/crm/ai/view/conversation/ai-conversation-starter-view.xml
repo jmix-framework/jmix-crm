@@ -89,13 +89,13 @@
                              classNames="ai-conversation-starter-section-rule"/>
                         <button id="showAllHistoryBtn"
                                 text="msg://aiConversationStarterView.showAll"
-                                themeNames="tertiary-inline small"/>
+                                themeNames="tertiary small"/>
                     </hbox>
                     <gridLayout id="recentConversationsGridLayout"
                                 itemsContainer="recentConversationsDc"
                                 width="100%"
                                 columnMinWidth="20rem"
-                                gap="var(--lumo-space-s)"
+                                gap="var(--vaadin-space-s)"
                                 classNames="ai-conversation-starter-recent-grid"/>
 
                     <hbox id="promptSuggestionsHeader"
@@ -113,7 +113,7 @@
                                 itemsContainer="promptSuggestionsDc"
                                 width="100%"
                                 columnMinWidth="16rem"
-                                gap="var(--lumo-space-s)"
+                                gap="var(--vaadin-space-s)"
                                 classNames="ai-conversation-starter-suggestions-grid"/>
                 </vbox>
             </vbox>

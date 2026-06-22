@@ -7,6 +7,7 @@ import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.app.util.report.CrmReportUtils;
 import com.company.crm.app.util.ui.CrmUiUtils;
 import com.company.crm.app.util.ui.renderer.CrmRenderers;
+import com.company.crm.app.util.ui.theme.CrmStyleUtility;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.contact.Contact;
 import com.company.crm.model.invoice.Invoice;
@@ -28,10 +29,6 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.theme.lumo.LumoUtility.Background;
-import com.vaadin.flow.theme.lumo.LumoUtility.BorderRadius;
-import com.vaadin.flow.theme.lumo.LumoUtility.Margin;
-import com.vaadin.flow.theme.lumo.LumoUtility.Padding;
 import io.jmix.core.Messages;
 import io.jmix.core.querycondition.LogicalCondition;
 import io.jmix.core.repository.JmixDataRepositoryContext;
@@ -352,8 +349,8 @@ public class InvoiceListView extends StandardListView<Invoice> {
         block.setAlignItems(Alignment.CENTER);
         block.setJustifyContentMode(JustifyContentMode.CENTER);
         block.addClassName(Objects.equals(status, invoices_StatusSelect.getValue())
-                ? Background.CONTRAST_10 : Background.CONTRAST_5);
-        block.addClassNames(BorderRadius.FULL, Margin.AUTO, Padding.Bottom.MEDIUM);
+                ? CrmStyleUtility.Background.CONTRAST_10 : CrmStyleUtility.Background.CONTRAST_5);
+        block.addClassNames(CrmStyleUtility.BorderRadius.FULL, CrmStyleUtility.Margin.AUTO, CrmStyleUtility.Padding.Bottom.MEDIUM);
         block.addClickListener(e -> {
             boolean unselectStatus = Objects.equals(status, invoices_StatusSelect.getValue());
             invoices_StatusSelect.setValue(unselectStatus ? null : status);

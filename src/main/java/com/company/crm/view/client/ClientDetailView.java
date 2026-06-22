@@ -12,6 +12,7 @@ import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.app.util.date.range.LocalDateRange;
 import com.company.crm.app.util.ui.chart.ChartsUtils;
 import com.company.crm.app.util.ui.renderer.CrmRenderers;
+import com.company.crm.app.util.ui.theme.CrmStyleUtility;
 import com.company.crm.model.address.Address;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.client.ClientRepository;
@@ -36,9 +37,6 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.theme.lumo.LumoUtility.Overflow;
-import com.vaadin.flow.theme.lumo.LumoUtility.TextOverflow;
-import com.vaadin.flow.theme.lumo.LumoUtility.Whitespace;
 import io.jmix.chartsflowui.component.Chart;
 import io.jmix.chartsflowui.data.item.SimpleDataItem;
 import io.jmix.chartsflowui.kit.component.model.DataSet;
@@ -295,12 +293,12 @@ public class ClientDetailView extends StandardDetailView<Client> {
 
         var closeButton = uiComponents.create(JmixButton.class);
         closeButton.setIcon(VaadinIcon.CLOSE_SMALL.create());
-        closeButton.addThemeVariants(ButtonVariant.LUMO_ICON, ButtonVariant.LUMO_TERTIARY);
+        closeButton.addThemeVariants(ButtonVariant.TERTIARY);
         closeButton.addClickListener(e -> closeDialog.run());
         addressDialog.getHeader().add(closeButton);
 
         var saveButton = uiComponents.create(JmixButton.class);
-        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        saveButton.addThemeVariants(ButtonVariant.PRIMARY);
         saveButton.setText(messages.getMessage("actions.Save"));
         saveButton.addClickListener(event -> {
             if (addressFragment.validate().isEmpty()) {
@@ -417,13 +415,13 @@ public class ClientDetailView extends StandardDetailView<Client> {
 
     private void fillSummaryCard(String title, CrmCard card, BigDecimal value) {
         var valueContent = new H1(PriceDataType.defaultFormat(value, datatypeFormatter));
-        valueContent.addClassNames(Overflow.HIDDEN, TextOverflow.ELLIPSIS, Whitespace.NOWRAP);
+        valueContent.addClassNames(CrmStyleUtility.Overflow.HIDDEN, CrmStyleUtility.TextOverflow.ELLIPSIS, CrmStyleUtility.Whitespace.NOWRAP);
 
         var content = new VerticalLayout(valueContent);
         content.setPadding(false);
         content.setSpacing(false);
 
-        content.addClassNames(Overflow.HIDDEN, TextOverflow.ELLIPSIS, Whitespace.NOWRAP);
+        content.addClassNames(CrmStyleUtility.Overflow.HIDDEN, CrmStyleUtility.TextOverflow.ELLIPSIS, CrmStyleUtility.Whitespace.NOWRAP);
         card.fillAsStaticCard(title, content);
         SkeletonStyler.remove(card);
     }

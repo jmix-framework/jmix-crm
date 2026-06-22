@@ -1,6 +1,6 @@
-# ![CRM](src/main/resources/META-INF/resources/images/logo.svg) B2B CRM
+# ![CRM](../src/main/resources/META-INF/resources/images/logo.svg) B2B CRM
 
-Sprachen: [English](README.md) | [Русский](README_ru.md) | [Deutsch](README_de.md) | [Italiano](README_it.md) | [Español](README_es.md)
+Sprachen: [English](../README.md) | [Русский](README_ru.md) | [Deutsch](README_de.md) | [Italiano](README_it.md) | [Español](README_es.md) | [Tiếng Việt](README_vi.md) | [Srpski](README_sr.md)
 
 `B2B CRM` ist eine Enterprise-Demoanwendung auf Basis von Jmix, die zeigt, wie **produktionsreife** Geschäftssysteme
 für `Kunden`, `Aufträge`, `Rechnungsstellung`, `Finanzen` und `Analysen` entwickelt werden. <br>Sie bildet reale **ERP/CRM**-Szenarien ab und demonstriert
@@ -54,7 +54,7 @@ Voraussetzungen: Java 21+
 
 ### Projekt starten
 
-1. Starte die Jmix-Run-Konfiguration [B2B CRM](.run/crm-app.run.xml) oder führe aus
+1. Starte die Jmix-Run-Konfiguration [B2B CRM](../.run/crm-app.run.xml) oder führe aus
 
    ```bash
    ./gradlew bootRun
@@ -103,7 +103,7 @@ Wichtige Funktionen:
 
 Konfiguration:
 
-- Setze `spring.ai.openai.api-key` in [application.properties](src/main/resources/application.properties) oder stelle die Umgebungsvariable `SPRING_AI_OPENAI_APIKEY` bereit
+- Setze `spring.ai.openai.api-key` in [application.properties](../src/main/resources/application.properties) oder stelle die Umgebungsvariable `SPRING_AI_OPENAI_APIKEY` bereit
 
 Nach der Aktivierung öffne den Menüpunkt `CRM AI` im Hauptmenü, um eine neue Konversation zu starten.
 
@@ -112,8 +112,8 @@ Nach der Aktivierung öffne den Menüpunkt `CRM AI` im Hauptmenü, um eine neue 
 Das lokale Profil generiert Demo-Daten beim Start der Anwendung:
 
 - Die Generierung von Demo-Daten kann mit der Eigenschaft `crm.generateDemoData`
-  in [application.properties](src/main/resources/application.properties) deaktiviert werden
-- Der Katalog wird aus [catalog.xlsx](src/main/resources/demo-data/catalog.xlsx) importiert
+  in [application.properties](../src/main/resources/application.properties) deaktiviert werden
+- Der Katalog wird aus [catalog.xlsx](../src/main/resources/demo-data/catalog.xlsx) importiert
 
 ## 👥 Anwendungskonten
 

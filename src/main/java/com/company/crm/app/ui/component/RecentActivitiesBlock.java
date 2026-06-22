@@ -2,6 +2,7 @@ package com.company.crm.app.ui.component;
 
 import com.company.crm.app.service.datetime.DateTimeService;
 import com.company.crm.app.service.user.UserActivityService;
+import com.company.crm.app.util.ui.theme.CrmStyleUtility;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.user.User;
 import com.company.crm.model.user.activity.UserActivity;
@@ -17,7 +18,6 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.Scroller;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 import io.jmix.core.Messages;
 import io.jmix.flowui.asynctask.UiAsyncTasks;
 import org.slf4j.Logger;
@@ -45,9 +45,9 @@ public class RecentActivitiesBlock extends Div implements ApplicationContextAwar
             DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm");
 
     private static final String[] BORDER_CLASSNAMES = new String[]{
-            LumoUtility.BorderRadius.LARGE,
-            LumoUtility.Border.ALL,
-            LumoUtility.Padding.MEDIUM
+            CrmStyleUtility.BorderRadius.LARGE,
+            CrmStyleUtility.Border.ALL,
+            CrmStyleUtility.Padding.MEDIUM
     };
 
     private final Map<String, LocalDate> loadedActivities = new LinkedHashMap<>();
@@ -140,11 +140,11 @@ public class RecentActivitiesBlock extends Div implements ApplicationContextAwar
 
     private void addActivitiesBlock(String title, LocalDate date) {
         H5 titleComponent = new H5(title);
-        titleComponent.addClassNames(LumoUtility.Padding.Bottom.SMALL, LumoUtility.Padding.Top.MEDIUM);
+        titleComponent.addClassNames(CrmStyleUtility.Padding.Bottom.SMALL, CrmStyleUtility.Padding.Top.MEDIUM);
         add(titleComponent);
 
         Div scrollerContent = new Div();
-        scrollerContent.addClassNames(LumoUtility.Padding.Left.MEDIUM);
+        scrollerContent.addClassNames(CrmStyleUtility.Padding.Left.MEDIUM);
 
         Scroller scroller = new Scroller(scrollerContent);
         scroller.setMaxHeight(activitiesInBlockMaxCount * 4, Unit.EM);
@@ -191,7 +191,7 @@ public class RecentActivitiesBlock extends Div implements ApplicationContextAwar
 
     private Component createEmptyRow() {
         Span span = new Span(messages.getMessage("recentActivities.emptyState"));
-        span.addClassNames(LumoUtility.Padding.Top.MEDIUM);
+        span.addClassNames(CrmStyleUtility.Padding.Top.MEDIUM);
         return span;
     }
 
@@ -204,16 +204,16 @@ public class RecentActivitiesBlock extends Div implements ApplicationContextAwar
         row.add(avatar);
 
         Span userNameSpan = new Span(user.getFullName());
-        userNameSpan.addClassNames(LumoUtility.TextColor.BODY);
+        userNameSpan.addClassNames(CrmStyleUtility.TextColor.BODY);
 
         Span activityDescriptionSpan = new Span(activity.getActionDescription());
-        activityDescriptionSpan.addClassNames(LumoUtility.TextColor.TERTIARY);
+        activityDescriptionSpan.addClassNames(CrmStyleUtility.TextColor.TERTIARY);
 
         Span dateSpan = new Span(DATE_WITH_YEAR_AND_TIME.format(requireNonNull(activity.getCreatedDate())));
-        dateSpan.addClassNames(LumoUtility.TextColor.TERTIARY);
+        dateSpan.addClassNames(CrmStyleUtility.TextColor.TERTIARY);
 
         Div activityInfoBlock = new Div(new HorizontalLayout(userNameSpan, activityDescriptionSpan), dateSpan);
-        activityInfoBlock.addClassNames(LumoUtility.Padding.Bottom.SMALL);
+        activityInfoBlock.addClassNames(CrmStyleUtility.Padding.Bottom.SMALL);
         row.add(activityInfoBlock);
 
         return row;

@@ -1,12 +1,11 @@
 package com.company.crm.view.main;
 
-import com.company.crm.ai.model.AiConversation;
 import com.company.crm.ai.service.AiConversationService;
-import com.company.crm.ai.view.conversation.AiConversationDetailView;
 import com.company.crm.ai.view.conversation.AiConversationStarterView;
 import com.company.crm.app.online.OnlineDemoDataCreator;
 import com.company.crm.app.ui.component.CrmLoader;
 import com.company.crm.app.util.constant.CrmConstants;
+import com.company.crm.app.util.ui.theme.CrmStyleUtility;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.client.ClientRepository;
 import com.company.crm.model.user.User;
@@ -16,6 +15,7 @@ import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.avatar.AvatarVariant;
+import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
@@ -23,8 +23,8 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.popover.Popover;
+import com.vaadin.flow.component.popover.PopoverVariant;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 import io.jmix.core.AccessManager;
 import io.jmix.core.Messages;
 import io.jmix.core.Metadata;
@@ -32,21 +32,19 @@ import io.jmix.core.security.CurrentAuthentication;
 import io.jmix.core.usersubstitution.CurrentUserSubstitution;
 import io.jmix.flowui.DialogWindows;
 import io.jmix.flowui.Dialogs;
-import io.jmix.flowui.Views;
-import io.jmix.flowui.component.sidedialog.SideDialog;
-import io.jmix.flowui.kit.component.sidedialog.SideDialogPosition;
-import com.vaadin.flow.component.button.Button;
 import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.ViewNavigators;
+import io.jmix.flowui.Views;
 import io.jmix.flowui.accesscontext.UiShowViewContext;
 import io.jmix.flowui.app.main.StandardMainView;
 import io.jmix.flowui.asynctask.UiAsyncTasks;
 import io.jmix.flowui.component.SupportsTypedValue.TypedValueChangeEvent;
+import io.jmix.flowui.component.sidedialog.SideDialog;
 import io.jmix.flowui.component.textfield.TypedTextField;
 import io.jmix.flowui.component.virtuallist.JmixVirtualList;
 import io.jmix.flowui.kit.action.ActionPerformedEvent;
 import io.jmix.flowui.kit.component.button.JmixButton;
-import io.jmix.flowui.view.DialogWindow;
+import io.jmix.flowui.kit.component.sidedialog.SideDialogPosition;
 import io.jmix.flowui.view.Install;
 import io.jmix.flowui.view.MessageBundle;
 import io.jmix.flowui.view.Subscribe;
@@ -174,7 +172,7 @@ public class MainView extends StandardMainView {
         String name = generateUserName(user);
 
         Avatar avatar = createAvatar(name);
-        avatar.addThemeVariants(AvatarVariant.LUMO_LARGE);
+        avatar.addThemeVariants(AvatarVariant.LARGE);
 
         Span text = uiComponents.create(Span.class);
         text.setText(name);
@@ -235,7 +233,7 @@ public class MainView extends StandardMainView {
         header.add(titleSpan);
 
         Button closeButton = new Button(VaadinIcon.CLOSE.create(), event -> sideDialog.close());
-        closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ICON);
+        closeButton.addThemeVariants(ButtonVariant.TERTIARY);
         header.add(closeButton);
 
         return header;
@@ -301,6 +299,7 @@ public class MainView extends StandardMainView {
         popover.setTarget(searchField);
         popover.setWidth("25em");
         popover.setHeight("10em");
+        popover.addThemeVariants(PopoverVariant.NO_PADDING);
         popover.setCloseOnEsc(true);
         popover.setCloseOnOutsideClick(true);
         popover.open();
@@ -328,7 +327,7 @@ public class MainView extends StandardMainView {
         JmixVirtualList<Client> virtualList = uiComponents.create(JmixVirtualList.class);
         virtualList.setItems(clients);
         virtualList.setRenderer(createClientsListRenderer(showAll, popover));
-        virtualList.addClassNames(LumoUtility.Padding.MEDIUM);
+        virtualList.addClassNames(CrmStyleUtility.Padding.Bottom.MEDIUM);
 
         popover.removeAll();
         popover.add(virtualList);
@@ -341,8 +340,8 @@ public class MainView extends StandardMainView {
 
             JmixButton button = uiComponents.create(JmixButton.class);
             button.setText(client.getName());
-            button.addClassNames(LumoUtility.TextOverflow.ELLIPSIS, LumoUtility.Whitespace.NOWRAP);
-            button.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE, ButtonVariant.LUMO_CONTRAST);
+            button.addClassNames(CrmStyleUtility.TextOverflow.ELLIPSIS, CrmStyleUtility.Whitespace.NOWRAP);
+            button.addThemeVariants(ButtonVariant.TERTIARY);
             button.setIcon(isShowAll ? VaadinIcon.EXTERNAL_LINK.create() : VaadinIcon.USER.create());
 
             button.addClickListener(click -> {
