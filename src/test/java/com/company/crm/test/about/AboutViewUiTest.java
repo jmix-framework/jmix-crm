@@ -49,9 +49,9 @@ public class AboutViewUiTest extends AbstractUiTest {
                 "https://www.jmix.io/blog/"
         );
         assertThat(hrefsOf(learn)).containsExactly(
+                "https://ai-assistant.jmix.io/",
                 "https://docs.jmix.io/jmix/intro.html",
                 "https://docs.jmix.io/jmix/concepts/index.html",
-                "https://ai-assistant.jmix.io/",
                 "https://www.udemy.com/course/rapid-application-development-with-jmix/",
                 "https://www.udemy.com/course/frontend-with-java-and-jmix/?referralCode=FCE0EA245FF7F448C414"
         );
