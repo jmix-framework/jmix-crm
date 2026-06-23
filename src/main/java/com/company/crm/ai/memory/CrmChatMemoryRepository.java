@@ -52,7 +52,7 @@ public class CrmChatMemoryRepository implements ChatMemoryRepository {
     @Override
     public List<String> findConversationIds() {
         try {
-            return dataManager.loadValue("select c.id from crm_AiConversation c", UUID.class)
+            return dataManager.loadValue("select c.id from AiConversation c", UUID.class)
                     .list()
                     .stream()
                     .map(UUID::toString)

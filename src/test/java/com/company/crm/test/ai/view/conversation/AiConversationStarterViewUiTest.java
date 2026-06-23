@@ -450,7 +450,7 @@ public class AiConversationStarterViewUiTest extends AbstractUiTest {
 
     private long countConversations() {
         return systemAuthenticator.withSystem(() -> dataManager.loadValue(
-                "select count(c) from crm_AiConversation c", Long.class).one());
+                "select count(c) from AiConversation c", Long.class).one());
     }
 
     private FileRef fileRef(String fileName) {

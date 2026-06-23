@@ -44,15 +44,18 @@ import static com.company.crm.app.util.ui.CrmUiUtils.addRowSelectionInMultiSelec
 import static com.company.crm.app.util.ui.CrmUiUtils.setSearchHintPopover;
 import static com.company.crm.app.util.ui.datacontext.DataContextUtils.addCondition;
 import static com.company.crm.app.util.ui.datacontext.DataContextUtils.installSortByCreatedDate;
+import static com.company.crm.view.catalog.CategoryItemListView.ROUTE;
 import static io.jmix.core.querycondition.PropertyCondition.contains;
 import static io.jmix.core.querycondition.PropertyCondition.equal;
 
-@Route(value = "products", layout = MainView.class)
+@Route(value = ROUTE, layout = MainView.class)
 @ViewController(id = CrmConstants.ViewIds.CATEGORY_ITEM_LIST)
 @ViewDescriptor(path = "category-item-list-view.xml")
 @LookupComponent("categoryItemsDataGrid")
 @DialogMode(width = "64em", resizable = true)
 public class CategoryItemListView extends StandardListView<CategoryItem> {
+
+    public static final String ROUTE = "products";
 
     @Autowired
     private CrmRenderers crmRenderers;

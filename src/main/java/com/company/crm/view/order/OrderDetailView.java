@@ -69,13 +69,16 @@ import static com.company.crm.app.util.ui.CrmUiUtils.DEFAULT_BADGE;
 import static com.company.crm.app.util.ui.CrmUiUtils.SUCCESS_BADGE;
 import static com.company.crm.app.util.ui.CrmUiUtils.WARNING_BADGE;
 import static com.company.crm.model.datatype.PriceDataType.defaultFormat;
+import static com.company.crm.view.order.OrderDetailView.ROUTE;
 
-@Route(value = "orders/:id", layout = MainView.class)
+@Route(value = ROUTE, layout = MainView.class)
 @ViewController(id = CrmConstants.ViewIds.ORDER_DETAIL)
 @ViewDescriptor(path = "order-detail-view.xml")
 @EditedEntityContainer("orderDc")
 @PrimaryDetailView(Order.class)
 public class OrderDetailView extends StandardDetailView<Order> {
+
+    public static final String ROUTE = "orders/:id";
 
     @Autowired
     private Dialogs dialogs;

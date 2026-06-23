@@ -69,18 +69,21 @@ import static com.company.crm.app.util.ui.CrmUiUtils.setBadge;
 import static com.company.crm.app.util.ui.color.EnumClassColors.getBadgeVariant;
 import static com.company.crm.app.util.ui.datacontext.DataContextUtils.addCondition;
 import static com.company.crm.app.util.ui.datacontext.DataContextUtils.installSortByCreatedDate;
+import static com.company.crm.view.invoice.InvoiceListView.ROUTE;
 import static io.jmix.core.querycondition.PropertyCondition.equal;
 import static io.jmix.core.querycondition.PropertyCondition.greaterOrEqual;
 import static io.jmix.core.querycondition.PropertyCondition.lessOrEqual;
 import static io.jmix.flowui.component.UiComponentUtils.getCurrentView;
 
-@Route(value = "invoices", layout = MainView.class)
+@Route(value = ROUTE, layout = MainView.class)
 @ViewDescriptor("invoice-list-view.xml")
 @ViewController(CrmConstants.ViewIds.INVOICE_LIST)
 @LookupComponent("invoicesDataGrid")
 @PrimaryListView(Invoice.class)
 @DialogMode(width = "90%", resizable = true)
 public class InvoiceListView extends StandardListView<Invoice> {
+
+    public static final String ROUTE = "invoices";
 
     @Autowired
     private Messages messages;

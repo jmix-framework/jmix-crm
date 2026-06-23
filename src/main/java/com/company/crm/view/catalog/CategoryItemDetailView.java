@@ -29,13 +29,16 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
+import static com.company.crm.view.catalog.CategoryItemDetailView.ROUTE;
 import static com.vaadin.flow.server.streams.DownloadHandler.fromInputStream;
 
-@Route(value = "products/:id", layout = MainView.class)
+@Route(value = ROUTE, layout = MainView.class)
 @ViewController(id = CrmConstants.ViewIds.CATEGORY_ITEM_DETAIL)
 @ViewDescriptor(path = "category-item-detail-view.xml")
 @EditedEntityContainer("categoryItemDc")
 public class CategoryItemDetailView extends StandardDetailView<CategoryItem> {
+
+    public static final String ROUTE = "products/:id";
 
     @Autowired
     private FileStorage fileStorage;

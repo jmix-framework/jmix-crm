@@ -39,12 +39,15 @@ import java.util.Set;
 import java.util.UUID;
 
 import static com.company.crm.app.util.price.PriceCalculator.calculateInvoiceFieldsFromOrder;
+import static com.company.crm.view.invoice.InvoiceDetailView.ROUTE;
 
-@Route(value = "invoices/:id", layout = MainView.class)
+@Route(value = ROUTE, layout = MainView.class)
 @ViewController(id = CrmConstants.ViewIds.INVOICE_DETAIL)
 @ViewDescriptor(path = "invoice-detail-view.xml")
 @EditedEntityContainer("invoiceDc")
 public class InvoiceDetailView extends StandardDetailView<Invoice> {
+
+    public static final String ROUTE = "invoices/:id";
 
     @Autowired
     private EntityStates entityStates;

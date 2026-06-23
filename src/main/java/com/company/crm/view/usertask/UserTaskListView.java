@@ -78,17 +78,20 @@ import java.util.List;
 import java.util.Set;
 
 import static com.company.crm.app.util.ui.datacontext.DataContextUtils.addCondition;
+import static com.company.crm.view.usertask.UserTaskListView.ROUTE;
 import static io.jmix.core.repository.JmixDataRepositoryUtils.buildPageRequest;
 import static io.jmix.core.repository.JmixDataRepositoryUtils.buildRepositoryContext;
 import static io.jmix.core.repository.JmixDataRepositoryUtils.extractEntityId;
 import static io.jmix.flowui.component.delegate.AbstractFieldDelegate.PROPERTY_INVALID;
 
-@Route(value = "user-tasks", layout = MainView.class)
+@Route(value = ROUTE, layout = MainView.class)
 @ViewController(id = CrmConstants.ViewIds.USER_TASK_LIST)
 @ViewDescriptor(path = "user-task-list-view.xml")
 @LookupComponent("userTasksDataGrid")
 @DialogMode(width = "90%", resizable = true, closeOnOutsideClick = true, closeOnEsc = true)
 public class UserTaskListView extends StandardListView<UserTask> {
+
+    public static final String ROUTE = "user-tasks";
 
     @Autowired
     private UserTaskRepository userTaskRepository;

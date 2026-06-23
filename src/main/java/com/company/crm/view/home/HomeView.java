@@ -79,12 +79,15 @@ import java.util.Map;
 import static com.company.crm.app.feature.sortable.SortableFeature.makeSortable;
 import static com.company.crm.app.util.ui.CrmUiUtils.setBackgroundTransparent;
 import static com.company.crm.app.util.ui.CrmUiUtils.setDefaultEmptyStateComponent;
+import static com.company.crm.view.home.HomeView.ROUTE;
 import static io.jmix.flowui.component.UiComponentUtils.traverseComponents;
 
-@Route(value = "", layout = MainView.class)
+@Route(value = ROUTE, layout = MainView.class)
 @ViewController(id = CrmConstants.ViewIds.HOME)
 @ViewDescriptor(path = "home-view.xml")
 public class HomeView extends StandardView {
+
+    public static final String ROUTE = "";
 
     @Autowired
     private Metadata metadata;

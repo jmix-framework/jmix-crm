@@ -30,6 +30,8 @@
         <item view="Payment.list" id="payments" title="msg:///menu_config.finance.payments.title" icon="vaadin:wallet"/>
     </menu>
 
+    <separator/>
+
     <menu opened="true" id="administration"
           description="msg:///menu_config.administration.description"
           title="msg:///menu_config.administration.title" icon="vaadin:cog">
@@ -46,4 +48,9 @@
             <item view="report_ReportTableView" title="msg://io.jmix.reportsflowui/reportTableView.menu"/>
         </menu>
     </menu>
+
+    <separator/>
+
+    <item view="AboutView" id="about"
+          title="msg:///menu_config.about.title" icon="vaadin:info-circle"/>
 </menu-config>

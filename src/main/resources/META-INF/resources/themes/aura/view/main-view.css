@@ -304,8 +304,7 @@ vaadin-button[theme~="ai"] vaadin-icon[icon="crm:sparkles"] {
 }
 
 .jmix-menu-item {
-    padding: var(--vaadin-padding-m) var(--vaadin-padding-m) var(--vaadin-padding-m) var(--vaadin-padding-m) !important;
-    font-size: var(--aura-font-size-m);
+    padding: var(--vaadin-padding-s) var(--vaadin-padding-m) var(--vaadin-padding-s) var(--vaadin-padding-m) !important;
 }
 
 .jmix-menu-item span {

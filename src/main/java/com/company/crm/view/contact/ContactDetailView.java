@@ -1,5 +1,6 @@
 package com.company.crm.view.contact;
 
+import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.contact.Contact;
 import com.company.crm.model.contact.ContactRepository;
@@ -23,12 +24,16 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-@Route(value = "contacts/:id", layout = MainView.class)
-@ViewController(id = "Contact.detail")
+import static com.company.crm.view.contact.ContactDetailView.ROUTE;
+
+@Route(value = ROUTE, layout = MainView.class)
+@ViewController(id = CrmConstants.ViewIds.CONTACT_DETAIL)
 @ViewDescriptor(path = "contact-detail-view.xml")
 @EditedEntityContainer("contactDc")
 @DialogMode(width = "64em", resizable = true)
 public class ContactDetailView extends StandardDetailView<Contact> {
+
+    public static final String ROUTE = "contacts/:id";
 
     @Autowired
     private ContactRepository repository;

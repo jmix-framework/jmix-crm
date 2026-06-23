@@ -36,11 +36,15 @@ import java.util.List;
 import java.util.Objects;
 import java.util.TimeZone;
 
-@Route(value = "users/:id", layout = MainView.class)
+import static com.company.crm.view.user.UserDetailView.ROUTE;
+
+@Route(value = ROUTE, layout = MainView.class)
 @ViewController(id = CrmConstants.ViewIds.USER_DETAIL)
 @ViewDescriptor(path = "user-detail-view.xml")
 @EditedEntityContainer("userDc")
 public class UserDetailView extends StandardDetailView<User> {
+
+    public static final String ROUTE = "users/:id";
 
     @Autowired
     private RoleUtils roleUtils;

@@ -1,11 +1,19 @@
 .jmix
-
 .bin
-.gradle
+.DS_Store
+
 build/
-!gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**
 !**/src/test/**
+
+### GRADLE ###
+.gradle
+!gradle/wrapper/gradle-wrapper.jar
+
+### AI ###
+openspec/**
+docs/superpowers/**
+.playwright-mcp
 
 ### IntelliJ IDEA ###
 .idea/*
@@ -25,5 +33,3 @@ src/main/frontend/generated/
 pnpmfile.js
 vite.generated.ts
 webpack.generated.js
-
-.DS_Store

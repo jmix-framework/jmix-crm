@@ -78,16 +78,19 @@ import static com.company.crm.app.util.ui.CrmUiUtils.openLink;
 import static com.company.crm.app.util.ui.CrmUiUtils.setSearchHintPopover;
 import static com.company.crm.app.util.ui.datacontext.DataContextUtils.addCondition;
 import static com.company.crm.app.util.ui.datacontext.DataContextUtils.installSortByCreatedDate;
+import static com.company.crm.view.client.ClientListView.ROUTE;
 import static io.jmix.core.querycondition.PropertyCondition.contains;
 import static io.jmix.core.querycondition.PropertyCondition.equal;
 import static io.jmix.core.querycondition.PropertyCondition.isCollectionEmpty;
 
-@Route(value = "clients", layout = MainView.class)
+@Route(value = ROUTE, layout = MainView.class)
 @ViewController(id = CrmConstants.ViewIds.CLIENT_LIST)
 @ViewDescriptor(path = "client-list-view.xml")
 @LookupComponent("clientsDataGrid")
 @DialogMode(width = "90%", resizable = true)
 public class ClientListView extends StandardListView<Client> {
+
+    public static final String ROUTE = "clients";
 
     @Autowired
     private Messages messages;

@@ -4,6 +4,7 @@ import com.company.crm.ai.model.AiConversation;
 import com.company.crm.ai.model.AiConversationAttachment;
 import com.company.crm.ai.model.ChatMessage;
 import com.company.crm.ai.model.ChatMessageEntityReference;
+import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.model.address.Address;
 import com.company.crm.model.catalog.category.Category;
 import com.company.crm.model.catalog.item.CategoryItem;
@@ -36,8 +37,8 @@ public interface ManagerRole extends UiMinimalRole, ReportsRunRole {
     String CODE = "manager";
     String NAME = "Manager";
 
-    @MenuPolicy(menuIds = {"home", "tasks", "clients", "orders", "invoices", "payments", "AiConversation.start"})
-    @ViewPolicy(viewIds = {"HomeView", "UserTask.list", "Client.list", "Order.list", "CategoryItem.detail", "Category.detail", "Client.detail", "Invoice.detail", "Invoice.list", "OrderItem.detail", "Order.detail", "Payment.detail", "Payment.list", "AddressFragment", "Contact.detail", "flowui_AddConditionView", "flowui_GroupFilterCondition.detail", "flowui_JpqlFilterCondition.detail", "flowui_PropertyFilterCondition.detail", "flowui_DateIntervalDialog", "AiConversation.detail", "AiConversation.start"})
+    @MenuPolicy(menuIds = {"home", "tasks", "clients", "orders", "invoices", "payments", CrmConstants.ViewIds.AI_CONVERSATION_STARTER})
+    @ViewPolicy(viewIds = {CrmConstants.ViewIds.HOME, CrmConstants.ViewIds.USER_TASK_LIST, CrmConstants.ViewIds.CLIENT_LIST, CrmConstants.ViewIds.ORDER_LIST, CrmConstants.ViewIds.CATEGORY_ITEM_DETAIL, CrmConstants.ViewIds.CATEGORY_DETAIL, CrmConstants.ViewIds.CLIENT_DETAIL, CrmConstants.ViewIds.INVOICE_DETAIL, CrmConstants.ViewIds.INVOICE_LIST, CrmConstants.ViewIds.ORDER_ITEM_DETAIL, CrmConstants.ViewIds.ORDER_DETAIL, CrmConstants.ViewIds.PAYMENT_DETAIL, CrmConstants.ViewIds.PAYMENT_LIST, "AddressFragment", CrmConstants.ViewIds.CONTACT_DETAIL, "flowui_AddConditionView", "flowui_GroupFilterCondition.detail", "flowui_JpqlFilterCondition.detail", "flowui_PropertyFilterCondition.detail", "flowui_DateIntervalDialog", CrmConstants.ViewIds.AI_CONVERSATION_DETAIL, CrmConstants.ViewIds.AI_CONVERSATION_STARTER})
     void views();
 
     @EntityAttributePolicy(entityClass = AiConversation.class, attributes = "*", action = EntityAttributePolicyAction.MODIFY)

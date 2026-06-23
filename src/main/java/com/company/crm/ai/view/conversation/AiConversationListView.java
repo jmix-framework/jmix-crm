@@ -10,10 +10,13 @@ import io.jmix.flowui.view.StandardListView;
 import io.jmix.flowui.view.ViewController;
 import io.jmix.flowui.view.ViewDescriptor;
 
-@Route(value = "ai-conversations/all", layout = MainView.class)
+import static com.company.crm.ai.view.conversation.AiConversationListView.ROUTE;
+
+@Route(value = ROUTE, layout = MainView.class)
 @ViewController(id = CrmConstants.ViewIds.AI_CONVERSATION_LIST)
 @ViewDescriptor(path = "ai-conversation-list-view.xml")
 @LookupComponent("aiConversationsDataGrid")
 @DialogMode(width = "90%", resizable = true)
 public class AiConversationListView extends StandardListView<AiConversation> {
+    public static final String ROUTE = "ai-conversations/all";
 }

@@ -92,14 +92,17 @@ import java.util.UUID;
 
 import static com.company.crm.app.feature.sortable.SortableFeature.makeSortable;
 import static com.company.crm.app.util.demo.DemoUtils.defaultSleepForStatisticsLoading;
+import static com.company.crm.view.client.ClientDetailView.ROUTE;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-@Route(value = "clients/:id", layout = MainView.class)
+@Route(value = ROUTE, layout = MainView.class)
 @ViewController(id = CrmConstants.ViewIds.CLIENT_DETAIL)
 @ViewDescriptor(path = "client-detail-view.xml")
 @EditedEntityContainer("clientDc")
 @DialogMode(width = "90%", height = "90%", resizable = true, closeOnEsc = true, closeOnOutsideClick = true)
 public class ClientDetailView extends StandardDetailView<Client> {
+
+    public static final String ROUTE = "clients/:id";
 
     @Autowired
     private Messages messages;

@@ -46,10 +46,14 @@ import java.util.Locale;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-@Route(value = "login")
+import static com.company.crm.view.login.LoginView.ROUTE;
+
+@Route(value = ROUTE)
 @ViewController(id = CrmConstants.ViewIds.LOGIN)
 @ViewDescriptor(path = "login-view.xml")
 public class LoginView extends StandardView implements LocaleChangeObserver {
+
+    public static final String ROUTE = "login";
 
     private static final Logger log = LoggerFactory.getLogger(LoginView.class);
     

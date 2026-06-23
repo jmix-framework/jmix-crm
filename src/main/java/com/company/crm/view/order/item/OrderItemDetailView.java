@@ -42,13 +42,16 @@ import static com.company.crm.app.util.price.PriceCalculator.calculateNetPrice;
 import static com.company.crm.app.util.price.PriceCalculator.calculateVat;
 import static com.company.crm.app.util.price.PriceCalculator.calculateVatPercent;
 import static com.company.crm.app.util.price.PriceCalculator.recalculatePricing;
+import static com.company.crm.view.order.item.OrderItemDetailView.ROUTE;
 
-@Route(value = "order-items/:id", layout = MainView.class)
+@Route(value = ROUTE, layout = MainView.class)
 @ViewController(id = CrmConstants.ViewIds.ORDER_ITEM_DETAIL)
 @ViewDescriptor(path = "order-item-detail-view.xml")
 @EditedEntityContainer("orderItemDc")
 @DialogMode(resizable = true)
 public class OrderItemDetailView extends StandardDetailView<OrderItem> {
+
+    public static final String ROUTE = "order-items/:id";
 
     @Autowired
     private EntityStates entityStates;

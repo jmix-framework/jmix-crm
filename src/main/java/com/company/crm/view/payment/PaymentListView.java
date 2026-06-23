@@ -42,16 +42,19 @@ import java.util.List;
 import static com.company.crm.app.util.ui.CrmUiUtils.addRowSelectionInMultiSelectMode;
 import static com.company.crm.app.util.ui.datacontext.DataContextUtils.addCondition;
 import static com.company.crm.app.util.ui.datacontext.DataContextUtils.installSortByCreatedDate;
+import static com.company.crm.view.payment.PaymentListView.ROUTE;
 import static io.jmix.core.querycondition.PropertyCondition.equal;
 import static io.jmix.core.querycondition.PropertyCondition.greaterOrEqual;
 import static io.jmix.core.querycondition.PropertyCondition.lessOrEqual;
 
-@Route(value = "payments", layout = MainView.class)
+@Route(value = ROUTE, layout = MainView.class)
 @ViewDescriptor("payment-list-view.xml")
 @ViewController(CrmConstants.ViewIds.PAYMENT_LIST)
 @LookupComponent("paymentsDataGrid")
 @DialogMode(width = "90%", resizable = true)
 public class PaymentListView extends StandardListView<Payment> {
+
+    public static final String ROUTE = "payments";
 
     @Autowired
     private CrmRenderers crmRenderers;

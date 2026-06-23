@@ -9,7 +9,11 @@ import java.util.Locale;
 @JsModule("./icons/crm-icons.js")
 public enum CrmIcons implements IconFactory {
 
-    SPARKLES;
+    SPARKLES,
+    YOUTUBE,
+    LINKEDIN,
+    FACEBOOK,
+    X;
 
     @Override
     public Icon create() {

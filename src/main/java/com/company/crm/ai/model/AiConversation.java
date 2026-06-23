@@ -17,7 +17,7 @@ import java.util.Optional;
 
 @JmixEntity
 @Table(name = "AI_CONVERSATION")
-@Entity(name = "crm_AiConversation")
+@Entity
 public class AiConversation extends CreateAuditEntity {
 
     @Column(name = "TITLE")

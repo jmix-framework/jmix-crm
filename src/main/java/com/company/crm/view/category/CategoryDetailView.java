@@ -19,11 +19,15 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-@Route(value = "categories/:id", layout = MainView.class)
+import static com.company.crm.view.category.CategoryDetailView.ROUTE;
+
+@Route(value = ROUTE, layout = MainView.class)
 @ViewController(id = CrmConstants.ViewIds.CATEGORY_DETAIL)
 @ViewDescriptor(path = "category-detail-view.xml")
 @EditedEntityContainer("categoryDc")
 public class CategoryDetailView extends StandardDetailView<Category> {
+
+    public static final String ROUTE = "categories/:id";
 
     @Autowired
     private CategoryRepository categoryRepository;

@@ -30,11 +30,15 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-@Route(value = "payments/:id", layout = MainView.class)
+import static com.company.crm.view.payment.PaymentDetailView.ROUTE;
+
+@Route(value = ROUTE, layout = MainView.class)
 @ViewController(id = CrmConstants.ViewIds.PAYMENT_DETAIL)
 @ViewDescriptor(path = "payment-detail-view.xml")
 @EditedEntityContainer("paymentDc")
 public class PaymentDetailView extends StandardDetailView<Payment> {
+
+    public static final String ROUTE = "payments/:id";
 
     @Autowired
     private PaymentRepository paymentRepository;
