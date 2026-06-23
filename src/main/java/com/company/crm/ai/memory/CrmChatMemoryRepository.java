@@ -64,7 +64,7 @@ public class CrmChatMemoryRepository implements ChatMemoryRepository {
     }
 
     @Override
-    public List<Message> findByConversationId(@NonNull String conversationId) {
+    public List<Message> findByConversationId(String conversationId) {
         UUID uuid = conversationUuid(conversationId);
         return dataManager.load(AiConversation.class)
                 .id(uuid)

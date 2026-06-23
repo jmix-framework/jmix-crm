@@ -50,7 +50,7 @@
             </formLayout>
             <genericFilter id="advancedFilter" dataLoader="ordersDl" maxWidth="48em"
                            opened="false" summaryText="msg:///advanced"
-                           themeNames="filled" classNames="mt-m mb-m">
+                           themeNames="filled" classNames="pl-m mt-m mb-m">
                 <properties include="(number)|(client)|(date)|(status)|(total)"/>
             </genericFilter>
         </div>

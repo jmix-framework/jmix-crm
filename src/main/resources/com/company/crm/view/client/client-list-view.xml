@@ -67,7 +67,7 @@
             </formLayout>
             <genericFilter id="advancedFilter" dataLoader="clientsDl"
                            opened="false" summaryText="msg:///advanced"
-                           themeNames="filled" classNames="mt-m mb-m">
+                           themeNames="filled" classNames="pl-m mt-m mb-m">
                 <properties include="(name)|(accountManager)|(type)|(vatNumber)|(regNumber)|(website)"/>
             </genericFilter>
         </div>

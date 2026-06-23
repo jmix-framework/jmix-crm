@@ -63,7 +63,7 @@ public class CategoryItemDetailView extends StandardDetailView<CategoryItem> {
 
     @Install(to = "categoryItemDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
     private Optional<CategoryItem> loadDelegate(UUID id, JmixDataRepositoryContext context) {
-        return itemRepository.findByIdWithDynamicAttributes(id, context.fetchPlan());
+        return itemRepository.findById(id, context);
     }
 
     @Install(target = Target.DATA_CONTEXT)

@@ -39,7 +39,8 @@
                         emptySelectionCaption="msg://allCategories"/>
             </formLayout>
             <genericFilter id="items_advancedFilter" dataLoader="categoryItemsDl"
-                           opened="false" summaryText="msg:///advanced" themeNames="filled" classNames="mt-m mb-m">
+                           opened="false" summaryText="msg:///advanced"
+                           themeNames="filled" classNames="pl-m mt-m mb-m">
                 <properties include="(name)|(code)|(category)|(uom)|(price)"/>
             </genericFilter>
         </div>

@@ -2,6 +2,7 @@ package com.company.crm.ai.config;
 
 import com.company.crm.app.config.HttpClientProxyConfiguration;
 import com.company.crm.app.util.proxy.ProxyUtils;
+import org.jspecify.annotations.NonNull;
 import org.springframework.ai.model.openai.autoconfigure.OpenAiChatProperties;
 import org.springframework.ai.model.openai.autoconfigure.OpenAiCommonProperties;
 import org.springframework.beans.factory.ObjectProvider;
@@ -33,7 +34,7 @@ public class CrmAiConfig {
     static BeanPostProcessor openAiProxyConfigurer(ObjectProvider<HttpClientProxyConfiguration> proxyConfigurationProvider) {
         return new BeanPostProcessor() {
             @Override
-            public Object postProcessAfterInitialization(Object bean, String beanName) {
+            public Object postProcessAfterInitialization(@NonNull Object bean, @NonNull String beanName) {
                 if (bean instanceof OpenAiCommonProperties properties) {
                     HttpClientProxyConfiguration proxyConfiguration = proxyConfigurationProvider.getObject();
                     if (proxyConfiguration.isEnabled()) {

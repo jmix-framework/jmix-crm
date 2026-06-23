@@ -285,7 +285,8 @@ vaadin-button[theme~="ai"] vaadin-icon[icon="crm:sparkles"] {
 
 .jmix-list-menu a[highlight].jmix-menu-item:has(vaadin-icon[icon="crm:sparkles"]) {
     background-color: var(--jx-magic);
-    color: var(--jx-magic-soft);
+    color: #fff;
+    box-shadow: 0 1px 2px color-mix(in oklab, var(--jx-magic) 55%, transparent);
 }
 
 .jmix-list-menu vaadin-details-summary {
@@ -321,8 +322,12 @@ vaadin-button[theme~="ai"] vaadin-icon[icon="crm:sparkles"] {
 }
 
 .jmix-list-menu a.jmix-menu-item:not([highlight]):has(vaadin-icon[icon="crm:sparkles"]):hover {
-    background-color: var(--jx-magic-soft);
-    color: var(--jx-magic-dark);
+    background-color: color-mix(in oklab, var(--jx-magic) 14%, transparent);
+    color: light-dark(var(--jx-magic-dark), var(--jx-magic-soft));
+}
+
+.jmix-list-menu a.jmix-menu-item:not([highlight]):has(vaadin-icon[icon="crm:sparkles"]):hover span {
+    color: light-dark(var(--jx-magic-dark), var(--jx-magic-soft));
 }
 
 .jmix-list-menu a[highlight] vaadin-icon[icon="crm:sparkles"] {

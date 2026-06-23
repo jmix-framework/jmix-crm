@@ -208,7 +208,7 @@ public class ClientDetailView extends StandardDetailView<Client> {
 
     @Install(to = "clientDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
     private Optional<Client> loadDelegate(UUID id, JmixDataRepositoryContext context) {
-        return clientRepository.findByIdWithDynamicAttributes(id, context.fetchPlan());
+        return clientRepository.findById(id, context);
     }
 
     @Install(target = Target.DATA_CONTEXT)

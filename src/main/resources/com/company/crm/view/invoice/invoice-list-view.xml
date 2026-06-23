@@ -71,7 +71,7 @@
             </formLayout>
             <genericFilter id="invoices_AdvancedFilter" dataLoader="invoicesDl" maxWidth="60em"
                            opened="false" summaryText="msg:///advanced"
-                           themeNames="filled" classNames="mt-m mb-m">
+                           themeNames="filled" classNames="pl-m mt-m mb-m">
                 <properties include="(number)|(date)|(order)|(client)|(invoice)|(amount)|(date)|(dueDate)|(vat)|(subTotal)|(total)"/>
             </genericFilter>
         </div>

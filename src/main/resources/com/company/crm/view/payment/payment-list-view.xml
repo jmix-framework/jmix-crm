@@ -72,7 +72,7 @@
             </formLayout>
             <genericFilter id="payments_AdvancedFilter" dataLoader="paymentsDl" maxWidth="60em"
                            opened="false" summaryText="msg:///advanced"
-                           themeNames="filled" classNames="mt-m mb-m">
+                           themeNames="filled" classNames="pl-m mt-m mb-m">
                 <properties include="(number)|(date)|(order)|(order.client)|(invoice)|(amount)"/>
             </genericFilter>
         </div>
