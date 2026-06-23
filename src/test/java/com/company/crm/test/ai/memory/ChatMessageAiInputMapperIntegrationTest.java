@@ -1,7 +1,7 @@
 package com.company.crm.test.ai.memory;
 
 import com.company.crm.AbstractTest;
-import com.company.crm.ai.memory.JmixChatMemoryRepository;
+import com.company.crm.ai.memory.CrmChatMemoryRepository;
 import com.company.crm.ai.model.AiConversation;
 import com.company.crm.ai.service.AiConversationService;
 import com.company.crm.ai.service.PendingAttachmentInput;
@@ -36,7 +36,7 @@ class ChatMessageAiInputMapperIntegrationTest extends AbstractTest {
     @Autowired
     private AiConversationService aiConversationService;
     @Autowired
-    private JmixChatMemoryRepository chatMemoryRepository;
+    private CrmChatMemoryRepository chatMemoryRepository;
     @Autowired
     private FileStorage fileStorage;
     @Autowired

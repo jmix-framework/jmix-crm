@@ -9,9 +9,9 @@ import com.company.crm.ai.model.ChatMessageEntityReference;
 import com.company.crm.ai.model.ChatMessageType;
 import com.company.crm.ai.service.CrmAnalyticsService;
 import com.company.crm.ai.service.PendingAttachmentInput;
-import com.company.crm.ai.view.conversation.composer.AiConversationComposerFragment;
 import com.company.crm.ai.view.conversation.AiConversationDetailView;
 import com.company.crm.ai.view.conversation.AiConversationStarterView;
+import com.company.crm.ai.view.conversation.composer.AiConversationComposerFragment;
 import com.company.crm.model.catalog.category.Category;
 import com.vaadin.flow.component.ComponentUtil;
 import com.vaadin.flow.component.html.Span;
@@ -31,8 +31,8 @@ import io.jmix.flowui.kit.component.button.JmixButton;
 import io.jmix.flowui.testassist.UiTestUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -450,7 +450,7 @@ public class AiConversationStarterViewUiTest extends AbstractUiTest {
 
     private long countConversations() {
         return systemAuthenticator.withSystem(() -> dataManager.loadValue(
-                "select count(c) from AiConversation c", Long.class).one());
+                "select count(c) from crm_AiConversation c", Long.class).one());
     }
 
     private FileRef fileRef(String fileName) {

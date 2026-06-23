@@ -1,7 +1,7 @@
 package com.company.crm.test.ai.memory;
 
 import com.company.crm.AbstractTest;
-import com.company.crm.ai.memory.JmixChatMemoryRepository;
+import com.company.crm.ai.memory.CrmChatMemoryRepository;
 import com.company.crm.ai.model.AiConversation;
 import com.company.crm.ai.model.ChatMessage;
 import com.company.crm.ai.model.ChatMessageType;
@@ -20,10 +20,10 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class JmixChatMemoryRepositoryIntegrationTest extends AbstractTest {
+class CrmChatMemoryRepositoryIntegrationTest extends AbstractTest {
 
     @Autowired
-    private JmixChatMemoryRepository chatMemoryRepository;
+    private CrmChatMemoryRepository chatMemoryRepository;
     @Autowired
     private AiConversationService aiConversationService;
 

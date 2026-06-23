@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataRepositorySettings" useNamedParametersForRepoQuery="false" />
+  <component name="IgnoredChangelogIncludeConfig">
+    <datastore-include-infos>
+      <datastore-include-info datastore-name="main" />
+    </datastore-include-infos>
+  </component>
   <component name="JmixDataStoreSettingsManager">
     <moduleSettings>
       <entry key="b2b-crm.main">
@@ -53,7 +58,7 @@
             <map>
               <entry key="main">
                 <value>
-                  <DataStoreSettingsV2/>
+                  <DataStoreSettingsV2 />
                 </value>
               </entry>
             </map>

@@ -1,14 +1,12 @@
 package com.company.crm.ai.service;
 
-import com.company.crm.ai.context.AiContextEntityRegistry;
-import com.company.crm.ai.memory.JmixChatMemoryRepository;
+import com.company.crm.ai.memory.CrmChatMemoryRepository;
 import com.company.crm.ai.model.AiUiStatusUpdate;
 import com.company.crm.ai.model.ChatMessage;
 import com.company.crm.ai.model.ChatMessageType;
 import com.company.crm.ai.tool.AiToolStatusPublisher;
-import com.company.crm.ai.tool.CrmAiToolFactory;
-import com.company.crm.report.CategoryCashflowRiskReport;
-import com.company.crm.report.Client360Report;
+import io.jmix.aitools.ChatClientFactory;
+import io.jmix.aitools.tool.AiToolRegistry;
 import io.jmix.core.DataManager;
 import io.jmix.core.FetchPlan;
 import io.jmix.core.security.CurrentAuthentication;
@@ -17,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
 import org.springframework.ai.chat.messages.Message;
+import org.springframework.ai.tool.ToolCallback;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
@@ -36,38 +35,30 @@ import java.util.function.Consumer;
 public class CrmAnalyticsService {
 
     private static final Logger log = LoggerFactory.getLogger(CrmAnalyticsService.class);
-    private static final List<String> ALLOWED_REPORT_CODES = List.of(
-            Client360Report.CODE,
-            CategoryCashflowRiskReport.CODE
-    );
 
-    private final CrmAiToolFactory crmAiToolFactory;
+    private final AiToolRegistry aiToolRegistry;
 
     private final Resource systemPrompt;
     private final ChatClient statelessChatClient;
-    private final JmixChatMemoryRepository chatMemoryRepository;
+    private final CrmChatMemoryRepository chatMemoryRepository;
     private final CurrentAuthentication currentAuthentication;
     private final DataManager dataManager;
-    private final AiContextEntityRegistry contextEntityRegistry;
 
     @Autowired
     public CrmAnalyticsService(
-            ChatClient.Builder chatClientBuilder,
+            ChatClientFactory chatClientFactory,
             @Value("classpath:prompts/crm-analytics-system-prompt.st") Resource systemPrompt,
-            JmixChatMemoryRepository chatMemoryRepository,
+            CrmChatMemoryRepository chatMemoryRepository,
             CurrentAuthentication currentAuthentication,
             DataManager dataManager,
-            AiContextEntityRegistry contextEntityRegistry,
-            CrmAiToolFactory crmAiToolFactory) {
-        this.statelessChatClient = chatClientBuilder.clone()
-                .defaultAdvisors(SimpleLoggerAdvisor.builder().build())
-                .build();
+            AiToolRegistry aiToolRegistry) {
+        this.statelessChatClient = chatClientFactory.createChatClient(builder ->
+                builder.defaultAdvisors(SimpleLoggerAdvisor.builder().build()));
         this.chatMemoryRepository = chatMemoryRepository;
         this.systemPrompt = systemPrompt;
         this.currentAuthentication = currentAuthentication;
         this.dataManager = dataManager;
-        this.contextEntityRegistry = contextEntityRegistry;
-        this.crmAiToolFactory = crmAiToolFactory;
+        this.aiToolRegistry = aiToolRegistry;
     }
 
     public String processUserMessage(UUID chatMessageId) {
@@ -126,7 +117,7 @@ public class CrmAnalyticsService {
 
     private void saveAssistantResponse(ChatMessage assistantMessage, String response) {
         assistantMessage.setContent(response);
-        dataManager.save(assistantMessage);
+        dataManager.saveWithoutReload(assistantMessage);
     }
 
     private void removeAssistantPlaceholder(ChatMessage assistantMessage) {
@@ -144,13 +135,7 @@ public class CrmAnalyticsService {
                 .system(system -> system
                         .text(systemPrompt)
                         .param("responseLanguage", resolveResponseLanguage()))
-                .tools(crmAiToolFactory.builder()
-                        .jpqlQueryExecutorTool()
-                        .viewsDiscoveryTool()
-                        .entitiesDiscoveryTool(contextEntityRegistry.aiToolContextEntityDefinitions())
-                        .reportsDiscoveryTool(ALLOWED_REPORT_CODES)
-                        .runReportTool(ALLOWED_REPORT_CODES)
-                        .buildToolsArray());
+                .tools(aiToolRegistry.getAllCallbacks().toArray(new ToolCallback[0]));
 
         Map<String, Object> toolContext = buildToolContext(conversationUuid, assistantMessageId, uiStatusUpdateCallback);
         return toolContext.isEmpty() ? baseSpec : baseSpec.toolContext(toolContext);

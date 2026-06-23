@@ -1,6 +1,7 @@
 package com.company.crm.ai.tool;
 
 import com.company.crm.ai.report.introspection.AiReportModelDescriptorYamlExporter;
+import io.jmix.aitools.tool.JmixAiTool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.model.ToolContext;
@@ -17,7 +18,7 @@ import java.util.stream.Collectors;
  * Spring AI Tool for discovering available Jmix reports and their parameters.
  * Provides a comprehensive YAML representation of reports, templates, and input parameters.
  */
-public class ReportsDiscoveryTool implements CrmAiTool {
+public class ReportsDiscoveryTool implements JmixAiTool {
 
     private static final Logger log = LoggerFactory.getLogger(ReportsDiscoveryTool.class);
 

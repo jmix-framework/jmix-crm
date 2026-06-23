@@ -36,15 +36,15 @@ import java.util.stream.Collectors;
  * @see ChatMessage
  */
 @Component
-public class JmixChatMemoryRepository implements ChatMemoryRepository {
+public class CrmChatMemoryRepository implements ChatMemoryRepository {
 
-    private static final Logger log = LoggerFactory.getLogger(JmixChatMemoryRepository.class);
+    private static final Logger log = LoggerFactory.getLogger(CrmChatMemoryRepository.class);
 
     private final DataManager dataManager;
     private final ChatMessageAiInputMapper chatMessageAiInputMapper;
 
-    public JmixChatMemoryRepository(DataManager dataManager,
-                                    ChatMessageAiInputMapper chatMessageAiInputMapper) {
+    public CrmChatMemoryRepository(DataManager dataManager,
+                                   ChatMessageAiInputMapper chatMessageAiInputMapper) {
         this.dataManager = dataManager;
         this.chatMessageAiInputMapper = chatMessageAiInputMapper;
     }
@@ -52,7 +52,7 @@ public class JmixChatMemoryRepository implements ChatMemoryRepository {
     @Override
     public List<String> findConversationIds() {
         try {
-            return dataManager.loadValue("select c.id from AiConversation c", UUID.class)
+            return dataManager.loadValue("select c.id from crm_AiConversation c", UUID.class)
                     .list()
                     .stream()
                     .map(UUID::toString)
