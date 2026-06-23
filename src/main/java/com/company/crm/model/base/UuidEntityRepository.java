@@ -79,12 +79,12 @@ public interface UuidEntityRepository<T extends UuidEntity> extends JmixDataRepo
         return getDataManager().loadValue(query, valueClass);
     }
 
+    @SuppressWarnings("unchecked")
     default Class<T> getEntityClass() {
         Type[] interfaces = getClass().getInterfaces();
         for (Type t : interfaces) {
             if (t instanceof Class<?> clazz) {
                 Type genericInterface = clazz.getGenericInterfaces()[0];
-                //noinspection unchecked
                 return (Class<T>) ((ParameterizedType) genericInterface).getActualTypeArguments()[0];
             }
         }

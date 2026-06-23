@@ -27,7 +27,7 @@ public class AddContextMenuFactory {
         this.messageBundle = messageBundle;
     }
 
-    public MenuBar createAddMenuBar(JmixUpload attachmentUpload) {
+    public MenuBar createAddMenuBar(JmixUpload<?> attachmentUpload) {
         configureAttachmentUploadForMenu(attachmentUpload);
 
         MenuBar menuBar = new MenuBar();
@@ -59,7 +59,7 @@ public class AddContextMenuFactory {
                 event -> openEntityLookup.accept(label, definition.entityClass()));
     }
 
-    private void configureAttachmentUploadForMenu(JmixUpload attachmentUpload) {
+    private void configureAttachmentUploadForMenu(JmixUpload<?> attachmentUpload) {
         attachmentUpload.setDropAllowed(false);
         attachmentUpload.setUploadButton(createMenuItemContent(VaadinIcon.UPLOAD, messageBundle.getMessage("uploadFileAction")));
         attachmentUpload.addClassName("ai-timeline-menu-upload");

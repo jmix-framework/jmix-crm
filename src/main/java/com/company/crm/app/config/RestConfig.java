@@ -10,7 +10,7 @@ import org.springframework.http.converter.ByteArrayHttpMessageConverter;
 import org.springframework.http.converter.FormHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.StringHttpMessageConverter;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.web.client.RestClient;
 
 import java.nio.charset.StandardCharsets;
@@ -39,7 +39,8 @@ public class RestConfig {
 
         RestClient.Builder configuredBuilder = builder
                 .requestFactory(factory)
-                .messageConverters(converters -> converters.addAll(getMessageConverters()));
+                .configureMessageConverters(converters -> converters
+                        .configureMessageConvertersList(list -> list.addAll(getMessageConverters())));
 
         if (useProxy) {
             configureProxy(applicationContext.getBean(HttpClientProxyConfiguration.class), factory);
@@ -57,9 +58,9 @@ public class RestConfig {
         );
     }
 
-    private static MappingJackson2HttpMessageConverter createJacksonMapper() {
-        MappingJackson2HttpMessageConverter jackson2HttpMessageConverter = new MappingJackson2HttpMessageConverter();
-        jackson2HttpMessageConverter.setSupportedMediaTypes(List.of(MediaType.ALL));
-        return jackson2HttpMessageConverter;
+    private static JacksonJsonHttpMessageConverter createJacksonMapper() {
+        JacksonJsonHttpMessageConverter jacksonConverter = new JacksonJsonHttpMessageConverter();
+        jacksonConverter.setSupportedMediaTypes(List.of(MediaType.ALL));
+        return jacksonConverter;
     }
 }

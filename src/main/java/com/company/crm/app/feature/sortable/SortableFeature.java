@@ -35,7 +35,7 @@ public final class SortableFeature {
 
             View<?> view = UiComponentUtils.findView(parent);
             if (view != null) {
-                SettingsFacet settingsFacet = ViewControllerUtils.getViewFacet(view, SettingsFacet.class);
+                SettingsFacet<?> settingsFacet = ViewControllerUtils.getViewFacet(view, SettingsFacet.class);
                 if (settingsFacet == null) {
                     throw new IllegalStateException("View %s doesn't have %s"
                             .formatted(view.getClass().getSimpleName(), SettingsFacet.class.getSimpleName()));

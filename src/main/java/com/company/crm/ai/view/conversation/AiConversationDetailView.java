@@ -386,6 +386,7 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
         }
     }
 
+    @SuppressWarnings("unchecked")
     private void ensureTimelineList() {
         if (timelineList == null) {
             timelineList = uiComponents.create(JmixVirtualList.class);

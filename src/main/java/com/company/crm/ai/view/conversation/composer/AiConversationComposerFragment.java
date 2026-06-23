@@ -13,7 +13,6 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.upload.FailedEvent;
 import com.vaadin.flow.component.upload.FileRejectedEvent;
-import com.vaadin.flow.component.upload.SucceededEvent;
 import io.jmix.core.FileRef;
 import io.jmix.core.FileStorage;
 import io.jmix.core.FileStorageLocator;
@@ -23,9 +22,7 @@ import io.jmix.core.Metadata;
 import io.jmix.flowui.DialogWindows;
 import io.jmix.flowui.Notifications;
 import io.jmix.flowui.component.upload.JmixUpload;
-import io.jmix.flowui.component.upload.receiver.FileTemporaryStorageBuffer;
-import io.jmix.flowui.component.upload.receiver.MultiFileTemporaryStorageBuffer;
-import io.jmix.flowui.component.upload.receiver.TemporaryStorageFileData;
+import io.jmix.flowui.component.upload.UploadSucceededEvent;
 import io.jmix.flowui.fragment.Fragment;
 import io.jmix.flowui.fragment.FragmentDescriptor;
 import io.jmix.flowui.fragment.FragmentUtils;
@@ -61,7 +58,7 @@ public class AiConversationComposerFragment extends Fragment<VerticalLayout> {
     @ViewComponent
     private VerticalLayout pendingContextLayout;
     @ViewComponent
-    private JmixUpload<?> attachmentUpload;
+    private JmixUpload<TemporaryStorage.FileInfo> attachmentUpload;
     @ViewComponent
     private MessageBundle messageBundle;
     @Autowired
@@ -222,16 +219,16 @@ public class AiConversationComposerFragment extends Fragment<VerticalLayout> {
     }
 
     @Subscribe("attachmentUpload")
-    public void onAttachmentUploadSucceeded(final SucceededEvent event) {
-        final TemporaryStorageFileData uploadedFileData = findUploadedFileData(event);
+    public void onAttachmentUploadSucceeded(final UploadSucceededEvent<TemporaryStorage.FileInfo> event) {
+        final TemporaryStorage.FileInfo uploadedFileInfo = event.getData();
 
-        if (uploadedFileData == null) {
+        if (uploadedFileInfo == null || !uploadedFileInfo.getFile().exists()) {
             showMissingFileError();
             return;
         }
 
-        final String uploadedFileName = resolveUploadedFileName(event, uploadedFileData);
-        final FileRef uploadedFileRef = putFileIntoStorage(uploadedFileData, uploadedFileName);
+        final String uploadedFileName = resolveUploadedFileName(event.getFileName());
+        final FileRef uploadedFileRef = putFileIntoStorage(uploadedFileInfo, uploadedFileName);
 
         if (uploadedFileRef == null) {
             showMissingFileError();
@@ -248,9 +245,9 @@ public class AiConversationComposerFragment extends Fragment<VerticalLayout> {
             focus();
         } catch (Exception e) {
             try {
-                temporaryStorage.deleteFile(uploadedFileData.getFileInfo().getId());
+                temporaryStorage.deleteFile(uploadedFileInfo.getId());
             } catch (Exception cleanupError) {
-                log.warn("Failed to cleanup temporary upload {}", uploadedFileData.getFileInfo().getId(), cleanupError);
+                log.warn("Failed to cleanup temporary upload {}", uploadedFileInfo.getId(), cleanupError);
             }
             attachmentUpload.clearFileList();
             log.error("Failed to stage uploaded attachment", e);
@@ -267,37 +264,18 @@ public class AiConversationComposerFragment extends Fragment<VerticalLayout> {
                 .show();
     }
 
-    private String resolveUploadedFileName(SucceededEvent event, TemporaryStorageFileData uploadedFileData) {
-        String fileNameFromEvent = event.getFileName();
+    private String resolveUploadedFileName(String fileNameFromEvent) {
         if (StringUtils.hasText(fileNameFromEvent)) {
             return fileNameFromEvent;
-        }
-        String fileNameFromBuffer = uploadedFileData.getFileName();
-        if (StringUtils.hasText(fileNameFromBuffer)) {
-            return fileNameFromBuffer;
         }
         return "uploaded-file";
     }
 
-    private TemporaryStorageFileData findUploadedFileData(SucceededEvent event) {
-        if (event.getUpload().getReceiver() instanceof MultiFileTemporaryStorageBuffer multiBuffer) {
-            String fileName = event.getFileName();
-            return multiBuffer.getFiles().values().stream()
-                    .filter(data -> Objects.equals(data.getFileName(), fileName))
-                    .filter(data -> data.getFileInfo().getFile().exists())
-                    .findFirst()
-                    .orElse(null);
-        } else if (event.getUpload().getReceiver() instanceof FileTemporaryStorageBuffer storageBuffer) {
-            return storageBuffer.getFileData();
-        }
-        return null;
-    }
-
-    private FileRef putFileIntoStorage(TemporaryStorageFileData uploadedFileData, String uploadedFileName) {
+    private FileRef putFileIntoStorage(TemporaryStorage.FileInfo uploadedFileInfo, String uploadedFileName) {
         try {
             FileStorage fileStorage = fileStorageLocator.getByName(CrmFileStorage.STORAGE_NAME);
             return temporaryStorage.putFileIntoStorage(
-                    uploadedFileData.getFileInfo().getId(),
+                    uploadedFileInfo.getId(),
                     uploadedFileName,
                     fileStorage
             );

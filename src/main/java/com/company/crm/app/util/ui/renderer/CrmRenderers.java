@@ -115,7 +115,7 @@ public class CrmRenderers {
             var container = new VerticalLayout();
             container.add(new H3(messages.getMessage(getClass(), "orders")));
 
-            //noinspection unchecked
+            @SuppressWarnings("unchecked")
             DataGrid<Order> ordersGrid = uiComponents.create(DataGrid.class);
             ordersGrid.addThemeVariants(GridVariant.NO_BORDER, GridVariant.ROW_STRIPES);
             ordersGrid.setMaxHeight(15, Unit.EM);
@@ -139,7 +139,7 @@ public class CrmRenderers {
             var container = new VerticalLayout();
             container.add(new H3(messages.getMessage(getClass(), "payments")));
 
-            //noinspection unchecked
+            @SuppressWarnings("unchecked")
             DataGrid<Payment> paymentsGrid = uiComponents.create(DataGrid.class);
             paymentsGrid.addThemeVariants(GridVariant.NO_BORDER, GridVariant.ROW_STRIPES);
             paymentsGrid.setMaxHeight(15, Unit.EM);
@@ -163,7 +163,7 @@ public class CrmRenderers {
             var container = new VerticalLayout();
             container.add(new H3(messages.getMessage(getClass(), "invoices")));
 
-            //noinspection unchecked
+            @SuppressWarnings("unchecked")
             DataGrid<Invoice> invoicesGrid = uiComponents.create(DataGrid.class);
             invoicesGrid.addThemeVariants(GridVariant.NO_BORDER, GridVariant.ROW_STRIPES);
             invoicesGrid.setMaxHeight(15, Unit.EM);

@@ -174,8 +174,8 @@ class RunReportToolIntegrationTest extends AbstractTest {
             // then
             assertThat(result.success()).isFalse();
             assertThat(result.errorCode()).isEqualTo(ReportExecutionErrorCode.INVALID_OUTPUT_TYPE);
-            assertThat(json.path("errorCode").isTextual()).isTrue();
-            assertThat(json.path("errorCode").asText()).isEqualTo("INVALID_OUTPUT_TYPE");
+            assertThat(json.path("errorCode").isString()).isTrue();
+            assertThat(json.path("errorCode").asString()).isEqualTo("INVALID_OUTPUT_TYPE");
             assertThat(serialized).contains("\"errorCode\":\"INVALID_OUTPUT_TYPE\"");
         });
     }
