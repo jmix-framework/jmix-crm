@@ -264,7 +264,7 @@ vaadin-button[theme~="primary"] vaadin-icon[icon="crm:sparkles"] {
     color: currentColor;
 }
 
-vaadin-button:not([theme~="primary"]):not([theme~="icon"]):has(vaadin-icon[icon="crm:sparkles"]) {
+vaadin-button:not([theme~="primary"]):not([disabled]):not([theme~="icon"]):has(vaadin-icon[icon="crm:sparkles"]) {
     color: var(--jx-magic);
 }
 
