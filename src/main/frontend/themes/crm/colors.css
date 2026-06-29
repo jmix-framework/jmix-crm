@@ -21,7 +21,7 @@ vaadin-button[theme~="primary"] vaadin-icon[icon="crm:sparkles"] {
 /* Any non-primary button with text + sparkles icon (e.g. "Chat about this") — the
    whole button takes on the magic purple. Primary buttons are excluded (white on
    blue bg) and icon-only buttons keep the default purple icon. */
-vaadin-button:not([theme~="primary"]):not([theme~="icon"]):has(vaadin-icon[icon="crm:sparkles"]) {
+vaadin-button:not([theme~="primary"]):not([disabled]):not([theme~="icon"]):has(vaadin-icon[icon="crm:sparkles"]) {
     color: var(--jx-magic);
 }
 
