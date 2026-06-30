@@ -1,15 +1,5 @@
 package com.company.crm.ai.view.conversation;
 
-import com.company.crm.ai.view.conversation.composer.AiConversationComposerFragment;
-import com.company.crm.ai.view.conversation.component.ConversationTitleEditDialog;
-import io.jmix.core.metamodel.datatype.DatatypeFormatter;
-import com.company.crm.ai.view.conversation.task.PendingAssistantResponseSupport;
-import com.company.crm.ai.view.conversation.support.AiConversationActorNameResolver;
-import com.company.crm.ai.view.conversation.task.AssistantResponseTaskCoordinator;
-import com.company.crm.ai.view.timeline.TimelineItem;
-import com.company.crm.ai.view.timeline.AiTimelineComponentFactory;
-import com.company.crm.ai.view.timeline.AiConversationTimelineItemFactory;
-import com.company.crm.ai.view.context.ConversationContextPanelSupport;
 import com.company.crm.ai.config.CrmAiConfig;
 import com.company.crm.ai.model.AiConversation;
 import com.company.crm.ai.model.AiUiStatusUpdate;
@@ -17,6 +7,15 @@ import com.company.crm.ai.model.ChatMessage;
 import com.company.crm.ai.model.ChatMessageType;
 import com.company.crm.ai.service.AiConversationService;
 import com.company.crm.ai.service.PendingAttachmentInput;
+import com.company.crm.ai.view.context.ConversationContextPanelSupport;
+import com.company.crm.ai.view.conversation.component.ConversationTitleEditDialog;
+import com.company.crm.ai.view.conversation.composer.AiConversationComposerFragment;
+import com.company.crm.ai.view.conversation.support.AiConversationActorNameResolver;
+import com.company.crm.ai.view.conversation.task.AssistantResponseTaskCoordinator;
+import com.company.crm.ai.view.conversation.task.PendingAssistantResponseSupport;
+import com.company.crm.ai.view.timeline.AiConversationTimelineItemFactory;
+import com.company.crm.ai.view.timeline.AiTimelineComponentFactory;
+import com.company.crm.ai.view.timeline.TimelineItem;
 import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.view.main.MainView;
 import com.vaadin.flow.component.ClickEvent;
@@ -26,6 +25,7 @@ import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.Route;
 import io.jmix.core.DataManager;
 import io.jmix.core.TimeSource;
+import io.jmix.core.metamodel.datatype.DatatypeFormatter;
 import io.jmix.core.security.CurrentAuthentication;
 import io.jmix.flowui.Dialogs;
 import io.jmix.flowui.Fragments;
@@ -53,12 +53,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-@Route(value = "ai-conversations/:id", layout = MainView.class)
+import static com.company.crm.ai.view.conversation.AiConversationDetailView.ROUTE;
+
+@Route(value = ROUTE, layout = MainView.class)
 @ViewController(id = CrmConstants.ViewIds.AI_CONVERSATION_DETAIL)
 @ViewDescriptor(path = "ai-conversation-detail-view.xml")
 @EditedEntityContainer("aiConversationDc")
 @PrimaryDetailView(AiConversation.class)
 public class AiConversationDetailView extends StandardDetailView<AiConversation> {
+
+    public static final String ROUTE = "ai-conversations/:id";
 
     private static final Logger log = LoggerFactory.getLogger(AiConversationDetailView.class);
 
@@ -382,6 +386,7 @@ public class AiConversationDetailView extends StandardDetailView<AiConversation>
         }
     }
 
+    @SuppressWarnings("unchecked")
     private void ensureTimelineList() {
         if (timelineList == null) {
             timelineList = uiComponents.create(JmixVirtualList.class);

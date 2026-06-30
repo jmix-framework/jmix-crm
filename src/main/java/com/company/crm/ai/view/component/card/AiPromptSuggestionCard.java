@@ -1,7 +1,7 @@
 package com.company.crm.ai.view.component.card;
 
-import com.company.crm.ai.view.component.support.AiContextCardActionSurface;
 import com.company.crm.ai.model.AiPromptSuggestion;
+import com.company.crm.ai.view.component.support.AiContextCardActionSurface;
 import com.vaadin.flow.component.card.Card;
 import com.vaadin.flow.component.card.CardVariant;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -13,7 +13,7 @@ public class AiPromptSuggestionCard extends Card {
     public AiPromptSuggestionCard() {
         setWidthFull();
         addClassName("ai-conversation-starter-suggestion-card");
-        addThemeVariants(CardVariant.LUMO_OUTLINED);
+        addThemeVariants(CardVariant.OUTLINED);
     }
 
     public void setSuggestion(AiPromptSuggestion suggestion, Consumer<String> submitPrompt) {

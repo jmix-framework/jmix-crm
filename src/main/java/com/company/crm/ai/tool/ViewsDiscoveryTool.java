@@ -1,6 +1,7 @@
 package com.company.crm.ai.tool;
 
 import com.vaadin.flow.router.Route;
+import io.jmix.aitools.tool.JmixAiTool;
 import io.jmix.core.MetadataTools;
 import io.jmix.flowui.view.ViewInfo;
 import io.jmix.flowui.view.ViewRegistry;
@@ -8,14 +9,14 @@ import org.apache.commons.lang3.StringUtils;
 import org.jspecify.annotations.Nullable;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
-import org.springframework.boot.autoconfigure.web.ServerProperties;
+import org.springframework.boot.web.server.autoconfigure.ServerProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.annotation.AnnotationUtils;
 
 import java.util.List;
 import java.util.Objects;
 
-public class ViewsDiscoveryTool implements CrmAiTool {
+public class ViewsDiscoveryTool implements JmixAiTool {
 
     private final ServerProperties serverProperties;
     private final ViewRegistry viewRegistry;

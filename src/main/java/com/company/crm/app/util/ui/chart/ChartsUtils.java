@@ -1,11 +1,11 @@
 package com.company.crm.app.util.ui.chart;
 
 import com.company.crm.app.ui.component.CrmCard;
+import com.company.crm.app.util.ui.theme.CrmStyleUtility;
 import com.company.crm.view.util.SkeletonStyler;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.spring.annotation.SpringComponent;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 import io.jmix.chartsflowui.component.Chart;
 import io.jmix.chartsflowui.kit.component.model.Grid;
 import io.jmix.chartsflowui.kit.component.model.Title;
@@ -42,7 +42,7 @@ public class ChartsUtils {
 
     public CrmCard createViewStatChartWrapper(Chart chart, boolean applySkeleton) {
         var flexContainer = new VerticalLayout(chart);
-        flexContainer.addClassNames(LumoUtility.Flex.GROW);
+        flexContainer.addClassNames(CrmStyleUtility.Flex.GROW);
         flexContainer.setPadding(false);
 
         CrmCard card = uiComponents.create(CrmCard.class);

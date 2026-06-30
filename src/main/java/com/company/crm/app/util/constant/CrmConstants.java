@@ -25,6 +25,8 @@ public final class CrmConstants {
         public static final String CLIENT_LIST = "Client.list";
         public static final String CLIENT_DETAIL = "Client.detail";
 
+        public static final String CONTACT_DETAIL = "Contact.detail";
+
         public static final String HOME = "HomeView";
 
         public static final String INVOICE_LIST = "Invoice.list";
@@ -44,6 +46,8 @@ public final class CrmConstants {
         public static final String USER_TASK_LIST = "UserTask.list";
 
         public static final String USAGE_HELP = "UsageHelpView";
+
+        public static final String ABOUT = "AboutView";
 
         public static final String AI_CONVERSATION_LIST = "AiConversation.list";
         public static final String AI_CONVERSATION_DETAIL = "AiConversation.detail";

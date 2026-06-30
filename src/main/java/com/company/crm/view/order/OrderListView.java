@@ -58,17 +58,20 @@ import static com.company.crm.app.util.ui.CrmUiUtils.setSearchHintPopover;
 import static com.company.crm.app.util.ui.datacontext.DataContextUtils.addCondition;
 import static com.company.crm.app.util.ui.datacontext.DataContextUtils.installSortByCreatedDate;
 import static com.company.crm.model.datatype.PriceDataType.formatWithoutCurrency;
+import static com.company.crm.view.order.OrderListView.ROUTE;
 import static io.jmix.core.querycondition.PropertyCondition.equal;
 import static io.jmix.core.querycondition.PropertyCondition.greaterOrEqual;
 import static io.jmix.core.querycondition.PropertyCondition.lessOrEqual;
 
-@Route(value = "orders", layout = MainView.class)
+@Route(value = ROUTE, layout = MainView.class)
 @ViewController(id = CrmConstants.ViewIds.ORDER_LIST)
 @ViewDescriptor(path = "order-list-view.xml")
 @LookupComponent("ordersDataGrid")
 @DialogMode(width = "90%", resizable = true)
 @PrimaryListView(Order.class)
 public class OrderListView extends StandardListView<Order> {
+
+    public static final String ROUTE = "orders";
 
     @Autowired
     private Messages messages;
@@ -164,7 +167,7 @@ public class OrderListView extends StandardListView<Order> {
 
     @Supply(to = "ordersDataGrid.client", subject = "renderer")
     private Renderer<Order> ordersDataGridClientRenderer() {
-        return crmRenderers.orderClientLink();
+        return crmRenderers.orderClientLink(ordersDataGrid);
     }
 
     @Supply(to = "ordersDataGrid.status", subject = "renderer")
@@ -212,7 +215,7 @@ public class OrderListView extends StandardListView<Order> {
 
     private void configureGrid() {
         addColumnHeaderCurrencySuffix(ordersDataGrid, "total", "invoiced", "paid", "leftOver");
-        addRowSelectionInMultiSelectMode(ordersDataGrid, "number");
+        addRowSelectionInMultiSelectMode(ordersDataGrid, "itemDetails", "number");
         ordersDataGrid.setItemDetailsRenderer(crmRenderers.orderDetails());
         ordersDataGrid.setDetailsVisibleOnClick(false);
     }

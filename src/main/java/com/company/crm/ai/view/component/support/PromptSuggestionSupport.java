@@ -1,20 +1,14 @@
 package com.company.crm.ai.view.component.support;
 
-import com.company.crm.ai.view.component.card.AiPromptSuggestionCard;
 import com.company.crm.ai.context.AiContextEntityDefinition;
 import com.company.crm.ai.model.AiPromptSuggestion;
+import com.company.crm.ai.view.component.card.AiPromptSuggestionCard;
 import com.vaadin.flow.component.card.Card;
-import com.vaadin.flow.component.card.CardVariant;
-import com.vaadin.flow.component.html.Span;
-import com.vaadin.flow.component.icon.Icon;
-import com.vaadin.flow.component.icon.VaadinIcon;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import io.jmix.core.DataManager;
 import io.jmix.core.Id;
 import io.jmix.core.IdSerialization;
 import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.view.MessageBundle;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 
 import java.util.ArrayList;
 import java.util.Collections;

@@ -7,6 +7,7 @@ import org.springframework.core.io.ByteArrayResource;
 import java.nio.charset.StandardCharsets;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.ai.openai.OpenAiChatOptions.DEFAULT_CHAT_MODEL;
 
 class AiConversationTitleServiceConfigTest {
 
@@ -26,7 +27,7 @@ class AiConversationTitleServiceConfigTest {
         AiSmallModelProperties smallModelProperties = new AiSmallModelProperties();
         smallModelProperties.setModelId("gpt-test-small");
 
-        OpenAiChatOptions options = AiConversationTitleService.buildTitleOptions(smallModelProperties);
+        OpenAiChatOptions options = AiConversationTitleService.buildTitleOptions(smallModelProperties).build();
 
         assertThat(options.getModel()).isEqualTo("gpt-test-small");
         assertThat(options.getTemperature()).isEqualTo(0.0);
@@ -36,9 +37,9 @@ class AiConversationTitleServiceConfigTest {
 
     @Test
     void titleOptionsDoNotSetModelWhenUnset() {
-        OpenAiChatOptions options = AiConversationTitleService.buildTitleOptions(new AiSmallModelProperties());
+        OpenAiChatOptions options = AiConversationTitleService.buildTitleOptions(new AiSmallModelProperties()).build();
 
-        assertThat(options.getModel()).isNull();
+        assertThat(options.getModel()).isEqualTo(DEFAULT_CHAT_MODEL);
         assertThat(options.getTemperature()).isEqualTo(0.0);
         assertThat(options.getMaxCompletionTokens()).isEqualTo(32);
         assertThat(options.getServiceTier()).isNull();

@@ -1,8 +1,8 @@
 package com.company.crm.ai.view.context;
 
-import com.company.crm.ai.view.component.card.AiConversationContextCardFactory;
 import com.company.crm.ai.model.AiConversation;
 import com.company.crm.ai.model.AiConversationAttachment;
+import com.company.crm.ai.view.component.card.AiConversationContextCardFactory;
 import com.company.crm.model.base.UuidEntity;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -111,10 +111,7 @@ public class ConversationContextPanelSupport {
             Id<Object> id = idSerialization.stringToId(entityReference);
             Object entity = dataManager.load(id).one();
             if (entity instanceof UuidEntity uuidEntity) {
-                //noinspection unchecked,rawtypes
-                dialogWindows.detail(origin, (Class) uuidEntity.getClass())
-                        .editEntity(uuidEntity)
-                        .open();
+                openEntityDetail(origin, uuidEntity);
             }
         } catch (Exception e) {
             log.error("Failed to open CRM entity detail from timeline", e);
@@ -122,6 +119,13 @@ public class ConversationContextPanelSupport {
                     .withType(Notifications.Type.ERROR)
                     .show();
         }
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private void openEntityDetail(View<?> origin, UuidEntity entity) {
+        dialogWindows.detail(origin, (Class) entity.getClass())
+                .editEntity(entity)
+                .open();
     }
 
     public void downloadAttachment(AiConversationAttachment attachment) {

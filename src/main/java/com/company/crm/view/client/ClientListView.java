@@ -12,6 +12,7 @@ import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.app.util.role.RoleUtils;
 import com.company.crm.app.util.ui.CrmUiUtils;
 import com.company.crm.app.util.ui.renderer.CrmRenderers;
+import com.company.crm.app.util.ui.theme.CrmStyleUtility;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.client.ClientRepository;
 import com.company.crm.model.client.ClientType;
@@ -36,12 +37,6 @@ import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.data.selection.SelectionEvent;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.theme.lumo.LumoUtility;
-import com.vaadin.flow.theme.lumo.LumoUtility.FontSize;
-import com.vaadin.flow.theme.lumo.LumoUtility.FontWeight;
-import com.vaadin.flow.theme.lumo.LumoUtility.Overflow;
-import com.vaadin.flow.theme.lumo.LumoUtility.TextOverflow;
-import com.vaadin.flow.theme.lumo.LumoUtility.Whitespace;
 import io.jmix.core.Messages;
 import io.jmix.core.metamodel.datatype.DatatypeFormatter;
 import io.jmix.core.querycondition.LogicalCondition;
@@ -83,16 +78,19 @@ import static com.company.crm.app.util.ui.CrmUiUtils.openLink;
 import static com.company.crm.app.util.ui.CrmUiUtils.setSearchHintPopover;
 import static com.company.crm.app.util.ui.datacontext.DataContextUtils.addCondition;
 import static com.company.crm.app.util.ui.datacontext.DataContextUtils.installSortByCreatedDate;
+import static com.company.crm.view.client.ClientListView.ROUTE;
 import static io.jmix.core.querycondition.PropertyCondition.contains;
 import static io.jmix.core.querycondition.PropertyCondition.equal;
 import static io.jmix.core.querycondition.PropertyCondition.isCollectionEmpty;
 
-@Route(value = "clients", layout = MainView.class)
+@Route(value = ROUTE, layout = MainView.class)
 @ViewController(id = CrmConstants.ViewIds.CLIENT_LIST)
 @ViewDescriptor(path = "client-list-view.xml")
 @LookupComponent("clientsDataGrid")
 @DialogMode(width = "90%", resizable = true)
 public class ClientListView extends StandardListView<Client> {
+
+    public static final String ROUTE = "clients";
 
     @Autowired
     private Messages messages;
@@ -208,12 +206,12 @@ public class ClientListView extends StandardListView<Client> {
 
     @Supply(to = "clientsDataGrid.accountManager", subject = "renderer")
     private Renderer<Client> clientsDataGridAccountManagerRenderer() {
-        return crmRenderers.accountManagerLink();
+        return crmRenderers.accountManagerLink(clientsDataGrid);
     }
 
     @Supply(to = "clientsDataGrid.name", subject = "renderer")
     private Renderer<Client> clientsDataGridNameRenderer() {
-        return crmRenderers.clientNameLink();
+        return crmRenderers.clientNameLink(clientsDataGrid);
     }
 
     @Supply(to = "clientsDataGrid.type", subject = "renderer")
@@ -243,7 +241,7 @@ public class ClientListView extends StandardListView<Client> {
             Span span = new Span(websitePreview);
             CrmUiUtils.setClickableCursor(span);
             span.setTitle(website);
-            span.addClassNames(LumoUtility.TextColor.PRIMARY, LumoUtility.TextColor.SECONDARY, TextOverflow.ELLIPSIS);
+            span.addClassNames(CrmStyleUtility.TextColor.PRIMARY, CrmStyleUtility.TextColor.SECONDARY, CrmStyleUtility.TextOverflow.ELLIPSIS);
             span.addClickListener(e -> openLink(website));
             return span;
         });
@@ -252,7 +250,6 @@ public class ClientListView extends StandardListView<Client> {
     private void initialize() {
         initializeStatsBlock();
         initializeFilterFields();
-        addDetachListener(e -> asyncTasksRegistry.cancelAll());
         configureGrid();
     }
 
@@ -318,7 +315,8 @@ public class ClientListView extends StandardListView<Client> {
         SupplierConfigurer<?> task = uiAsyncTasks.supplierConfigurer(() -> calculateOrdersTotalSum(clients))
                 .withExceptionHandler(e -> SkeletonStyler.remove(ordersTotalSumCard))
                 .withResultHandler(ordersTotalSum ->
-                        fillStatCard(messages.getMessage("ordersTotal"), ordersTotalSumCard, ordersTotalSum));
+                        fillStatCard(messages.getMessage("ordersTotal"), ordersTotalSumCard, ordersTotalSum))
+                .withOwner(this);
         asyncTasksRegistry.placeTask("ordersTotalSumTask", task);
     }
 
@@ -326,14 +324,16 @@ public class ClientListView extends StandardListView<Client> {
         SupplierConfigurer<BigDecimal> taskConfigurer = uiAsyncTasks.supplierConfigurer(() -> calculatePaymentsTotalSum(clients))
                 .withExceptionHandler(e -> SkeletonStyler.remove(paymentsTotalSumCard))
                 .withResultHandler(paymentsTotalSum ->
-                        fillStatCard(messages.getMessage("paymentsTotal"), paymentsTotalSumCard, paymentsTotalSum));
+                        fillStatCard(messages.getMessage("paymentsTotal"), paymentsTotalSumCard, paymentsTotalSum))
+                .withOwner(this);
         asyncTasksRegistry.placeTask("paymentsTotalSumTask", taskConfigurer);
     }
 
     private void scheduleAverageBillCalculating(Client... clients) {
         SupplierConfigurer<?> task = uiAsyncTasks.supplierConfigurer(() -> calculateAverageBill(clients))
                 .withExceptionHandler(e -> SkeletonStyler.remove(averageBillCard))
-                .withResultHandler(averageBill -> fillStatCard(messages.getMessage("averageBill"), averageBillCard, averageBill));
+                .withResultHandler(averageBill -> fillStatCard(messages.getMessage("averageBill"), averageBillCard, averageBill))
+                .withOwner(this);
         asyncTasksRegistry.placeTask("averageBillTask", task);
     }
 
@@ -397,12 +397,12 @@ public class ClientListView extends StandardListView<Client> {
         var contentComponent = new H1(PriceDataType.defaultFormat(content, datatypeFormatter));
         contentComponent.setWidthFull();
         contentComponent.setMaxWidth(12, Unit.EM);
-        contentComponent.addClassNames(Overflow.HIDDEN, TextOverflow.ELLIPSIS, Whitespace.NOWRAP);
+        contentComponent.addClassNames(CrmStyleUtility.Overflow.HIDDEN, CrmStyleUtility.TextOverflow.ELLIPSIS, CrmStyleUtility.Whitespace.NOWRAP);
 
         VerticalLayout component = new VerticalLayout(contentComponent);
         component.setWidthFull();
         component.setPadding(false);
-        component.addClassNames(Overflow.HIDDEN);
+        component.addClassNames(CrmStyleUtility.Overflow.HIDDEN);
         component.add(createStatCardFooter());
 
         card.fillAsStaticCard(title, component);
@@ -439,12 +439,12 @@ public class ClientListView extends StandardListView<Client> {
         }
 
         CrmUiUtils.setBadge(mainText, badge);
-        mainText.addClassNames(FontSize.LARGE, FontWeight.MEDIUM);
-        mainText.addClassNames(Overflow.HIDDEN, TextOverflow.ELLIPSIS, Whitespace.NOWRAP);
+        mainText.addClassNames(CrmStyleUtility.FontSize.LARGE, CrmStyleUtility.FontWeight.MEDIUM);
+        mainText.addClassNames(CrmStyleUtility.Overflow.HIDDEN, CrmStyleUtility.TextOverflow.ELLIPSIS, CrmStyleUtility.Whitespace.NOWRAP);
         mainText.setWidthFull();
 
         Span hintText = new Span(messageBundle.getMessage("cardHintText"));
-        hintText.addClassNames(FontSize.XSMALL, FontWeight.THIN);
+        hintText.addClassNames(CrmStyleUtility.FontSize.XSMALL, CrmStyleUtility.FontWeight.THIN);
 
         VerticalLayout layout = new VerticalLayout(mainText, hintText);
         layout.setWidthFull();

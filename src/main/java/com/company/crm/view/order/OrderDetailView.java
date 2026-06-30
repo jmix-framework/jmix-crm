@@ -23,10 +23,10 @@ import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.router.Route;
 import io.jmix.core.EntityStates;
-import io.jmix.core.FetchPlan;
 import io.jmix.core.Messages;
 import io.jmix.core.SaveContext;
 import io.jmix.core.metamodel.datatype.DatatypeFormatter;
+import io.jmix.core.repository.JmixDataRepositoryContext;
 import io.jmix.flowui.Dialogs;
 import io.jmix.flowui.Notifications;
 import io.jmix.flowui.action.DialogAction;
@@ -69,13 +69,16 @@ import static com.company.crm.app.util.ui.CrmUiUtils.DEFAULT_BADGE;
 import static com.company.crm.app.util.ui.CrmUiUtils.SUCCESS_BADGE;
 import static com.company.crm.app.util.ui.CrmUiUtils.WARNING_BADGE;
 import static com.company.crm.model.datatype.PriceDataType.defaultFormat;
+import static com.company.crm.view.order.OrderDetailView.ROUTE;
 
-@Route(value = "orders/:id", layout = MainView.class)
+@Route(value = ROUTE, layout = MainView.class)
 @ViewController(id = CrmConstants.ViewIds.ORDER_DETAIL)
 @ViewDescriptor(path = "order-detail-view.xml")
 @EditedEntityContainer("orderDc")
 @PrimaryDetailView(Order.class)
 public class OrderDetailView extends StandardDetailView<Order> {
+
+    public static final String ROUTE = "orders/:id";
 
     @Autowired
     private Dialogs dialogs;
@@ -149,8 +152,8 @@ public class OrderDetailView extends StandardDetailView<Order> {
     }
 
     @Install(to = "orderDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
-    private Optional<Order> loadDelegate(UUID id, FetchPlan fetchPlan) {
-        return orderRepository.findById(id, fetchPlan);
+    private Optional<Order> loadDelegate(UUID id, JmixDataRepositoryContext context) {
+        return orderRepository.findById(id, context.fetchPlan());
     }
 
     @Install(target = Target.DATA_CONTEXT)

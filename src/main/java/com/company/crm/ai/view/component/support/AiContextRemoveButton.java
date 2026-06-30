@@ -8,7 +8,7 @@ public class AiContextRemoveButton extends Button {
 
     public AiContextRemoveButton(String ariaLabel, Runnable onRemove) {
         super(VaadinIcon.CLOSE.create());
-        addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE, ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_ICON);
+        addThemeVariants(ButtonVariant.TERTIARY, ButtonVariant.SMALL);
         if (ariaLabel != null) {
             setAriaLabel(ariaLabel);
         }

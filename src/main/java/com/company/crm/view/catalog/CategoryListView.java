@@ -46,13 +46,16 @@ import java.util.List;
 import java.util.Objects;
 
 import static com.company.crm.app.util.ui.datacontext.DataContextUtils.installSortByCreatedDate;
+import static com.company.crm.view.catalog.CategoryListView.ROUTE;
 
-@Route(value = "categories", layout = MainView.class)
+@Route(value = ROUTE, layout = MainView.class)
 @ViewController(id = CrmConstants.ViewIds.CATEGORY_LIST)
 @ViewDescriptor(path = "category-list-view.xml")
 @LookupComponent("categoriesDataGrid")
 @DialogMode(width = "64em", resizable = true)
 public class CategoryListView extends StandardListView<Category> {
+
+    public static final String ROUTE = "categories";
 
     @Autowired
     private Messages messages;

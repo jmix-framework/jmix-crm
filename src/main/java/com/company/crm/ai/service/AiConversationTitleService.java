@@ -145,14 +145,14 @@ public class AiConversationTitleService {
         return titlePromptBuilder.sanitizeTitle(title);
     }
 
-    static OpenAiChatOptions buildTitleOptions(AiSmallModelProperties smallModelProperties) {
+    static OpenAiChatOptions.Builder buildTitleOptions(AiSmallModelProperties smallModelProperties) {
         OpenAiChatOptions.Builder optionsBuilder = OpenAiChatOptions.builder()
                 .temperature(TITLE_TEMPERATURE)
                 .maxCompletionTokens(TITLE_MAX_TOKENS);
         if (StringUtils.hasText(smallModelProperties.getModelId())) {
             optionsBuilder.model(smallModelProperties.getModelId());
         }
-        return optionsBuilder.build();
+        return optionsBuilder;
     }
 
     static String renderSystemPrompt(Resource systemPrompt, AiTitleProperties titleProperties) {

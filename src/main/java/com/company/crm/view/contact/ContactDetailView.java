@@ -1,12 +1,13 @@
 package com.company.crm.view.contact;
 
+import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.contact.Contact;
 import com.company.crm.model.contact.ContactRepository;
 import com.company.crm.view.main.MainView;
 import com.vaadin.flow.router.Route;
-import io.jmix.core.FetchPlan;
 import io.jmix.core.SaveContext;
+import io.jmix.core.repository.JmixDataRepositoryContext;
 import io.jmix.flowui.component.combobox.EntityComboBox;
 import io.jmix.flowui.view.DialogMode;
 import io.jmix.flowui.view.EditedEntityContainer;
@@ -23,12 +24,16 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-@Route(value = "contacts/:id", layout = MainView.class)
-@ViewController(id = "Contact.detail")
+import static com.company.crm.view.contact.ContactDetailView.ROUTE;
+
+@Route(value = ROUTE, layout = MainView.class)
+@ViewController(id = CrmConstants.ViewIds.CONTACT_DETAIL)
 @ViewDescriptor(path = "contact-detail-view.xml")
 @EditedEntityContainer("contactDc")
 @DialogMode(width = "64em", resizable = true)
 public class ContactDetailView extends StandardDetailView<Contact> {
+
+    public static final String ROUTE = "contacts/:id";
 
     @Autowired
     private ContactRepository repository;
@@ -41,8 +46,8 @@ public class ContactDetailView extends StandardDetailView<Contact> {
     }
 
     @Install(to = "contactDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
-    private Optional<Contact> loadDelegate(UUID id, FetchPlan fetchPlan) {
-        return repository.findById(id, fetchPlan);
+    private Optional<Contact> loadDelegate(UUID id, JmixDataRepositoryContext context) {
+        return repository.findById(id, context.fetchPlan());
     }
 
     @Install(target = Target.DATA_CONTEXT)

@@ -11,6 +11,7 @@ import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.app.util.date.Period;
 import com.company.crm.app.util.ui.chart.ChartsUtils;
 import com.company.crm.app.util.ui.renderer.CrmRenderers;
+import com.company.crm.app.util.ui.theme.CrmStyleUtility;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.datatype.PriceDataType;
 import com.company.crm.model.invoice.Invoice;
@@ -31,7 +32,6 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.theme.lumo.LumoUtility.Margin;
 import io.jmix.chartsflowui.component.Chart;
 import io.jmix.chartsflowui.kit.component.model.DataSet;
 import io.jmix.chartsflowui.kit.component.model.Grid;
@@ -79,12 +79,15 @@ import java.util.Map;
 import static com.company.crm.app.feature.sortable.SortableFeature.makeSortable;
 import static com.company.crm.app.util.ui.CrmUiUtils.setBackgroundTransparent;
 import static com.company.crm.app.util.ui.CrmUiUtils.setDefaultEmptyStateComponent;
+import static com.company.crm.view.home.HomeView.ROUTE;
 import static io.jmix.flowui.component.UiComponentUtils.traverseComponents;
 
-@Route(value = "", layout = MainView.class)
+@Route(value = ROUTE, layout = MainView.class)
 @ViewController(id = CrmConstants.ViewIds.HOME)
 @ViewDescriptor(path = "home-view.xml")
 public class HomeView extends StandardView {
+
+    public static final String ROUTE = "";
 
     @Autowired
     private Metadata metadata;
@@ -193,7 +196,7 @@ public class HomeView extends StandardView {
 
         var newTaskButton = new Button(messageBundle.getMessage("newTask"));
         newTaskButton.setIcon(VaadinIcon.PLUS.create());
-        newTaskButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        newTaskButton.addThemeVariants(ButtonVariant.PRIMARY);
         newTaskButton.addClickListener(clickEvent ->
                 dialogWindows.view(this, UserTaskListView.class)
                         .withViewConfigurer(UserTaskListView::detailOnly)
@@ -232,7 +235,7 @@ public class HomeView extends StandardView {
 
     private void doCreateCards(List<JmixCard> cards, JmixFormLayout form) {
         for (JmixCard card : cards) {
-            card.addClassNames(Margin.Top.MEDIUM, Margin.Bottom.MEDIUM);
+            card.addClassNames(CrmStyleUtility.Margin.Top.MEDIUM, CrmStyleUtility.Margin.Bottom.MEDIUM);
             form.add(card);
         }
     }
@@ -288,7 +291,7 @@ public class HomeView extends StandardView {
         @SuppressWarnings("unchecked")
         DataGrid<Invoice> grid = uiComponents.create(DataGrid.class);
         grid.setDataProvider(gridItems);
-        grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+        grid.addThemeVariants(GridVariant.ROW_STRIPES);
         grid.setMinHeight(10, Unit.EM);
         grid.setMaxHeight(15, Unit.EM);
         setDefaultEmptyStateComponent(grid);
@@ -296,7 +299,7 @@ public class HomeView extends StandardView {
                 dialogWindows.detail(this, Invoice.class).editEntity(e.getItem()).open());
 
         var clientColumn = grid.addColumn("client", metadata.getClass(Invoice.class).getPropertyPath("client"));
-        clientColumn.setRenderer(crmRenderers.invoiceClientLink());
+        clientColumn.setRenderer(crmRenderers.invoiceClientLink(grid));
         clientColumn.setHeader(messages.getMessage(Client.class, "Client"));
         clientColumn.setFilterable(true);
         clientColumn.setSortable(true);

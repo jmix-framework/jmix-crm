@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      title="msg://aboutView.title"
+      focusMode="NO_FOCUS">
+    <layout classNames="about-layout">
+        <vbox classNames="about-grid">
+
+            <!-- Left column: links grouped into sections -->
+            <div classNames="about-card about-card-main">
+
+                <h3 classNames="about-section-title" text="msg://links.section.project"/>
+                <vbox id="communityLinks" classNames="about-link-list" padding="false" spacing="false"/>
+
+                <hr classNames="about-divider"/>
+
+                <h3 classNames="about-section-title" text="msg://links.section.learn"/>
+                <vbox id="learnLinks" classNames="about-link-list" padding="false" spacing="false"/>
+
+                <hr classNames="about-divider"/>
+
+                <h3 classNames="about-section-title" text="msg://links.section.social"/>
+                <hbox id="socialLinks" classNames="about-social-list" padding="false" spacing="false"/>
+            </div>
+
+            <!-- Right column: product version + about text -->
+            <div classNames="about-aside">
+
+                <!-- About text card -->
+                <div classNames="about-card about-card-main">
+
+                    <h3 classNames="about-section-title" text="msg://aboutCrm.title"/>
+                    <p classNames="about-paragraph" text="msg://aboutCrm.intro"/>
+                    <div id="aboutCrmSource" classNames="about-paragraph"/>
+
+                    <hr classNames="about-divider"/>
+
+                    <h3 classNames="about-section-title" text="msg://builtWithJmix.title"/>
+                    <p classNames="about-paragraph" text="msg://builtWithJmix.intro"/>
+                    <p classNames="about-paragraph" text="msg://builtWithJmix.details"/>
+                </div>
+
+                <!-- Product version card -->
+                <div classNames="about-card">
+                    <div classNames="about-card-header">
+                        <h3 classNames="about-card-title" text="msg://productVersion.title"/>
+                        <button id="copyButton" themeNames="tertiary-inline icon" classNames="about-copy-btn"/>
+                    </div>
+                    <div classNames="about-version">
+                        <div classNames="about-version-row">
+                            <span classNames="about-version-label" text="msg://productVersion.product"/>
+                            <span classNames="about-version-value" text="msg://product.name"/>
+                        </div>
+                        <div classNames="about-version-row">
+                            <span classNames="about-version-label" text="msg://productVersion.version"/>
+                            <span id="versionValue" classNames="about-version-value"/>
+                        </div>
+                        <div classNames="about-version-row">
+                            <span classNames="about-version-label" text="msg://productVersion.build"/>
+                            <span id="buildValue" classNames="about-version-value"/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </vbox>
+    </layout>
+</view>

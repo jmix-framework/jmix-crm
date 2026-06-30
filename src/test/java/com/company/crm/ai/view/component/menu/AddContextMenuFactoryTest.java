@@ -3,8 +3,8 @@ package com.company.crm.ai.view.component.menu;
 import com.company.crm.AbstractUiTest;
 import com.company.crm.ai.context.AiContextEntityRegistry;
 import com.company.crm.model.client.Client;
-import com.vaadin.flow.component.ComponentUtil;
 import com.vaadin.flow.component.ClickEvent;
+import com.vaadin.flow.component.ComponentUtil;
 import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.menubar.MenuBar;
 import io.jmix.core.Messages;
@@ -36,7 +36,7 @@ class AddContextMenuFactoryTest extends AbstractUiTest {
 
     @Test
     void uploadMenuItemUsesPluralLocalizedLabel() {
-        JmixUpload upload = uiComponents.create(JmixUpload.class);
+        JmixUpload<?> upload = uiComponents.create(JmixUpload.class);
         AddContextMenuFactory factory = new AddContextMenuFactory((label, entityClass) -> {
         }, contextEntityRegistry, conversationMessageBundle());
 

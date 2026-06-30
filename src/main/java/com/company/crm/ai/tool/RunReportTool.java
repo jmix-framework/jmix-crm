@@ -3,6 +3,7 @@ package com.company.crm.ai.tool;
 import com.company.crm.ai.report.run.AiReportExecutionService;
 import com.company.crm.ai.report.run.ReportExecutionErrorCode;
 import com.company.crm.ai.report.run.ReportExecutionResult;
+import io.jmix.aitools.tool.JmixAiTool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.model.ToolContext;
@@ -18,7 +19,7 @@ import java.util.UUID;
 /**
  * Spring AI Tool for executing Jmix reports and retrieving their text output.
  */
-public class RunReportTool implements CrmAiTool {
+public class RunReportTool implements JmixAiTool {
 
     private static final Logger log = LoggerFactory.getLogger(RunReportTool.class);
     private static final Set<String> ALLOWED_OUTPUT_TYPES = Set.of("HTML", "CSV");

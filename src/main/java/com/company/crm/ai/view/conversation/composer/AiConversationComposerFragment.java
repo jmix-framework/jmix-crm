@@ -1,34 +1,32 @@
 package com.company.crm.ai.view.conversation.composer;
 
-import com.company.crm.ai.view.component.card.AiConversationContextCardFactory;
-import com.company.crm.ai.view.component.menu.AddContextMenuFactory;
 import com.company.crm.ai.context.AiContextEntityRegistry;
 import com.company.crm.ai.model.AiConversationAttachment;
 import com.company.crm.ai.service.PendingAttachmentInput;
+import com.company.crm.ai.view.component.card.AiConversationContextCardFactory;
+import com.company.crm.ai.view.component.menu.AddContextMenuFactory;
+import com.company.crm.app.service.storage.CrmFileStorage;
+import com.company.crm.app.util.common.StreamUtils;
 import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.messages.MessageInput;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.upload.FailedEvent;
 import com.vaadin.flow.component.upload.FileRejectedEvent;
-import com.vaadin.flow.component.upload.SucceededEvent;
-import io.jmix.core.IdSerialization;
-import io.jmix.core.Metadata;
-import io.jmix.flowui.Notifications;
-import io.jmix.flowui.component.upload.JmixUpload;
 import io.jmix.core.FileRef;
 import io.jmix.core.FileStorage;
 import io.jmix.core.FileStorageLocator;
-import io.jmix.flowui.upload.TemporaryStorage;
-import io.jmix.flowui.component.upload.receiver.MultiFileTemporaryStorageBuffer;
-import io.jmix.flowui.component.upload.receiver.FileTemporaryStorageBuffer;
-import io.jmix.flowui.component.upload.receiver.TemporaryStorageFileData;
-import io.jmix.flowui.DialogWindows;
 import io.jmix.core.Id;
-import com.company.crm.app.service.storage.CrmFileStorage;
+import io.jmix.core.IdSerialization;
+import io.jmix.core.Metadata;
+import io.jmix.flowui.DialogWindows;
+import io.jmix.flowui.Notifications;
+import io.jmix.flowui.component.upload.JmixUpload;
+import io.jmix.flowui.component.upload.UploadSucceededEvent;
 import io.jmix.flowui.fragment.Fragment;
 import io.jmix.flowui.fragment.FragmentDescriptor;
 import io.jmix.flowui.fragment.FragmentUtils;
+import io.jmix.flowui.upload.TemporaryStorage;
 import io.jmix.flowui.view.MessageBundle;
 import io.jmix.flowui.view.Subscribe;
 import io.jmix.flowui.view.ViewComponent;
@@ -36,7 +34,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
-import com.company.crm.app.util.common.StreamUtils;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -61,7 +58,7 @@ public class AiConversationComposerFragment extends Fragment<VerticalLayout> {
     @ViewComponent
     private VerticalLayout pendingContextLayout;
     @ViewComponent
-    private JmixUpload attachmentUpload;
+    private JmixUpload<TemporaryStorage.FileInfo> attachmentUpload;
     @ViewComponent
     private MessageBundle messageBundle;
     @Autowired
@@ -222,16 +219,16 @@ public class AiConversationComposerFragment extends Fragment<VerticalLayout> {
     }
 
     @Subscribe("attachmentUpload")
-    public void onAttachmentUploadSucceeded(final SucceededEvent event) {
-        final TemporaryStorageFileData uploadedFileData = findUploadedFileData(event);
+    public void onAttachmentUploadSucceeded(final UploadSucceededEvent<TemporaryStorage.FileInfo> event) {
+        final TemporaryStorage.FileInfo uploadedFileInfo = event.getData();
 
-        if (uploadedFileData == null) {
+        if (uploadedFileInfo == null || !uploadedFileInfo.getFile().exists()) {
             showMissingFileError();
             return;
         }
 
-        final String uploadedFileName = resolveUploadedFileName(event, uploadedFileData);
-        final FileRef uploadedFileRef = putFileIntoStorage(uploadedFileData, uploadedFileName);
+        final String uploadedFileName = resolveUploadedFileName(event.getFileName());
+        final FileRef uploadedFileRef = putFileIntoStorage(uploadedFileInfo, uploadedFileName);
 
         if (uploadedFileRef == null) {
             showMissingFileError();
@@ -248,9 +245,9 @@ public class AiConversationComposerFragment extends Fragment<VerticalLayout> {
             focus();
         } catch (Exception e) {
             try {
-                temporaryStorage.deleteFile(uploadedFileData.getFileInfo().getId());
+                temporaryStorage.deleteFile(uploadedFileInfo.getId());
             } catch (Exception cleanupError) {
-                log.warn("Failed to cleanup temporary upload {}", uploadedFileData.getFileInfo().getId(), cleanupError);
+                log.warn("Failed to cleanup temporary upload {}", uploadedFileInfo.getId(), cleanupError);
             }
             attachmentUpload.clearFileList();
             log.error("Failed to stage uploaded attachment", e);
@@ -267,37 +264,18 @@ public class AiConversationComposerFragment extends Fragment<VerticalLayout> {
                 .show();
     }
 
-    private String resolveUploadedFileName(SucceededEvent event, TemporaryStorageFileData uploadedFileData) {
-        String fileNameFromEvent = event.getFileName();
+    private String resolveUploadedFileName(String fileNameFromEvent) {
         if (StringUtils.hasText(fileNameFromEvent)) {
             return fileNameFromEvent;
-        }
-        String fileNameFromBuffer = uploadedFileData.getFileName();
-        if (StringUtils.hasText(fileNameFromBuffer)) {
-            return fileNameFromBuffer;
         }
         return "uploaded-file";
     }
 
-    private TemporaryStorageFileData findUploadedFileData(SucceededEvent event) {
-        if (event.getUpload().getReceiver() instanceof MultiFileTemporaryStorageBuffer multiBuffer) {
-            String fileName = event.getFileName();
-            return multiBuffer.getFiles().values().stream()
-                    .filter(data -> Objects.equals(data.getFileName(), fileName))
-                    .filter(data -> data.getFileInfo().getFile().exists())
-                    .findFirst()
-                    .orElse(null);
-        } else if (event.getUpload().getReceiver() instanceof FileTemporaryStorageBuffer storageBuffer) {
-            return storageBuffer.getFileData();
-        }
-        return null;
-    }
-
-    private FileRef putFileIntoStorage(TemporaryStorageFileData uploadedFileData, String uploadedFileName) {
+    private FileRef putFileIntoStorage(TemporaryStorage.FileInfo uploadedFileInfo, String uploadedFileName) {
         try {
             FileStorage fileStorage = fileStorageLocator.getByName(CrmFileStorage.STORAGE_NAME);
             return temporaryStorage.putFileIntoStorage(
-                    uploadedFileData.getFileInfo().getId(),
+                    uploadedFileInfo.getId(),
                     uploadedFileName,
                     fileStorage
             );

@@ -53,7 +53,7 @@
                                 classNames="m-0"/>
                             <button id="editConversationTitleBtn"
                                     icon="PENCIL"
-                                    themeNames="tertiary-inline small icon"
+                                    themeNames="tertiary small icon"
                                     classNames="ms-xs"
                                     ariaLabel="msg://editConversationTitleAction"/>
                         </hbox>

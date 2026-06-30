@@ -1,6 +1,7 @@
 package com.company.crm.app.ui.component;
 
 import com.company.crm.app.util.ui.CrmUiUtils;
+import com.company.crm.app.util.ui.theme.CrmStyleUtility;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasComponents;
 import com.vaadin.flow.component.HasSize;
@@ -9,7 +10,6 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.SvgIcon;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.di.Instantiator;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 import io.jmix.core.Messages;
 import org.jspecify.annotations.Nullable;
 
@@ -33,7 +33,7 @@ public class CrmLoader extends VerticalLayout {
         setPadding(false);
         setAlignItems(Alignment.CENTER);
         setJustifyContentMode(JustifyContentMode.CENTER);
-        addClassName("crm-loader");
+        addClassName("loader");
         addComponents();
     }
 
@@ -100,8 +100,8 @@ public class CrmLoader extends VerticalLayout {
 
     private void addLoadingMessage() {
         setLoadingMessage(loadingMessage.getText(), CrmUiUtils.DEFAULT_BADGE);
-        loadingMessage.addClassNames(LumoUtility.FontWeight.THIN, LumoUtility.FontSize.SMALL);
-        loadingMessage.addClassName("crm-loader-message");
+        loadingMessage.addClassNames(CrmStyleUtility.FontWeight.THIN, CrmStyleUtility.FontSize.SMALL);
+        loadingMessage.addClassName("loader-message");
         add(loadingMessage);
     }
 }

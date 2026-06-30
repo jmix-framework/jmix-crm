@@ -21,8 +21,6 @@
         <settings auto="true"/>
         <dataLoadCoordinator auto="true"/>
         <urlQueryParameters>
-            <pagination component="pagination"/>
-            <genericFilter component="genericFilter"/>
             <dataGridFilter component="userTasksDataGrid"/>
         </urlQueryParameters>
     </facets>
@@ -33,9 +31,6 @@
     <layout padding="false">
         <formLayout id="layoutWrapper" classNames="master-detail-layout" width="100%" height="100%">
             <vbox id="listLayout" height="100%" colspan="1">
-                <genericFilter id="genericFilter" dataLoader="userTasksDl">
-                    <properties include="(isCompleted)|(title)|(dueDate)"/>
-                </genericFilter>
                 <hbox id="buttonsPanel" classNames="buttons-panel">
                     <startSlot>
                         <button id="createButton" action="userTasksDataGrid.createAction"/>
@@ -43,11 +38,6 @@
                         <button id="removeButton" action="userTasksDataGrid.removeAction"/>
                         <button id="excelExportBtn" action="userTasksDataGrid.excelExport"/>
                     </startSlot>
-                    <endSlot>
-                        <simplePagination id="pagination" dataLoader="userTasksDl" itemsPerPageVisible="true"/>
-                        <gridColumnVisibility dataGrid="userTasksDataGrid" icon="COG_O"
-                                              themeNames="tertiary-inline" hideAllEnabled="false"/>
-                    </endSlot>
                 </hbox>
                 <dataGrid id="userTasksDataGrid"
                           width="100%"
@@ -76,11 +66,9 @@
             <vbox id="detailsLayout" height="100%" colspan="1">
                 <formLayout id="form" dataContainer="userTaskDc" autoResponsive="true"
                             maxColumns="1" expandColumns="true" expandFields="true">
-                    <responsiveSteps>
-                        <responsiveStep minWidth="0" columns="1"/>
-                        <responsiveStep minWidth="40em" columns="2"/>
-                    </responsiveSteps>
-                    <textField id="titleField" property="title"/>
+                    <formItem>
+                        <textField id="titleField" property="title"/>
+                    </formItem>
                     <richTextEditor id="descriptionField" height="9.5em" property="description"/>
                     <datePicker id="dueDateField" property="dueDate"/>
                     <checkbox id="isCompletedField" property="isCompleted"/>

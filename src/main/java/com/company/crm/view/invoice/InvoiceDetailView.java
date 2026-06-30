@@ -13,8 +13,8 @@ import com.company.crm.view.main.MainView;
 import com.vaadin.flow.component.AbstractField.ComponentValueChangeEvent;
 import com.vaadin.flow.router.Route;
 import io.jmix.core.EntityStates;
-import io.jmix.core.FetchPlan;
 import io.jmix.core.SaveContext;
+import io.jmix.core.repository.JmixDataRepositoryContext;
 import io.jmix.flowui.DialogWindows;
 import io.jmix.flowui.component.combobox.EntityComboBox;
 import io.jmix.flowui.component.datepicker.TypedDatePicker;
@@ -39,12 +39,15 @@ import java.util.Set;
 import java.util.UUID;
 
 import static com.company.crm.app.util.price.PriceCalculator.calculateInvoiceFieldsFromOrder;
+import static com.company.crm.view.invoice.InvoiceDetailView.ROUTE;
 
-@Route(value = "invoices/:id", layout = MainView.class)
+@Route(value = ROUTE, layout = MainView.class)
 @ViewController(id = CrmConstants.ViewIds.INVOICE_DETAIL)
 @ViewDescriptor(path = "invoice-detail-view.xml")
 @EditedEntityContainer("invoiceDc")
 public class InvoiceDetailView extends StandardDetailView<Invoice> {
+
+    public static final String ROUTE = "invoices/:id";
 
     @Autowired
     private EntityStates entityStates;
@@ -122,8 +125,8 @@ public class InvoiceDetailView extends StandardDetailView<Invoice> {
     }
 
     @Install(to = "invoiceDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
-    private Optional<Invoice> loadDelegate(UUID id, FetchPlan fetchPlan) {
-        return invoiceRepository.findById(id, fetchPlan);
+    private Optional<Invoice> loadDelegate(UUID id, JmixDataRepositoryContext context) {
+        return invoiceRepository.findById(id, context.fetchPlan());
     }
 
     @Install(target = Target.DATA_CONTEXT)

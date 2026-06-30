@@ -160,7 +160,7 @@
             <h3 text="Total:" classNames="mr-l"/>
             <span text="Products"/>
             <h3 id="orderItemsCount"/>
-            <split orientation="HORIZONTAL" height="100%">
+            <split orientation="HORIZONTAL" height="100%" themeNames="small">
                 <div/>
                 <div/>
             </split>

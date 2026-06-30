@@ -42,16 +42,19 @@ import java.util.List;
 import static com.company.crm.app.util.ui.CrmUiUtils.addRowSelectionInMultiSelectMode;
 import static com.company.crm.app.util.ui.datacontext.DataContextUtils.addCondition;
 import static com.company.crm.app.util.ui.datacontext.DataContextUtils.installSortByCreatedDate;
+import static com.company.crm.view.payment.PaymentListView.ROUTE;
 import static io.jmix.core.querycondition.PropertyCondition.equal;
 import static io.jmix.core.querycondition.PropertyCondition.greaterOrEqual;
 import static io.jmix.core.querycondition.PropertyCondition.lessOrEqual;
 
-@Route(value = "payments", layout = MainView.class)
+@Route(value = ROUTE, layout = MainView.class)
 @ViewDescriptor("payment-list-view.xml")
 @ViewController(CrmConstants.ViewIds.PAYMENT_LIST)
 @LookupComponent("paymentsDataGrid")
 @DialogMode(width = "90%", resizable = true)
 public class PaymentListView extends StandardListView<Payment> {
+
+    public static final String ROUTE = "payments";
 
     @Autowired
     private CrmRenderers crmRenderers;
@@ -122,17 +125,17 @@ public class PaymentListView extends StandardListView<Payment> {
 
     @Supply(to = "paymentsDataGrid.[order.client]", subject = "renderer")
     private Renderer<Payment> paymentsDataGridOrderClientRenderer() {
-        return crmRenderers.entityLink(p -> p.getOrder().getClient());
+        return crmRenderers.entityLink(paymentsDataGrid, p -> p.getOrder().getClient());
     }
 
     @Supply(to = "paymentsDataGrid.order", subject = "renderer")
     private Renderer<Payment> paymentsDataGridOrderRenderer() {
-        return crmRenderers.entityLink(Payment::getOrder);
+        return crmRenderers.entityLink(paymentsDataGrid, Payment::getOrder);
     }
 
     @Supply(to = "paymentsDataGrid.invoice", subject = "renderer")
     private Renderer<Payment> paymentsDataGridInvoiceRenderer() {
-        return crmRenderers.entityLink(Payment::getInvoice);
+        return crmRenderers.entityLink(paymentsDataGrid, Payment::getInvoice);
     }
 
     private void installGridDefaultSorting() {

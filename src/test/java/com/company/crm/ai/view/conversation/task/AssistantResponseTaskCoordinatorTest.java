@@ -206,6 +206,7 @@ class AssistantResponseTaskCoordinatorTest extends AbstractUiTest {
         }
 
         @SafeVarargs
+        @SuppressWarnings("varargs")
         @Override
         public final void publish(T... changes) {
             task.progress(List.of(changes));

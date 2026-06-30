@@ -1,0 +1,359 @@
+/* Predefined styles */
+
+:where(:root),
+:where(:host) {
+    --vaadin-app-layout-drawer-width: 256px;
+}
+
+vaadin-app-layout.jmix-main-view-app-layout:not([primary-section='navbar']) {
+    --vaadin-app-layout-navbar-padding-top: var(--aura-app-layout-inset);
+    --vaadin-app-layout-navbar-padding-inline-start: var(--aura-app-layout-inset);
+    --vaadin-app-layout-navbar-padding-inline-end: var(--aura-app-layout-inset);
+    --vaadin-app-layout-navbar-padding-bottom: 0px;
+
+    transition: padding-bottom var(--vaadin-app-layout-transition-duration),
+    padding-inline-start var(--vaadin-app-layout-transition-duration),
+    padding-inline-end var(--vaadin-app-layout-transition-duration);
+}
+
+vaadin-app-layout.jmix-main-view-app-layout[drawer-opened]:not([primary-section='navbar']) {
+    --vaadin-app-layout-navbar-padding-inline-start: 0px;
+}
+
+vaadin-app-layout.jmix-main-view-app-layout:not([primary-section='navbar'])::part(navbar) {
+    transition: inset-inline-start var(--vaadin-app-layout-transition-duration),
+    padding var(--vaadin-app-layout-transition-duration);
+}
+
+vaadin-app-layout.jmix-main-view-app-layout[has-navbar]:not([primary-section='navbar']) > :nth-child(1 of :not([slot])):nth-last-child(1 of :not([slot])) {
+    border-top-width: 0;
+    border-start-start-radius: 0;
+    border-start-end-radius: 0;
+}
+
+vaadin-app-layout.jmix-main-view-app-layout[has-navbar][has-drawer][drawer-opened]:not([overlay]):not([primary-section='navbar']) > :nth-child(1 of :not([slot])):nth-last-child(1 of :not([slot])) {
+    border-start-start-radius: 0;
+}
+
+vaadin-app-layout.jmix-main-view-app-layout:not([primary-section='navbar']) .jmix-main-view-header {
+    background: linear-gradient(var(--aura-surface-color), var(--aura-surface-color)), var(--aura-app-background);
+    background-clip: padding-box;
+    background-origin: border-box;
+
+    border: var(--aura-app-layout-border-width) solid var(--vaadin-border-color-secondary);
+    border-top-width: min(var(--aura-app-layout-inset), var(--aura-app-layout-border-width));
+    border-inline-width: min(var(--aura-app-layout-inset), var(--aura-app-layout-border-width));
+    border-bottom-width: 1px;
+    border-start-start-radius: var(--_app-layout-radius);
+    border-start-end-radius: var(--_app-layout-radius);
+
+    padding: var(--vaadin-padding-s) var(--vaadin-padding-m);
+}
+
+vaadin-app-layout.jmix-main-view-app-layout:not([primary-section='navbar'])::part(navbar-bottom) {
+    border-top: 1px solid var(--vaadin-border-color-secondary);
+}
+
+vaadin-app-layout.jmix-main-view-app-layout[has-drawer][drawer-opened]:not([overlay]):not([primary-section='navbar']) > .jmix-main-view-header {
+    border-inline-start-width: var(--aura-app-layout-border-width);
+}
+
+.jmix-main-view-header {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    box-sizing: border-box;
+    gap: var(--vaadin-gap-m);
+}
+
+.jmix-main-view-title {
+    font-size: var(--aura-font-size-xl);
+}
+
+.jmix-main-view-section {
+    background-color: var(--vaadin-background-container);
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    max-height: 100%;
+    min-height: 100%;
+}
+
+.jmix-main-view-application-title {
+    display: flex;
+    align-items: center;
+    margin: 0;
+    padding: var(--vaadin-padding-m);
+    font-size: var(--aura-font-size-l);
+    gap: var(--vaadin-gap-s);
+}
+
+.jmix-main-view-application-title:hover {
+    filter: brightness(1.3);
+}
+
+.jmix-main-view-application-title-base-link {
+    color: var(--vaadin-text-color);
+    text-decoration: none;
+}
+
+.jmix-main-view-navigation {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    overflow: auto;
+}
+
+.jmix-main-view-footer {
+    display: flex;
+    align-items: center;
+    gap: var(--vaadin-gap-m);
+    padding: var(--vaadin-padding-m);
+    padding-bottom: max(0px, var(--aura-app-layout-inset) - var(--vaadin-padding-m));
+    border-top: 1px solid var(--vaadin-border-color-secondary);
+}
+
+.jmix-main-view-footer .jmix-user-indicator {
+    flex-grow: 1;
+}
+
+/* User Menu */
+
+.jmix-main-view-user-menu {
+    margin-inline-start: auto;
+}
+
+.user-menu-button-content,
+.user-menu-header-content {
+    display: grid;
+    grid-template: "avatar text"
+                   "avatar subtext";
+    grid-template-columns: auto 1fr;
+    column-gap: var(--vaadin-gap-s);
+
+    width: max-content;
+    box-sizing: border-box;
+
+    color: var(--vaadin-text-color);
+    padding: var(--vaadin-padding-xs) var(--vaadin-padding-s);
+}
+
+.user-menu-header-content {
+    width: 100%;
+    padding-inline-end: var(--vaadin-padding-l);
+}
+
+.user-menu-button-content > .user-menu-avatar,
+.user-menu-header-content > .user-menu-avatar {
+    grid-area: avatar;
+    align-self: center;
+}
+
+.user-menu-button-content > .user-menu-text {
+    grid-row: text / subtext;
+}
+
+.jmix-main-view-user-menu[theme~='substituted'] .user-menu-button-content > .user-menu-text {
+    grid-row: text;
+}
+
+.user-menu-header-content > .user-menu-text {
+    grid-area: text;
+
+    color: var(--vaadin-text-color);
+    font-weight: 700;
+    font-size: var(--aura-font-size-m);
+}
+
+.user-menu-header-content > .user-menu-text-subtext {
+    grid-row: text / subtext;
+}
+
+.user-menu-button-content > .user-menu-text,
+.user-menu-header-content > .user-menu-text {
+    align-self: center;
+    text-align: start;
+
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.user-menu-button-content > .user-menu-subtext,
+.user-menu-header-content > .user-menu-subtext {
+    grid-area: subtext;
+    align-self: center;
+    text-align: start;
+
+    color: var(--vaadin-text-color-secondary);
+    font-size: var(--aura-font-size-xs);
+
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.jmix-main-view-user-menu:not([theme~='substituted']) .user-menu-button-content > .user-menu-subtext {
+    display: none;
+}
+
+/* Initial Layout */
+
+.jmix-initial-layout {
+    --title-size: round(var(--aura-font-size-m) * 2.5, 0.0625rem);
+    --title-color: var(--vaadin-text-color-secondary);
+
+    width: 100%;
+    height: 100%;
+
+    align-items: center;
+    justify-content: center;
+
+    container-type: inline-size;
+    container-name: jmix-initial-layout;
+}
+
+.jmix-initial-layout-content {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 50rem;
+    padding: var(--vaadin-padding-xl);
+    box-sizing: border-box;
+}
+
+@container jmix-initial-layout (max-width: 45rem) {
+    .jmix-initial-layout-content {
+        flex-direction: column-reverse;
+        align-items: center;
+        gap: var(--vaadin-gap-l);
+    }
+
+    .jmix-initial-layout-title {
+        padding-top: var(--vaadin-padding-m);
+        line-height: var(--aura-line-height-m);
+        text-align: center;
+    }
+}
+
+/* MenuFilterField component */
+
+.jmix-main-view-navigation > .jmix-menu-filter-field {
+    margin: var(--vaadin-padding-s) var(--vaadin-padding-m);
+}
+
+/* Search add-on */
+
+.jmix-main-view-navigation > .jmix-search-field {
+    display: flex;
+    margin: auto var(--vaadin-padding-m) var(--vaadin-padding-s) var(--vaadin-padding-m);
+}
+
+.jmix-main-view-header > .jmix-search-field {
+    margin-inline-start: auto;
+    margin-inline-end: var(--vaadin-padding-m);
+}
+
+/* Custom styles */
+
+vaadin-icon[icon="crm:sparkles"] {
+    color: var(--jx-magic);
+}
+
+vaadin-button[theme~="primary"] vaadin-icon[icon="crm:sparkles"] {
+    color: currentColor;
+}
+
+vaadin-button:not([theme~="primary"]):not([disabled]):not([theme~="icon"]):has(vaadin-icon[icon="crm:sparkles"]) {
+    color: var(--jx-magic);
+}
+
+vaadin-button[theme~="ai"] vaadin-icon[icon="crm:sparkles"] {
+    color: currentColor;
+}
+
+.jmix-list-menu {
+    color: var(--vaadin-text-color);
+}
+
+.jmix-list-menu a.jmix-menu-item[highlight],
+.jmix-list-menu a[highlight][class*='jmix-menu-item'] {
+    background-color: var(--aura-accent-surface);
+    color: var(--aura-accent-text-color);
+    border-radius: var(--vaadin-radius-m);
+}
+
+.jmix-list-menu a[highlight].jmix-menu-item:has(vaadin-icon[icon="crm:sparkles"]) {
+    background-color: var(--jx-magic);
+    color: #fff;
+    box-shadow: 0 1px 2px color-mix(in oklab, var(--jx-magic) 55%, transparent);
+}
+
+.jmix-list-menu vaadin-details-summary {
+    padding: 0 !important;
+    border-radius: var(--vaadin-radius-m);
+    font-size: var(--aura-font-size-m);
+}
+
+.jmix-menubar-item vaadin-details-summary {
+    padding-right: 0.5em !important;
+}
+
+.jmix-menubar-item vaadin-details-summary:hover,
+.jmix-menubar-item vaadin-details-summary:focus {
+    background-color: var(--vaadin-background-container);
+}
+
+.jmix-menu-item {
+    padding: var(--vaadin-padding-s) var(--vaadin-padding-m) var(--vaadin-padding-s) var(--vaadin-padding-m) !important;
+}
+
+.jmix-menu-item span {
+    font-weight: 700 !important;
+}
+
+.jmix-menu-item:hover span {
+    color: var(--aura-accent-text-color);
+}
+
+.jmix-menu-item:hover {
+    background-color: var(--vaadin-background-container);
+    border-radius: var(--vaadin-radius-m);
+}
+
+.jmix-list-menu a.jmix-menu-item:not([highlight]):has(vaadin-icon[icon="crm:sparkles"]):hover {
+    background-color: color-mix(in oklab, var(--jx-magic) 14%, transparent);
+    color: light-dark(var(--jx-magic-dark), var(--jx-magic-soft));
+}
+
+.jmix-list-menu a.jmix-menu-item:not([highlight]):has(vaadin-icon[icon="crm:sparkles"]):hover span {
+    color: light-dark(var(--jx-magic-dark), var(--jx-magic-soft));
+}
+
+.jmix-list-menu a[highlight] vaadin-icon[icon="crm:sparkles"] {
+    color: currentColor;
+}
+
+.jmix-menu-item:focus {
+    background-color: var(--vaadin-background-container);
+    border-radius: var(--vaadin-radius-m);
+}
+
+.jmix-menubar-item {
+    color: var(--vaadin-text-color);
+    padding: 0 !important;
+    font-size: var(--aura-font-size-m);
+}
+
+.jmix-menubar-summary-icon-container {
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    gap: var(--vaadin-gap-s);
+    padding: var(--vaadin-padding-s) var(--vaadin-padding-xs) var(--vaadin-padding-s) var(--vaadin-padding-m) !important;
+    color: var(--vaadin-text-color);
+    border-radius: var(--vaadin-radius-m);
+    flex: 1 1 auto;
+    min-width: 0;
+    width: auto !important;
+}

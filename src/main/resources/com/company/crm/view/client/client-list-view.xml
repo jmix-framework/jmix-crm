@@ -38,7 +38,7 @@
         </formLayout>
 
         <div width="100%" maxWidth="40em">
-            <formLayout width="100%">
+            <formLayout width="100%" classNames="pb-s">
                 <responsiveSteps>
                     <responsiveStep minWidth="0" columns="1"/>
                     <responsiveStep minWidth="30em" columns="2"/>
@@ -66,7 +66,8 @@
                         emptySelectionAllowed="true" emptySelectionCaption="msg://allClients"/>
             </formLayout>
             <genericFilter id="advancedFilter" dataLoader="clientsDl"
-                           opened="false" summaryText="msg:///advanced" themeNames="filled">
+                           opened="false" summaryText="msg:///advanced"
+                           themeNames="filled" classNames="pl-m mt-m mb-m">
                 <properties include="(name)|(accountManager)|(type)|(vatNumber)|(regNumber)|(website)"/>
             </genericFilter>
         </div>
@@ -83,7 +84,7 @@
                 <simplePagination id="pagination" dataLoader="clientsDl" autoLoad="true"
                                   itemsPerPageVisible="true"/>
                 <gridColumnVisibility dataGrid="clientsDataGrid" icon="COG_O"
-                                      themeNames="tertiary-inline" hideAllEnabled="false"/>
+                                      themeNames="tertiary" hideAllEnabled="false"/>
             </endSlot>
         </hbox>
         <dataGrid id="clientsDataGrid" dataContainer="clientsDc"

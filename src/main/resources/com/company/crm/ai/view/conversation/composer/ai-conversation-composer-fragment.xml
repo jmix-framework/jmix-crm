@@ -20,7 +20,7 @@
                         acceptedFileTypes=".pdf,.csv,.doc,.docx,.xls,.xlsx,.html,.htm,.txt,.md,.png,.jpg,.jpeg,.gif,.webp"
                         uploadText="msg://com.company.crm.ai.view.conversation/attachmentUploadField.uploadText"
                         dropAllowed="false"
-                        receiverType="MULTI_FILE_TEMPORARY_STORAGE_BUFFER"
+                        uploadHandlerType="FILE_TEMPORARY_STORAGE"
                         maxFileSize="26214400"
                         maxFiles="10"/>
             </hbox>

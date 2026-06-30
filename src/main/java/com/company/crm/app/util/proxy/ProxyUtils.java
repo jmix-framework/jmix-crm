@@ -19,6 +19,14 @@ public final class ProxyUtils {
 
     public static void configureProxy(HttpClientProxyConfiguration proxyConfiguration,
                                       SimpleClientHttpRequestFactory requestFactory) {
+        requestFactory.setProxy(buildProxy(proxyConfiguration));
+    }
+
+    /**
+     * Validates the proxy configuration, registers the JVM-wide proxy {@link Authenticator}
+     * when credentials are set, and returns the configured {@link Proxy}.
+     */
+    public static Proxy buildProxy(HttpClientProxyConfiguration proxyConfiguration) {
         if (!proxyConfiguration.isEnabled()) {
             throw new IllegalStateException(
                     String.format("Property '%s' must be set to true to enable proxy",
@@ -46,8 +54,8 @@ public final class ProxyUtils {
                 ? Proxy.Type.SOCKS
                 : Proxy.Type.HTTP;
 
-        requestFactory.setProxy(new Proxy(proxyType, new InetSocketAddress(proxyHost, proxyPort)));
         configureProxyAuthenticator(proxyConfiguration, proxyHost, proxyPort);
+        return new Proxy(proxyType, new InetSocketAddress(proxyHost, proxyPort));
     }
 
     private static void configureProxyAuthenticator(HttpClientProxyConfiguration proxyConfiguration,

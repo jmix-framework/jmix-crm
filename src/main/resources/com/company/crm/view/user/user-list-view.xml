@@ -25,8 +25,7 @@
         </urlQueryParameters>
     </facets>
     <layout>
-        <genericFilter id="genericFilter"
-                       dataLoader="usersDl">
+        <genericFilter id="genericFilter" dataLoader="usersDl" maxWidth="48em">
             <properties include="(username)|(firstName)|(lastName)|(email)"/>
         </genericFilter>
         <hbox id="buttonsPanel" classNames="buttons-panel">
@@ -35,7 +34,7 @@
                 <button id="editButton" action="usersDataGrid.editAction"/>
                 <button id="removeButton" action="usersDataGrid.removeAction"/>
                 <button id="showRoleAssignmentsButton" action="usersDataGrid.showRoleAssignmentsAction"/>
-                <dropdownButton id="additionalButton" text="msg://additionalMenu" icon="COG">
+                <dropdownButton id="additionalButton" text="msg://additionalMenu" icon="COG" themeNames="contained">
                     <items>
                         <actionItem id="changePasswordItem" ref="usersDataGrid.changePasswordAction"/>
                         <actionItem id="resetPasswordItem" ref="usersDataGrid.resetPasswordAction"/>
@@ -46,7 +45,7 @@
             <endSlot>
                 <simplePagination id="pagination" dataLoader="usersDl" itemsPerPageVisible="true"/>
                 <gridColumnVisibility dataGrid="usersDataGrid" icon="COG_O"
-                                      themeNames="tertiary-inline" hideAllEnabled="false"/>
+                                      themeNames="tertiary" hideAllEnabled="false"/>
             </endSlot>
         </hbox>
         <dataGrid id="usersDataGrid" dataContainer="usersDc"

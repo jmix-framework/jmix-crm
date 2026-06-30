@@ -38,7 +38,6 @@ import io.jmix.flowui.action.SecuredBaseAction;
 import io.jmix.flowui.component.UiComponentUtils;
 import io.jmix.flowui.component.checkbox.JmixCheckbox;
 import io.jmix.flowui.component.formlayout.JmixFormLayout;
-import io.jmix.flowui.component.genericfilter.GenericFilter;
 import io.jmix.flowui.component.grid.DataGrid;
 import io.jmix.flowui.component.textfield.TypedTextField;
 import io.jmix.flowui.component.validation.ValidationErrors;
@@ -79,17 +78,20 @@ import java.util.List;
 import java.util.Set;
 
 import static com.company.crm.app.util.ui.datacontext.DataContextUtils.addCondition;
+import static com.company.crm.view.usertask.UserTaskListView.ROUTE;
 import static io.jmix.core.repository.JmixDataRepositoryUtils.buildPageRequest;
 import static io.jmix.core.repository.JmixDataRepositoryUtils.buildRepositoryContext;
 import static io.jmix.core.repository.JmixDataRepositoryUtils.extractEntityId;
 import static io.jmix.flowui.component.delegate.AbstractFieldDelegate.PROPERTY_INVALID;
 
-@Route(value = "user-tasks", layout = MainView.class)
+@Route(value = ROUTE, layout = MainView.class)
 @ViewController(id = CrmConstants.ViewIds.USER_TASK_LIST)
 @ViewDescriptor(path = "user-task-list-view.xml")
 @LookupComponent("userTasksDataGrid")
 @DialogMode(width = "90%", resizable = true, closeOnOutsideClick = true, closeOnEsc = true)
 public class UserTaskListView extends StandardListView<UserTask> {
+
+    public static final String ROUTE = "user-tasks";
 
     @Autowired
     private UserTaskRepository userTaskRepository;
@@ -139,8 +141,6 @@ public class UserTaskListView extends StandardListView<UserTask> {
     private HorizontalLayout buttonsPanel;
     @ViewComponent
     private JmixFormLayout layoutWrapper;
-    @ViewComponent
-    private GenericFilter genericFilter;
 
     private boolean modifiedAfterEdit;
 
@@ -191,7 +191,6 @@ public class UserTaskListView extends StandardListView<UserTask> {
         listLayout.setHeight(getContent().getHeight());
         listLayout.setMaxHeight(getContent().getMaxHeight());
 
-        genericFilter.setVisible(false);
         detailsLayout.setVisible(!gridOnly);
         buttonsPanel.setVisible(!gridOnly);
 
@@ -211,7 +210,7 @@ public class UserTaskListView extends StandardListView<UserTask> {
             }
         });
         userTasksDataGrid.getActions().forEach(action -> {
-            if (action instanceof SecuredBaseAction secured) {
+            if (action instanceof SecuredBaseAction<?> secured) {
                 secured.addEnabledRule(() -> listLayout.isEnabled());
             }
         });
@@ -320,7 +319,7 @@ public class UserTaskListView extends StandardListView<UserTask> {
             editor.setValue(userTask.getIsCompleted());
             editor.addValueChangeListener(e -> {
                 userTask.setIsCompleted(e.getValue());
-                dataManager.save(userTask);
+                dataManager.saveWithoutReload(userTask);
                 reloadData();
             });
 
@@ -334,6 +333,9 @@ public class UserTaskListView extends StandardListView<UserTask> {
 
     @Install(to = "userTaskDl", target = Target.DATA_LOADER)
     private UserTask detailLoadDelegate(LoadContext<UserTask> context) {
+        if (context.getId() == null) {
+            return null;
+        }
         return userTaskRepository.getById(extractEntityId(context), context.getFetchPlan());
     }
 

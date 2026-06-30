@@ -1,0 +1,41 @@
+/* Detail view shell and centered timeline canvas
+   ----------------------------------------------
+   The detail view is a full-height flex layout. The outer view owns clipping and
+   page padding; the canvas applies the single readable max-width for header,
+   timeline, composer, and prompt suggestions. */
+.ai-conversation-timeline-view {
+    box-sizing: border-box;
+    min-height: 0;
+    overflow: hidden;
+    padding: 0 var(--vaadin-gap-m) var(--vaadin-gap-m);
+}
+
+/* Single centered canvas that imposes the 68rem max-width.
+   Every child inside just uses width: 100% - no per-component max-width needed. */
+.ai-timeline-canvas {
+    box-sizing: border-box;
+    align-self: center;
+    flex: 1 1 auto;
+    margin: 0 auto;
+    max-width: 68rem;
+    min-height: 0;
+    padding-top: var(--vaadin-gap-m);
+    width: 100%;
+}
+
+.ai-timeline-content {
+    box-sizing: border-box;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.ai-conversation-title-layout {
+    border-bottom: 1px solid var(--vaadin-background-container-strong);
+    box-sizing: border-box;
+    padding-bottom: var(--vaadin-gap-s);
+}
+
+.ai-conversation-context-side-panel-dialog {
+    --jmix-side-panel-layout-vertical-size: 22rem;
+}

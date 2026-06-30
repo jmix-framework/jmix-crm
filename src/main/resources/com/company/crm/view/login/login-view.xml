@@ -12,7 +12,7 @@
                     </hbox>
                     <button id="usageBtn"
                             text="msg://usageHelp.buttonTitle" icon="vaadin:question-circle-o"
-                            themeNames="small tertiary-inline"
+                            themeNames="small tertiary" alignSelf="CENTER" justifySelf="CENTER"
                             classNames="usage-scenarios-btn"/>
                     <div id="errorMessage" classNames="login-form-error-message" visible="false">
                         <h5 id="errorMessageTitle"

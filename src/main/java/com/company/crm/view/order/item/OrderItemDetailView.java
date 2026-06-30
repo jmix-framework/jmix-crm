@@ -10,8 +10,8 @@ import com.company.crm.view.main.MainView;
 import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.router.Route;
 import io.jmix.core.EntityStates;
-import io.jmix.core.FetchPlan;
 import io.jmix.core.SaveContext;
+import io.jmix.core.repository.JmixDataRepositoryContext;
 import io.jmix.flowui.component.checkbox.Switch;
 import io.jmix.flowui.component.textfield.JmixBigDecimalField;
 import io.jmix.flowui.component.textfield.TypedTextField;
@@ -42,13 +42,16 @@ import static com.company.crm.app.util.price.PriceCalculator.calculateNetPrice;
 import static com.company.crm.app.util.price.PriceCalculator.calculateVat;
 import static com.company.crm.app.util.price.PriceCalculator.calculateVatPercent;
 import static com.company.crm.app.util.price.PriceCalculator.recalculatePricing;
+import static com.company.crm.view.order.item.OrderItemDetailView.ROUTE;
 
-@Route(value = "order-items/:id", layout = MainView.class)
+@Route(value = ROUTE, layout = MainView.class)
 @ViewController(id = CrmConstants.ViewIds.ORDER_ITEM_DETAIL)
 @ViewDescriptor(path = "order-item-detail-view.xml")
 @EditedEntityContainer("orderItemDc")
 @DialogMode(resizable = true)
 public class OrderItemDetailView extends StandardDetailView<OrderItem> {
+
+    public static final String ROUTE = "order-items/:id";
 
     @Autowired
     private EntityStates entityStates;
@@ -114,8 +117,8 @@ public class OrderItemDetailView extends StandardDetailView<OrderItem> {
     }
 
     @Install(to = "orderItemDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
-    private Optional<OrderItem> loadDelegate(UUID id, FetchPlan fetchPlan) {
-        return itemRepository.findById(id, fetchPlan);
+    private Optional<OrderItem> loadDelegate(UUID id, JmixDataRepositoryContext context) {
+        return itemRepository.findById(id, context.fetchPlan());
     }
 
     @Install(target = Target.DATA_CONTEXT)

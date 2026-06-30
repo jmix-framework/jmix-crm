@@ -1,5 +1,6 @@
 package com.company.crm.app.config;
 
+import org.jetbrains.annotations.Nullable;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
@@ -10,9 +11,13 @@ public class HttpClientProxyConfiguration {
     public static final String PROPERTIES_PREFIX = "crm.http.client.proxy";
 
     private Boolean enabled = false;
+    @Nullable
     private String host;
+    @Nullable
     private Integer port;
+    @Nullable
     private String username;
+    @Nullable
     private String password;
     private ProxyType type = ProxyType.SOCKS5;
 
@@ -36,6 +41,7 @@ public class HttpClientProxyConfiguration {
         this.type = type;
     }
 
+    @Nullable
     public String getHost() {
         return host;
     }
@@ -44,6 +50,7 @@ public class HttpClientProxyConfiguration {
         this.host = host;
     }
 
+    @Nullable
     public Integer getPort() {
         return port;
     }
@@ -52,6 +59,7 @@ public class HttpClientProxyConfiguration {
         this.port = port;
     }
 
+    @Nullable
     public String getUsername() {
         return username;
     }
@@ -60,6 +68,7 @@ public class HttpClientProxyConfiguration {
         this.username = username;
     }
 
+    @Nullable
     public String getPassword() {
         return password;
     }

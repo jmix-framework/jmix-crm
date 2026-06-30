@@ -7,6 +7,7 @@ import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.app.util.report.CrmReportUtils;
 import com.company.crm.app.util.ui.CrmUiUtils;
 import com.company.crm.app.util.ui.renderer.CrmRenderers;
+import com.company.crm.app.util.ui.theme.CrmStyleUtility;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.contact.Contact;
 import com.company.crm.model.invoice.Invoice;
@@ -28,10 +29,6 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.theme.lumo.LumoUtility.Background;
-import com.vaadin.flow.theme.lumo.LumoUtility.BorderRadius;
-import com.vaadin.flow.theme.lumo.LumoUtility.Margin;
-import com.vaadin.flow.theme.lumo.LumoUtility.Padding;
 import io.jmix.core.Messages;
 import io.jmix.core.querycondition.LogicalCondition;
 import io.jmix.core.repository.JmixDataRepositoryContext;
@@ -72,18 +69,21 @@ import static com.company.crm.app.util.ui.CrmUiUtils.setBadge;
 import static com.company.crm.app.util.ui.color.EnumClassColors.getBadgeVariant;
 import static com.company.crm.app.util.ui.datacontext.DataContextUtils.addCondition;
 import static com.company.crm.app.util.ui.datacontext.DataContextUtils.installSortByCreatedDate;
+import static com.company.crm.view.invoice.InvoiceListView.ROUTE;
 import static io.jmix.core.querycondition.PropertyCondition.equal;
 import static io.jmix.core.querycondition.PropertyCondition.greaterOrEqual;
 import static io.jmix.core.querycondition.PropertyCondition.lessOrEqual;
 import static io.jmix.flowui.component.UiComponentUtils.getCurrentView;
 
-@Route(value = "invoices", layout = MainView.class)
+@Route(value = ROUTE, layout = MainView.class)
 @ViewDescriptor("invoice-list-view.xml")
 @ViewController(CrmConstants.ViewIds.INVOICE_LIST)
 @LookupComponent("invoicesDataGrid")
 @PrimaryListView(Invoice.class)
 @DialogMode(width = "90%", resizable = true)
 public class InvoiceListView extends StandardListView<Invoice> {
+
+    public static final String ROUTE = "invoices";
 
     @Autowired
     private Messages messages;
@@ -166,7 +166,7 @@ public class InvoiceListView extends StandardListView<Invoice> {
 
     @Supply(to = "invoicesDataGrid.[order.number]", subject = "renderer")
     private Renderer<Invoice> invoicesDataGridOrderNumberRenderer() {
-        return crmRenderers.invoiceOrderLink();
+        return crmRenderers.invoiceOrderLink(invoicesDataGrid);
     }
 
     @Supply(to = "invoicesDataGrid.number", subject = "renderer")
@@ -176,7 +176,7 @@ public class InvoiceListView extends StandardListView<Invoice> {
 
     @Supply(to = "invoicesDataGrid.client", subject = "renderer")
     private Renderer<Invoice> invoicesDataGridClientRenderer() {
-        return crmRenderers.invoiceClientLink();
+        return crmRenderers.invoiceClientLink(invoicesDataGrid);
     }
 
     @Install(to = "invoicesDataGrid.emailAction", subject = "enabledRule")
@@ -247,7 +247,7 @@ public class InvoiceListView extends StandardListView<Invoice> {
     }
 
     private void configureGrid() {
-        addRowSelectionInMultiSelectMode(invoicesDataGrid, "number");
+        addRowSelectionInMultiSelectMode(invoicesDataGrid, "itemDetails", "number");
         invoicesDataGrid.setItemDetailsRenderer(crmRenderers.invoiceDetails());
         invoicesDataGrid.setDetailsVisibleOnClick(false);
     }
@@ -352,8 +352,8 @@ public class InvoiceListView extends StandardListView<Invoice> {
         block.setAlignItems(Alignment.CENTER);
         block.setJustifyContentMode(JustifyContentMode.CENTER);
         block.addClassName(Objects.equals(status, invoices_StatusSelect.getValue())
-                ? Background.CONTRAST_10 : Background.CONTRAST_5);
-        block.addClassNames(BorderRadius.FULL, Margin.AUTO, Padding.Bottom.MEDIUM);
+                ? CrmStyleUtility.Background.CONTRAST_10 : CrmStyleUtility.Background.CONTRAST_5);
+        block.addClassNames(CrmStyleUtility.BorderRadius.FULL, CrmStyleUtility.Margin.AUTO, CrmStyleUtility.Padding.Bottom.MEDIUM);
         block.addClickListener(e -> {
             boolean unselectStatus = Objects.equals(status, invoices_StatusSelect.getValue());
             invoices_StatusSelect.setValue(unselectStatus ? null : status);

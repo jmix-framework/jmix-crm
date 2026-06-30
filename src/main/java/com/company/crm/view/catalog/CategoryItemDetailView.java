@@ -8,10 +8,10 @@ import com.vaadin.flow.component.AbstractField;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.streams.DownloadHandler;
 import com.vaadin.flow.server.streams.DownloadResponse;
-import io.jmix.core.FetchPlan;
 import io.jmix.core.FileRef;
 import io.jmix.core.FileStorage;
 import io.jmix.core.SaveContext;
+import io.jmix.core.repository.JmixDataRepositoryContext;
 import io.jmix.flowui.component.image.JmixImage;
 import io.jmix.flowui.component.upload.FileStorageUploadField;
 import io.jmix.flowui.view.EditedEntityContainer;
@@ -29,13 +29,16 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
+import static com.company.crm.view.catalog.CategoryItemDetailView.ROUTE;
 import static com.vaadin.flow.server.streams.DownloadHandler.fromInputStream;
 
-@Route(value = "products/:id", layout = MainView.class)
+@Route(value = ROUTE, layout = MainView.class)
 @ViewController(id = CrmConstants.ViewIds.CATEGORY_ITEM_DETAIL)
 @ViewDescriptor(path = "category-item-detail-view.xml")
 @EditedEntityContainer("categoryItemDc")
 public class CategoryItemDetailView extends StandardDetailView<CategoryItem> {
+
+    public static final String ROUTE = "products/:id";
 
     @Autowired
     private FileStorage fileStorage;
@@ -59,8 +62,8 @@ public class CategoryItemDetailView extends StandardDetailView<CategoryItem> {
     }
 
     @Install(to = "categoryItemDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
-    private Optional<CategoryItem> loadDelegate(UUID id, FetchPlan fetchPlan) {
-        return itemRepository.findByIdWithDynamicAttributes(id, fetchPlan);
+    private Optional<CategoryItem> loadDelegate(UUID id, JmixDataRepositoryContext context) {
+        return itemRepository.findById(id, context);
     }
 
     @Install(target = Target.DATA_CONTEXT)

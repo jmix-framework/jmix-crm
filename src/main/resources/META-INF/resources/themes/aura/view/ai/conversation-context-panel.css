@@ -1,0 +1,86 @@
+/* Conversation context side panel
+   -------------------------------
+   Drawer content for all entity references and attachments connected to the
+   conversation. It reuses the same context-card classes as the inline timeline,
+   but removes their max-width so cards fill the drawer column. */
+.ai-conversation-attachments-toggle vaadin-icon {
+    margin-inline-end: var(--vaadin-gap-xs);
+}
+
+.ai-conversation-context-toggle-count {
+    background-color: var(--vaadin-background-container-strong);
+    border-radius: var(--vaadin-radius-s);
+    color: var(--vaadin-text-color-secondary);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1;
+    margin-inline-start: var(--vaadin-gap-xs);
+    padding: 0.125rem var(--vaadin-gap-xs);
+}
+
+.ai-conversation-context-side-panel-content {
+    background: var(--vaadin-background-color);
+    box-sizing: border-box;
+    overflow-y: auto;
+}
+
+.ai-conversation-context-header {
+    align-items: center;
+    box-sizing: border-box;
+    padding: var(--vaadin-gap-s) var(--vaadin-gap-m);
+    width: 100%;
+}
+
+.ai-conversation-context-header-title {
+    color: var(--vaadin-text-color);
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.ai-conversation-context-header-count {
+    background-color: var(--vaadin-background-container-strong);
+    border-radius: var(--vaadin-radius-s);
+    color: var(--vaadin-text-color-secondary);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    padding: 0.125rem var(--vaadin-gap-xs);
+}
+
+.ai-conversation-context-content {
+    box-sizing: border-box;
+    padding: var(--vaadin-gap-m);
+}
+
+.ai-conversation-context-empty {
+    color: var(--vaadin-text-color-secondary);
+    font-size: 0.875rem;
+    padding: var(--vaadin-gap-m) 0;
+    text-align: center;
+}
+
+.ai-conversation-context-section-heading {
+    margin-top: var(--vaadin-gap-s);
+}
+
+.ai-conversation-context-section-title {
+    color: var(--vaadin-text-color-secondary);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    margin: 0;
+    text-transform: uppercase;
+}
+
+.ai-conversation-context-section-count {
+    background-color: var(--vaadin-background-container-strong);
+    border-radius: var(--vaadin-radius-s);
+    color: var(--vaadin-text-color-secondary);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    padding: 0.125rem var(--vaadin-gap-xs);
+}
+
+.ai-conversation-context-side-panel-content .ai-timeline-context-card {
+    max-width: 100%;
+}

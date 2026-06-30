@@ -1,5 +1,6 @@
 package com.company.crm.security.role;
 
+import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.model.catalog.category.Category;
 import com.company.crm.model.catalog.item.CategoryItem;
 import com.company.crm.model.catalog.item.CategoryItemComment;
@@ -34,6 +35,6 @@ public interface SupervisorRole extends ManagerRole {
     void categoryItemComment();
 
     @MenuPolicy(menuIds = {"categories", "products"})
-    @ViewPolicy(viewIds = {"Category.list", "CategoryItem.list"})
+    @ViewPolicy(viewIds = {CrmConstants.ViewIds.CATEGORY_LIST, CrmConstants.ViewIds.CATEGORY_ITEM_LIST})
     void views();
 }

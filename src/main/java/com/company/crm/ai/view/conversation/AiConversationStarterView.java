@@ -1,11 +1,5 @@
 package com.company.crm.ai.view.conversation;
 
-import com.company.crm.ai.view.conversation.composer.AiConversationComposerFragment;
-import com.company.crm.ai.view.conversation.component.AiConversationCard;
-import com.company.crm.ai.view.conversation.component.AiConversationHistoryGroup;
-import com.company.crm.ai.view.conversation.component.AiSideDialogHeader;
-import io.jmix.core.metamodel.datatype.DatatypeFormatter;
-import com.company.crm.ai.view.component.support.PromptSuggestionSupport;
 import com.company.crm.ai.config.CrmAiConfig;
 import com.company.crm.ai.model.AiConversation;
 import com.company.crm.ai.model.AiPromptSuggestion;
@@ -13,43 +7,44 @@ import com.company.crm.ai.model.ChatMessage;
 import com.company.crm.ai.model.ChatMessageType;
 import com.company.crm.ai.service.AiConversationService;
 import com.company.crm.ai.service.PendingAttachmentInput;
+import com.company.crm.ai.view.component.support.PromptSuggestionSupport;
+import com.company.crm.ai.view.conversation.component.AiConversationCard;
+import com.company.crm.ai.view.conversation.component.AiConversationHistoryGroup;
+import com.company.crm.ai.view.conversation.component.AiSideDialogHeader;
+import com.company.crm.ai.view.conversation.composer.AiConversationComposerFragment;
 import com.company.crm.app.icons.CrmIcons;
 import com.company.crm.app.util.constant.CrmConstants;
 import com.company.crm.view.main.MainView;
 import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.card.Card;
-import com.vaadin.flow.component.card.CardVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
-import com.vaadin.flow.component.icon.VaadinIcon;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.Route;
 import io.jmix.core.DataManager;
 import io.jmix.core.IdSerialization;
+import io.jmix.core.metamodel.datatype.DatatypeFormatter;
 import io.jmix.flowui.DialogWindows;
 import io.jmix.flowui.Dialogs;
-import io.jmix.flowui.Views;
-import io.jmix.flowui.component.sidedialog.SideDialog;
-import io.jmix.flowui.kit.component.sidedialog.SideDialogPosition;
-import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
 import io.jmix.flowui.Fragments;
 import io.jmix.flowui.Notifications;
 import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.ViewNavigators;
+import io.jmix.flowui.Views;
 import io.jmix.flowui.component.SupportsTypedValue;
-import io.jmix.flowui.view.DialogWindow;
-import io.jmix.flowui.view.StandardOutcome;
 import io.jmix.flowui.component.gridlayout.GridLayout;
+import io.jmix.flowui.component.sidedialog.SideDialog;
 import io.jmix.flowui.component.sidepanellayout.SidePanelLayout;
 import io.jmix.flowui.component.textfield.TypedTextField;
 import io.jmix.flowui.kit.component.button.JmixButton;
+import io.jmix.flowui.kit.component.sidedialog.SideDialogPosition;
 import io.jmix.flowui.model.CollectionContainer;
+import io.jmix.flowui.view.DialogWindow;
 import io.jmix.flowui.view.MessageBundle;
+import io.jmix.flowui.view.StandardOutcome;
 import io.jmix.flowui.view.StandardView;
 import io.jmix.flowui.view.Subscribe;
 import io.jmix.flowui.view.Supply;
@@ -72,10 +67,14 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-@Route(value = "ai-conversations", layout = MainView.class)
+import static com.company.crm.ai.view.conversation.AiConversationStarterView.ROUTE;
+
+@Route(value = ROUTE, layout = MainView.class)
 @ViewController(id = CrmConstants.ViewIds.AI_CONVERSATION_STARTER)
 @ViewDescriptor(path = "ai-conversation-starter-view.xml")
 public class AiConversationStarterView extends StandardView {
+
+    public static final String ROUTE = "ai-conversations";
 
     private static final Logger log = LoggerFactory.getLogger(AiConversationStarterView.class);
 

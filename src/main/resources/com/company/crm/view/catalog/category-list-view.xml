@@ -23,7 +23,7 @@
         <action id="discardAction" type="lookup_discard"/>
     </actions>
     <layout>
-        <genericFilter id="genericFilter" dataLoader="categoriesDl">
+        <genericFilter id="genericFilter" dataLoader="categoriesDl" maxWidth="48em">
             <properties include="(code)|(name)|(description)"/>
         </genericFilter>
         <hbox id="buttonsPanel" classNames="buttons-panel">
@@ -36,7 +36,7 @@
             <endSlot>
                 <simplePagination id="pagination" dataLoader="categoriesDl" itemsPerPageVisible="true"/>
                 <gridColumnVisibility dataGrid="categoriesDataGrid" icon="COG_O"
-                                      themeNames="tertiary-inline" hideAllEnabled="false"/>
+                                      themeNames="tertiary small" hideAllEnabled="false"/>
             </endSlot>
         </hbox>
         <treeDataGrid id="categoriesDataGrid"

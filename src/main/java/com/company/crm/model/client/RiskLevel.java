@@ -2,7 +2,7 @@ package com.company.crm.model.client;
 
 import com.company.crm.app.util.enums.EnumUtils;
 import com.company.crm.model.base.DefaultStringEnumClass;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 public enum RiskLevel implements DefaultStringEnumClass<RiskLevel> {
 

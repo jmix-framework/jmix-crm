@@ -1,5 +1,6 @@
 package com.company.crm.security.role;
 
+import com.company.crm.app.util.constant.CrmConstants;
 import io.jmix.security.model.SecurityScope;
 import io.jmix.security.role.annotation.ResourceRole;
 import io.jmix.security.role.annotation.SpecificPolicy;
@@ -11,10 +12,10 @@ public interface UiMinimalRole extends UiMinimalPolicies {
 
     String CODE = "ui-minimal";
 
-    @ViewPolicy(viewIds = {"MainView", "User.detail"})
+    @ViewPolicy(viewIds = {CrmConstants.ViewIds.MAIN, CrmConstants.ViewIds.USER_DETAIL, CrmConstants.ViewIds.ABOUT})
     void main();
 
-    @ViewPolicy(viewIds = "LoginView")
+    @ViewPolicy(viewIds = CrmConstants.ViewIds.LOGIN)
     @SpecificPolicy(resources = "ui.loginToUi")
     void login();
 }

@@ -1,9 +1,9 @@
 package com.company.crm.app.ui.component;
 
 import com.company.crm.app.util.ui.CrmUiUtils;
+import com.company.crm.app.util.ui.theme.CrmStyleUtility;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 
 public class GridEmptyStateComponent extends VerticalLayout {
 
@@ -27,7 +27,7 @@ public class GridEmptyStateComponent extends VerticalLayout {
         logo.setSize("6em");
 
         var message = new Span(emptyText);
-        message.addClassNames(LumoUtility.FontWeight.BOLD);
+        message.addClassNames(CrmStyleUtility.FontWeight.BOLD);
 
         add(logo, message);
     }

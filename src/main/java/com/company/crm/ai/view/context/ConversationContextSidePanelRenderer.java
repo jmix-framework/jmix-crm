@@ -1,8 +1,8 @@
 package com.company.crm.ai.view.context;
 
-import com.company.crm.ai.view.component.card.AiConversationContextCardFactory;
 import com.company.crm.ai.model.AiConversation;
 import com.company.crm.ai.model.AiConversationAttachment;
+import com.company.crm.ai.view.component.card.AiConversationContextCardFactory;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -13,7 +13,6 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.component.sidepanellayout.SidePanelLayout;
 import io.jmix.flowui.view.MessageBundle;
 
@@ -61,7 +60,7 @@ public class ConversationContextSidePanelRenderer {
         titleGroup.setPadding(false);
 
         Button closeButton = new Button(VaadinIcon.CLOSE.create(), event -> sidePanelLayout.closeSidePanel());
-        closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE, ButtonVariant.LUMO_ICON);
+        closeButton.addThemeVariants(ButtonVariant.TERTIARY);
         closeButton.setAriaLabel(messageBundle.getMessage("contextSidePanelClose"));
 
         header.add(titleGroup, closeButton);

@@ -1,0 +1,13 @@
+/* Custom Colors*/
+html {
+    --crm-success-color: var(--aura-green);
+    --crm-success-text-color: var(--aura-green-text);
+    --crm-error-color: var(--aura-red);
+    --crm-error-text-color: var(--aura-red-text);
+    --crm-warning-color: var(--aura-orange);
+
+    --jx-magic: light-dark(oklch(0.508 0.191 300.906), oklch(0.613 0.18 301.105));
+    --jx-magic-dark: light-dark(oklch(0.425 0.164 299.678), oklch(0.524 0.242 297.313));
+    --jx-magic-soft: light-dark(oklch(0.825 0.08 308.976), oklch(0.876 0.064 306.68));
+
+}

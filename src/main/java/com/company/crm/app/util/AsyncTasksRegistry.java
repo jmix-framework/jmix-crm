@@ -62,10 +62,6 @@ public final class AsyncTasksRegistry {
         return placeTask(id, CompletableFuture.runAsync(task));
     }
 
-    public void cancelAll() {
-        registry.keySet().forEach(this::cancelAndRemoveTask);
-    }
-
     private void registerTaskRemoving(String id, CompletableFuture<?> task) {
         task.whenComplete((r, e) -> registry.remove(id));
     }

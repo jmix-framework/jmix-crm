@@ -39,21 +39,23 @@ import org.springframework.data.domain.Pageable;
 import java.io.ByteArrayInputStream;
 import java.util.Collection;
 import java.util.List;
-import java.util.function.Function;
 
 import static com.company.crm.app.util.ui.CrmUiUtils.addRowSelectionInMultiSelectMode;
 import static com.company.crm.app.util.ui.CrmUiUtils.setSearchHintPopover;
 import static com.company.crm.app.util.ui.datacontext.DataContextUtils.addCondition;
 import static com.company.crm.app.util.ui.datacontext.DataContextUtils.installSortByCreatedDate;
+import static com.company.crm.view.catalog.CategoryItemListView.ROUTE;
 import static io.jmix.core.querycondition.PropertyCondition.contains;
 import static io.jmix.core.querycondition.PropertyCondition.equal;
 
-@Route(value = "products", layout = MainView.class)
+@Route(value = ROUTE, layout = MainView.class)
 @ViewController(id = CrmConstants.ViewIds.CATEGORY_ITEM_LIST)
 @ViewDescriptor(path = "category-item-list-view.xml")
 @LookupComponent("categoryItemsDataGrid")
 @DialogMode(width = "64em", resizable = true)
 public class CategoryItemListView extends StandardListView<CategoryItem> {
+
+    public static final String ROUTE = "products";
 
     @Autowired
     private CrmRenderers crmRenderers;
@@ -105,12 +107,12 @@ public class CategoryItemListView extends StandardListView<CategoryItem> {
 
     @Supply(to = "categoryItemsDataGrid.name", subject = "renderer")
     private Renderer<CategoryItem> categoryItemsDataGridNameRenderer() {
-        return crmRenderers.entityLink(Function.identity());
+        return crmRenderers.detailLink(categoryItemsDataGrid);
     }
 
     @Supply(to = "categoryItemsDataGrid.category", subject = "renderer")
     private Renderer<CategoryItem> categoryItemsDataGridCategoryRenderer() {
-        return crmRenderers.entityLink(CategoryItem::getCategory);
+        return crmRenderers.entityLink(categoryItemsDataGrid, CategoryItem::getCategory);
     }
 
     @Supply(to = "categoryItemsDataGrid.code", subject = "renderer")
@@ -119,7 +121,7 @@ public class CategoryItemListView extends StandardListView<CategoryItem> {
     }
 
     @Subscribe("updateCatalogField")
-    public void onImportCatalogFieldFileUploadSucceeded(FileUploadSucceededEvent<FileUploadField> event) {
+    public void onImportCatalogFieldFileUploadSucceeded(FileUploadSucceededEvent<FileUploadField, byte[]> event) {
         byte[] content = updateCatalogField.getValue();
         if (content != null) {
             ByteArrayInputStream inputStream = new ByteArrayInputStream(content);

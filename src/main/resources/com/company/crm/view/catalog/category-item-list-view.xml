@@ -39,7 +39,8 @@
                         emptySelectionCaption="msg://allCategories"/>
             </formLayout>
             <genericFilter id="items_advancedFilter" dataLoader="categoryItemsDl"
-                           opened="false" summaryText="msg:///advanced" themeNames="filled">
+                           opened="false" summaryText="msg:///advanced"
+                           themeNames="filled" classNames="pl-m mt-m mb-m">
                 <properties include="(name)|(code)|(category)|(uom)|(price)"/>
             </genericFilter>
         </div>
@@ -55,7 +56,7 @@
             <endSlot>
                 <simplePagination id="items_pagination" dataLoader="categoryItemsDl" itemsPerPageVisible="true"/>
                 <gridColumnVisibility dataGrid="categoryItemsDataGrid" icon="COG_O"
-                                      themeNames="tertiary-inline" hideAllEnabled="false"/>
+                                      themeNames="tertiary" hideAllEnabled="false"/>
             </endSlot>
         </hbox>
         <dataGrid id="categoryItemsDataGrid"

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <mainView xmlns="http://jmix.io/schema/flowui/main-view"
-          title="msg://MainView.title">
+          title="B2B CRM">
     <actions>
         <action id="logoutAction" text="msg:///actions.logout.text" type="logout"/>
     </actions>
@@ -8,17 +8,16 @@
         <settings auto="true"/>
         <urlQueryParameters id="urlQueryParameters"/>
     </facets>
-    <appLayout>
+    <appLayout classNames="jmix-main-view-app-layout">
         <drawerLayout>
             <section id="section" classNames="jmix-main-view-section">
                 <h2 id="applicationTitle" classNames="jmix-main-view-application-title">
-                    <svgIcon id="logo" size="40px" resource="icons/icon.svg" classNames="pr-m" css="cursor: pointer"/>
+                    <svgIcon id="logo" size="40px" resource="icons/icon.svg" css="cursor: pointer;"/>
                     <anchor id="baseLink"
                             href="."
-                            text="msg://applicationTitle.text"
-                            classNames="jmix-main-view-application-title-base-link font-black text-xl"/>
+                            text="B2B CRM"
+                            classNames="jmix-main-view-application-title-base-link font-bold"/>
                 </h2>
-                <hr/>
                 <nav id="navigation"
                      classNames="jmix-main-view-navigation"
                      ariaLabel="msg://navigation.ariaLabel">
@@ -31,24 +30,23 @@
             <header id="header" classNames="jmix-main-view-header">
                 <drawerToggle id="drawerToggle"
                               classNames="jmix-main-view-drawer-toggle"
-                              themeNames="contrast"
+                              themeNames="tertiary-inline"
                               ariaLabel="msg://drawerToggle.ariaLabel"/>
                 <h1 id="viewTitle" classNames="jmix-main-view-title"/>
 
-                <div classNames="ms-auto me-xl" minWidth="2em" maxWidth="20em">
+                <div classNames="ml-auto" minWidth="2em" maxWidth="20em">
                     <textField id="searchField" valueChangeMode="EAGER" valueChangeTimeout="500"
                                placeholder="msg://searchFieldPlaceholder" clearButtonVisible="true"
-                               classNames="ms-m" width="100%">
+                               width="100%">
                         <suffix>
                             <icon icon="SEARCH"/>
                         </suffix>
                     </textField>
                 </div>
-                <button id="chatButton" icon="crm:sparkles" themeNames="icon tertiary" classNames="me-l"/>
-                <button id="notificationsButton" icon="BELL_O" themeNames="tertiary" classNames="me-l"
-                        css="background-color: var(--lumo-shade-5pct);"/>
+                <button id="chatButton" icon="crm:sparkles" themeNames="icon tertiary"/>
+                <button id="notificationsButton" icon="BELL_O" themeNames="icon tertiary"/>
 
-                <userMenu id="userMenu" themeNames="tertiary" classNames="me-l">
+                <userMenu id="userMenu" themeNames="tertiary">
                     <items>
                         <separator/>
                         <actionItem id="substituteUserMenuItem"

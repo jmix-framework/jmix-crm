@@ -8,7 +8,6 @@ import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.menubar.MenuBar;
-import com.vaadin.flow.component.menubar.MenuBarVariant;
 import io.jmix.flowui.component.upload.JmixUpload;
 import io.jmix.flowui.view.MessageBundle;
 
@@ -28,16 +27,14 @@ public class AddContextMenuFactory {
         this.messageBundle = messageBundle;
     }
 
-    public MenuBar createAddMenuBar(JmixUpload attachmentUpload) {
+    public MenuBar createAddMenuBar(JmixUpload<?> attachmentUpload) {
         configureAttachmentUploadForMenu(attachmentUpload);
 
         MenuBar menuBar = new MenuBar();
-        menuBar.addThemeVariants(MenuBarVariant.LUMO_ICON);
         menuBar.addClassName("ai-timeline-add-menu");
-        menuBar.setOverlayClassName("ai-timeline-add-menu-overlay");
 
         Icon addIcon = VaadinIcon.PLUS.create();
-        addIcon.setSize("var(--lumo-icon-size-s)");
+        addIcon.setSize("20px");
 
         MenuItem addItem = menuBar.addItem(addIcon);
         addItem.setAriaLabel(messageBundle.getMessage("addContextAction"));
@@ -62,7 +59,7 @@ public class AddContextMenuFactory {
                 event -> openEntityLookup.accept(label, definition.entityClass()));
     }
 
-    private void configureAttachmentUploadForMenu(JmixUpload attachmentUpload) {
+    private void configureAttachmentUploadForMenu(JmixUpload<?> attachmentUpload) {
         attachmentUpload.setDropAllowed(false);
         attachmentUpload.setUploadButton(createMenuItemContent(VaadinIcon.UPLOAD, messageBundle.getMessage("uploadFileAction")));
         attachmentUpload.addClassName("ai-timeline-menu-upload");

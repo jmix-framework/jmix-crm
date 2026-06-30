@@ -6,14 +6,12 @@ import io.jmix.core.FluentValueLoader;
 import io.jmix.core.FluentValuesLoader;
 import io.jmix.core.repository.JmixDataRepository;
 import io.jmix.core.repository.JmixDataRepositoryContext;
-import io.jmix.dynattr.DynAttrQueryHints;
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.repository.NoRepositoryBean;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -54,13 +52,6 @@ public interface UuidEntityRepository<T extends UuidEntity> extends JmixDataRepo
 
     Optional<T> findById(UUID id, JmixDataRepositoryContext context);
 
-    default Optional<T> findByIdWithDynamicAttributes(UUID id, @Nullable FetchPlan fetchPlan) {
-        return findById(id, JmixDataRepositoryContext.builder()
-                .plan(fetchPlan)
-                .hints(Map.of(DynAttrQueryHints.LOAD_DYN_ATTR, true))
-                .build());
-    }
-
     // ----- utils -----
 
     default FluentLoader.ByQuery<T> queryLoader(String query, Object... params) {
@@ -79,12 +70,12 @@ public interface UuidEntityRepository<T extends UuidEntity> extends JmixDataRepo
         return getDataManager().loadValue(query, valueClass);
     }
 
+    @SuppressWarnings("unchecked")
     default Class<T> getEntityClass() {
         Type[] interfaces = getClass().getInterfaces();
         for (Type t : interfaces) {
             if (t instanceof Class<?> clazz) {
                 Type genericInterface = clazz.getGenericInterfaces()[0];
-                //noinspection unchecked
                 return (Class<T>) ((ParameterizedType) genericInterface).getActualTypeArguments()[0];
             }
         }

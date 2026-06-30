@@ -3,6 +3,7 @@ package com.company.crm.app.online;
 import com.company.crm.app.annotation.OnlineProfile;
 import com.company.crm.app.ui.component.CrmLoader;
 import com.company.crm.app.util.init.DemoDataGenerator;
+import com.vaadin.flow.component.ModalityMode;
 import com.vaadin.flow.component.dialog.Dialog;
 import io.jmix.core.Messages;
 import io.jmix.core.session.SessionData;
@@ -69,7 +70,7 @@ public class OnlineDemoDataCreator {
             demoDataDialog = new Dialog(demoDataLoader);
             demoDataDialog.setCloseOnEsc(false);
             demoDataDialog.setCloseOnOutsideClick(false);
-            demoDataDialog.setModal(true);
+            demoDataDialog.setModality(ModalityMode.STRICT);
             demoDataDialog.addClassName("demo-data-loader-dialog");
         }
 
