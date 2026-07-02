@@ -52,8 +52,8 @@ import io.jmix.chartsflowui.kit.component.model.toolbox.Toolbox;
 import io.jmix.chartsflowui.kit.data.chart.ListChartItems;
 import io.jmix.core.Messages;
 import io.jmix.core.Metadata;
-import io.jmix.core.security.CurrentAuthentication;
 import io.jmix.core.metamodel.datatype.DatatypeFormatter;
+import io.jmix.core.security.CurrentAuthentication;
 import io.jmix.flowui.DialogWindows;
 import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.Views;
@@ -166,19 +166,26 @@ public class HomeView extends StandardView {
         if ("ru".equals(currentAuthentication.getLocale().getLanguage())) {
             return false;
         }
+
         VaadinRequest request = VaadinService.getCurrentRequest();
         if (request == null) {
             return false;
         }
+
         // behind a reverse proxy the original host arrives in X-Forwarded-Host
         String host = request.getHeader("X-Forwarded-Host");
         if (host == null) {
             host = request.getHeader("Host");
         }
+
         if (host == null) {
             return false;
         }
-        return host.split(",")[0].trim().split(":")[0].endsWith(".io");
+
+        return host.split(",")[0]
+                .trim()
+                .split(":")[0]
+                .endsWith(".io");
     }
 
     @Subscribe("webinarBannerCloseButton")
