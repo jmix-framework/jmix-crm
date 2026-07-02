@@ -1,12 +1,5 @@
-/* Webinar announcement banner on the home view.
-   Backgrounds are picked per screen width; the close hotspot is a transparent
-   button positioned (in % of the banner box) exactly over the cross drawn
-   inside each SVG. The widest variant is the default and narrower variants
-   override it via cascading max-width queries, so no viewport width (including
-   fractional ones under browser zoom / OS scaling) is left without a banner. */
-
 .webinar-banner-container {
-    padding: var(--lumo-space-m) var(--lumo-space-m) 0;
+    padding: 1em 1em 0 1em;
 }
 
 .webinar-banner-container.webinar-banner-closed {
