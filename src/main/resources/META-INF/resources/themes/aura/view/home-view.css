@@ -1,0 +1,90 @@
+/* Webinar announcement banner on the home view.
+   Backgrounds are picked per screen width; the close hotspot is a transparent
+   button positioned (in % of the banner box) exactly over the cross drawn
+   inside each SVG. The widest variant is the default and narrower variants
+   override it via cascading max-width queries, so no viewport width (including
+   fractional ones under browser zoom / OS scaling) is left without a banner. */
+
+.webinar-banner-container {
+    padding: var(--lumo-space-m) var(--lumo-space-m) 0;
+}
+
+.webinar-banner-container.webinar-banner-closed {
+    display: none;
+}
+
+/* Default: 1920px.svg — 936x116, cross center at (908, 28) */
+.webinar-banner {
+    position: relative;
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    background-image: url('../images/webinar/1920px.svg');
+    aspect-ratio: 936 / 116;
+}
+
+.webinar-banner-link {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+}
+
+.webinar-banner-close {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    margin: 0;
+    padding: 0;
+    min-width: 0;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    z-index: 2;
+    left: 97%;
+    top: 24.1%;
+    width: 2.9%;
+    height: 23%;
+}
+
+/* 1024px.svg — 1176x161, cross center at (1144, 58) */
+@media (max-width: 1450px) {
+    .webinar-banner {
+        background-image: url('../images/webinar/1024px.svg');
+        aspect-ratio: 1176 / 161;
+    }
+
+    .webinar-banner-close {
+        left: 97.3%;
+        top: 36%;
+        width: 2.3%;
+        height: 17%;
+    }
+}
+
+/* 750px.svg — 783x116, cross center at (730, 18) */
+@media (max-width: 900px) {
+    .webinar-banner {
+        background-image: url('../images/webinar/750px.svg');
+        aspect-ratio: 783 / 116;
+    }
+
+    .webinar-banner-close {
+        left: 93.2%;
+        top: 15.5%;
+        width: 3.5%;
+        height: 23%;
+    }
+}
+
+/* 360px.svg — 328x240, cross center at (296, 32) */
+@media (max-width: 600px) {
+    .webinar-banner {
+        background-image: url('../images/webinar/360px.svg');
+        aspect-ratio: 328 / 240;
+    }
+
+    .webinar-banner-close {
+        left: 90.2%;
+        top: 13.3%;
+        width: 8%;
+        height: 11%;
+    }
+}

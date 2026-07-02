@@ -1,6 +1,7 @@
 @import url('login-view.css');
 @import url('main-view.css');
 @import url('about-view.css');
+@import url('home-view.css');
 
 @import url('ai/conversation-detail-view.css');
 @import url('ai/conversation-timeline.css');

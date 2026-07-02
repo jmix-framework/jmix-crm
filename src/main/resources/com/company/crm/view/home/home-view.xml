@@ -5,6 +5,13 @@
         <settings id="settingsFacet" auto="true"/>
     </facets>
     <layout padding="false" classNames="dashboard-grid-container">
+        <vbox id="webinarBannerBox" classNames="webinar-banner-container"
+              padding="false" spacing="false" visible="false">
+            <hbox id="webinarBanner" classNames="webinar-banner" width="100%">
+                <button id="webinarBannerCloseButton" classNames="webinar-banner-close"/>
+            </hbox>
+        </vbox>
+
         <gridLayout width="100%" classNames="dashboard-grid">
             <vbox id="leftBox" classNames="dashboard-grid-main-content">
                 <formLayout id="leftContent" width="100%"/>

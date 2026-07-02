@@ -20,18 +20,23 @@ import com.company.crm.model.order.OrderStatus;
 import com.company.crm.model.payment.Payment;
 import com.company.crm.view.main.MainView;
 import com.company.crm.view.usertask.UserTaskListView;
+import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.card.CardVariant;
 import com.vaadin.flow.component.grid.GridVariant;
+import com.vaadin.flow.component.html.Anchor;
+import com.vaadin.flow.component.html.AnchorTarget;
 import com.vaadin.flow.component.html.H4;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.VaadinRequest;
+import com.vaadin.flow.server.VaadinService;
 import io.jmix.chartsflowui.component.Chart;
 import io.jmix.chartsflowui.kit.component.model.DataSet;
 import io.jmix.chartsflowui.kit.component.model.Grid;
@@ -47,6 +52,7 @@ import io.jmix.chartsflowui.kit.component.model.toolbox.Toolbox;
 import io.jmix.chartsflowui.kit.data.chart.ListChartItems;
 import io.jmix.core.Messages;
 import io.jmix.core.Metadata;
+import io.jmix.core.security.CurrentAuthentication;
 import io.jmix.core.metamodel.datatype.DatatypeFormatter;
 import io.jmix.flowui.DialogWindows;
 import io.jmix.flowui.UiComponents;
@@ -56,6 +62,7 @@ import io.jmix.flowui.component.formatter.DateFormatter;
 import io.jmix.flowui.component.formlayout.JmixFormLayout;
 import io.jmix.flowui.component.grid.DataGrid;
 import io.jmix.flowui.data.grid.ContainerDataGridItems;
+import io.jmix.flowui.kit.component.button.JmixButton;
 import io.jmix.flowui.model.CollectionContainer;
 import io.jmix.flowui.model.CollectionLoader;
 import io.jmix.flowui.model.DataComponents;
@@ -89,6 +96,9 @@ public class HomeView extends StandardView {
 
     public static final String ROUTE = "";
 
+    private static final String WEBINAR_URL =
+            "https://forms.jmix.io/whats-new-in-jmix-3.0?utm_source=demo&utm_medium=site&utm_campaign=webinar";
+
     @Autowired
     private Metadata metadata;
     @Autowired
@@ -118,7 +128,15 @@ public class HomeView extends StandardView {
     private DialogWindows dialogWindows;
     @Autowired
     private DateFormatter<LocalDate> localDateFormatter;
+    @Autowired
+    private CurrentAuthentication currentAuthentication;
 
+    @ViewComponent
+    private VerticalLayout webinarBannerBox;
+    @ViewComponent
+    private HorizontalLayout webinarBanner;
+    @ViewComponent
+    private JmixButton webinarBannerCloseButton;
     @ViewComponent
     private JmixFormLayout rightContent;
     @ViewComponent
@@ -128,7 +146,44 @@ public class HomeView extends StandardView {
 
     @Subscribe
     private void onInit(final InitEvent event) {
+        initWebinarBanner();
         createComponents();
+    }
+
+    private void initWebinarBanner() {
+        Anchor link = new Anchor(WEBINAR_URL, "");
+        link.setTarget(AnchorTarget.BLANK);
+        link.getElement().setAttribute("rel", "noopener");
+        link.getElement().setAttribute("aria-label", "Open webinar page");
+        link.addClassName("webinar-banner-link");
+        webinarBanner.add(link);
+
+        webinarBannerCloseButton.getElement().setAttribute("aria-label", "Close banner");
+        webinarBannerBox.setVisible(isWebinarBannerVisible());
+    }
+
+    private boolean isWebinarBannerVisible() {
+        if ("ru".equals(currentAuthentication.getLocale().getLanguage())) {
+            return false;
+        }
+        VaadinRequest request = VaadinService.getCurrentRequest();
+        if (request == null) {
+            return false;
+        }
+        // behind a reverse proxy the original host arrives in X-Forwarded-Host
+        String host = request.getHeader("X-Forwarded-Host");
+        if (host == null) {
+            host = request.getHeader("Host");
+        }
+        if (host == null) {
+            return false;
+        }
+        return host.split(",")[0].trim().split(":")[0].endsWith(".io");
+    }
+
+    @Subscribe("webinarBannerCloseButton")
+    public void onWebinarBannerCloseButtonClick(final ClickEvent<JmixButton> event) {
+        webinarBannerBox.addClassName("webinar-banner-closed");
     }
 
     private void createComponents() {
