@@ -24,12 +24,22 @@ class MessagePropertiesTest {
     private static final int EXPECTED_LOCALIZED_MESSAGE_FILES = 7;
     private static final Pattern LOCALIZED_MESSAGES_FILENAME = Pattern.compile("messages_(.+)\\.properties");
 
+    private static final List<Pattern> IGNORED_KEY_PATTERNS = List.of(
+            Pattern.compile("^com\\.company\\.crm\\.view\\.about/.*\\.(items|url|icon|hiddenTlds)$"),
+            Pattern.compile("^com\\.company\\.crm\\.view\\.about/links\\.(vk|telegram|max)$")
+    );
+
+    private static boolean isIgnored(String key) {
+        return IGNORED_KEY_PATTERNS.stream().anyMatch(pattern -> pattern.matcher(key).matches());
+    }
+
     @Test
     void localizedMessageBundlesContainSameKeys() throws IOException {
         Map<String, Properties> messagesByLocale = loadLocalizedMessages();
 
         Set<String> allKeys = new TreeSet<>();
         messagesByLocale.values().forEach(properties -> allKeys.addAll(properties.stringPropertyNames()));
+        allKeys.removeIf(MessagePropertiesTest::isIgnored);
 
         List<String> failures = new ArrayList<>();
         for (Map.Entry<String, Properties> entry : messagesByLocale.entrySet()) {

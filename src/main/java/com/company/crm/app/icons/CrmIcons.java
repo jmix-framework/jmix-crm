@@ -13,7 +13,10 @@ public enum CrmIcons implements IconFactory {
     YOUTUBE,
     LINKEDIN,
     FACEBOOK,
-    X;
+    X,
+    VK,
+    TELEGRAM,
+    MAX;
 
     @Override
     public Icon create() {
