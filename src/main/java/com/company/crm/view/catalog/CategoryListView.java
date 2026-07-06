@@ -25,12 +25,14 @@ import io.jmix.flowui.component.grid.TreeDataGrid;
 import io.jmix.flowui.component.grid.editor.DataGridEditor;
 import io.jmix.flowui.component.grid.editor.EditComponentGenerationContext;
 import io.jmix.flowui.component.textfield.TypedTextField;
+import io.jmix.flowui.exception.ValidationException;
 import io.jmix.flowui.kit.action.ActionPerformedEvent;
 import io.jmix.flowui.model.CollectionContainer;
 import io.jmix.flowui.model.CollectionLoader;
 import io.jmix.flowui.view.DialogMode;
 import io.jmix.flowui.view.Install;
 import io.jmix.flowui.view.LookupComponent;
+import io.jmix.flowui.view.MessageBundle;
 import io.jmix.flowui.view.StandardListView;
 import io.jmix.flowui.view.Subscribe;
 import io.jmix.flowui.view.Supply;
@@ -78,17 +80,20 @@ public class CategoryListView extends StandardListView<Category> {
     private CollectionLoader<Category> categoriesDl;
 
     private Category draggedCategory;
+    @ViewComponent
+    private MessageBundle messageBundle;
 
     @Subscribe
     public void onInit(InitEvent event) {
         installSortByCreatedDate(categoriesDl);
         configureInlineEdit();
+        addDragAndDropSupport();
     }
 
     @Override
     protected void onAttach(AttachEvent attachEvent) {
         super.onAttach(attachEvent);
-        categoriesDl.load();
+        loadData();
     }
 
     @Install(to = "categoriesDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
@@ -140,14 +145,22 @@ public class CategoryListView extends StandardListView<Category> {
         categoriesDataGrid.select(category);
     }
 
-    private void configureInlineEdit() {
-        addGridDoubleClickListener();
-        installDefaultStringEditorComponent("code", "name", "description");
-        addEditorListeners();
-        addDragAndDropSupport();
+    private void loadData() {
+        categoriesDl.load();
     }
 
-    private void addGridDoubleClickListener() {
+    private void configureInlineEdit() {
+        addGridClickListeners();
+        addEditorListeners();
+        installDefaultStringEditorComponent();
+    }
+
+    private void addGridClickListeners() {
+        categoriesDataGrid.addItemClickListener(e -> {
+            if (categoriesDataGrid.getEditor().isOpen()) {
+                saveEditSelectedItem();
+            }
+        });
         categoriesDataGrid.addItemDoubleClickListener(e -> editItem(e.getItem()));
     }
 
@@ -206,7 +219,7 @@ public class CategoryListView extends StandardListView<Category> {
         }
         categoriesDataGrid.select(saved);
 
-        categoriesDl.load();
+        loadData();
     }
 
     private void onDragEnd(GridDragEndEvent<Category> event) {
@@ -237,10 +250,10 @@ public class CategoryListView extends StandardListView<Category> {
         return false;
     }
 
-    private void installDefaultStringEditorComponent(String... columns) {
-        for (String column : columns) {
-            categoriesDataGrid.getEditor()
-                    .setColumnEditorComponent(column, ctx -> getDefaultStringEditor(column, ctx));
+    private void installDefaultStringEditorComponent() {
+        for (String column : new String[]{"code", "name", "description"}) {
+            categoriesDataGrid.getEditor().setColumnEditorComponent(column,
+                    ctx -> getDefaultStringEditor(column, ctx));
         }
     }
 
@@ -249,9 +262,7 @@ public class CategoryListView extends StandardListView<Category> {
         DataGridEditor<Category> editor = categoriesDataGrid.getEditor();
 
         if (editor.isOpen()) {
-            editor.save();
-            editor.closeEditor();
-            categoriesDataGrid.deselectAll();
+            saveEditSelectedItem();
         } else {
             if (selectedItem != null) {
                 editItem(selectedItem);
@@ -264,6 +275,14 @@ public class CategoryListView extends StandardListView<Category> {
         if (editor.isOpen()) {
             editor.cancel();
             editor.closeEditor();
+        }
+    }
+
+    private void saveEditSelectedItem() {
+        DataGridEditor<Category> editor = categoriesDataGrid.getEditor();
+        if (editor.isOpen() && editor.save()) {
+            editor.closeEditor();
+            categoriesDataGrid.deselectAll();
         }
     }
 
@@ -280,9 +299,25 @@ public class CategoryListView extends StandardListView<Category> {
         component.setValueSource(ctx.getValueSourceProvider().getValueSource(column));
         component.addKeyDownListener(Key.ENTER, e -> startOrStopEditSelectedItem());
         component.addKeyDownListener(Key.ESCAPE, e -> cancelEditSelectedItem());
+
         if ("name".equals(column)) {
             component.focus();
+        } else if ("code".equals(column)) {
+            component.addValidator(code -> {
+                if (code == null || code.isEmpty()) {
+                    throw new ValidationException(messageBundle.getMessage("validation.code.isEmpty"));
+                }
+
+                if (Objects.equals(ctx.getItem().getCode(), code)) {
+                    return;
+                }
+
+                if (categoryRepository.existsByCode(code)) {
+                    throw new ValidationException(messageBundle.formatMessage("validation.code.alreadyExists",code));
+                }
+            });
         }
+
         return component;
     }
 }
