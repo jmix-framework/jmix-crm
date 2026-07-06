@@ -313,7 +313,7 @@ public class CategoryListView extends StandardListView<Category> {
                 }
 
                 if (categoryRepository.existsByCode(code)) {
-                    throw new ValidationException(messageBundle.getMessage("validation.code.alreadyExists") + code + "' already exists");
+                    throw new ValidationException(messageBundle.formatMessage("validation.code.alreadyExists",code));
                 }
             });
         }
