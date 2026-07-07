@@ -14,6 +14,30 @@
     grid-column: span 1;
 }
 
+.dashboard-grid vaadin-card {
+    min-width: 0;
+    /* FormLayout lays cards out as flex items with align-items: baseline, so
+       cards of unequal height misalign when placed side by side. Stretch them
+       to the row height so they stay top-aligned and equal-height. */
+    align-self: stretch;
+}
+
+.dashboard-grid vaadin-card div:has(> h1) {
+    container-type: inline-size;
+}
+
+.dashboard-grid vaadin-card h1 {
+    font-size: clamp(1rem, 10cqi, 2rem);
+    line-height: 1.2;
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.dashboard-grid vaadin-card h4 {
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
 @supports (container-type: inline-size) {
     @container (min-width: 600px) {
         .dashboard-grid {
