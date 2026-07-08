@@ -13,6 +13,8 @@
     background-size: 100% 100%;
     background-image: url('../images/webinar/1920px.svg');
     aspect-ratio: 936 / 116;
+    max-width: 1400px;
+    margin-inline: auto;
 }
 
 .webinar-banner-link {
