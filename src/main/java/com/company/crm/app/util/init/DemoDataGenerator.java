@@ -115,7 +115,7 @@ public class DemoDataGenerator implements Ordered {
         dynamicAttributesInitializer.createDynamicAttributesIfNeeded();
 
         publishProgress(progressListener, messages.getMessage("demoData.progress.configuring"));
-        List<User> users = loadDemoUsers();
+        List<User> users = loadUsers();
         Map<String, User> usersByUsername = new HashMap<>();
         for (User u : users) {
             usersByUsername.put(u.getUsername(), u);
@@ -153,20 +153,22 @@ public class DemoDataGenerator implements Ordered {
                 catalog.size(),
                 catalog.values().stream().mapToLong(Collection::size).sum(),
                 clientsById.size(),
-                dataManager.loadValue("select count(c) from Contact c", Long.class).one(),
-                dataManager.loadValue("select count(o) from Order_ o", Long.class).one(),
-                dataManager.loadValue("select count(i) from Invoice i", Long.class).one(),
-                dataManager.loadValue("select count(p) from Payment p", Long.class).one()
+                getCountOf("Contact"),
+                getCountOf("Order_"),
+                getCountOf("Invoice"),
+                getCountOf("Payment")
         );
+    }
+
+    private Long getCountOf(String entityName) {
+        return dataManager.loadValue("select count(c) from %s c".formatted(entityName), Long.class).one();
     }
 
     // ---- Users (created via Liquibase in 010-init-user.xml) ----
 
-    private List<User> loadDemoUsers() {
-        log.info("Loading demo users (alice, bob) from database...");
-        User alice = dataManager.load(User.class).query("e.username = :u").parameter("u", "alice").one();
-        User bob = dataManager.load(User.class).query("e.username = :u").parameter("u", "robert").one();
-        return List.of(alice, bob);
+    private List<User> loadUsers() {
+        log.info("Loading users from database...");
+        return dataManager.load(User.class).all().list();
     }
 
     // ---- Catalog (from xlsx) ----

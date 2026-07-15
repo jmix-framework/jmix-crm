@@ -145,6 +145,11 @@ public class CategoryListView extends StandardListView<Category> {
         categoriesDataGrid.select(category);
     }
 
+    @Supply(to = "categoriesDataGrid.name", subject = "renderer")
+    private Renderer<Category> categoriesDataGridNameRenderer() {
+        return crmRenderers.categoryNameLink(categoriesDataGrid);
+    }
+
     private void loadData() {
         categoriesDl.load();
     }
@@ -313,7 +318,7 @@ public class CategoryListView extends StandardListView<Category> {
                 }
 
                 if (categoryRepository.existsByCode(code)) {
-                    throw new ValidationException(messageBundle.formatMessage("validation.code.alreadyExists",code));
+                    throw new ValidationException(messageBundle.formatMessage("validation.code.alreadyExists", code));
                 }
             });
         }

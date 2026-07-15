@@ -18,6 +18,7 @@ import com.company.crm.model.order.OrderStatus;
 import com.company.crm.model.payment.Payment;
 import com.company.crm.model.user.User;
 import com.company.crm.model.user.task.UserTask;
+import com.company.crm.view.category.CategoryDetailView;
 import com.company.crm.view.client.ClientDetailView;
 import com.company.crm.view.order.OrderDetailView;
 import com.company.crm.view.user.UserDetailView;
@@ -44,6 +45,7 @@ import io.jmix.flowui.DialogWindows;
 import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.ViewNavigators;
 import io.jmix.flowui.asynctask.UiAsyncTasks;
+import io.jmix.flowui.component.ListDataComponent;
 import io.jmix.flowui.component.grid.DataGrid;
 import io.jmix.flowui.component.grid.renderer.DetailButtonRenderer;
 import io.jmix.flowui.view.OpenMode;
@@ -186,7 +188,7 @@ public class CrmRenderers {
         return detailLink(grid, metadataTools::getInstanceName, null);
     }
 
-    public <E> Renderer<E> detailLink(DataGrid<E> grid, ValueProvider<E, String> textProvider,
+    public <E> Renderer<E> detailLink(ListDataComponent<E> grid, ValueProvider<E, String> textProvider,
                                       @Nullable Class<? extends View<?>> detailViewClass) {
         return new DetailButtonRenderer<>(uiComponents, viewNavigators, dialogWindows, grid, textProvider)
                 .withOpenMode(OpenMode.DIALOG)
@@ -239,6 +241,10 @@ public class CrmRenderers {
 
     public Renderer<Client> clientNameLink(DataGrid<Client> grid) {
         return detailLink(grid, Client::getName, ClientDetailView.class);
+    }
+
+    public Renderer<Category> categoryNameLink(ListDataComponent<Category> grid) {
+        return detailLink(grid, Category::getName, CategoryDetailView.class);
     }
 
     public <E extends UuidEntity> Renderer<E> uniqueNumber(Function<E, String> numberProvider) {
