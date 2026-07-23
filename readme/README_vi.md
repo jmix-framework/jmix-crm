@@ -2,7 +2,7 @@
 
 🖥️ [Online Demo](https://demo.jmix.io/b2b-crm/login)
 
-🌐 Ngôn ngữ: [English](../README.md) | [Русский](README_ru.md) | [Deutsch](README_de.md) | [Italiano](README_it.md) | [Español](README_es.md) | [Srpski](README_srb.md) | [Tiếng Việt](README_vi.md)
+🌐 Ngôn ngữ: [English](../README.md) | [Русский](README_ru.md) | [Deutsch](README_de.md) | [Italiano](README_it.md) | [Español](README_es.md) | [Tiếng Việt](README_vi.md) | [Srpski](README_sr.md)
 
 `B2B CRM` là ứng dụng doanh nghiệp mẫu được xây dựng bằng nền tảng Jmix, minh họa cách phát triển các hệ thống kinh doanh **sẵn sàng cho môi trường sản xuất**, bao gồm `khách hàng`, `đơn hàng`, `hóa đơn`, `tài chính` và `phân tích dữ liệu`.
 Ứng dụng phản ánh các kịch bản **ERP/CRM** thực tế và trình bày các thực tiễn tốt nhất về mô hình hóa nghiệp vụ, giao diện người dùng, bảo mật và triển khai logic nghiệp vụ.
