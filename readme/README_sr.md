@@ -2,7 +2,7 @@
 
 🖥️ [Online Demo](https://demo.jmix.io/b2b-crm/login)
 
-🌐 Jezici: [English](../README.md) | [Русский](README_ru.md) | [Deutsch](README_de.md) | [Italiano](README_it.md) | [Español](README_es.md) | [Srpski](README_srb.md) | [Tiếng Việt](README_vi.md)i.md)
+🌐 Jezici: [English](../README.md) | [Русский](README_ru.md) | [Deutsch](README_de.md) | [Italiano](README_it.md) | [Español](README_es.md) | [Tiếng Việt](README_vi.md) | [Srpski](README_sr.md)
 
 `B2B CRM` je poslovna demonstraciona aplikacija razvijena pomoću Jmix platforme koja prikazuje kako se grade **produkcijski spremni** poslovni sistemi, uključujući `kupce`, `porudžbine`, `fakturisanje`, `finansije` i `analitiku`. <br>
 Aplikacija odražava stvarne **ERP/CRM** scenarije i demonstrira najbolje prakse u modeliranju domena, korisničkom interfejsu, bezbjednosti i implementaciji poslovne logike.
