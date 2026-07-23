@@ -1,6 +1,8 @@
 # ![CRM](../src/main/resources/META-INF/resources/images/logo.svg) B2B CRM
 
-Lingue: [English](../README.md) | [Русский](README_ru.md) | [Deutsch](README_de.md) | [Italiano](README_it.md) | [Español](README_es.md) | [Tiếng Việt](README_vi.md) | [Srpski](README_sr.md)
+🖥️ [Online Demo](https://demo.jmix.io/b2b-crm/login)
+
+🌐 Lingue: [English](../README.md) | [Русский](README_ru.md) | [Deutsch](README_de.md) | [Italiano](README_it.md) | [Español](README_es.md) | [Tiếng Việt](README_vi.md) | [Srpski](README_sr.md)
 
 `B2B CRM` è un'applicazione demo sviluppata con Jmix che mostra come creare sistemi aziendali **pronti per la produzione**
 per lavorare con `clienti`, `ordini`, `fatture`, `finanza` e `analitica`. <br>Rappresenta scenari reali **ERP/CRM** e dimostra
@@ -33,20 +35,20 @@ Questo progetto modella un tipico flusso di vendita B2B:
 ## 🛠️ Stack tecnico
 
 - Java 21
-- Jmix 2.8
-- Spring Boot 3
+- Jmix (Spring Boot & Vaadin Flow)
 - HSQLDB
 
 ## 🧩 Add-on utilizzati
 
-- Audit
-- Application settings
-- Charts
-- Data tools
-- Dynamic attributes
-- Grid export
-- Local file storage
-- Reports, incluso un modello di fattura
+- [AI Tools](https://www.jmix.io/marketplace/ai-tools/)
+- [Audit](https://www.jmix.io/marketplace/audit/)
+- [Application Settings](https://www.jmix.io/marketplace/application-settings/)
+- [Charts](https://www.jmix.io/marketplace/charts/)
+- [Data tools](https://www.jmix.io/marketplace/data-tools/)
+- [Dynamic attributes](https://www.jmix.io/marketplace/dynamic-attributes/)
+- [Grid export](https://www.jmix.io/marketplace/grid-export-actions/)
+- [Reports](https://www.jmix.io/marketplace/reports/)
+- Local file storage, Localizations
 
 ## 🚀 Build ed esecuzione
 

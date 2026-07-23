@@ -1,6 +1,8 @@
 # ![CRM](../src/main/resources/META-INF/resources/images/logo.svg) B2B CRM
 
-Языки: [English](../README.md) | [Русский](README_ru.md) | [Deutsch](README_de.md) | [Italiano](README_it.md) | [Español](README_es.md) | [Tiếng Việt](README_vi.md) | [Srpski](README_sr.md)
+🖥️ [Online Demo](https://demo.jmix.ru/b2b-crm/login)
+
+🌐 Языки: [English](../README.md) | [Русский](README_ru.md) | [Deutsch](README_de.md) | [Italiano](README_it.md) | [Español](README_es.md) | [Tiếng Việt](README_vi.md) | [Srpski](README_sr.md)
 
 `B2B CRM` — корпоративное демонстрационное приложение на Jmix, показывающее, как разрабатывать **готовые к production** бизнес-системы
 для работы с `клиентами`, `заказами`, `счетами`, `финансами` и `аналитикой`. <br>Оно отражает реальные сценарии **ERP/CRM** и демонстрирует
@@ -33,20 +35,20 @@
 ## 🛠️ Технический стек
 
 - Java 21
-- Jmix 2.8
-- Spring Boot 3
+- Jmix (Spring Boot & Vaadin Flow)
 - HSQLDB
 
 ## 🧩 Используемые Add-ons
 
-- Audit
-- Application settings
-- Charts
-- Data tools
-- Dynamic attributes
-- Grid export
-- Local file storage
-- Reports, включая шаблон счета
+- [AI Tools](https://www.jmix.ru/marketplace/ai-tools/)
+- [Audit](https://www.jmix.ru/marketplace/audit/)
+- [Application Settings](https://www.jmix.ru/marketplace/application-settings/)
+- [Charts](https://www.jmix.ru/marketplace/charts/)
+- [Data tools](https://www.jmix.ru/marketplace/data-tools/)
+- [Dynamic attributes](https://www.jmix.ru/marketplace/dynamic-attributes/)
+- [Grid export](https://www.jmix.ru/marketplace/grid-export-actions/)
+- [Reports](https://www.jmix.ru/marketplace/reports/)
+- Local file storage, Localizations
 
 ## 🚀 Сборка и запуск
 

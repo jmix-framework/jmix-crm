@@ -1,6 +1,8 @@
 # ![CRM](../src/main/resources/META-INF/resources/images/logo.svg) B2B CRM
 
-Ngôn ngữ: [English](../README.md) | [Русский](README_ru.md) | [Deutsch](README_de.md) | [Italiano](README_it.md) | [Español](README_es.md) | [Srpski](README_srb.md) | [Tiếng Việt](README_vi.md)
+🖥️ [Online Demo](https://demo.jmix.io/b2b-crm/login)
+
+🌐 Ngôn ngữ: [English](../README.md) | [Русский](README_ru.md) | [Deutsch](README_de.md) | [Italiano](README_it.md) | [Español](README_es.md) | [Srpski](README_srb.md) | [Tiếng Việt](README_vi.md)
 
 `B2B CRM` là ứng dụng doanh nghiệp mẫu được xây dựng bằng nền tảng Jmix, minh họa cách phát triển các hệ thống kinh doanh **sẵn sàng cho môi trường sản xuất**, bao gồm `khách hàng`, `đơn hàng`, `hóa đơn`, `tài chính` và `phân tích dữ liệu`.
 Ứng dụng phản ánh các kịch bản **ERP/CRM** thực tế và trình bày các thực tiễn tốt nhất về mô hình hóa nghiệp vụ, giao diện người dùng, bảo mật và triển khai logic nghiệp vụ.
@@ -32,19 +34,20 @@ Dự án này mô phỏng quy trình bán hàng B2B điển hình:
 ## 🛠️ Ngăn xếp công nghệ
 
 - Java 21
-- Jmix (Spring Boot + Vaadin)
+- Jmix (Spring Boot & Vaadin Flow)
 - HSQLDB
 
 ## 🧩 Các add-on được sử dụng
 
-- Audit
-- Application Settings
-- Charts
-- Data Tools
-- Dynamic Attributes
-- Grid Export
-- Local File Storage
-- Reports (bao gồm mẫu hóa đơn)
+- [AI Tools](https://www.jmix.io/marketplace/ai-tools/)
+- [Audit](https://www.jmix.io/marketplace/audit/)
+- [Application Settings](https://www.jmix.io/marketplace/application-settings/)
+- [Charts](https://www.jmix.io/marketplace/charts/)
+- [Data tools](https://www.jmix.io/marketplace/data-tools/)
+- [Dynamic attributes](https://www.jmix.io/marketplace/dynamic-attributes/)
+- [Grid export](https://www.jmix.io/marketplace/grid-export-actions/)
+- [Reports](https://www.jmix.io/marketplace/reports/)
+- Local file storage, Localizations
 
 ## 🚀 Xây dựng và chạy ứng dụng
 

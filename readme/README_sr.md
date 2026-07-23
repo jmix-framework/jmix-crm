@@ -1,6 +1,8 @@
 # ![CRM](../src/main/resources/META-INF/resources/images/logo.svg) B2B CRM
 
-Jezici: [English](../README.md) | [Русский](README_ru.md) | [Deutsch](README_de.md) | [Italiano](README_it.md) | [Español](README_es.md) | [Srpski](README_srb.md) | [Tiếng Việt](README_vi.md)i.md)
+🖥️ [Online Demo](https://demo.jmix.io/b2b-crm/login)
+
+🌐 Jezici: [English](../README.md) | [Русский](README_ru.md) | [Deutsch](README_de.md) | [Italiano](README_it.md) | [Español](README_es.md) | [Srpski](README_srb.md) | [Tiếng Việt](README_vi.md)i.md)
 
 `B2B CRM` je poslovna demonstraciona aplikacija razvijena pomoću Jmix platforme koja prikazuje kako se grade **produkcijski spremni** poslovni sistemi, uključujući `kupce`, `porudžbine`, `fakturisanje`, `finansije` i `analitiku`. <br>
 Aplikacija odražava stvarne **ERP/CRM** scenarije i demonstrira najbolje prakse u modeliranju domena, korisničkom interfejsu, bezbjednosti i implementaciji poslovne logike.
@@ -32,19 +34,20 @@ Ovaj projekat modeluje tipičan B2B prodajni proces:
 ## 🛠️ Tehnički stek
 
 - Java 21
-- Jmix (Spring Boot + Vaadin)
+- Jmix (Spring Boot & Vaadin Flow)
 - HSQLDB
 
 ## 🧩 Dodaci
 
-- Audit
-- Podešavanja aplikacije
-- Grafikoni
-- Alati za podatke
-- Dinamički atributi
-- Izvoz tabela
-- Lokalno skladištenje datoteka
-- Izvještaji (uključuje šablon fakture)
+- [AI Tools](https://www.jmix.io/marketplace/ai-tools/)
+- [Audit](https://www.jmix.io/marketplace/audit/)
+- [Application Settings](https://www.jmix.io/marketplace/application-settings/)
+- [Charts](https://www.jmix.io/marketplace/charts/)
+- [Data tools](https://www.jmix.io/marketplace/data-tools/)
+- [Dynamic attributes](https://www.jmix.io/marketplace/dynamic-attributes/)
+- [Grid export](https://www.jmix.io/marketplace/grid-export-actions/)
+- [Reports](https://www.jmix.io/marketplace/reports/)
+- Local file storage, Localizations
 
 ## 🚀 Pokretanje i izvršavanje aplikacije
 
