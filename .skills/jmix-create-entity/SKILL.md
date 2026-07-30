@@ -10,8 +10,10 @@ Use this skill when adding or changing a database-backed Jmix entity.
 ## Steps
 
 1. Create or update the Java entity in `src/main/java/<base-package>/entity`.
+   **Changing an existing entity? Read "Widening an existing entity" below first.**
 2. Add Jmix and JPA metadata: `@JmixEntity`, `@Entity`, `@Table`.
-3. Add UUID identity with `@Id` and `@JmixGeneratedValue`.
+3. **Choose the id strategy explicitly** — generated surrogate or assigned natural
+   key. See "Id strategy" below.
 4. Add `@Version`.
 5. Add `@InstanceName` on a stable human-readable field or method.
 6. Define columns with exact `nullable`, `length`, `precision`, and `scale` constraints from requirements.
@@ -55,6 +57,101 @@ public class Customer {
     // getters and setters
 }
 ```
+
+## Id strategy — an explicit choice, not a default
+
+Two strategies. Decide which one the entity needs BEFORE writing the `@Id` field;
+the wrong one is expensive to change once rows and changelogs exist.
+
+**Generated surrogate UUID** — the default for entities this application owns.
+Jmix assigns the id on `DataManager.create()`:
+
+```java
+@JmixGeneratedValue
+@Column(name = "ID", nullable = false)
+@Id
+private UUID id;
+```
+
+**Assigned natural key** — when the id comes from OUTSIDE the application and must
+be preserved: a numeric id from an external system being mirrored, an
+externally-issued code. NO `@JmixGeneratedValue` — it makes Jmix assign the id at
+creation, which is exactly what must not happen here. The writer sets the id:
+
+```java
+@Column(name = "ID", nullable = false)
+@Id
+private Long id;              // assigned from the source system, never generated
+```
+
+```java
+ExternalAccount account = dataManager.create(ExternalAccount.class);
+account.setId(dto.id());       // caller MUST set it — nothing generates it
+dataManager.save(account);
+```
+
+Pick the assigned key when: the source system's id is the identity users and
+integrations refer to, or a sync must upsert by that id (load-by-id, insert if
+absent). Pick the generated surrogate otherwise — including when the external key
+merely needs to be UNIQUE, which is a unique index on an ordinary column, not an
+id. Match the Liquibase column type to the Java type (`bigint` for `Long`, not
+`${uuid.type}`).
+
+## Required references — BOTH annotations, or the field is not really required
+
+A required `@ManyToOne` needs the constraint in two places:
+
+```java
+@JoinColumn(name = "CUSTOMER_ID", nullable = false)   // ← metamodel: mandatory
+@ManyToOne(fetch = FetchType.LAZY, optional = false)  // ← JPA: not optional
+private Customer customer;
+```
+
+Omitting `nullable = false` on `@JoinColumn` leaves the Jmix metamodel treating
+the attribute as OPTIONAL: the UI does not require it, no validation fires, and
+the failure surfaces later as a database constraint error — or as a null nobody
+expected. `optional = false` alone is not enough. This is a hard rule; it holds
+for every required reference, not only composition children.
+
+## Widening an existing entity
+
+Adding fields to an entity that already exists is a DIFFERENT task from creating
+one. Change only what the requirement asks for:
+
+- **Do NOT touch** the `@Id` field or its strategy, `@Table(name = ...)`,
+  `@Version`, or the existing columns' types and constraints. An entity with an
+  assigned `Long` id stays that way — do not "normalize" it to a generated UUID.
+- **Add** the new fields with their exact constraints, plus new `@Index` entries in
+  `@Table(indexes = {...})` if the new columns need indexing (see below).
+- **Pair it with an `addColumn` changelog**, never a second `createTable` — see
+  `jmix-create-liquibase-changelog` ("Changing an existing table").
+- Follow the precedent already in the project: read the entity's own changelog
+  before writing the new one, and match its naming and column-type style.
+
+## Index parity — declare every index in BOTH places
+
+When you add an index (typically on a new reference/FK column), declare it in the
+entity annotation AND in the changelog:
+
+```java
+@Table(name = "CUSTOMER", indexes = {
+        @Index(name = "IDX_CUSTOMER_MANAGER", columnList = "MANAGER_ID"),
+        @Index(name = "IDX_CUSTOMER_REGION", columnList = "REGION_ID")
+})
+```
+
+```xml
+<createIndex indexName="IDX_CUSTOMER_MANAGER" tableName="CUSTOMER">
+    <column name="MANAGER_ID"/>
+</createIndex>
+```
+
+Same names on both sides. **No gate catches the drift** — a missing `@Index`
+changes neither the metamodel nor the schema, so `compileJava`, the Jmix
+inspection, and a green `clean test` all pass with the index in the changelog only.
+It breaks Studio round-tripping and the code-as-source-of-truth convention, and it
+is found by nothing but this check. Do it as you write the column, not as a later
+audit.
 
 ## Required-field defaults — at the ENTITY layer, not elsewhere
 
@@ -169,6 +266,16 @@ Non-persistent derived attributes use `@JmixProperty` + `@Transient` + `@Depends
 ## Embeddable, Inheritance, and Data Stores
 
 - `@Embeddable` value objects (still annotated `@JmixEntity`) are supported, as are JPA inheritance strategies (`@Inheritance` with `JOINED`, `SINGLE_TABLE`, or `TABLE_PER_CLASS`).
+- For `SINGLE_TABLE`, an **abstract** base class is normal and carries NO
+  `@DiscriminatorValue` of its own — it is never instantiated, so there is no row
+  to discriminate. Only the concrete subclasses need one. (The published examples
+  usually show a concrete base that does have one; the difference is plain JPA, not
+  a Jmix rule — see `jmix-verify-api-symbol`.)
+- **Loading through the base class does not fetch subclass attributes.** A
+  `dataManager.load(BaseType.class)` builds its default fetch plan from the base
+  metaclass's own properties, so casting the result to a subclass and reading a
+  subclass-declared attribute throws `IllegalStateException: Cannot get unfetched
+  attribute`. See `jmix-configure-fetch-plan` for the fix.
 - For a non-default data store, annotate the entity with `@Store(name = "...")` (defined in `application.properties`); add-on entities use an entity-name prefix, e.g. `@Entity(name = "app_Customer")`.
 
 ## Constraint Audit
@@ -201,6 +308,10 @@ Apply common Java validation and persistence mappings when the field semantics a
 - Lombok annotations (`@Data`, `@Getter`, `@Setter`, etc.) on Jmix entities — they interfere with the entity enhancer and break JPA/Jmix metadata.
 - `FetchType.EAGER`.
 - Missing Liquibase changelog for persistent changes.
+- A required `@ManyToOne` with `optional = false` but no `@JoinColumn(nullable = false)` — the metamodel then treats it as optional and the UI does not require it.
+- `@JmixGeneratedValue` on an assigned natural key — Jmix then assigns the id itself, defeating the point of preserving the source system's id.
+- Changing an existing entity's id strategy, `@Table` name, or `@Version` while adding fields to it.
+- An index declared in the changelog but missing from `@Table(indexes = …)`, or the reverse.
 - Nullable child back references in composition aggregates.
 - Relying only on UI initialization for required persistence fields.
 - Instantiating or replacing a collection field that Jmix populated — it may be a `NotInstantiatedList`/`NotInstantiatedSet`. Leave collection fields uninitialized; do not assign `new ArrayList`/`new HashSet`.

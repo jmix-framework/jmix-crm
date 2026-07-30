@@ -5,12 +5,10 @@
         <collection id="recentConversationsDc"
                     class="com.company.crm.ai.model.AiConversation">
             <fetchPlan extends="_base"/>
-            <loader id="recentConversationsDl" readOnly="true">
+            <loader id="recentConversationsDl" readOnly="true" firstResult="0" maxResults="6">
                 <query>
                     <![CDATA[select e from AiConversation e where e.firstMessageSent = true order by e.createdDate desc]]>
                 </query>
-                <firstResult>0</firstResult>
-                <maxResults>6</maxResults>
             </loader>
         </collection>
         <collection id="historyConversationsDc"

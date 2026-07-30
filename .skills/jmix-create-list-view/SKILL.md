@@ -193,6 +193,39 @@ XML. You do NOT need an `@Install(target = Target.DATA_LOADER)` load delegate;
 if you DO write one, it must return `List<E>` — returning the `LoadContext`
 itself means the query never runs and the grid is empty at open.
 
+## Overriding `beforeEnter` — always call `super`, unconditionally
+
+The `dataLoadCoordinator` auto-load fires INSIDE
+`StandardListView.beforeEnter(...)`. An override that skips the `super` call —
+or calls it only on one branch — leaves the grid silently empty: no exception, no
+warning, a clean compile and a clean render.
+
+```java
+public class OrderListView extends StandardListView<Order> implements BeforeEnterObserver {
+
+    @ViewComponent
+    private CollectionLoader<Order> ordersDl;
+
+    @Override
+    public void beforeEnter(BeforeEnterEvent event) {
+        // custom query/parameter handling FIRST
+        List<String> customerIds = event.getLocation().getQueryParameters()
+                .getParameters().getOrDefault("customerId", List.of());
+        if (!customerIds.isEmpty()) {
+            ordersDl.setQuery("select e from Order e where e.customer.id = :customerId");
+            ordersDl.setParameter("customerId", UUID.fromString(customerIds.getFirst()));
+        }
+
+        // then ALWAYS, on every path — the auto-load happens in here
+        super.beforeEnter(event);
+    }
+}
+```
+
+The same holds for every overridden view lifecycle method (`beforeEnter`,
+`afterNavigation`): do your work, then call `super`, on every code path. An
+early `return` before `super` is the defect.
+
 ## Forbidden
 
 - Declaring actions without visible buttons or another reachable UI trigger.
@@ -205,3 +238,4 @@ itself means the query never runs and the grid is empty at open.
 - Missing role view policy.
 - Adding menu policy for dialog-only detail views.
 - A load delegate returning `LoadContext` instead of `List<E>` (the query never runs; the grid is empty at open).
+- An overridden `beforeEnter` that does not call `super.beforeEnter(event)` on every path (the auto-load never fires; the grid is empty).

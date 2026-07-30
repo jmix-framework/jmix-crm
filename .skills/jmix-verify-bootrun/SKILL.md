@@ -38,10 +38,15 @@ If a seed test is RED after your changes, YOU broke it — fix it to green. Do
 not call a red `clean test` "pre-existing".
 
 A green Gate 2 is necessary but NOT sufficient: the seed tests load the context
-but do NOT open your new views or exercise your new roles. It catches
-catastrophic breakage (broken view registry, schema/Liquibase error, missing
-`@JmixEntity`), not render-time UI defects — those are caught by the mechanical
-checks and the optional Gate 3.
+but do NOT open your new views, exercise your new roles, or fire code that only
+runs outside a user request (see `jmix-run-background-code`). It catches catastrophic 
+breakage (broken view registry, schema/Liquibase error, missing `@JmixEntity`), 
+not render-time UI defects — those are caught by the mechanical checks and Gate 3.
+
+The rule behind it: a defect survives every gate when nothing enters its code
+path. So when you add a path that nothing yet calls, ADD THE CALLER — a test or a
+render walk — or report it as unverified. Never write "all gates passed" for a
+path no gate entered.
 
 ## Gate 3 — render walk (REQUIRED for every view/role you created or changed)
 

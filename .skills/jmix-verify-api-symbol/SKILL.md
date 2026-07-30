@@ -49,13 +49,37 @@ For anything NOT already in the project, verify it before you type it:
    its fully-qualified name and members to settle package guesses and whether a
    constant or inner type exists.
 
-3. **Floor (no MCP): grep a known-good example and reuse only what is actually
-   there.** Find a real call site in the wider codebase or a reference app and copy
-   its exact shape — the portable equivalent when (1) and (2) are unavailable.
+3. **`javap` on the dependency jars — the fallback that always works.** It prints
+   the real members and signatures from the compiled classes, and it is the only
+   check left for a symbol with **zero call sites in the project** (step 4 has
+   nothing to grep).
+
+   ```bash
+   CP=$(find ~/.gradle/caches -name '*.jar' ! -name '*sources*' | tr '\n' ':')
+   javap -p -cp "$CP" io.jmix.flowui.Dialogs
+   ```
+
+   Every cached jar on one classpath, so you need not know which artifact owns the
+   class (`-p` also lists non-public members). If the cache holds several versions
+   and a signature looks wrong, check which one the build resolves.
+
+4. **Floor: grep a known-good example and reuse only what is actually there.**
+   Find a real call site in the wider codebase or a reference app and copy its
+   exact shape — useful when the symbol IS used somewhere, but blind when it is
+   new to the project (use step 3 then).
 
 Never invent and ship. If nothing confirms a symbol, do not type it — pick one you
 CAN confirm, or omit the optional decoration (e.g. drop an icon attribute rather
 than guess a constant).
+
+## A close-but-not-exact doc example still confirms the symbol
+
+When the fetched example differs from what you need only on a **plain Java or JPA**
+axis — an abstract vs concrete base class, one field more or less, another property
+type — it has already confirmed the API. Stop querying for a closer match.
+
+Keep verifying only when the difference IS the Jmix API: another method name,
+another package, another annotation member. Then use `javap` (step 3).
 
 ## The recurring garbage list
 
@@ -70,6 +94,7 @@ Symbols commonly invented. NEVER type these — verify first:
 | `io.jmix.flowui.dialogs.Dialogs`                     | actual: `io.jmix.flowui.Dialogs`                             |
 | `io.jmix.core.entity.EntityStates`                   | actual: `io.jmix.core.EntityStates`                          |
 | `io.jmix.flowui.component.datagrid.DataGrid`         | actual: `io.jmix.flowui.component.grid.DataGrid`             |
+| `io.jmix.flowui.component.markdown.Markdown`         | actual: `com.vaadin.flow.component.markdown.Markdown` — the `<markdown>` component is Vaadin's; `io.jmix.flowui` has a DIFFERENT `markdowneditor` component |
 | `dialogs.createDetailView(this, entity, View.class)` | use `dialogWindows.detail(this, EntityClass.class).editEntity(entity).withViewClass(View.class)` |
 | `dataGrid.addItemChangeListener(...)`                | use `addSelectionListener(...)` or `asSingleSelect().addValueChangeListener(...)` |
 | `dataGrid.getSingleSelected()`                       | use `getSingleSelectedItem()`                                |
@@ -79,5 +104,6 @@ Symbols commonly invented. NEVER type these — verify first:
 A verification check takes ~1 second; a failed `compileJava` cycle costs
 15–30 seconds plus error-log parsing, and a passed compile that fails at render
 time in a UI test costs the whole test run. The break-even is one prevented
-failure per session — run the check: Context7 if connected, else grep a
-known-good call site (step 3); never ship an unverified symbol.
+failure per session — run the check: Context7 if connected, else `javap` on the
+dependency jars (step 3), else grep a known-good call site (step 4); never ship an
+unverified symbol.

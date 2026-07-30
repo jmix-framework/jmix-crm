@@ -99,6 +99,47 @@ class CustomerUiTest {
 
 Use the project's helper for component lookup if it exists. Otherwise keep a local typed helper small and explicit. A `@UiTest` that navigates to a view will fail to find it if the view's id or the component id is wrong — the test, not just `compileJava`, is what catches that.
 
+**List a nested `@TestConfiguration` in `classes` explicitly.** Do not rely on the
+usual "a static `@TestConfiguration` inside the test class is picked up
+automatically" behaviour once `@SpringBootTest(classes = {...})` names an explicit
+set, as `@UiTest` requires — in practice the nested class's beans do not appear.
+Name it yourself:
+
+```java
+@UiTest
+@SpringBootTest(classes = {
+        AppApplication.class,
+        FlowuiTestAssistConfiguration.class,
+        CustomerUiTest.MockApiConfig.class})   // ← nested config, listed EXPLICITLY
+class CustomerUiTest {
+
+    @TestConfiguration
+    static class MockApiConfig { /* @Bean overrides */ }
+}
+```
+
+Omitting it does not fail loudly: the beans simply never get defined, and the test
+runs against the real collaborator (a live HTTP call, or a `NoSuchBeanDefinition`
+far from the cause).
+
+## Testing code that runs outside a user session
+
+A scheduler / `@Async` / application event listener path has no authenticated user, and a test that
+sets authentication up **hides** exactly the defect worth catching. Call the entry
+point bare, and authenticate only the data setup:
+
+```java
+@Test
+void generateDailyReportsRunsOnTheSchedulerThread() {
+    systemAuthenticator.runWithSystem(() -> givenOrder());   // setup only
+    // no authentication around the call — reproduces the scheduler thread
+    reportService.generateDailyReports();
+}
+```
+
+See `jmix-run-background-code` for the `@Authenticated` / `SystemAuthenticator`
+rules on the production side.
+
 ## End-To-End Tests
 
 Use Masquerade/Selenide or the project's browser-test stack when browser verification is required. Enable test ids only in a test profile and prefer stable component ids over text selectors.
@@ -125,3 +166,6 @@ Before finishing, check:
 - Browser tests for behavior that `@UiTest` or service tests can prove.
 - Hardcoded sleeps when framework waits or component assertions are available.
 - `@WithUserDetails` for Jmix security tests when `SystemAuthenticator` or the project auth extension is available.
+- A nested `@TestConfiguration` left out of `@SpringBootTest(classes = {...})` — its beans are silently never defined.
+- `spring.main.allow-bean-definition-overriding=true` to replace a bean for one test — use a distinct `@Primary` bean instead.
+- Authenticating before calling a scheduler/`@Async` entry point and then claiming that path is covered.
