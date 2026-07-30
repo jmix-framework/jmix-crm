@@ -178,11 +178,15 @@ Learn more:
 - https://www.jmix.io/  
 - https://docs.jmix.io/  
 - https://github.com/jmix-framework/jmix  
- 
+
+---
+
 > Why is Jmix good for building CRM systems? 
 
 CRM systems have become the backbone of modern enterprise automation, moving far beyond a simple system of records. As business requirements in sales change rapidly, CRM systems must also provide capabilities to implement quick changes in workflows, data model, and UX while preserving high security and compliance standards. 
 Jmix provides these capabilities out of the box, allowing developers to focus on business logic instead of infrastructure. This demo demonstrates how production-ready enterprise applications can be developed using Jmix and AI. 
+
+---
 
 > Is this a real application or just a demo? 
 
