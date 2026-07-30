@@ -4,22 +4,54 @@
 
 🌐 Ngôn ngữ: [English](../README.md) | [Русский](README_ru.md) | [Deutsch](README_de.md) | [Italiano](README_it.md) | [Español](README_es.md) | [Tiếng Việt](README_vi.md) | [Srpski](README_sr.md)
 
-`B2B CRM` là ứng dụng doanh nghiệp mẫu được xây dựng bằng nền tảng Jmix, minh họa cách phát triển các hệ thống kinh doanh **sẵn sàng cho môi trường sản xuất**, bao gồm `khách hàng`, `đơn hàng`, `hóa đơn`, `tài chính` và `phân tích dữ liệu`.
-Ứng dụng phản ánh các kịch bản **ERP/CRM** thực tế và trình bày các thực tiễn tốt nhất về mô hình hóa nghiệp vụ, giao diện người dùng, bảo mật và triển khai logic nghiệp vụ.
+`B2B CRM` là ứng dụng doanh nghiệp mẫu dựa trên `nền tảng Jmix` với `AI` tích hợp, minh họa cách phát triển các hệ thống kinh doanh sẵn sàng cho môi trường sản xuất, bao gồm `khách hàng`, `đơn hàng`, `hóa đơn`, `tài chính` và `phân tích dữ liệu`.
 
 ## 📑 Mục lục
 
-- [Tổng quan](#-tổng-quan)
 - [Ngăn xếp công nghệ](#-ngăn-xếp-công-nghệ)
-- [Các add-on được sử dụng](#-các-add-on-được-sử-dụng)
-- [Xây dựng và chạy ứng dụng](#-xây-dựng-và-chạy-ứng-dụng)
+- [Tổng quan](#-tổng-quan)
 - [Trợ lý AI](#-trợ-lý-ai)
+- [Các add-on](#-các-add-on-được-sử-dụng)
+- [Xây dựng và chạy ứng dụng](#-xây-dựng-và-chạy-ứng-dụng)
 - [Dữ liệu mẫu](#-dữ-liệu-mẫu)
 - [Tài khoản ứng dụng](#-tài-khoản-ứng-dụng)
 - [Mô hình miền](#-mô-hình-miền)
 - [Mô hình vai trò](#-mô-hình-vai-trò)
+- [Tìm hiểu thêm về Jmix](#ℹ-tìm-hiểu-thêm-về-jmix)
+- [FAQ](#-faq)
+
+## 🛠️ Ngăn xếp công nghệ
+
+- Java 21
+- Jmix (Spring Boot & Vaadin Flow)
+- HSQLDB
 
 ## 📖 Tổng quan
+
+<details>
+<summary>📸 Ảnh chụp màn hình (nhấn để mở rộng)</summary>
+
+<br>
+
+<h3>Trang đăng nhập</h3>
+<img width="1496" height="816" alt="Trang đăng nhập" src="../images/screenshots/login-page.png" />
+
+<h3>Bảng điều khiển</h3>
+<img width="1496" height="816" alt="Bảng điều khiển" src="../images/screenshots/dashboard.png" />
+
+<h3>CRM AI</h3>
+<img width="1496" height="818" alt="CRM AI" src="../images/screenshots/crm-ai.png" />
+
+<h3>Khách hàng</h3>
+<img width="1496" height="816" alt="Khách hàng" src="../images/screenshots/clients.png" />
+
+<h3>Đơn hàng</h3>
+<img width="1496" height="817" alt="Đơn hàng" src="../images/screenshots/orders.png" />
+
+<h3>Giới thiệu</h3>
+<img width="1496" height="816" alt="Giới thiệu" src="../images/screenshots/about.png" />
+
+</details>
 
 Dự án này mô phỏng quy trình bán hàng B2B điển hình:
 
@@ -31,11 +63,24 @@ Dự án này mô phỏng quy trình bán hàng B2B điển hình:
 - Theo dõi công việc và các hoạt động gần đây
 - Xem phân tích doanh số bán hàng
 
-## 🛠️ Ngăn xếp công nghệ
+## 🤖 Trợ lý AI
 
-- Java 21
-- Jmix (Spring Boot & Vaadin Flow)
-- HSQLDB
+Ứng dụng bao gồm không gian làm việc `CRM AI` được tích hợp sẵn để phân tích dữ liệu CRM bằng ngôn ngữ tự nhiên.
+
+Các khả năng chính:
+
+- Đặt câu hỏi kinh doanh về khách hàng, đơn hàng, hóa đơn, thanh toán và hiệu suất bán hàng
+- Tôn trọng quyền truy cập dữ liệu của người dùng hiện tại và giữ riêng tư các cuộc trò chuyện
+- Sử dụng các báo cáo nghiệp vụ tích hợp như `Client 360 Report` và `Category Cashflow Risk Allocation Report`
+- Lưu lịch sử hội thoại với tiêu đề được tạo tự động
+- Tải tệp lên cuộc trò chuyện và cho phép trợ lý phân tích tài liệu và hình ảnh được hỗ trợ
+- Tạo liên kết tương tác đến các bản ghi CRM trực tiếp trong câu trả lời
+
+Cấu hình:
+
+- Thiết lập `spring.ai.openai.api-key` trong [application.properties](../src/main/resources/application.properties) hoặc cung cấp biến môi trường `SPRING_AI_OPENAI_APIKEY`
+
+Sau khi được kích hoạt, hãy mở mục `CRM AI` trong menu chính để bắt đầu một cuộc trò chuyện mới.
 
 ## 🧩 Các add-on được sử dụng
 
@@ -55,15 +100,13 @@ Dự án này mô phỏng quy trình bán hàng B2B điển hình:
 
 ### Chạy dự án
 
-1. Chạy cấu hình Jmix cho [B2B CRM](.run/crm-app.run.xml) hoặc thực thi:
+1. Chạy cấu hình Jmix cho [B2B CRM](../.run/crm-app.run.xml) hoặc thực thi:
 
-```bash
-./gradlew bootRun
-```
+   ```bash
+   ./gradlew bootRun
+   ```
 
-2. Mở ứng dụng tại:
-
-http://localhost:8080/b2b-crm
+2. [Mở URL của ứng dụng](http://localhost:8080/b2b-crm)
 
 ### Chạy bằng JAR
 
@@ -91,41 +134,22 @@ docker run --rm -p 8080:8080 jmix-crm
 docker-compose up
 ```
 
-## 🤖 Trợ lý AI
-
-Ứng dụng bao gồm không gian làm việc `CRM AI` được tích hợp sẵn để phân tích dữ liệu CRM bằng ngôn ngữ tự nhiên.
-
-Các khả năng chính:
-
-- Đặt câu hỏi kinh doanh về khách hàng, đơn hàng, hóa đơn, thanh toán và hiệu suất bán hàng
-- Tôn trọng quyền truy cập dữ liệu của người dùng hiện tại và giữ riêng tư các cuộc trò chuyện
-- Sử dụng các báo cáo nghiệp vụ tích hợp như `Client 360 Report` và `Category Cashflow Risk Allocation Report`
-- Lưu lịch sử hội thoại với tiêu đề được tạo tự động
-- Tải tệp lên cuộc trò chuyện và cho phép trợ lý phân tích tài liệu và hình ảnh được hỗ trợ
-- Tạo liên kết tương tác đến các bản ghi CRM trực tiếp trong câu trả lời
-
-Cấu hình:
-
-- Thiết lập `spring.ai.openai.api-key` trong [application.properties](src/main/resources/application.properties) hoặc cung cấp biến môi trường `SPRING_AI_OPENAI_APIKEY`
-
-Sau khi được kích hoạt, hãy mở mục `CRM AI` trong menu chính để bắt đầu một cuộc trò chuyện mới.
-
 ## 🎲 Dữ liệu mẫu
 
 Hồ sơ cục bộ sẽ tạo dữ liệu mẫu khi ứng dụng khởi động:
 
-- Bạn có thể tắt việc tạo dữ liệu mẫu bằng thuộc tính `crm.generateDemoData` trong [application.properties](src/main/resources/application.properties)
-- Danh mục sản phẩm được nhập từ [catalog.xlsx](src/main/resources/demo-data/catalog.xlsx)
+- Bạn có thể tắt việc tạo dữ liệu mẫu bằng thuộc tính `crm.generateDemoData` trong [application.properties](../src/main/resources/application.properties)
+- Danh mục sản phẩm được nhập từ [catalog.xlsx](../src/main/resources/demo-data/catalog.xlsx)
 
 ## 👥 Tài khoản ứng dụng
 
-| Vai trò         | Tên đăng nhập | Mật khẩu | Quyền truy cập                                         |
-|-----------------|---------------|----------|--------------------------------------------------------|
-| Administrator   | `admin`       | admin    | Toàn quyền truy cập dữ liệu và cấu hình                |
-| Supervisor      | `james`       | james    | Manager + quản lý danh mục + phân công tài khoản       |
-| Manager         | `manager`     | manager  | Toàn quyền truy cập khách hàng và đơn hàng             |
-| Account Manager | `alice`       | alice    | Chỉ xem khách hàng được gán cho Alice Brown            |
-| Account Manager | `robert`      | robert   | Chỉ xem khách hàng được gán cho Robert Taylor          |
+| Vai trò         | Tên đăng nhập | Mật khẩu | Quyền truy cập                                   |
+|-----------------|---------------|----------|--------------------------------------------------|
+| Administrator   | `admin`       | admin    | Toàn quyền truy cập dữ liệu và cấu hình          |
+| Supervisor      | `james`       | james    | Manager + quản lý danh mục + phân công tài khoản |
+| Manager         | `manager`     | manager  | Toàn quyền truy cập khách hàng và đơn hàng       |
+| Account Manager | `alice`       | alice    | Chỉ xem khách hàng được gán cho Alice Brown      |
+| Account Manager | `robert`      | robert   | Chỉ xem khách hàng được gán cho Robert Taylor    |
 
 ## ⚙️ Mô hình miền
 
@@ -157,3 +181,38 @@ classDiagram
     - Chỉ có quyền xem danh mục sản phẩm.
     - Quản lý các Task của chính mình.
 - `UI Minimal`: Quyền tối thiểu, cho phép đăng nhập và điều hướng cơ bản.
+
+## ℹ️  Tìm hiểu thêm về Jmix
+
+- 🌐 Trang web: https://www.jmix.io/
+- 📚 Tài liệu: https://docs.jmix.io/
+- 💻 GitHub: https://github.com/jmix-framework/jmix
+- 🎥 YouTube: https://www.youtube.com/@jmixframework
+- 💬 Diễn đàn: https://forum.jmix.io/
+- 💼 LinkedIn: https://www.linkedin.com/company/jmix-framework/
+
+## 💬 FAQ
+
+> Jmix là gì?
+
+Jmix là nền tảng Java full-stack mã nguồn mở dành cho phát triển phần mềm doanh nghiệp với các mô hình cục bộ và công khai.
+Nền tảng này giúp các nhóm phát triển xây dựng ứng dụng nghiệp vụ nội bộ nhanh hơn trong khi vẫn giữ toàn quyền kiểm soát mã nguồn, kiến trúc và triển khai. Jmix kết hợp Java, Spring Boot, giao diện doanh nghiệp, bảo mật, truy cập dữ liệu, công cụ phát triển trực quan và phát triển có sự hỗ trợ của AI trong một nền tảng duy nhất.
+
+Tìm hiểu thêm:
+- https://www.jmix.io/
+- https://docs.jmix.io/
+- https://github.com/jmix-framework/jmix
+
+---
+
+> Vì sao Jmix phù hợp để xây dựng hệ thống CRM?
+
+Hệ thống CRM đã trở thành nền tảng của tự động hóa doanh nghiệp hiện đại, vượt xa một hệ thống lưu trữ bản ghi đơn thuần. Do yêu cầu nghiệp vụ trong bán hàng thay đổi nhanh chóng, hệ thống CRM cũng phải cho phép thay đổi nhanh quy trình, mô hình dữ liệu và UX trong khi vẫn duy trì tiêu chuẩn cao về bảo mật và tuân thủ.
+Jmix cung cấp sẵn các khả năng này, giúp nhà phát triển tập trung vào logic nghiệp vụ thay vì hạ tầng. Bản demo này cho thấy cách xây dựng ứng dụng doanh nghiệp sẵn sàng cho môi trường sản xuất bằng Jmix và AI.
+
+---
+
+> Đây là ứng dụng thật hay chỉ là bản demo?
+
+B2B CRM là ứng dụng demo được thiết kế để minh họa kiến trúc sẵn sàng cho môi trường sản xuất và các thực tiễn phát triển doanh nghiệp.
+Ứng dụng bao gồm các tình huống nghiệp vụ thực tế, giao diện hiện đại, khả năng AI, bảo mật, báo cáo và các mẫu tích hợp có thể tái sử dụng trong các dự án doanh nghiệp của bạn.
