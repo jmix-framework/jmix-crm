@@ -4,23 +4,54 @@
 
 🌐 Sprachen: [English](../README.md) | [Русский](README_ru.md) | [Deutsch](README_de.md) | [Italiano](README_it.md) | [Español](README_es.md) | [Tiếng Việt](README_vi.md) | [Srpski](README_sr.md)
 
-`B2B CRM` ist eine Enterprise-Demoanwendung auf Basis von Jmix, die zeigt, wie **produktionsreife** Geschäftssysteme
-für `Kunden`, `Aufträge`, `Rechnungsstellung`, `Finanzen` und `Analysen` entwickelt werden. <br>Sie bildet reale **ERP/CRM**-Szenarien ab und demonstriert
-Best Practices für Domänenmodellierung, UI, Sicherheit und die Implementierung von Geschäftslogik.
+`B2B CRM` ist eine Enterprise-Demoanwendung auf Basis des `Jmix Frameworks` mit integrierter `AI`, die zeigt, wie produktionsreife Geschäftssysteme für `Kunden`, `Aufträge`, `Rechnungsstellung`, `Finanzen` und `Analysen` entwickelt werden.
 
 ## 📑 Inhaltsverzeichnis
 
-- [Überblick](#-überblick)
 - [Technischer Stack](#-technischer-stack)
-- [Verwendete Add-ons](#-verwendete-add-ons)
-- [Build und Start](#-build-und-start)
+- [Überblick](#-überblick)
 - [AI-Assistent](#-ai-assistent)
+- [Add-ons](#-verwendete-add-ons)
+- [Build & Start](#-build-und-start)
 - [Demo-Daten](#-demo-daten)
 - [Konten](#-anwendungskonten)
 - [Domänenmodell](#-domänenmodell)
 - [Rollenmodell](#-rollenmodell)
+- [Mehr über Jmix](#ℹ-mehr-über-jmix)
+- [FAQ](#-faq)
+
+## 🛠️ Technischer Stack
+
+- Java 21
+- Jmix (Spring Boot & Vaadin Flow)
+- HSQLDB
 
 ## 📖 Überblick
+
+<details>
+<summary>📸 Screenshots (zum Aufklappen klicken)</summary>
+
+<br>
+
+<h3>Anmeldeseite</h3>
+<img width="1496" height="816" alt="Anmeldeseite" src="../images/screenshots/login-page.png" />
+
+<h3>Dashboard</h3>
+<img width="1496" height="816" alt="Dashboard" src="../images/screenshots/dashboard.png" />
+
+<h3>CRM AI</h3>
+<img width="1496" height="818" alt="CRM AI" src="../images/screenshots/crm-ai.png" />
+
+<h3>Kunden</h3>
+<img width="1496" height="816" alt="Kunden" src="../images/screenshots/clients.png" />
+
+<h3>Aufträge</h3>
+<img width="1496" height="817" alt="Aufträge" src="../images/screenshots/orders.png" />
+
+<h3>Über die Anwendung</h3>
+<img width="1496" height="816" alt="Über die Anwendung" src="../images/screenshots/about.png" />
+
+</details>
 
 Dieses Projekt modelliert einen typischen B2B-Vertriebsablauf:
 
@@ -32,11 +63,24 @@ Dieses Projekt modelliert einen typischen B2B-Vertriebsablauf:
 - Aufgaben und letzte Aktivitäten überwachen
 - Vertriebsanalysen anzeigen
 
-## 🛠️ Technischer Stack
+## 🤖 AI-Assistent
 
-- Java 21
-- Jmix (Spring Boot & Vaadin Flow)
-- HSQLDB
+Die Anwendung enthält einen integrierten `CRM AI`-Arbeitsbereich für die natürlichsprachliche Analyse von CRM-Daten.
+
+Wichtige Funktionen:
+
+- Geschäftsfragen zu Kunden, Aufträgen, Rechnungen, Zahlungen und Vertriebsleistung stellen
+- Die Datenzugriffsrechte des aktuellen Benutzers berücksichtigen und Konversationen nur für ihren Autor sichtbar halten
+- Integrierte Geschäftsberichte wie `Client 360 Report` und `Category Cashflow Risk Allocation Report` verwenden
+- Den Konversationsverlauf mit automatisch generierten Chat-Titeln speichern
+- Dateien in die Konversation hochladen und den Assistenten unterstützte Dokumente und Bilder analysieren lassen
+- Interaktive Links zu CRM-Datensätzen direkt in Antworten generieren
+
+Konfiguration:
+
+- Setze `spring.ai.openai.api-key` in [application.properties](../src/main/resources/application.properties) oder stelle die Umgebungsvariable `SPRING_AI_OPENAI_APIKEY` bereit
+
+Nach der Aktivierung öffne den Menüpunkt `CRM AI` im Hauptmenü, um eine neue Konversation zu starten.
 
 ## 🧩 Verwendete Add-ons
 
@@ -90,25 +134,6 @@ docker run --rm -p 8080:8080 jmix-crm
 docker-compose up
 ```
 
-## 🤖 AI-Assistent
-
-Die Anwendung enthält einen integrierten `CRM AI`-Arbeitsbereich für die natürlichsprachliche Analyse von CRM-Daten.
-
-Wichtige Funktionen:
-
-- Geschäftsfragen zu Kunden, Aufträgen, Rechnungen, Zahlungen und Vertriebsleistung stellen
-- Die Datenzugriffsrechte des aktuellen Benutzers berücksichtigen und Konversationen nur für ihren Autor sichtbar halten
-- Integrierte Geschäftsberichte wie `Client 360 Report` und `Category Cashflow Risk Allocation Report` verwenden
-- Den Konversationsverlauf mit automatisch generierten Chat-Titeln speichern
-- Dateien in die Konversation hochladen und den Assistenten unterstützte Dokumente und Bilder analysieren lassen
-- Interaktive Links zu CRM-Datensätzen direkt in Antworten generieren
-
-Konfiguration:
-
-- Setze `spring.ai.openai.api-key` in [application.properties](../src/main/resources/application.properties) oder stelle die Umgebungsvariable `SPRING_AI_OPENAI_APIKEY` bereit
-
-Nach der Aktivierung öffne den Menüpunkt `CRM AI` im Hauptmenü, um eine neue Konversation zu starten.
-
 ## 🎲 Demo-Daten
 
 Das lokale Profil generiert Demo-Daten beim Start der Anwendung:
@@ -119,12 +144,12 @@ Das lokale Profil generiert Demo-Daten beim Start der Anwendung:
 
 ## 👥 Anwendungskonten
 
-| Position        | Benutzername  | Passwort | Zugriff                                         |
-|-----------------|---------------|----------|-------------------------------------------------|
-| Administrator   | ```admin```   | admin    | Vollzugriff auf alle Daten und Einstellungen    |
-| Supervisor      | ```james```   | james    | Manager + Katalogverwaltung + Konten zuweisen   |
-| Manager         | ```manager``` | manager  | Vollzugriff auf alle Kunden und Aufträge        |
-| Account Manager | ```alice```   | alice    | Sieht nur Kunden, die Alice Brown zugewiesen sind |
+| Position        | Benutzername  | Passwort | Zugriff                                             |
+|-----------------|---------------|----------|-----------------------------------------------------|
+| Administrator   | ```admin```   | admin    | Vollzugriff auf alle Daten und Einstellungen        |
+| Supervisor      | ```james```   | james    | Manager + Katalogverwaltung + Konten zuweisen       |
+| Manager         | ```manager``` | manager  | Vollzugriff auf alle Kunden und Aufträge            |
+| Account Manager | ```alice```   | alice    | Sieht nur Kunden, die Alice Brown zugewiesen sind   |
 | Account Manager | ```robert```  | robert   | Sieht nur Kunden, die Robert Taylor zugewiesen sind |
 
 ## ⚙️ Domänenmodell
@@ -157,3 +182,38 @@ Die Anwendung verwendet ein hierarchisches Rollenmodell:
     - Lesezugriff auf den Produktkatalog.
     - Eigene Tasks verwalten.
 - `UI Minimal`: Minimaler Zugriff, der Anmeldung und grundlegende Navigation ermöglicht.
+
+## ℹ️  Mehr über Jmix
+
+- 🌐 Website: https://www.jmix.io/
+- 📚 Dokumentation: https://docs.jmix.io/
+- 💻 GitHub: https://github.com/jmix-framework/jmix
+- 🎥 YouTube: https://www.youtube.com/@jmixframework
+- 💬 Forum: https://forum.jmix.io/
+- 💼 LinkedIn: https://www.linkedin.com/company/jmix-framework/
+
+## 💬 FAQ
+
+> Was ist Jmix?
+
+Jmix ist eine Full-Stack-Open-Source-Java-Plattform für die Entwicklung von Unternehmenssoftware mit lokalen und öffentlichen Modellen.
+Sie hilft Entwicklungsteams, interne Geschäftsanwendungen schneller zu erstellen und dabei die vollständige Kontrolle über Quellcode, Architektur und Deployment zu behalten. Jmix vereint Java, Spring Boot, Enterprise-UI, Sicherheit, Datenzugriff, visuelle Entwicklungswerkzeuge und AI-gestützte Entwicklung in einer einzigen Plattform.
+
+Mehr erfahren:
+- https://www.jmix.io/
+- https://docs.jmix.io/
+- https://github.com/jmix-framework/jmix
+
+---
+
+> Warum ist Jmix gut für den Aufbau von CRM-Systemen geeignet?
+
+CRM-Systeme sind zum Rückgrat der modernen Unternehmensautomatisierung geworden und gehen weit über ein einfaches Aufzeichnungssystem hinaus. Da sich Geschäftsanforderungen im Vertrieb schnell ändern, müssen CRM-Systeme auch die Möglichkeit bieten, Workflows, Datenmodell und UX schnell anzupassen und dabei hohe Sicherheits- und Compliance-Standards einzuhalten.
+Jmix bietet diese Fähigkeiten von Anfang an, sodass sich Entwickler auf die Geschäftslogik statt auf die Infrastruktur konzentrieren können. Diese Demo zeigt, wie produktionsreife Unternehmensanwendungen mit Jmix und AI entwickelt werden können.
+
+---
+
+> Ist das eine echte Anwendung oder nur eine Demo?
+
+B2B CRM ist eine Demoanwendung, die produktionsreife Architektur und Praktiken der Unternehmensentwicklung demonstrieren soll.
+Sie enthält reale Geschäftsszenarien, eine moderne UI, AI-Funktionen, Sicherheit, Reporting und Integrationsmuster, die in eigenen Unternehmensprojekten wiederverwendet werden können.
