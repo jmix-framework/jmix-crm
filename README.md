@@ -28,6 +28,31 @@
 
 ## 📖 Overview
 
+<details>
+<summary>📸 Screenshots (click to expand)</summary>
+
+<br>
+
+<h3>Login Page</h3>
+<img width="1496" height="816" alt="image" src="https://github.com/user-attachments/assets/94a6b258-3f13-4cd1-b2a7-1542a3a80fe7" />
+
+<h3>Dashboard</h3>
+<img width="1496" height="816" alt="image" src="https://github.com/user-attachments/assets/92714051-3269-4ef1-aa0f-71abf78bbdbd" />
+
+<h3>CRM AI</h3>
+<img width="1496" height="818" alt="image" src="https://github.com/user-attachments/assets/0bf5aed8-fc56-48b3-9f16-c149da4a651e" />
+
+<h3>Clients</h3>
+<img width="1496" height="816" alt="image" src="https://github.com/user-attachments/assets/265e3585-5699-4896-9def-27f84466b906" />
+
+<h3>Orders</h3>
+<img width="1496" height="817" alt="image" src="https://github.com/user-attachments/assets/9501a3ba-b1b2-4601-bb75-67a37190ee29" />
+
+<h3>About</h3>
+<img width="1496" height="816" alt="image" src="https://github.com/user-attachments/assets/a8cba95c-ee81-4ca8-8b17-5202ab4b528d" />
+
+</details>
+
 This project models a typical B2B sales workflow:
 
 - Manage the catalog of your products and categories
