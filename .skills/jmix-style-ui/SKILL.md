@@ -63,12 +63,66 @@ Do not re-implement a badge or a size variant with hand-written CSS:
 
 ```java
 avatar.addThemeVariants(AvatarVariant.LARGE);
-badge.getElement().getThemeList().addAll(List.of("badge", "pill"));   // Vaadin badge theme
+badge.getElement().getThemeList().addAll(List.of("badge", "pill"));   // badge theme: Vaadin's under Lumo, Jmix's under Aura
 ```
 
 `ThemeList` holds single tokens — `add("badge pill")` happens to render (the
 attribute joins entries with spaces) but stores one bogus entry, so a later
 `remove("pill")` or `contains("badge")` silently does nothing.
+
+**A variant name is theme-specific, exactly like a token.** A `*Variant` constant
+is only a string the theme has to style: `ButtonVariant.LUMO_TERTIARY_INLINE`
+sets `theme="tertiary-inline"`, Aura has no rule for that name, and the call
+therefore does nothing — the button keeps its default background, border, and
+shadow. One enum holds all the families — `LUMO_*`, `AURA_*`, and theme-neutral
+constants (`PRIMARY`, `TERTIARY`, `SUCCESS`, `WARNING`, `ERROR`, `SMALL`,
+`LARGE`) — and they all compile the same. Prefer the theme-neutral constant, and
+confirm the active theme styles the name it maps to:
+
+**Grep every stylesheet the app declares, not just the Vaadin one.** A Jmix app
+loads `Aura.STYLESHEET` *and* `JmixAura.STYLESHEET`, and each layer brings its own
+`[theme~=...]` rules, so a name missing from one may be styled by the other. The
+`badge` and `pill` above are exactly that case: they come from the Jmix layer, and
+a grep of the Vaadin jar alone reports them as unstyled.
+
+```bash
+# the cache usually holds several versions — list them and set the two variables
+# to the ones matching the project's Vaadin and Jmix versions
+find ~/.gradle/caches \( -name 'vaadin-aura-theme-*.jar' \
+  -o -name 'jmix-flowui-themes-*.jar' \) ! -name '*-sources.jar'
+JAR=...     # vaadin-aura-theme-<vaadin version>.jar
+JMIX=...    # jmix-flowui-themes-<jmix version>.jar
+
+# 1. the Vaadin layer (Aura.STYLESHEET) — one file, values unquoted
+unzip -p "$JAR" 'META-INF/resources/aura/aura.css' \
+  | grep -ohE "theme~=['\"]?[a-z0-9-]+" | sed -E "s/theme~=['\"]?//" | sort -u
+
+# 2. the Jmix layer (JmixAura.STYLESHEET) — ~120 files, values quoted.
+# Extract, then grep: a member glob is not portable, because on Windows unzip a
+# '*' does not cross '/', so 'META-INF/resources/themes/jmix-aura/*.css' matches
+# only the top-level file and prints nothing. Same reason the whole jar comes
+# out, not just the theme folder — it is under 1 MB.
+DIR=$(mktemp -d)
+unzip -oq "$JMIX" -d "$DIR"
+grep -rhoE "theme~=['\"]?[a-z0-9-]+" "$DIR/META-INF/resources/themes/jmix-aura" \
+  | sed -E "s/theme~=['\"]?//" | sort -u
+```
+
+Under Lumo the same two commands read `META-INF/resources/lumo/lumo.css` in
+`vaadin-lumo-theme-*.jar` and the extracted `themes/jmix-lumo` folder from the
+same Jmix jar. If grep reports the folder does not exist, check the version you
+picked — Jmix 2.x ships `jmix-lumo` only. A third place a name can be styled is
+the project's own theme CSS — grep that folder too.
+
+Across both layers (Aura 25.1/25.2 with Jmix 3.0/3.1) `primary` and `tertiary`
+are styled, but `tertiary-inline` appears in neither — a name a Lumo-era call site
+is likely to carry.
+
+**Read the selector, not just the name.** A hit does not mean the variant works on
+your component. In the Jmix layer `contrast` exists only as
+`[theme~='badge'][theme~='contrast']` and `icon` only on one specific menu bar, so
+on a plain button both still do nothing. (`icon-button` is a different name, not a
+match for `icon`.)
 
 **3. Inline `getStyle().set(...)` — last resort.** Correct for a one-off dynamic
 value (a color computed from data, a width from a measurement), not for a look
@@ -200,9 +254,22 @@ inherited value — that difference is the check. Do the same for
 `borderRadius`/`borderColor` when you set them. If no browser tool is available,
 say `styling not browser-verified` rather than calling it done.
 
+The same check catches a dead theme variant, because a variant the theme does not
+style computes exactly like the component with no variant at all:
+
+```js
+getComputedStyle(document.querySelector('#orderButton')).backgroundColor
+```
+
+Under Aura a working `tertiary` gives `rgba(0, 0, 0, 0)`; a name the theme never
+styles gives the default button fill. Compare against a plain component of the
+same type — if the two match, the variant did nothing.
+
 ## Forbidden
 
 - `--lumo-*` tokens in an Aura app, or `--aura-*` in a Lumo app.
+- A `LUMO_*` theme variant in an Aura app (or `AURA_*` in a Lumo app) whose
+  variant string the active theme does not style — it compiles and does nothing.
 - A guessed token name — confirm it in the active theme's stylesheet first.
 - Inline `getStyle().set(...)` for a look that a component theme variant or a
   reusable CSS class already provides.
