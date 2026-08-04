@@ -1,0 +1,4 @@
+<!-- rendered from PROJECT snippet: studio-templates/snippet/crmListFooter.xml (UI-agnostic folder) -->
+<hbox id="crmFooter" width="100%" classNames="crm-project-footer">
+    <span id="crmFooterLabel" text="${entityName} list generated from the project template"/>
+</hbox>

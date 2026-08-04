@@ -1,0 +1,81 @@
+<%def isEmbedded(attr) {
+    return attr.hasAnnotation('Embedded') || attr.hasAnnotation('EmbeddedId')
+}
+
+def columns = []
+
+fetchPlan.orderedRootProperties.each { property ->
+    def attr = entity.getAttribute(property.name)
+    if (attr == null || !attr.allowPutToDataAware()) {
+        return
+    }
+    if (!isEmbedded(attr)
+        && !attr.hasAnnotation('OneToMany') && !attr.hasAnnotation('ManyToMany')
+        && !columns.contains(property.name)
+        && !attr.isElementCollection()
+        && !attr.isDeepInheritor('java.net.URI')) {
+        columns << property.name
+    } else if (property.entity != null) {
+        def subProperties = property.subProperties
+        def propEntity = property.entity
+        subProperties.each { subProp ->
+            def subPropAttr = propEntity.getAttribute(subProp.name)
+            if (subPropAttr != null && !isEmbedded(subPropAttr)
+                && !subPropAttr.hasAnnotation('OneToMany') && !subPropAttr.hasAnnotation('ManyToMany')
+                && !subPropAttr.hasAnnotation('SystemLevel')
+                && !columns.contains("${property.name}.${subProp.name}")) {
+                    columns << "${property.name}.${subProp.name}"
+            }
+        }
+    }
+}
+
+private String getXmlNamespace() {
+    if (tableType.xmlName.contains(':')) {
+        def index = tableType.xmlName.indexOf(':') + 1
+        return tableType.xmlName.substring(0, index)
+    } else {
+        return ""
+    }
+}
+
+def xmlNs = getXmlNamespace()
+def isGroupDataGridTable = tableType.getXmlName().equals("groupg:groupDataGrid")
+
+%>
+<!-- rendered from PROJECT snippet: studio-templates/snippet/flowui/table.xml -->
+<hbox id="buttonsPanel" wrap="true" width="100%">
+<startSlot>
+<%tableActions.each { actionId ->%>
+<button id="${actionId}Button" action="${tableId}.${actionId}Action"/>
+<%}%>
+</startSlot>
+<endSlot>
+<simplePagination id="pagination" dataLoader="${tableDl}"/>
+</endSlot>
+</hbox>
+<${tableType.xmlName} id="${tableId}"
+        classNames="crm-project-data-grid"
+        width="100%"
+        minHeight="20em"
+        dataContainer="${tableDc}"<%
+        (tableType.isHierarchical()) ? print("\nhierarchyProperty=\"${hierarchicalProperty}\"") : print("")
+        if (columnReorderingAllowed) {%>\n columnReorderingAllowed="true"<%}
+        if (multiselect) {%>\n selectionMode="MULTI"<%}%>>
+    <${xmlNs}actions><%tableActions.each { actionId ->
+    if (actionSearch != null && jmixProjectModule != null) {
+    def actionDescription = actionSearch.getActionDescriptionBy(actionId, jmixProjectModule)
+    %>
+    <${xmlNs}action id="${actionDescription.getId()}Action" type="${actionDescription.getType()}"/>
+    <%} else {%>
+    <${xmlNs}action id="${actionId}Action" type="list_${actionId}"/>
+    <%}%>
+    <%}%>
+    </${xmlNs}actions>
+    <${xmlNs}columns<%if (resizableColumns) {%> resizable="true"<%}%>>
+    <%if (isGroupDataGridTable) {%><${xmlNs}groupColumn key="groupColumn"/><%}%>
+    <%columns.each {column ->%>
+        <${xmlNs}column property="${column}"/>
+    <%}%>
+    </${xmlNs}columns>
+</${tableType.xmlName}>

@@ -1,0 +1,79 @@
+<%
+def pluralForm = api.pluralForm(entity.uncapitalizedClassName)
+tableId = "${pluralForm}DataGrid"
+def tableDc = entity.uncapitalizedClassName.equals(pluralForm) ? pluralForm + "CollectionDc" : pluralForm + "Dc"
+def tableDl = entity.uncapitalizedClassName.equals(pluralForm) ? pluralForm + "CollectionDl" : pluralForm + "Dl"
+
+private Object getActionSearchSafely() {
+    try {
+        return actionSearch
+    } catch(Exception e) {
+        return null
+    }
+}
+
+def groupDataGridNamespace = tableType.getXmlName().equals("groupg:groupDataGrid")
+        ? ' xmlns:groupg="http://jmix.io/schema/groupgrid/ui"'
+        : ''
+
+// resolved from studio-templates/snippet/flowui/table.xml (project override of the standard snippet)
+def tableXml = api.processSnippet('table.xml',
+        ['jmixProjectModule': api.jmixProjectModule,
+        'actionSearch': getActionSearchSafely(),
+        'tableActions': tableActions,
+        'entity': entity,
+        'fetchPlan': listFetchPlan,
+        'tableDc': tableDc,
+        'tableDl': tableDl,
+        'tableType': tableType,
+        'tableId': tableId,
+        'multiselect': multiselect,
+        'columnReorderingAllowed': columnReorderingAllowed,
+        'resizableColumns': resizableColumns,
+        'hierarchicalProperty': binding.hasVariable('tableType_hierarchicalProperty') ? binding.getVariable('tableType_hierarchicalProperty') : null])
+
+// resolved from studio-templates/snippet/crmListFooter.xml (project-only snippet)
+def footerXml = api.processSnippet('crmListFooter.xml', ['entityName': entity.className])
+%><?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      ${groupDataGridNamespace}
+      xmlns:c="http://jmix.io/schema/flowui/jpql-condition"
+      title="${messageKeys['viewTitle']}"
+      focusComponent="${tableId}">
+    <data>
+        <collection id="${tableDc}"
+                    class="${entity.fqn}"<%if (!is_inline_listFetchPlan) {%>
+        fetchPlan="${listFetchPlan.name}"<%}%>> <%if (is_inline_listFetchPlan) {%>
+            ${inline_listFetchPlan}
+            <%}%><loader id="${tableDl}" readOnly="true">
+                <query>
+                    <![CDATA[select e from ${entity.name} e]]>
+                </query>
+            </loader>
+        </collection>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+        <urlQueryParameters><%if (createGenericFilter) {%>
+            <genericFilter component="genericFilter"/><%}%>
+            <pagination component="pagination"/>
+        </urlQueryParameters>
+    </facets>
+    <actions>
+        <action id="selectAction" type="lookup_select"/>
+        <action id="discardAction" type="lookup_discard"/>
+    </actions>
+    <layout>
+        <%if (createGenericFilter) {%>
+        <genericFilter id="genericFilter"
+                       dataLoader="${tableDl}">
+            <properties include=".*"/>
+        </genericFilter><%}%>
+        ${tableXml}
+        ${footerXml}
+        <hbox id="lookupActions" visible="false">
+            <button id="selectButton" action="selectAction"/>
+            <button id="discardButton" action="discardAction"/>
+        </hbox>
+    </layout>
+</view>
