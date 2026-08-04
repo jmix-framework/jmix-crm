@@ -31,8 +31,6 @@
 <details>
 <summary>📸 Ảnh chụp màn hình (nhấn để mở rộng)</summary>
 
-<br>
-
 <h3>Trang đăng nhập</h3>
 <img width="1496" height="816" alt="Trang đăng nhập" src="../images/screenshots/login-page.png" />
 
@@ -53,32 +51,50 @@
 
 </details>
 
+### ✨ Tính năng chính
+
 Dự án này mô phỏng quy trình bán hàng B2B điển hình:
 
 - Quản lý danh mục sản phẩm và nhóm sản phẩm
-- Quản lý khách hàng và thông tin liên hệ
-- Theo dõi đơn hàng và các dòng sản phẩm trong đơn hàng
+- Quản lý khách hàng, người liên hệ và địa chỉ
+- Theo dõi đơn hàng theo phễu bán hàng
 - Phát hành hóa đơn và ghi nhận thanh toán
-- Đặt câu hỏi kinh doanh cho trợ lý AI
-- Theo dõi công việc và các hoạt động gần đây
-- Xem phân tích doanh số bán hàng
+- Lập kế hoạch và theo dõi công việc của người dùng
+- Hỏi trợ lý AI tích hợp để có thông tin phân tích kinh doanh
+- Xem phân tích doanh số trên bảng điều khiển và trong các báo cáo tích hợp
+
+#### 📈 Tự động hóa bán hàng
+
+`B2B CRM` giúp nhân viên bán hàng tự động hóa quy trình bán hàng: hệ thống theo dõi các thương vụ, hóa đơn, thanh toán và công việc của người dùng, đồng thời cung cấp phân tích nhanh về khách hàng. Ví dụ, hệ thống có thể nhanh chóng trả lời những câu hỏi thường gặp như:
+
+- Có bao nhiêu thương vụ đang ở giai đoạn tiền bán hàng hoặc đang chờ thanh toán, và với tổng giá trị bao nhiêu
+- Những khách hàng nào dẫn đầu về doanh thu và những khách hàng nào tụt lại phía sau — và ở những nhóm sản phẩm nào
+- Các khách hàng được chọn mua hàng thường xuyên như thế nào
+- Các đề xuất cho một khách hàng so sánh với nhau ra sao, và mức giảm giá tối đa cho một nhóm sản phẩm cụ thể là bao nhiêu
+
+Thông thường, những yêu cầu như vậy đòi hỏi phải cấu hình các báo cáo chuyên biệt và cần đến chuyên môn của nhà phân tích. Trong `B2B CRM`, chỉ cần viết yêu cầu bằng ngôn ngữ tự nhiên: [Trợ lý AI](#-trợ-lý-ai) tích hợp giúp phân tích doanh số bằng cách tổng hợp dữ liệu về thương vụ, hóa đơn và thanh toán, đồng thời tôn trọng quyền truy cập dữ liệu của người dùng.
+
+#### 🔽 Phễu bán hàng
+
+Màn hình `Đơn hàng` có phễu bán hàng tương tác dựa trên trạng thái đơn hàng: `Mới` → `Đã chấp nhận` → `Đang thực hiện` → `Hoàn tất`. Mỗi giai đoạn hiển thị số lượng đơn hàng ở giai đoạn đó, và chỉ một cú nhấp chuột sẽ đưa nhân viên bán hàng đến các đơn hàng của giai đoạn được chọn — cùng với tổng số tiền, số tiền đã xuất hóa đơn, đã thanh toán và còn lại của từng đơn hàng.
 
 ## 🤖 Trợ lý AI
 
 Ứng dụng bao gồm không gian làm việc `CRM AI` được tích hợp sẵn để phân tích dữ liệu CRM bằng ngôn ngữ tự nhiên.
 
-Các khả năng chính:
+#### ✨ Các khả năng chính:
 
 - Đặt câu hỏi kinh doanh về khách hàng, đơn hàng, hóa đơn, thanh toán và hiệu suất bán hàng
+- Tải các thực thể và tệp lên ngữ cảnh cuộc trò chuyện
 - Tôn trọng quyền truy cập dữ liệu của người dùng hiện tại và giữ riêng tư các cuộc trò chuyện
 - Sử dụng các báo cáo nghiệp vụ tích hợp như `Client 360 Report` và `Category Cashflow Risk Allocation Report`
 - Lưu lịch sử hội thoại với tiêu đề được tạo tự động
-- Tải tệp lên cuộc trò chuyện và cho phép trợ lý phân tích tài liệu và hình ảnh được hỗ trợ
 - Tạo liên kết tương tác đến các bản ghi CRM trực tiếp trong câu trả lời
 
-Cấu hình:
+#### ⚙️ Cấu hình:
 
-- Thiết lập `spring.ai.openai.api-key` trong [application.properties](../src/main/resources/application.properties) hoặc cung cấp biến môi trường `SPRING_AI_OPENAI_APIKEY`
+Thiết lập `spring.ai.openai.api-key` trong [application.properties](../src/main/resources/application.properties)
+hoặc cung cấp biến môi trường `SPRING_AI_OPENAI_APIKEY`.
 
 Sau khi được kích hoạt, hãy mở mục `CRM AI` trong menu chính để bắt đầu một cuộc trò chuyện mới.
 
@@ -92,15 +108,13 @@ Sau khi được kích hoạt, hãy mở mục `CRM AI` trong menu chính để 
 - [Dynamic attributes](https://www.jmix.io/marketplace/dynamic-attributes/)
 - [Grid export](https://www.jmix.io/marketplace/grid-export-actions/)
 - [Reports](https://www.jmix.io/marketplace/reports/)
-- Local file storage, Localizations
+- Local File Storage, Localizations
 
 ## 🚀 Xây dựng và chạy ứng dụng
 
-Điều kiện tiên quyết: Java 21+
+#### Chạy dự án
 
-### Chạy dự án
-
-1. Chạy cấu hình Jmix cho [B2B CRM](../.run/crm-app.run.xml) hoặc thực thi:
+1. Chạy cấu hình Jmix cho [B2B CRM](../.run/crm-app.run.xml) hoặc thực thi
 
    ```bash
    ./gradlew bootRun
@@ -108,7 +122,7 @@ Sau khi được kích hoạt, hãy mở mục `CRM AI` trong menu chính để 
 
 2. [Mở URL của ứng dụng](http://localhost:8080/b2b-crm)
 
-### Chạy bằng JAR
+#### Chạy bằng JAR:
 
 ```bash
 ./gradlew bootJar -Pvaadin.productionMode
@@ -118,7 +132,7 @@ Sau khi được kích hoạt, hãy mở mục `CRM AI` trong menu chính để 
 java -jar build/libs/crm.jar
 ```
 
-### Chạy bằng Docker
+#### Chạy bằng Docker
 
 ```bash
 docker build -t jmix-crm .
@@ -128,7 +142,7 @@ docker build -t jmix-crm .
 docker run --rm -p 8080:8080 jmix-crm
 ```
 
-### Chạy bằng Docker Compose
+#### Chạy bằng Docker Compose
 
 ```bash
 docker-compose up
@@ -138,7 +152,8 @@ docker-compose up
 
 Hồ sơ cục bộ sẽ tạo dữ liệu mẫu khi ứng dụng khởi động:
 
-- Bạn có thể tắt việc tạo dữ liệu mẫu bằng thuộc tính `crm.generateDemoData` trong [application.properties](../src/main/resources/application.properties)
+- Bạn có thể tắt việc tạo dữ liệu mẫu bằng thuộc tính `crm.generateDemoData`
+  trong [application.properties](../src/main/resources/application.properties)
 - Danh mục sản phẩm được nhập từ [catalog.xlsx](../src/main/resources/demo-data/catalog.xlsx)
 
 ## 👥 Tài khoản ứng dụng
@@ -160,11 +175,9 @@ classDiagram
     Client o-- Invoice
     Client o-- Payment
     Client o-- Address
-
     Order *-- OrderItem
     OrderItem --> CategoryItem
     Category o-- CategoryItem
-
     Invoice o-- Payment
 ```
 
@@ -172,24 +185,23 @@ classDiagram
 
 Ứng dụng sử dụng mô hình vai trò phân cấp:
 
-- `Administrator`: Toàn quyền truy cập tất cả tính năng, thực thể và cấu hình của ứng dụng.
-- `Supervisor`: Mở rộng vai trò Manager với các khả năng quản trị bổ sung:
-    - Quản lý danh mục sản phẩm (Categories và Category Items).
-    - Gán Account Manager cho khách hàng.
-- `Manager`: Vai trò chính cho hoạt động bán hàng.
-    - Toàn quyền truy cập Clients, Contacts, Orders, Invoices và Payments.
-    - Chỉ có quyền xem danh mục sản phẩm.
-    - Quản lý các Task của chính mình.
-- `UI Minimal`: Quyền tối thiểu, cho phép đăng nhập và điều hướng cơ bản.
+| Vai trò         | Mô tả                                                                                                                                                                         |
+|-----------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `Administrator` | Toàn quyền truy cập tất cả tính năng, thực thể và cấu hình của ứng dụng.                                                                                                       |
+| `Supervisor`    | Mở rộng vai trò `Manager` với các khả năng quản trị bổ sung: quản lý danh mục sản phẩm và gán Account Manager cho khách hàng.                                                  |
+| `Manager`       | Vai trò chính cho hoạt động bán hàng. Toàn quyền truy cập Clients, Contacts, Orders, Invoices và Payments. Chỉ có quyền xem danh mục sản phẩm. Quản lý các Task của chính mình. |
+| `UI Minimal`    | Quyền tối thiểu, cho phép đăng nhập và điều hướng cơ bản.                                                                                                                      |
 
-## ℹ️  Tìm hiểu thêm về Jmix
+## ℹ️ Tìm hiểu thêm về Jmix
 
-- 🌐 Trang web: https://www.jmix.io/
-- 📚 Tài liệu: https://docs.jmix.io/
-- 💻 GitHub: https://github.com/jmix-framework/jmix
-- 🎥 YouTube: https://www.youtube.com/@jmixframework
-- 💬 Diễn đàn: https://forum.jmix.io/
-- 💼 LinkedIn: https://www.linkedin.com/company/jmix-framework/
+| Nguồn         | Liên kết                                        |
+|---------------|-------------------------------------------------|
+| 🌐 Trang web  | https://www.jmix.io                             |
+| 📚 Tài liệu   | https://docs.jmix.io                            |
+| 💬 Diễn đàn   | https://forum.jmix.io                           |
+| 💻 GitHub     | https://github.com/jmix-framework/jmix          |
+| 🎥 YouTube    | https://www.youtube.com/@jmixframework          |
+| 💼 LinkedIn   | https://www.linkedin.com/company/jmix-framework |
 
 ## 💬 FAQ
 
@@ -198,10 +210,13 @@ classDiagram
 Jmix là nền tảng Java full-stack mã nguồn mở dành cho phát triển phần mềm doanh nghiệp với các mô hình cục bộ và công khai.
 Nền tảng này giúp các nhóm phát triển xây dựng ứng dụng nghiệp vụ nội bộ nhanh hơn trong khi vẫn giữ toàn quyền kiểm soát mã nguồn, kiến trúc và triển khai. Jmix kết hợp Java, Spring Boot, giao diện doanh nghiệp, bảo mật, truy cập dữ liệu, công cụ phát triển trực quan và phát triển có sự hỗ trợ của AI trong một nền tảng duy nhất.
 
-Tìm hiểu thêm:
-- https://www.jmix.io/
-- https://docs.jmix.io/
-- https://github.com/jmix-framework/jmix
+**Tìm hiểu thêm:**
+
+| Nguồn     | Liên kết                               |
+|-----------|----------------------------------------|
+| Trang web | https://www.jmix.io/                   |
+| Tài liệu  | https://docs.jmix.io/                  |
+| GitHub    | https://github.com/jmix-framework/jmix |
 
 ---
 

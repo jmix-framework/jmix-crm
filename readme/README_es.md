@@ -31,8 +31,6 @@
 <details>
 <summary>📸 Capturas de pantalla (haz clic para expandir)</summary>
 
-<br>
-
 <h3>Página de inicio de sesión</h3>
 <img width="1496" height="816" alt="Página de inicio de sesión" src="../images/screenshots/login-page.png" />
 
@@ -53,32 +51,50 @@
 
 </details>
 
-Este proyecto modela un flujo típico de ventas B2B para:
+### ✨ Características principales
 
-- gestionar el catálogo de productos y categorías
-- mantener clientes y contactos
-- hacer seguimiento de pedidos y líneas de pedido
-- emitir facturas y registrar pagos
-- preguntar a un asistente de IA por perspectivas de negocio
-- supervisar tareas y actividades recientes
-- ver analítica de ventas
+Este proyecto modela un flujo típico de ventas B2B:
+
+- Gestionar el catálogo de productos y categorías
+- Mantener clientes, contactos y direcciones
+- Hacer seguimiento de los pedidos a través del embudo de ventas
+- Emitir facturas y registrar pagos
+- Planificar y controlar las tareas de usuario
+- Preguntar al asistente de IA integrado por perspectivas de negocio
+- Ver la analítica de ventas en el panel de control y en los informes integrados
+
+#### 📈 Automatización de ventas
+
+`B2B CRM` ayuda a los responsables de ventas a automatizar el proceso de ventas: el sistema lleva el control de las oportunidades, las facturas, los pagos y las tareas de usuario, y ofrece analítica rápida sobre los clientes. Por ejemplo, puede responder rápidamente a preguntas habituales como:
+
+- Cuántas oportunidades están en la fase de preventa o esperando el pago, y por qué importe total
+- Qué clientes son los líderes en ingresos y cuáles los rezagados — y en qué categorías de producto
+- Con qué frecuencia compran los clientes seleccionados
+- Cómo se comparan entre sí las propuestas para un cliente y cuáles fueron los descuentos máximos en una categoría de producto concreta
+
+Normalmente, estas consultas requieren configurar informes especializados y conocimientos de analista. En `B2B CRM` basta con escribir la consulta en lenguaje natural: el [Asistente de IA](#-asistente-de-ia) integrado ayuda a analizar las ventas agregando datos de oportunidades, facturas y pagos, respetando los permisos de acceso a datos del usuario.
+
+#### 🔽 Embudo de ventas
+
+La pantalla `Pedidos` incluye un embudo de ventas interactivo basado en los estados de los pedidos: `Nuevo` → `Aceptado` → `En curso` → `Completado`. Cada etapa muestra el número de pedidos que hay en ella, y con un solo clic el manager accede a los pedidos de la etapa seleccionada — con los importes total, facturado, pagado y pendiente de cada pedido.
 
 ## 🤖 Asistente de IA
 
 La aplicación incluye un espacio de trabajo integrado `CRM AI` para el análisis de datos CRM en lenguaje natural.
 
-Capacidades principales:
+#### ✨ Capacidades clave:
 
 - Hacer preguntas de negocio sobre clientes, pedidos, facturas, pagos y rendimiento de ventas
+- Subir entidades y archivos al contexto de la conversación
 - Respetar los permisos de acceso a datos del usuario actual y mantener las conversaciones privadas para su autor
 - Usar informes de negocio integrados como `Client 360 Report` y `Category Cashflow Risk Allocation Report`
 - Mantener el historial de conversación con títulos de chat generados automáticamente
-- Subir archivos a la conversación y permitir que el asistente analice documentos e imágenes compatibles
 - Generar enlaces interactivos a registros CRM directamente en las respuestas
 
-Configuración:
+#### ⚙️ Configuración:
 
-- Define `spring.ai.openai.api-key` en [application.properties](../src/main/resources/application.properties) o proporciona la variable de entorno `SPRING_AI_OPENAI_APIKEY`
+Define `spring.ai.openai.api-key` en [application.properties](../src/main/resources/application.properties)
+o proporciona la variable de entorno `SPRING_AI_OPENAI_APIKEY`.
 
 Cuando esté habilitado, abre el elemento `CRM AI` en el menú principal para iniciar una nueva conversación.
 
@@ -92,13 +108,11 @@ Cuando esté habilitado, abre el elemento `CRM AI` en el menú principal para in
 - [Dynamic attributes](https://www.jmix.io/marketplace/dynamic-attributes/)
 - [Grid export](https://www.jmix.io/marketplace/grid-export-actions/)
 - [Reports](https://www.jmix.io/marketplace/reports/)
-- Local file storage, Localizations
+- Local File Storage, Localizations
 
 ## 🚀 Build y ejecución
 
-Requisitos: Java 21+
-
-### Para ejecutar el proyecto
+#### Ejecutar el proyecto
 
 1. Ejecuta la configuración Jmix [B2B CRM](../.run/crm-app.run.xml) o ejecuta
 
@@ -108,7 +122,7 @@ Requisitos: Java 21+
 
 2. [Abre la URL de la aplicación](http://localhost:8080/b2b-crm)
 
-### Ejecutar mediante JAR
+#### Ejecutar mediante JAR:
 
 ```bash
 ./gradlew bootJar -Pvaadin.productionMode
@@ -118,7 +132,7 @@ Requisitos: Java 21+
 java -jar build/libs/crm.jar
 ```
 
-### Ejecutar mediante Docker
+#### Ejecutar mediante Docker
 
 ```bash
 docker build -t jmix-crm .
@@ -128,7 +142,7 @@ docker build -t jmix-crm .
 docker run --rm -p 8080:8080 jmix-crm
 ```
 
-### Ejecutar mediante Docker Compose
+#### Ejecutar mediante Docker Compose
 
 ```bash
 docker-compose up
@@ -144,13 +158,13 @@ El perfil local genera datos demo al iniciar la aplicación:
 
 ## 👥 Cuentas de la aplicación
 
-| Puesto                                    | Usuario   | Contraseña | Acceso                                                |
-| ----------------------------------------- | --------- | ---------- | ----------------------------------------------------- |
-| Administrador del sistema (Administrator) | `admin`   | admin      | Acceso completo a todos los datos y configuraciones   |
-| Supervisor                                | `james`   | james      | Manager + gestión de catálogo + asignación de cuentas |
-| Manager                                   | `manager` | manager    | Acceso completo a todos los clientes y pedidos        |
-| Gestora de cuenta (Account Manager)       | `alice`   | alice      | Solo ve clientes asignados a Alice Brown              |
-| Gestor de cuenta (Account Manager)        | `robert`  | robert     | Solo ve clientes asignados a Robert Taylor            |
+| Puesto          | Usuario   | Contraseña | Acceso                                                |
+|-----------------|-----------|------------|-------------------------------------------------------|
+| Administrator   | `admin`   | admin      | Acceso completo a todos los datos y configuraciones   |
+| Supervisor      | `james`   | james      | Manager + gestión de catálogo + asignación de cuentas |
+| Manager         | `manager` | manager    | Acceso completo a todos los clientes y pedidos        |
+| Account Manager | `alice`   | alice      | Solo ve clientes asignados a Alice Brown              |
+| Account Manager | `robert`  | robert     | Solo ve clientes asignados a Robert Taylor            |
 
 ## ⚙️ Modelo de dominio
 
@@ -161,11 +175,9 @@ classDiagram
     Client o-- Invoice
     Client o-- Payment
     Client o-- Address
-
     Order *-- OrderItem
     OrderItem --> CategoryItem
     Category o-- CategoryItem
-
     Invoice o-- Payment
 ```
 
@@ -173,24 +185,23 @@ classDiagram
 
 La aplicación usa un modelo jerárquico de roles:
 
-- `Administrator`: acceso completo a todas las funciones, entidades y configuraciones de la aplicación.
-- `Supervisor`: como el rol Manager (ver más abajo), pero con capacidades administrativas adicionales:
-  - Gestiona el catálogo de productos, incluidas Categories y Category Items.
-  - Asigna Account Managers a Clients.
-- `Manager`: rol principal para operaciones de ventas.
-  - Acceso completo a Clients, Contacts, Orders, Invoices y Payments.
-  - Acceso de solo lectura al catálogo de productos.
-  - Gestión de sus propias Tasks.
-- `UI Minimal`: acceso mínimo que permite iniciar sesión y navegación básica.
+| Rol             | Descripción                                                                                                                                                                                    |
+|-----------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `Administrator` | Acceso completo a todas las funciones, entidades y configuraciones de la aplicación.                                                                                                           |
+| `Supervisor`    | Extiende el rol `Manager` con capacidades administrativas adicionales: gestionar el catálogo de productos y asignar Account Managers a los clientes.                                           |
+| `Manager`       | Rol principal para las operaciones de ventas. Acceso completo a Clients, Contacts, Orders, Invoices y Payments. Acceso de solo lectura al catálogo de productos. Gestión de sus propias Tasks. |
+| `UI Minimal`    | Acceso mínimo que permite iniciar sesión y navegación básica.                                                                                                                                  |
 
-## ℹ️  Más sobre Jmix
+## ℹ️ Más sobre Jmix
 
-- 🌐 Sitio web: https://www.jmix.io/
-- 📚 Documentación: https://docs.jmix.io/
-- 💻 GitHub: https://github.com/jmix-framework/jmix
-- 🎥 YouTube: https://www.youtube.com/@jmixframework
-- 💬 Foro: https://forum.jmix.io/
-- 💼 LinkedIn: https://www.linkedin.com/company/jmix-framework/
+| Fuente          | Enlace                                          |
+|-----------------|-------------------------------------------------|
+| 🌐 Sitio web    | https://www.jmix.io                             |
+| 📚 Documentación | https://docs.jmix.io                            |
+| 💬 Foro         | https://forum.jmix.io                           |
+| 💻 GitHub       | https://github.com/jmix-framework/jmix          |
+| 🎥 YouTube      | https://www.youtube.com/@jmixframework          |
+| 💼 LinkedIn     | https://www.linkedin.com/company/jmix-framework |
 
 ## 💬 FAQ
 
@@ -199,10 +210,13 @@ La aplicación usa un modelo jerárquico de roles:
 Jmix es una plataforma Java full-stack de código abierto para el desarrollo de software empresarial con modelos locales y públicos.
 Ayuda a los equipos de desarrollo a crear aplicaciones de negocio internas más rápido manteniendo el control total sobre el código fuente, la arquitectura y el despliegue. Jmix combina Java, Spring Boot, UI empresarial, seguridad, acceso a datos, herramientas de desarrollo visual y desarrollo asistido por IA en una única plataforma.
 
-Más información:
-- https://www.jmix.io/
-- https://docs.jmix.io/
-- https://github.com/jmix-framework/jmix
+**Más información:**
+
+| Fuente | Enlace                                 |
+|--------|----------------------------------------|
+| Sitio  | https://www.jmix.io/                   |
+| Docs   | https://docs.jmix.io/                  |
+| GitHub | https://github.com/jmix-framework/jmix |
 
 ---
 
