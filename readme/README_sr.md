@@ -31,8 +31,6 @@
 <details>
 <summary>📸 Snimci ekrana (kliknite da proširite)</summary>
 
-<br>
-
 <h3>Stranica za prijavu</h3>
 <img width="1496" height="816" alt="Stranica za prijavu" src="../images/screenshots/login-page.png" />
 
@@ -53,32 +51,50 @@
 
 </details>
 
+### ✨ Glavne funkcionalnosti
+
 Ovaj projekat modeluje tipičan B2B prodajni proces:
 
 - Upravljanje katalogom proizvoda i kategorija
-- Održavanje podataka o klijentima i kontaktima
-- Praćenje porudžbina i stavki porudžbina
+- Vođenje klijenata, kontakata i adresa
+- Praćenje porudžbina kroz prodajni levak
 - Izdavanje faktura i evidentiranje uplata
-- Postavljanje poslovnih pitanja AI asistentu
-- Praćenje zadataka i nedavnih aktivnosti
-- Analiza prodajnih rezultata
+- Planiranje i kontrola korisničkih zadataka
+- Traženje poslovnih uvida od ugrađenog AI asistenta
+- Pregled analitike prodaje na kontrolnoj tabli i u ugrađenim izvještajima
+
+#### 📈 Automatizacija prodaje
+
+`B2B CRM` pomaže menadžerima prodaje da automatizuju prodajni proces: sistem vodi evidenciju o prodajnim poslovima, fakturama, uplatama i korisničkim zadacima i omogućava brzu analitiku o klijentima. Na primjer, može brzo odgovoriti na tipična pitanja kao što su:
+
+- Koliko poslova se nalazi u fazi pretprodaje ili čeka na plaćanje i na koji ukupan iznos
+- Koji klijenti su lideri po prihodu, a koji zaostaju — i u kojim kategorijama proizvoda
+- Koliko često izabrani klijenti kupuju
+- Kako se ponude za klijenta međusobno porede i koji su bili maksimalni popusti za određenu kategoriju proizvoda
+
+Obično takvi upiti zahtijevaju konfigurisanje specijalizovanih izvještaja i znanje analitičara. U `B2B CRM` dovoljno je napisati upit prirodnim jezikom: ugrađeni [AI asistent](#-ai-asistent) pomaže u analizi prodaje agregiranjem podataka o poslovima, fakturama i uplatama, uz poštovanje prava pristupa podacima korisnika.
+
+#### 🔽 Prodajni levak
+
+Ekran `Porudžbine` sadrži interaktivni prodajni levak zasnovan na statusima porudžbina: `Nova` → `Prihvaćena` → `U toku` → `Završena`. Svaka faza prikazuje broj porudžbina u njoj, a jedan klik vodi menadžera do porudžbina izabrane faze — sa ukupnim, fakturisanim, plaćenim i preostalim iznosima za svaku porudžbinu.
 
 ## 🤖 AI Asistent
 
 Aplikacija uključuje ugrađeni radni prostor `CRM AI` za analizu CRM podataka korišćenjem prirodnog jezika.
 
-Ključne mogućnosti:
+#### ✨ Ključne mogućnosti:
 
 - Postavljanje poslovnih pitanja o klijentima, porudžbinama, fakturama, uplatama i rezultatima prodaje
+- Otpremanje entiteta i datoteka u kontekst razgovora
 - Poštovanje prava pristupa podacima trenutnog korisnika i čuvanje privatnosti razgovora
 - Korišćenje ugrađenih poslovnih izvještaja kao što su `Client 360 Report` i `Category Cashflow Risk Allocation Report`
 - Čuvanje istorije razgovora sa automatski generisanim naslovima razgovora
-- Otpremanje datoteka u razgovor i analiza podržanih dokumenata i slika
 - Generisanje interaktivnih linkova ka CRM zapisima direktno u odgovorima
 
-Konfiguracija:
+#### ⚙️ Konfiguracija:
 
-- Postavite `spring.ai.openai.api-key` u datoteci [application.properties](../src/main/resources/application.properties) ili obezbijedite promenljivu okruženja `SPRING_AI_OPENAI_APIKEY`
+Postavite `spring.ai.openai.api-key` u datoteci [application.properties](../src/main/resources/application.properties)
+ili obezbijedite promenljivu okruženja `SPRING_AI_OPENAI_APIKEY`.
 
 Kada je funkcionalnost omogućena, otvorite stavku `CRM AI` u glavnom meniju da biste započeli novi razgovor.
 
@@ -92,15 +108,13 @@ Kada je funkcionalnost omogućena, otvorite stavku `CRM AI` u glavnom meniju da 
 - [Dynamic attributes](https://www.jmix.io/marketplace/dynamic-attributes/)
 - [Grid export](https://www.jmix.io/marketplace/grid-export-actions/)
 - [Reports](https://www.jmix.io/marketplace/reports/)
-- Local file storage, Localizations
+- Local File Storage, Localizations
 
 ## 🚀 Pokretanje i izvršavanje aplikacije
 
-Preduslovi: Java 21+
+#### Pokretanje projekta
 
-### Pokretanje projekta
-
-1. Pokrenite Jmix konfiguraciju za pokretanje [B2B CRM](../.run/crm-app.run.xml) ili izvršite:
+1. Pokrenite Jmix konfiguraciju za pokretanje [B2B CRM](../.run/crm-app.run.xml) ili izvršite
 
    ```bash
    ./gradlew bootRun
@@ -108,7 +122,7 @@ Preduslovi: Java 21+
 
 2. [Otvorite URL aplikacije](http://localhost:8080/b2b-crm)
 
-### Pokretanje putem JAR datoteke
+#### Pokretanje putem JAR datoteke:
 
 ```bash
 ./gradlew bootJar -Pvaadin.productionMode
@@ -118,7 +132,7 @@ Preduslovi: Java 21+
 java -jar build/libs/crm.jar
 ```
 
-### Pokretanje putem Docker-a
+#### Pokretanje putem Docker-a
 
 ```bash
 docker build -t jmix-crm .
@@ -128,7 +142,7 @@ docker build -t jmix-crm .
 docker run --rm -p 8080:8080 jmix-crm
 ```
 
-### Pokretanje putem Docker Compose-a
+#### Pokretanje putem Docker Compose-a
 
 ```bash
 docker-compose up
@@ -146,11 +160,11 @@ Lokalni profil generiše demo podatke prilikom pokretanja aplikacije:
 
 | Pozicija        | Korisničko ime | Lozinka | Pristup                                           |
 |-----------------|----------------|---------|---------------------------------------------------|
-| Administrator   | ```admin```    | admin   | Potpun pristup svim podacima i podešavanjima      |
-| Supervisor      | ```james```    | james   | Menadžer + upravljanje katalogom + dodjela naloga |
-| Manager         | ```manager```  | manager | Potpun pristup svim klijentima i porudžbinama     |
-| Account Manager | ```alice```    | alice   | Vidi samo klijente dodijeljene Alice Brown        |
-| Account Manager | ```robert```   | robert  | Vidi samo klijente dodijeljene Robert Taylor      |
+| Administrator   | `admin`        | admin   | Potpun pristup svim podacima i podešavanjima      |
+| Supervisor      | `james`        | james   | Menadžer + upravljanje katalogom + dodjela naloga |
+| Manager         | `manager`      | manager | Potpun pristup svim klijentima i porudžbinama     |
+| Account Manager | `alice`        | alice   | Vidi samo klijente dodijeljene Alice Brown        |
+| Account Manager | `robert`       | robert  | Vidi samo klijente dodijeljene Robert Taylor      |
 
 ## ⚙️ Model domena
 
@@ -161,11 +175,9 @@ classDiagram
     Client o-- Invoice
     Client o-- Payment
     Client o-- Address
-
     Order *-- OrderItem
     OrderItem --> CategoryItem
     Category o-- CategoryItem
-
     Invoice o-- Payment
 ```
 
@@ -173,24 +185,23 @@ classDiagram
 
 Aplikacija koristi hijerarhijski model uloga:
 
-- `Administrator`: Potpun pristup svim funkcionalnostima aplikacije, entitetima i podešavanjima.
-- `Supervisor`: Proširuje ulogu Menadžera dodatnim administrativnim mogućnostima:
-    - Upravljanje katalogom proizvoda (kategorije i artikli).
-    - Dodjeljivanje menadžera klijenata klijentima.
-- `Manager`: Osnovna uloga za prodajne aktivnosti.
-    - Potpun pristup klijentima, kontaktima, porudžbinama, fakturama i uplatama.
-    - Pristup katalogu proizvoda samo za čitanje.
-    - Upravljanje sopstvenim zadacima.
-- `UI Minimal`: Minimalan pristup koji omogućava prijavu u sistem i osnovnu navigaciju.
+| Uloga           | Opis                                                                                                                                                                     |
+|-----------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `Administrator` | Potpun pristup svim funkcionalnostima aplikacije, entitetima i podešavanjima.                                                                                            |
+| `Supervisor`    | Proširuje ulogu `Manager` dodatnim administrativnim mogućnostima: upravljanje katalogom proizvoda i dodjeljivanje account menadžera klijentima.                           |
+| `Manager`       | Osnovna uloga za prodajne aktivnosti. Potpun pristup klijentima, kontaktima, porudžbinama, fakturama i uplatama. Pristup katalogu proizvoda samo za čitanje. Upravljanje sopstvenim zadacima. |
+| `UI Minimal`    | Minimalan pristup koji omogućava prijavu u sistem i osnovnu navigaciju.                                                                                                  |
 
-## ℹ️  Više o Jmix-u
+## ℹ️ Više o Jmix-u
 
-- 🌐 Veb sajt: https://www.jmix.io/
-- 📚 Dokumentacija: https://docs.jmix.io/
-- 💻 GitHub: https://github.com/jmix-framework/jmix
-- 🎥 YouTube: https://www.youtube.com/@jmixframework
-- 💬 Forum: https://forum.jmix.io/
-- 💼 LinkedIn: https://www.linkedin.com/company/jmix-framework/
+| Izvor           | Link                                            |
+|-----------------|-------------------------------------------------|
+| 🌐 Veb sajt     | https://www.jmix.io                             |
+| 📚 Dokumentacija | https://docs.jmix.io                           |
+| 💬 Forum        | https://forum.jmix.io                           |
+| 💻 GitHub       | https://github.com/jmix-framework/jmix          |
+| 🎥 YouTube      | https://www.youtube.com/@jmixframework          |
+| 💼 LinkedIn     | https://www.linkedin.com/company/jmix-framework |
 
 ## 💬 FAQ
 
@@ -199,10 +210,13 @@ Aplikacija koristi hijerarhijski model uloga:
 Jmix je full-stack open-source Java platforma za razvoj poslovnog softvera sa lokalnim i javnim modelima.
 Pomaže razvojnim timovima da brže grade interne poslovne aplikacije uz potpunu kontrolu nad izvornim kodom, arhitekturom i isporukom. Jmix objedinjuje Java, Spring Boot, poslovni korisnički interfejs, bezbjednost, pristup podacima, alate za vizuelni razvoj i razvoj uz podršku AI u jednoj platformi.
 
-Saznajte više:
-- https://www.jmix.io/
-- https://docs.jmix.io/
-- https://github.com/jmix-framework/jmix
+**Saznajte više:**
+
+| Izvor        | Link                                   |
+|--------------|----------------------------------------|
+| Sajt         | https://www.jmix.io/                   |
+| Dokumentacija | https://docs.jmix.io/                 |
+| GitHub       | https://github.com/jmix-framework/jmix |
 
 ---
 
