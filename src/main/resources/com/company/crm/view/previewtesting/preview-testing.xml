@@ -1,0 +1,566 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      xmlns:charts="http://jmix.io/schema/charts/ui"
+      xmlns:calendar="http://jmix.io/schema/fullcalendar/ui"
+      xmlns:pvttbl="http://jmix.io/schema/pvttbl/ui"
+      xmlns:search="http://jmix.io/schema/search/ui"
+      xmlns:dynattr="http://jmix.io/schema/dynattr/flowui"
+      xmlns:kanban="http://jmix.io/schema/kanban/ui"
+      xmlns:dashb="http://jmix.io/schema/vaadin-dashboard/ui"
+      xmlns:sprd="http://jmix.io/schema/vaadin-spreadsheet/ui"
+      xmlns:groupg="http://jmix.io/schema/groupgrid/ui"
+      title="msg://previewTesting.title">
+    <data>
+        <instance id="clientDc" class="com.company.crm.model.client.Client">
+            <fetchPlan extends="_base">
+                <property name="accountManager" fetchPlan="_base"/>
+            </fetchPlan>
+            <loader id="clientDl"/>
+        </instance>
+        <collection id="clientsDc" class="com.company.crm.model.client.Client">
+            <fetchPlan extends="_base">
+                <property name="accountManager" fetchPlan="_base"/>
+            </fetchPlan>
+            <loader id="clientsDl" readOnly="true">
+                <query>
+                    <![CDATA[select e from Client e]]>
+                </query>
+            </loader>
+        </collection>
+        <instance id="categoryItemDc" class="com.company.crm.model.catalog.item.CategoryItem">
+            <fetchPlan extends="_base"/>
+            <loader id="categoryItemDl"/>
+        </instance>
+        <collection id="categoriesDc" class="com.company.crm.model.catalog.category.Category">
+            <fetchPlan extends="_base"/>
+            <loader id="categoriesDl" readOnly="true">
+                <query>
+                    <![CDATA[select e from Category e]]>
+                </query>
+            </loader>
+        </collection>
+        <collection id="ordersDc" class="com.company.crm.model.order.Order">
+            <fetchPlan extends="_base"/>
+            <loader id="ordersDl" readOnly="true">
+                <query>
+                    <![CDATA[select e from Order e]]>
+                </query>
+            </loader>
+        </collection>
+    </data>
+    <actions>
+        <!-- referenced by dropdownButton's actionItem below, so the ref resolves -->
+        <action id="sampleViewAction" text="View action" icon="CHECK"/>
+    </actions>
+    <layout>
+
+        <!-- ============================================================= -->
+        <!-- 1. Layout containers                                          -->
+        <!-- ============================================================= -->
+        <h3 text="1. Layout containers"/>
+
+        <hbox id="hboxSample" padding="true" spacing="true">
+            <button id="hboxButton1" text="In hbox"/>
+            <button id="hboxButton2" text="In hbox"/>
+        </hbox>
+
+        <vbox id="vboxSample" padding="true">
+            <button id="vboxButton" text="In vbox"/>
+        </vbox>
+
+        <flexLayout id="flexLayoutSample" flexDirection="ROW" alignItems="CENTER">
+            <button id="flexButton1" text="Flex 1"/>
+            <button id="flexButton2" text="Flex 2"/>
+        </flexLayout>
+
+        <scroller id="scrollerSample" width="20em" height="6em" scrollBarsDirection="VERTICAL">
+            <vbox id="scrollerContent">
+                <span id="scrollerSpan1" text="Scrollable line 1"/>
+                <span id="scrollerSpan2" text="Scrollable line 2"/>
+                <span id="scrollerSpan3" text="Scrollable line 3"/>
+                <span id="scrollerSpan4" text="Scrollable line 4"/>
+            </vbox>
+        </scroller>
+
+        <div id="divSample" width="100%">
+            <span id="divSpan" text="Inside div"/>
+        </div>
+
+        <details id="detailsSample" summaryText="Details summary" opened="true">
+            <span id="detailsSpan" text="Details content"/>
+        </details>
+
+        <accordion id="accordionSample" width="100%">
+            <accordionPanel id="accordionPanel1" summaryText="Panel 1" opened="true">
+                <span id="accordionSpan1" text="Panel 1 content"/>
+            </accordionPanel>
+            <accordionPanel id="accordionPanel2" summaryText="Panel 2">
+                <span id="accordionSpan2" text="Panel 2 content"/>
+            </accordionPanel>
+        </accordion>
+
+        <tabSheet id="tabSheetSample" width="100%">
+            <tab id="tabSheetTab1" label="Tab 1">
+                <vbox id="tabSheetTab1Box">
+                    <button id="tabSheetTab1Button" text="Tab 1 button"/>
+                </vbox>
+            </tab>
+            <tab id="tabSheetTab2" label="Tab 2">
+                <vbox id="tabSheetTab2Box">
+                    <span id="tabSheetTab2Span" text="Tab 2 content"/>
+                </vbox>
+            </tab>
+        </tabSheet>
+
+        <tabs id="tabsSample">
+            <tab id="tabsTab1" label="Tabs item 1"/>
+            <tab id="tabsTab2" label="Tabs item 2"/>
+        </tabs>
+
+        <split id="splitSample" width="100%" height="8em" splitterPosition="40">
+            <vbox id="splitFirst">
+                <span id="splitFirstSpan" text="First pane"/>
+            </vbox>
+            <vbox id="splitSecond">
+                <span id="splitSecondSpan" text="Second pane"/>
+            </vbox>
+        </split>
+
+        <card id="cardSample" title="Card title" subtitle="Card subtitle" width="20em">
+            <content>
+                <span id="cardContentSpan" text="Card content"/>
+            </content>
+            <footer>
+                <button id="cardFooterButton" text="Card action"/>
+            </footer>
+        </card>
+
+        <gridLayout id="gridLayoutSample" width="100%" columnMinWidth="10em" gap="1rem">
+            <button id="gridLayoutButton1" text="Cell 1"/>
+            <button id="gridLayoutButton2" text="Cell 2"/>
+            <button id="gridLayoutButton3" text="Cell 3"/>
+        </gridLayout>
+
+        <sidePanelLayout id="sidePanelLayoutSample" width="100%" height="10em" sidePanelPosition="INLINE_END">
+            <vbox id="sidePanelContentBox">
+                <span id="sidePanelContentSpan" text="Side panel layout content"/>
+                <sidePanelLayoutCloser id="sidePanelCloser"/>
+            </vbox>
+        </sidePanelLayout>
+
+        <formLayout id="formLayoutSample" width="100%">
+            <responsiveSteps>
+                <responsiveStep minWidth="0" columns="1"/>
+                <responsiveStep minWidth="40em" columns="2"/>
+            </responsiveSteps>
+            <textField id="formLayoutField1" label="Form field 1"/>
+            <textField id="formLayoutField2" label="Form field 2"/>
+            <formItem id="formItemSample" label="Form item">
+                <textField id="formItemField"/>
+            </formItem>
+            <formRow>
+                <textField id="formRowField1" label="Row field 1"/>
+                <textField id="formRowField2" label="Row field 2"/>
+            </formRow>
+        </formLayout>
+
+        <!-- ============================================================= -->
+        <!-- 2. Input fields                                               -->
+        <!-- ============================================================= -->
+        <h3 text="2. Input fields"/>
+
+        <formLayout id="fieldsForm" width="100%">
+            <responsiveSteps>
+                <responsiveStep minWidth="0" columns="1"/>
+                <responsiveStep minWidth="40em" columns="3"/>
+            </responsiveSteps>
+
+            <textField id="textFieldSample" label="textField" placeholder="Type here"
+                       clearButtonVisible="true"/>
+            <emailField id="emailFieldSample" label="emailField" placeholder="mail@example.com"/>
+            <passwordField id="passwordFieldSample" label="passwordField"/>
+            <numberField id="numberFieldSample" label="numberField"/>
+            <integerField id="integerFieldSample" label="integerField"/>
+            <bigDecimalField id="bigDecimalFieldSample" label="bigDecimalField"/>
+            <textArea id="textAreaSample" label="textArea" placeholder="Multiline"/>
+            <datePicker id="datePickerSample" label="datePicker"/>
+            <timePicker id="timePickerSample" label="timePicker"/>
+            <dateTimePicker id="dateTimePickerSample" label="dateTimePicker"/>
+            <checkbox id="checkboxSample" label="checkbox"/>
+            <switch id="switchSample" label="switch"/>
+            <comboBox id="comboBoxSample" label="comboBox"/>
+            <multiSelectComboBox id="multiSelectComboBoxSample" label="multiSelectComboBox"/>
+            <select id="selectSample" label="select"/>
+            <codeEditor id="codeEditorSample" label="codeEditor" height="6em" mode="JAVA"/>
+        </formLayout>
+
+        <checkboxGroup id="checkboxGroupSample" label="checkboxGroup"/>
+        <radioButtonGroup id="radioButtonGroupSample" label="radioButtonGroup"/>
+        <listBox id="listBoxSample" height="6em"/>
+        <multiSelectListBox id="multiSelectListBoxSample" height="6em"/>
+        <twinColumn id="twinColumnSample" label="twinColumn"
+                    itemsColumnLabel="Available" selectedItemsColumnLabel="Selected"/>
+
+        <richTextEditor id="richTextEditorSample" height="12em"/>
+        <markdownEditor id="markdownEditorSample" height="12em"/>
+
+        <upload id="uploadSample"/>
+        <fileUploadField id="fileUploadFieldSample" label="fileUploadField"/>
+        <fileStorageUploadField id="fileStorageUploadFieldSample" label="fileStorageUploadField"/>
+
+        <!-- Pickers: bare, and with actions (exercises the action processor) -->
+        <valuePicker id="valuePickerSample" label="valuePicker">
+            <actions>
+                <action id="valuePickerClear" type="value_clear"/>
+            </actions>
+        </valuePicker>
+        <multiValuePicker id="multiValuePickerSample" label="multiValuePicker">
+            <actions>
+                <action id="multiValuePickerClear" type="value_clear"/>
+            </actions>
+        </multiValuePicker>
+        <entityPicker id="entityPickerSample" label="entityPicker"
+                      dataContainer="clientDc" property="accountManager">
+            <actions>
+                <action id="entityPickerLookup" type="entity_lookup"/>
+                <action id="entityPickerClear" type="entity_clear"/>
+            </actions>
+        </entityPicker>
+        <entityComboBox id="entityComboBoxSample" label="entityComboBox" itemsContainer="clientsDc">
+            <actions>
+                <action id="entityComboBoxLookup" type="entity_lookup"/>
+                <action id="entityComboBoxClear" type="entity_clear"/>
+            </actions>
+        </entityComboBox>
+        <multiSelectComboBoxPicker id="multiSelectComboBoxPickerSample" label="multiSelectComboBoxPicker"
+                                   itemsContainer="clientsDc">
+            <actions>
+                <action id="multiSelectComboBoxPickerClear" type="entity_clear"/>
+            </actions>
+        </multiSelectComboBoxPicker>
+
+        <!-- ============================================================= -->
+        <!-- 3. Buttons, menus, indicators                                 -->
+        <!-- ============================================================= -->
+        <h3 text="3. Buttons, menus, indicators"/>
+
+        <hbox id="buttonsBox" spacing="true" alignItems="CENTER">
+            <button id="buttonSample" text="button" icon="CHECK"/>
+            <avatar id="avatarSample" name="John Doe" abbreviation="JD"/>
+            <drawerToggle id="drawerToggleSample"/>
+            <userIndicator id="userIndicatorSample"/>
+            <progressBar id="progressBarSample" width="10em" value="0.4"/>
+        </hbox>
+
+        <!-- userMenu with declared items -->
+        <userMenu id="userMenuWithItems">
+            <items>
+                <textItem id="userMenuTextItem" text="Text item"/>
+                <separator/>
+                <viewItem id="userMenuViewItem" text="View item" viewClass="com.company.crm.view.about.AboutView"/>
+            </items>
+        </userMenu>
+
+        <!-- userMenu without items: loader builds 5 placeholder items -->
+        <userMenu id="userMenuEmpty"/>
+
+        <!-- listMenu / horizontalMenu are MenuConfig-driven: placeholder-only in preview -->
+        <listMenu id="mainListMenu" width="16em" height="10em"/>
+        <horizontalMenu id="horizontalMenuSample" width="100%"/>
+        <menuFilterField id="menuFilterFieldSample" menu="mainListMenu" placeholder="Filter menu"/>
+
+        <!-- ============================================================= -->
+        <!-- 4. Dropdown buttons (incl. the placeholder edge cases)        -->
+        <!-- ============================================================= -->
+        <h3 text="4. Dropdown buttons"/>
+
+        <hbox id="dropdownBox" spacing="true">
+            <!-- real items: textItem + actionItem + separator -->
+            <dropdownButton id="dropdownButtonWithItems" text="dropdownButton" icon="MENU">
+                <items>
+                    <textItem id="dropdownTextItem" text="Text item"/>
+                    <separator/>
+                    <!-- ref resolves to the view-level <actions> entry -->
+                    <actionItem id="dropdownActionItemRef" ref="sampleViewAction"/>
+                    <!-- inline action, resolved without a lookup -->
+                    <actionItem id="dropdownActionItemInline">
+                        <action id="dropdownInlineAction" text="Inline action" icon="PLUS"/>
+                    </actionItem>
+                </items>
+            </dropdownButton>
+
+            <!-- no <items> at all: loader builds 5 placeholder items -->
+            <dropdownButton id="dropdownButtonEmpty" text="dropdownButton (no items)"/>
+
+            <!-- <items> with only a componentItem: nothing renderable, so placeholders too -->
+            <dropdownButton id="dropdownButtonComponentItemOnly" text="dropdownButton (componentItem only)">
+                <items>
+                    <componentItem id="dropdownComponentItem">
+                        <textField id="dropdownComponentItemField"/>
+                    </componentItem>
+                </items>
+            </dropdownButton>
+
+            <comboButton id="comboButtonSample" text="comboButton">
+                <items>
+                    <textItem id="comboButtonTextItem" text="Text item"/>
+                </items>
+            </comboButton>
+
+            <comboButton id="comboButtonEmpty" text="comboButton (no items)"/>
+        </hbox>
+
+        <!-- ============================================================= -->
+        <!-- 5. Data grids                                                 -->
+        <!-- ============================================================= -->
+        <h3 text="5. Data grids"/>
+
+        <dataGrid id="clientsDataGrid" dataContainer="clientsDc" width="100%" height="14em">
+            <actions>
+                <action id="clientsGridCreate" type="list_create"/>
+                <action id="clientsGridEdit" type="list_edit"/>
+                <action id="clientsGridRemove" type="list_remove"/>
+            </actions>
+            <columns>
+                <column property="name"/>
+                <column property="fullName"/>
+                <column property="type"/>
+                <column property="website"/>
+                <column property="accountManager"/>
+            </columns>
+        </dataGrid>
+
+        <!-- gridColumnVisibility with a resolvable dataGrid ref: real column toggles -->
+        <gridColumnVisibility id="gridColumnVisibilityWithRef" dataGrid="clientsDataGrid" icon="COG"/>
+
+        <!-- dataGrid without <columns>: nothing to build from XML -->
+        <dataGrid id="clientsDataGridNoColumns" dataContainer="clientsDc" width="100%" height="10em"/>
+
+        <treeDataGrid id="categoriesTreeDataGrid" dataContainer="categoriesDc" hierarchyProperty="parent"
+                      width="100%" height="14em">
+            <columns>
+                <column property="name"/>
+                <column property="code"/>
+                <column property="description"/>
+            </columns>
+        </treeDataGrid>
+
+        <simplePagination id="simplePaginationSample" dataLoader="clientsDl"/>
+
+        <virtualList id="virtualListSample" itemsContainer="clientsDc" height="10em"/>
+
+        <!-- groupgrid add-on: no preview loader yet, exercises Studio's own fallback -->
+        <groupg:groupDataGrid id="ordersGroupDataGrid" dataContainer="ordersDc" width="100%" height="14em">
+            <groupg:groupBy>
+                <groupg:columnRef key="status"/>
+            </groupg:groupBy>
+            <groupg:columns>
+                <groupg:column property="number"/>
+                <groupg:column property="status"/>
+                <groupg:column property="date"/>
+                <groupg:column property="total"/>
+            </groupg:columns>
+        </groupg:groupDataGrid>
+
+        <!-- ============================================================= -->
+        <!-- 6. Filters                                                    -->
+        <!-- ============================================================= -->
+        <h3 text="6. Filters"/>
+
+        <genericFilter id="genericFilterSample" dataLoader="clientsDl"/>
+
+        <propertyFilter id="propertyFilterSample" dataLoader="clientsDl"
+                        property="name" operation="CONTAINS" label="Name contains"/>
+
+        <jpqlFilter id="jpqlFilterSample" dataLoader="clientsDl" parameterClass="java.lang.String"
+                    label="JPQL filter">
+            <condition>
+                <jpql>
+                    <where>e.vatNumber like ?</where>
+                </jpql>
+            </condition>
+        </jpqlFilter>
+
+        <groupFilter id="groupFilterSample" dataLoader="clientsDl" operation="AND">
+            <propertyFilter id="groupFilterProperty1" property="name" operation="CONTAINS"/>
+            <propertyFilter id="groupFilterProperty2" property="type" operation="EQUAL"/>
+        </groupFilter>
+
+        <search:fullTextFilter id="fullTextFilterSample" dataLoader="clientsDl" label="Full-text filter"/>
+
+        <!-- ============================================================= -->
+        <!-- 7. Icons and media                                            -->
+        <!-- ============================================================= -->
+        <h3 text="7. Icons and media"/>
+
+        <hbox id="iconsBox" spacing="true" alignItems="CENTER">
+            <icon id="iconSample" icon="USER"/>
+            <svgIcon id="svgIconSample" resource="icons/jmix-logo.svg"/>
+            <fontIcon id="fontIconSample" iconClassNames="fa fa-star"/>
+        </hbox>
+
+        <image id="imageSample" resource="https://www.jmix.io/assets/images/jmix-logo.svg"
+               alternateText="Sample image" width="8em"/>
+        <image id="imageBound" dataContainer="categoryItemDc" property="image" width="8em"/>
+
+        <markdown id="markdownWithAttribute" content="# Markdown heading&#10;&#10;Rendered from the `content` attribute."/>
+        <markdown id="markdownWithBody">
+            <content>
+                <![CDATA[## Inline markdown
+
+- first item
+- second item]]>
+            </content>
+        </markdown>
+
+        <!-- ============================================================= -->
+        <!-- 8. Login components                                           -->
+        <!-- ============================================================= -->
+        <h3 text="8. Login components"/>
+
+        <loginForm id="loginFormSample"/>
+        <loginOverlay id="loginOverlaySample"/>
+
+        <!-- ============================================================= -->
+        <!-- 9. Fragment                                                   -->
+        <!-- ============================================================= -->
+        <h3 text="9. Fragment"/>
+
+        <fragment id="addressFragmentSample" class="com.company.crm.view.address.AddressFragment"/>
+
+        <!-- ============================================================= -->
+        <!-- 10. HTML elements                                             -->
+        <!-- ============================================================= -->
+        <h3 text="10. HTML elements"/>
+
+        <h1 id="h1Sample" text="h1"/>
+        <h2 id="h2Sample" text="h2"/>
+        <h3 id="h3Sample" text="h3"/>
+        <h4 id="h4Sample" text="h4"/>
+        <h5 id="h5Sample" text="h5"/>
+        <h6 id="h6Sample" text="h6"/>
+        <p id="pSample" text="Paragraph text"/>
+        <span id="spanSample" text="Span text"/>
+        <emphasis id="emphasisSample" text="Emphasised text"/>
+        <pre id="preSample" text="preformatted   text"/>
+        <code id="codeSample" text="int x = 1;"/>
+        <hr id="hrSample"/>
+        <anchor id="anchorSample" text="Anchor to jmix.io" href="https://www.jmix.io"/>
+        <iframe id="iframeSample" resource="https://www.jmix.io" width="100%" height="8em"/>
+        <input id="inputSample" placeholder="Native input"/>
+        <rangeInput id="rangeInputSample"/>
+        <nativeLabel id="nativeLabelSample" text="Native label"/>
+        <nativeButton id="nativeButtonSample" text="Native button"/>
+        <nativeDetails id="nativeDetailsSample" summaryText="Native details">
+            <span id="nativeDetailsSpan" text="Native details content"/>
+        </nativeDetails>
+        <fieldSet id="fieldSetSample" legendText="Field set">
+            <textField id="fieldSetField" label="Inside field set"/>
+        </fieldSet>
+
+        <unorderedList id="unorderedListSample">
+            <listItem id="unorderedListItem1" text="Unordered item 1"/>
+            <listItem id="unorderedListItem2" text="Unordered item 2"/>
+        </unorderedList>
+
+        <orderedList id="orderedListSample">
+            <listItem id="orderedListItem1" text="Ordered item 1"/>
+            <listItem id="orderedListItem2" text="Ordered item 2"/>
+        </orderedList>
+
+        <descriptionList id="descriptionListSample">
+            <term id="descriptionTerm" text="Term"/>
+            <description id="descriptionText" text="Description of the term"/>
+        </descriptionList>
+
+        <section id="sectionSample">
+            <span id="sectionSpan" text="Inside section"/>
+        </section>
+        <article id="articleSample">
+            <span id="articleSpan" text="Inside article"/>
+        </article>
+        <header id="headerSample">
+            <span id="headerSpan" text="Inside header"/>
+        </header>
+        <nav id="navSample">
+            <span id="navSpan" text="Inside nav"/>
+        </nav>
+        <main id="mainSample">
+            <span id="mainSpan" text="Inside main"/>
+        </main>
+        <aside id="asideSample">
+            <span id="asideSpan" text="Inside aside"/>
+        </aside>
+        <footer id="footerSample">
+            <span id="footerSpan" text="Inside footer"/>
+        </footer>
+
+        <htmlObject id="htmlObjectSample" data="https://www.jmix.io" type="text/html"
+                    width="100%" height="8em">
+            <param id="htmlObjectParam" name="quality" value="high"/>
+        </htmlObject>
+
+        <!-- inline markup via the <content> child -->
+        <html id="htmlInline">
+            <content><![CDATA[<div><p>Inline <b>HTML</b> content</p></div>]]></content>
+        </html>
+
+        <!-- same component, markup via the content attribute -->
+        <html id="htmlWithAttribute" content="&lt;p&gt;HTML from the content attribute&lt;/p&gt;"/>
+
+        <!-- ============================================================= -->
+        <!-- 11. Add-on components                                         -->
+        <!-- ============================================================= -->
+        <h3 text="11. Add-on components"/>
+
+        <search:searchField id="searchFieldSample" placeholder="Full-text search"/>
+
+        <dynattr:dynamicAttributesPanel id="dynamicAttributesPanelSample" dataContainer="clientDc"
+                                        categoryFieldVisible="true"/>
+
+        <charts:chart id="chartSample" width="100%" height="16em">
+            <charts:title text="Chart title"/>
+            <charts:legend icon="lumo:bar-chart"/>
+            <charts:xAxes>
+                <charts:xAxis type="CATEGORY"/>
+            </charts:xAxes>
+            <charts:yAxes>
+                <charts:yAxis type="VALUE"/>
+            </charts:yAxes>
+            <charts:series>
+                <charts:bar name="Series"/>
+            </charts:series>
+        </charts:chart>
+
+        <calendar:calendar id="calendarSample" width="100%" height="20em"
+                           initialDisplayMode="DAY_GRID_MONTH"/>
+        <hr width="100%" height="2em"></hr>
+        <pvttbl:pivotTable id="pivotTableSample" dataContainer="ordersDc" width="100%" height="16em"
+                           showUI="true"/>
+
+        <kanban:kanban id="kanbanSample" dataContainer="ordersDc" width="100%" height="20em">
+            <kanban:propertiesMapping id="id" status="status" text="number"/>
+            <kanban:columns>
+                <kanban:column dataField="a" width="5"/>
+            </kanban:columns>
+        </kanban:kanban>
+
+        <dashb:dashboard id="dashboardSample" maximumColumnCount="2">
+            <dashb:dashboardWidget id="dashboardWidgetSample" title="Widget">
+                <dashb:content>
+                    <span id="dashboardWidgetSpan" text="Widget content"/>
+                </dashb:content>
+            </dashb:dashboardWidget>
+            <dashb:dashboardSection id="dashboardSectionSample" title="Section">
+                <dashb:dashboardWidget id="dashboardSectionWidget" title="Section widget">
+                    <dashb:content>
+                        <span id="dashboardSectionWidgetSpan" text="Section widget content"/>
+                    </dashb:content>
+                </dashb:dashboardWidget>
+            </dashb:dashboardSection>
+        </dashb:dashboard>
+
+        <sprd:spreadsheet id="spreadsheetSample" width="100%" height="20em"/>
+
+    </layout>
+</view>
