@@ -1,0 +1,16 @@
+// JST-5452 test fixture: a reusable theme add-on.
+//
+// Deliberately has NO dependencies — a theme artifact is resource-only by nature.
+// Besides the theme itself it contains "poison" entries (see src/main/resources/META-INF)
+// that would break the isolated dev server runtime if this artifact were put on its
+// classpath as is. The Studio must repack only the static resources.
+plugins {
+    id 'java-library'
+}
+
+group = 'com.company.crm'
+version = '1.0.0'
+
+jar {
+    archiveFileName = "crm-theme-${version}.jar"
+}

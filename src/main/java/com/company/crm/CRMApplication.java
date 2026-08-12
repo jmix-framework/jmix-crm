@@ -23,6 +23,10 @@ import javax.sql.DataSource;
 @StyleSheet(Aura.STYLESHEET)
 @StyleSheet(JmixAura.STYLESHEET)
 @StyleSheet("themes/aura/styles.css")
+// JST-5452 case 1: flat stylesheet path from the crm-theme dependency (Vaadin 25 layout).
+@StyleSheet("cobalt/master.css")
+// JST-5452 case 2: reusable theme folder from the crm-theme dependency. Uncomment to check.
+// @StyleSheet("themes/cobalt/styles.css")
 @JsModule("./src/theme/color-scheme-switching-support.js")
 @PWA(name = "CRM", shortName = "CRM", offline = false)
 @SpringBootApplication

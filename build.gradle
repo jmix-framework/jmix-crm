@@ -106,6 +106,13 @@ dependencies {
     implementation 'io.jmix.translations:jmix-translations-it'
     implementation 'io.jmix.translations:jmix-translations-es'
 
+    //              --- [ JST-5452 TEST THEME ] ---
+    // Variant A — module dependency: theme resources come from the crm-theme output directory.
+    implementation project(':crm-theme')
+    // Variant B — jar dependency: run `./gradlew :crm-theme:jar` first,
+    // then comment out variant A and uncomment the line below.
+    // implementation files('crm-theme/build/libs/crm-theme-1.0.0.jar')
+
     //              --- [ VAADIN ] ---
     implementation 'com.vaadin:vaadin-dev'
     implementation 'org.vaadin.jchristophe:sortable-layout:3.0.1'

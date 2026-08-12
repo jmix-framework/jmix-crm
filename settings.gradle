@@ -1,1 +1,4 @@
 rootProject.name = 'jmix-crm'
+
+// JST-5452 test fixture: reusable theme add-on. Remove together with the crm-theme folder.
+include 'crm-theme'

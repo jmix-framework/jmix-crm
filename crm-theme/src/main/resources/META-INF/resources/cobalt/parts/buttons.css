@@ -1,0 +1,7 @@
+/*
+ * Pulled in by the relative @import from master.css.
+ * Proves that resources next to the referenced stylesheet are repacked too.
+ */
+vaadin-button {
+    border: 2px dashed #0055a6;
+}

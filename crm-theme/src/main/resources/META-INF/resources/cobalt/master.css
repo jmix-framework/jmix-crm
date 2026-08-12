@@ -1,0 +1,25 @@
+/*
+ * Vaadin 25 / Jmix 3 layout: a flat path under META-INF/resources,
+ * loaded with @StyleSheet("cobalt/master.css"). No theme.json, no themes/ folder.
+ */
+@import url('parts/buttons.css');
+
+html {
+    --lumo-primary-color: #0055a6;
+    --lumo-primary-color-50pct: rgba(0, 85, 166, 0.5);
+    --lumo-primary-color-10pct: rgba(0, 85, 166, 0.1);
+    --lumo-primary-text-color: #0055a6;
+}
+
+/* Visible marker: this banner in the preview means master.css was loaded from the dependency. */
+body::before {
+    content: 'COBALT master.css LOADED FROM DEPENDENCY';
+    position: fixed;
+    z-index: 99999;
+    top: 0;
+    left: 0;
+    padding: 2px 8px;
+    font: 700 11px/1.6 monospace;
+    color: #fff;
+    background: #0055a6;
+}

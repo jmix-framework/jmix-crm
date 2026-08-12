@@ -1,0 +1,23 @@
+/*
+ * Classic reusable theme layout: META-INF/resources/themes/<theme>/styles.css.
+ * Applied with @StyleSheet("themes/cobalt/styles.css") or with @Theme("cobalt") on Jmix 2.x.
+ */
+@import url('views/main-view.css');
+
+html {
+    --lumo-primary-color: #a63b00;
+    --lumo-primary-text-color: #a63b00;
+}
+
+/* Visible marker: this banner means the themes/cobalt folder was loaded from the dependency. */
+body::after {
+    content: 'COBALT themes/cobalt/styles.css LOADED FROM DEPENDENCY';
+    position: fixed;
+    z-index: 99999;
+    bottom: 0;
+    left: 0;
+    padding: 2px 8px;
+    font: 700 11px/1.6 monospace;
+    color: #fff;
+    background: #a63b00;
+}
