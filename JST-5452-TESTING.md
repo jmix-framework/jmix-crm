@@ -1,113 +1,225 @@
-# JST-5452 — testing in this project
+# JST-5452 — reusable theme preview testing
 
-Checks that the view designer preview picks up theme resources from **module dependencies**, and that
-nothing else from those dependencies reaches the isolated dev server classloader.
+This branch verifies that View Designer Preview loads CSS resources from project module dependencies
+without adding the complete dependency artifact to the isolated dev-server classloader.
 
-Plugin side: `FlowThemeJarBuilder` + `FlowDevServerManager.loadThemeResourcesJar`, branch
-`feature/JST-5452` of `jmix-studio`. This project is Jmix 3.0.1, so it covers the Vaadin 25 model:
-`@Theme` is deprecated and styles are loaded with `@StyleSheet` from `META-INF/resources`.
+The project uses Jmix 3.0.1 and Vaadin 25.1.7. Vaadin 25 recommends `@StyleSheet`, while deprecated
+`@Theme` is still available as a compatibility path. Both models are covered here.
 
-## What was added here
+Studio implementation under test:
 
-| Path                  | Purpose                                                                   |
-|-----------------------|---------------------------------------------------------------------------|
-| `crm-theme/`          | reusable theme add-on, `java-library` with **no** dependencies            |
-| `settings.gradle`     | `include 'crm-theme'`                                                     |
-| `build.gradle`        | `implementation project(':crm-theme')` in the *JST-5452 TEST THEME* block |
-| `CRMApplication.java` | `@StyleSheet("cobalt/master.css")` + a commented alternative              |
+- `FlowThemeJarBuilder` resolves project, framework, and dependency resources and creates a resource-only JAR;
+- `FlowDevServerManager.loadThemeResources` adds that JAR and the resolved stylesheet URLs to the preview;
+- Registry key `io.jmix.designer.flowui.theme.dependencies.enabled` disables the feature when needed.
 
-The add-on ships two theme layouts at once so both resolution paths can be tested:
+## Fixture layout
 
-| Layout                                 | Applied with                                                                 | Era                  |
-|----------------------------------------|------------------------------------------------------------------------------|----------------------|
-| `META-INF/resources/cobalt/master.css` | `@StyleSheet("cobalt/master.css")`                                           | Vaadin 25 / Jmix 3   |
-| `META-INF/resources/themes/cobalt/`    | `@StyleSheet("themes/cobalt/styles.css")`, or `@Theme("cobalt")` on Jmix 2.x | Vaadin 24 / Jmix 2.x |
+| Path                  | Purpose                                                                    |
+|-----------------------|----------------------------------------------------------------------------|
+| `crm-theme/`          | Dependency module containing modern and legacy reusable-theme layouts      |
+| `settings.gradle`     | Includes the `crm-theme` module                                            |
+| `build.gradle`        | Uses the module dependency by default and contains an optional JAR variant |
+| `CRMApplication.java` | Contains mutually exclusive annotation scenarios                           |
+| `themes/crm-preview/` | Project theme that inherits dependency theme `cobalt` for case 4           |
 
-Each entry point paints a fixed banner in the preview — blue on top, brown at the bottom — and dashed
-or dotted borders on `vaadin-button` coming from a relative `@import`. No DevTools needed.
+The dependency publishes these CSS entry points:
 
-It also ships four **poison** entries that must never reach the dev server classpath:
+| Resource                                      | Usage                                                      |
+|-----------------------------------------------|------------------------------------------------------------|
+| `META-INF/resources/cobalt/master.css`        | Modern `@StyleSheet("cobalt/master.css")` layout           |
+| `META-INF/resources/themes/cobalt/styles.css` | Reusable-theme layout for `@StyleSheet` or legacy `@Theme` |
+| `META-INF/resources/themes/cobalt/theme.json` | Declares framework theme `jmix-lumo` as parent             |
 
-| Entry                                                           | What it would do if the artifact were added as is                                         |
-|-----------------------------------------------------------------|-------------------------------------------------------------------------------------------|
-| `META-INF/services/jakarta.servlet.ServletContainerInitializer` | Jetty scans the extra classpath for SCIs → class missing → context fails to start         |
-| `com/company/crm/theme/CobaltThemeConfiguration.class`          | not a valid class file; classes of project artifacts must not be scanned or loaded at all |
-| `META-INF/spring.factories`                                     | Spring descriptor; the dev server classloader has no Spring                               |
-| `META-INF/resources/frontend/cobalt-addon.js`                   | imports a non-existent npm package → the frontend build of the preview breaks             |
+`master.css` displays a blue top banner and gives buttons a dashed blue border. The reusable theme
+displays a brown bottom banner and gives buttons a dotted brown border. Relative `@import` files verify
+that resources next to the entry point are also available.
+
+The dependency also contains `META-INF/resources/frontend/cobalt-addon.js`, which imports a nonexistent
+npm package. It must not be copied into the resource-only preview JAR.
 
 ## Preparation
 
-1. `./gradlew :jmix-intellij:runIde` in `jmix-studio` on branch `feature/JST-5452`.
-2. Open this project in the sandbox IDE, reimport Gradle (the new `crm-theme` module must appear).
+1. Run `./gradlew :jmix-intellij:runIde` in `jmix-studio` on `feature/JST-5452`.
+2. Open this project from branch `qa/JST-5452` in the sandbox IDE.
+3. Reimport Gradle and check that `crm-theme` is shown as a module.
 
-Building the project is **not** required: for a module dependency the resources are taken from its
-resource root (`crm-theme/src/main/resources`), not from `build/`.
+Do not build `crm-theme` for the default module-dependency tests. Studio resolves its
+`src/main/resources` source root through the IntelliJ module model; no `build` directory is involved.
 
-The whole feature can be turned off in Registry: `io.jmix.designer.flowui.theme.dependencies.enabled`.
+After every annotation or dependency change, use **Restart View Designer Preview**, reopen a view, and
+switch to its **Preview** tab. Reopening matters because an already open preview can retain old state.
 
-## Cases
+## Case 1 — flat dependency stylesheet, active by default
 
-After each annotation change: restart the dev server (Jmix tool window → *Restart View Designer Preview*),
-then open any view and switch to the **Preview** tab.
-
-### 1. Flat stylesheet path — Vaadin 25 layout (active by default)
+Keep the existing project/framework stylesheets and this annotation:
 
 ```java
 @StyleSheet("cobalt/master.css")
 ```
 
-Expected: blue banner `COBALT master.css LOADED FROM DEPENDENCY` on top, dashed blue borders on buttons.
+Leave the other JST-5452 annotations commented. Expected:
 
-### 2. Reusable theme folder
+- the preview starts without HTTP 500;
+- the blue `COBALT master.css LOADED FROM DEPENDENCY` banner is visible;
+- buttons have dashed blue borders;
+- the existing Aura/Jmix/project styles remain applied.
+- `GET /b2b-crm/cobalt/master.css` returns HTTP 200 in the running application; the test security
+  configuration explicitly permits `/cobalt/**` because this path is outside Vaadin's standard theme folders.
 
-In `CRMApplication`, comment out case 1 and uncomment:
+This is the primary Vaadin 25/Jmix 3 scenario. `theme.json` inheritance is intentionally not consulted
+for a pure `@StyleSheet` declaration.
+
+## Case 2 — stylesheet inside a reusable-theme folder
+
+Comment out case 1 and uncomment:
 
 ```java
 @StyleSheet("themes/cobalt/styles.css")
 ```
 
-Expected: brown banner `COBALT themes/cobalt/styles.css LOADED FROM DEPENDENCY` at the bottom, dotted
-borders on buttons.
+Keep the three existing Aura/Jmix/project `@StyleSheet` annotations. Expected:
 
-### 3. Jar dependency instead of a module dependency
+- the brown `COBALT themes/cobalt/styles.css LOADED FROM DEPENDENCY` banner is visible;
+- buttons have dotted brown borders;
+- the existing project styles remain applied.
+
+This checks that a `themes/<name>` path works as a normal public stylesheet without invoking legacy
+theme inheritance.
+
+## Case 3 — standalone dependency theme through legacy `@Theme`
+
+Comment out **all** `@StyleSheet` annotations in `CRMApplication`, then uncomment:
+
+```java
+@Theme("cobalt")
+```
+
+Only one `@Theme` annotation may be active. Expected:
+
+- the preview starts and the brown dependency-theme banner is visible;
+- `themes/cobalt/theme.json` is resolved;
+- parent entry point `themes/jmix-lumo/styles.css` is applied before cobalt;
+- the generated JAR keeps the `themes/cobalt` name because this is Jmix 3.
+
+The `@StyleSheet` annotations must be disabled for this case because Studio deliberately prefers the
+modern stylesheet model when both models are present.
+
+## Case 4 — project theme with a dependency parent
+
+Comment out all `@StyleSheet` annotations and case 3, then uncomment:
+
+```java
+@Theme("crm-preview")
+```
+
+The project file `src/main/resources/META-INF/resources/themes/crm-preview/theme.json` declares:
+
+```json
+{
+  "parent": "cobalt"
+}
+```
+
+The resulting chain is:
+
+```text
+project crm-preview -> dependency cobalt -> framework jmix-lumo
+```
+
+Expected:
+
+- a green project-theme banner and the brown cobalt parent-theme banner are both visible;
+- the generated JAR contains dependency resources but no `themes/crm-preview` project resources;
+- parent styles are registered before child styles.
+
+After this case, restore the default annotations before testing cases 5–8.
+
+## Case 5 — JAR dependency instead of a module dependency
+
+Build only the fixture artifact:
 
 ```bash
 ./gradlew :crm-theme:jar
 ```
 
-In `build.gradle`, comment out variant A and uncomment variant B
-(`implementation files('crm-theme/build/libs/crm-theme-1.0.0.jar')`), reimport Gradle, restart the
-dev server. Expected: same picture as cases 1–2; the log line now names the jar instead of the
-`src/main/resources` directory.
+In `build.gradle`, comment variant A and uncomment variant B:
 
-### 4. Project styles are not broken
-
-`@StyleSheet(Aura.STYLESHEET)`, `@StyleSheet(JmixAura.STYLESHEET)` and
-`@StyleSheet("themes/aura/styles.css")` stay in place during all cases above. Expected: the project theme
-still applies as before, and its files are **not** in the generated jar — framework stylesheets and the
-project's own `src/main/resources/META-INF/resources` are deliberately skipped.
-
-## What to check besides the picture
-
-**idea.log** (sandbox: `jmix-studio/.intellijPlatform/sandbox/jmix-studio-bootstrap/IU-2026.1/system/log/idea.log`):
-
-```
-[FlowDevServerManager]: Theme resources from module dependencies repacked to …/jmix/theme-preview/<hash>.jar
-… resource files repacked from [/…/crm-theme/src/main/resources] to …
+```groovy
+// implementation project(':crm-theme')
+implementation files('crm-theme/build/libs/crm-theme-1.0.0.jar')
 ```
 
-**The generated jar** — `<IDEA system dir>/jmix/theme-preview/<hash>.jar`
-(sandbox: `jmix-studio/.intellijPlatform/sandbox/jmix-studio-bootstrap/IU-2026.1/system/jmix/theme-preview/`):
+Reimport Gradle and repeat cases 1–4. Expected behavior is identical; the Studio log names the JAR
+instead of `crm-theme/src/main/resources`.
+
+The production mechanism does not depend on module output directories: this case exists only to test
+an actual external JAR dependency.
+
+## Case 6 — fail-fast diagnostics
+
+With the module dependency restored, temporarily change the active custom stylesheet to:
+
+```java
+@StyleSheet("cobalt/missing.css")
+```
+
+Restart preview. Expected:
+
+- preview startup fails before Jetty renders a partially styled page;
+- the Studio notification and `idea.log` name `cobalt/missing.css` as a missing required resource.
+
+Restore `cobalt/master.css` afterwards. To check invalid parent diagnostics, temporarily set the parent
+in `crm-theme/.../themes/cobalt/theme.json` to a nonexistent theme and repeat case 3 or 4.
+
+## Case 7 — feature kill switch
+
+Open Registry and disable:
+
+```text
+io.jmix.designer.flowui.theme.dependencies.enabled
+```
+
+Restart preview with case 1 active. Expected: preview starts with the normal project styles, but the blue
+dependency banner is absent and no theme-preview JAR is generated. Enable the key again afterwards.
+
+## Case 8 — cache behavior
+
+Start the same preview twice without modifying resources. The second start must reuse the same
+`<hash>.jar`. Then edit a CSS file under `crm-theme/src/main/resources` and restart preview. A different
+hash must be generated even if file size or timestamp happens to be unchanged.
+
+The cache is cleaned on preview startup. JARs unused for seven days are eligible for deletion.
+
+## Log and generated-JAR checks
+
+Sandbox log:
+
+```text
+jmix-studio/.intellijPlatform/sandbox/jmix-studio-bootstrap/IU-2026.1/system/log/idea.log
+```
+
+Expected messages include:
+
+```text
+[FlowDevServerManager]: Theme resources from module dependencies repacked to .../jmix/theme-preview/<hash>.jar
+... resource files repacked from [.../crm-theme/src/main/resources] to ...
+```
+
+Generated JAR directory:
+
+```text
+jmix-studio/.intellijPlatform/sandbox/jmix-studio-bootstrap/IU-2026.1/system/jmix/theme-preview/
+```
+
+Inspect the newest JAR:
 
 ```bash
-unzip -l <path-to-generated>.jar
+unzip -l <path-to-generated.jar>
 ```
 
-Expected — these five files plus their directory entries, and nothing else. The directory entries matter:
-Vaadin discovers jars with themes by looking up the `META-INF/resources/themes/` directory resource on the
-classpath.
+With the current fixture it must contain these files plus parent directory entries:
 
-```
+```text
 META-INF/resources/cobalt/master.css
 META-INF/resources/cobalt/parts/buttons.css
 META-INF/resources/themes/cobalt/styles.css
@@ -115,22 +227,32 @@ META-INF/resources/themes/cobalt/theme.json
 META-INF/resources/themes/cobalt/views/main-view.css
 ```
 
-No `*.class`, no `META-INF/services`, no `META-INF/spring.factories`, no `META-INF/resources/frontend`,
-nothing from `themes/aura` or `themes/jmix-aura`.
+It must not contain:
 
-**Caching:** a second dev server start must reuse the same `<hash>.jar` — no new file and no
-"resource files repacked" line. Edit a CSS file in `crm-theme/src/main/resources`, restart the server →
-a new `<hash>.jar` appears (for the jar variant, rebuild the jar first).
+```text
+META-INF/resources/frontend/cobalt-addon.js
+META-INF/resources/themes/crm-preview/**
+*.class
+META-INF/services/**
+META-INF/spring.factories
+```
 
-Note: this project is Jmix 3, so the theme folder keeps its name. On Jmix 2.x the theme is repacked as
-`themes/preview-theme` because the 2.x dev server renders the preview with `@Theme("preview-theme")` —
-see the same document in `jixflow28`.
+The explicit `META-INF/resources/themes/` ZIP directory entry is required for Vaadin theme discovery.
 
-**Negative case:** the fact that the preview renders at all is the check. The add-on declares a
-`ServletContainerInitializer` that does not exist; had the dependency been put on the dev server
-classpath as is, the Jetty context would have failed with a `ServiceConfigurationError`.
+## Restore the default state
 
-## Revert
+Before finishing, restore:
 
-Remove the `crm-theme` folder, the `include 'crm-theme'` line, the *JST-5452 TEST THEME* dependency block,
-and the two `// JST-5452` annotations in `CRMApplication`.
+```java
+@StyleSheet(Aura.STYLESHEET)
+@StyleSheet(JmixAura.STYLESHEET)
+@StyleSheet("themes/aura/styles.css")
+@StyleSheet("cobalt/master.css")
+```
+
+Keep both `@Theme` annotations and the reusable-theme stylesheet case commented. Restore module dependency
+variant A and enable the Registry key.
+
+To remove the fixture completely, remove `crm-theme`, its `settings.gradle` include, the JST-5452 block
+from `build.gradle`, the four JST-5452 annotation lines/import from `CRMApplication`, this document, and
+`src/main/resources/META-INF/resources/themes/crm-preview`.

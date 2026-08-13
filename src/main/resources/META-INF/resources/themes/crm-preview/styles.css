@@ -1,0 +1,14 @@
+/*
+ * JST-5452 case 4: a project theme whose parent comes from the crm-theme dependency.
+ */
+body::before {
+    content: 'CRM PROJECT THEME WITH DEPENDENCY PARENT';
+    position: fixed;
+    z-index: 99999;
+    top: 0;
+    right: 0;
+    padding: 2px 8px;
+    font: 700 11px/1.6 monospace;
+    color: #fff;
+    background: #287d3c;
+}

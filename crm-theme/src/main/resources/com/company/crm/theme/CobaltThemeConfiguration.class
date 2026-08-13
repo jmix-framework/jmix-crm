@@ -1,3 +1,0 @@
-Poison #4: not a valid class file on purpose. Kept under resources so that a plain
-`./gradlew :crm-theme:jar` reproduces it without any compile dependency. Jetty and Vaadin
-scan classes of every classpath entry, so this entry must never reach the dev server.

@@ -1,9 +1,8 @@
 // JST-5452 test fixture: a reusable theme add-on.
 //
 // Deliberately has NO dependencies — a theme artifact is resource-only by nature.
-// Besides the theme itself it contains "poison" entries (see src/main/resources/META-INF)
-// that would break the isolated dev server runtime if this artifact were put on its
-// classpath as is. The Studio must repack only the static resources.
+// Its frontend resource imports a non-existent npm package and must not be copied to
+// the isolated preview classpath. Studio repacks only safe static resources.
 plugins {
     id 'java-library'
 }

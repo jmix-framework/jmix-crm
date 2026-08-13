@@ -1,3 +1,0 @@
-# Poison #3: a Spring descriptor, meaningless in the dev server runtime
-# (the dev server classloader has no Spring at all).
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=com.company.crm.theme.CobaltThemeAutoConfiguration

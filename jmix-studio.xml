@@ -67,7 +67,4 @@
       </entry>
     </moduleSettings>
   </component>
-  <component name="JmixPluginProjectSettings">
-    <option name="suppressSPNotification" value="true" />
-  </component>
 </project>

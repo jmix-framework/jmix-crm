@@ -40,11 +40,11 @@ public class AddContextMenuFactory {
         addItem.setAriaLabel(messageBundle.getMessage("addContextAction"));
 
         SubMenu subMenu = addItem.getSubMenu();
-        subMenu.addItem(attachmentUpload, null);
+        subMenu.addItem(attachmentUpload, "");
 
         MenuItem crmEntityItem = subMenu.addItem(
                 createMenuItemContent(VaadinIcon.DATABASE, messageBundle.getMessage("addCrmEntityAction")),
-                null
+                ""
         );
         SubMenu crmEntitySubMenu = crmEntityItem.getSubMenu();
         contextEntityRegistry.addMenuDefinitions()

@@ -11,7 +11,7 @@ group = 'com.company'
 version = '3.0.1'
 
 jmix {
-    bomVersion = '3.0.1'
+    bomVersion = '3.1.999-SNAPSHOT'
 }
 
 vaadin {
@@ -29,6 +29,8 @@ java {
 }
 
 repositories {
+    // mavenLocal()
+
     mavenCentral()
 
     maven {
@@ -107,7 +109,7 @@ dependencies {
     implementation 'io.jmix.translations:jmix-translations-es'
 
     //              --- [ JST-5452 TEST THEME ] ---
-    // Variant A — module dependency: theme resources come from the crm-theme output directory.
+    // Variant A — module dependency: Studio reads the crm-theme source resource root directly.
     implementation project(':crm-theme')
     // Variant B — jar dependency: run `./gradlew :crm-theme:jar` first,
     // then comment out variant A and uncomment the line below.

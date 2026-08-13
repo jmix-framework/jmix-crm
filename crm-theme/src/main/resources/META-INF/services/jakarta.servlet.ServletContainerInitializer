@@ -1,4 +1,0 @@
-# Poison #2: Jetty discovers ServletContainerInitializers over the whole extra classpath.
-# This class does not exist, so putting this artifact on the dev server classpath as is
-# makes the Jetty context fail to start.
-com.company.crm.theme.CobaltServletContainerInitializer

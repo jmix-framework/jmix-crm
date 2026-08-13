@@ -27,6 +27,11 @@ import javax.sql.DataSource;
 @StyleSheet("cobalt/master.css")
 // JST-5452 case 2: reusable theme folder from the crm-theme dependency. Uncomment to check.
 // @StyleSheet("themes/cobalt/styles.css")
+// JST-5452 case 3: legacy standalone reusable theme. Comment out every @StyleSheet above first.
+// @Theme("cobalt")
+// JST-5452 case 4: project theme with cobalt as its dependency parent.
+// Comment out every @StyleSheet above first.
+// @Theme("crm-preview")
 @JsModule("./src/theme/color-scheme-switching-support.js")
 @PWA(name = "CRM", shortName = "CRM", offline = false)
 @SpringBootApplication
