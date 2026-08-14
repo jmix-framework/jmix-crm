@@ -4,7 +4,6 @@
       xmlns:calendar="http://jmix.io/schema/fullcalendar/ui"
       xmlns:pvttbl="http://jmix.io/schema/pvttbl/ui"
       xmlns:search="http://jmix.io/schema/search/ui"
-      xmlns:dynattr="http://jmix.io/schema/dynattr/flowui"
       xmlns:kanban="http://jmix.io/schema/kanban/ui"
       xmlns:dashb="http://jmix.io/schema/vaadin-dashboard/ui"
       xmlns:sprd="http://jmix.io/schema/vaadin-spreadsheet/ui"
@@ -59,6 +58,7 @@
         <!-- ============================================================= -->
         <h3 text="1. Layout containers"/>
 
+
         <hbox id="hboxSample" padding="true" spacing="true">
             <button id="hboxButton1" text="In hbox"/>
             <button id="hboxButton2" text="In hbox"/>
@@ -73,7 +73,9 @@
             <button id="flexButton2" text="Flex 2"/>
         </flexLayout>
 
-        <scroller id="scrollerSample" width="20em" height="6em" scrollBarsDirection="VERTICAL">
+        <!-- minHeight everywhere below: fixed-height children get flex-squeezed to 0 in the
+             overfilled vertical layout (both runtime and preview), minHeight also tests size attrs -->
+        <scroller id="scrollerSample" width="20em" height="6em" minHeight="6em" scrollBarsDirection="VERTICAL">
             <vbox id="scrollerContent">
                 <span id="scrollerSpan1" text="Scrollable line 1"/>
                 <span id="scrollerSpan2" text="Scrollable line 2"/>
@@ -99,7 +101,7 @@
             </accordionPanel>
         </accordion>
 
-        <tabSheet id="tabSheetSample" width="100%">
+        <tabSheet id="tabSheetSample" width="100%" minHeight="8em">
             <tab id="tabSheetTab1" label="Tab 1">
                 <vbox id="tabSheetTab1Box">
                     <button id="tabSheetTab1Button" text="Tab 1 button"/>
@@ -117,7 +119,7 @@
             <tab id="tabsTab2" label="Tabs item 2"/>
         </tabs>
 
-        <split id="splitSample" width="100%" height="8em" splitterPosition="40">
+        <split id="splitSample" width="100%" height="8em" minHeight="8em" splitterPosition="40">
             <vbox id="splitFirst">
                 <span id="splitFirstSpan" text="First pane"/>
             </vbox>
@@ -141,7 +143,10 @@
             <button id="gridLayoutButton3" text="Cell 3"/>
         </gridLayout>
 
-        <sidePanelLayout id="sidePanelLayoutSample" width="100%" height="10em" sidePanelPosition="INLINE_END">
+        <sidePanelLayout id="sidePanelLayoutSample" width="100%" height="10em" minHeight="10em" sidePanelPosition="INLINE_END">
+            <vbox id="sidePanelMainBox">
+                <span id="sidePanelMainSpan" text="Side panel layout main content"/>
+            </vbox>
             <vbox id="sidePanelContentBox">
                 <span id="sidePanelContentSpan" text="Side panel layout content"/>
                 <sidePanelLayoutCloser id="sidePanelCloser"/>
@@ -226,7 +231,7 @@
                 <action id="entityPickerClear" type="entity_clear"/>
             </actions>
         </entityPicker>
-        <entityComboBox id="entityComboBoxSample" label="entityComboBox" itemsContainer="clientsDc">
+        <entityComboBox id="entityComboBoxSample" label="entityComboBox" metaClass="Client" itemsContainer="clientsDc">
             <actions>
                 <action id="entityComboBoxLookup" type="entity_lookup"/>
                 <action id="entityComboBoxClear" type="entity_clear"/>
@@ -266,7 +271,9 @@
 
         <!-- listMenu / horizontalMenu are MenuConfig-driven: placeholder-only in preview -->
         <listMenu id="mainListMenu" width="16em" height="10em"/>
-        <horizontalMenu id="horizontalMenuSample" width="100%"/>
+        <!-- horizontalMenu disabled: crm menu.xml has root-level <separator/>, runtime HorizontalMenu
+             throws UnsupportedOperationException while preview shows a placeholder (QA finding) -->
+        <!--<horizontalMenu id="horizontalMenuSample" width="100%"/>-->
         <menuFilterField id="menuFilterFieldSample" menu="mainListMenu" placeholder="Filter menu"/>
 
         <!-- ============================================================= -->
@@ -336,6 +343,11 @@
         <!-- dataGrid without <columns>: nothing to build from XML -->
         <dataGrid id="clientsDataGridNoColumns" dataContainer="clientsDc" width="100%" height="10em"/>
 
+        <!-- includeAll: columns come from entity metadata (preview needs Studio environment for this) -->
+        <dataGrid id="clientsDataGridIncludeAll" dataContainer="clientsDc" width="100%" height="10em">
+            <columns includeAll="true" exclude="id,version,createdBy,createdDate,lastModifiedBy,lastModifiedDate"/>
+        </dataGrid>
+
         <treeDataGrid id="categoriesTreeDataGrid" dataContainer="categoriesDc" hierarchyProperty="parent"
                       width="100%" height="14em">
             <columns>
@@ -399,8 +411,9 @@
             <fontIcon id="fontIconSample" iconClassNames="fa fa-star"/>
         </hbox>
 
-        <image id="imageSample" resource="https://www.jmix.io/assets/images/jmix-logo.svg"
-               alternateText="Sample image" width="8em"/>
+        <image id="imageSample" resource="https://svgsilh.com/svg/1801287.svg"
+               alternateText="Sample image" height="10em"/>
+        <image id="imageClasspath" resource="images/logo.svg" alternateText="Classpath image" width="8em"/>
         <image id="imageBound" dataContainer="categoryItemDc" property="image" width="8em"/>
 
         <markdown id="markdownWithAttribute" content="# Markdown heading&#10;&#10;Rendered from the `content` attribute."/>
@@ -419,7 +432,9 @@
         <h3 text="8. Login components"/>
 
         <loginForm id="loginFormSample"/>
-        <loginOverlay id="loginOverlaySample"/>
+        <!-- loginOverlay disabled for section-by-section QA: in preview it renders as an opened
+             fullscreen overlay hiding the whole page, in runtime it stays closed/invisible (QA finding) -->
+        <!--<loginOverlay id="loginOverlaySample"/>-->
 
         <!-- ============================================================= -->
         <!-- 9. Fragment                                                   -->
@@ -515,8 +530,10 @@
 
         <search:searchField id="searchFieldSample" placeholder="Full-text search"/>
 
-        <dynattr:dynamicAttributesPanel id="dynamicAttributesPanelSample" dataContainer="clientDc"
-                                        categoryFieldVisible="true"/>
+        <!-- dynamicAttributesPanel disabled: runtime requires a Categorized entity
+             (DynamicAttributesPanel.initCategoryField throws for Client), preview renders it fine (QA finding) -->
+        <!--<dynattr:dynamicAttributesPanel id="dynamicAttributesPanelSample" dataContainer="clientDc"
+                                        categoryFieldVisible="false"/>-->
 
         <charts:chart id="chartSample" width="100%" height="16em">
             <charts:title text="Chart title"/>
@@ -532,20 +549,20 @@
             </charts:series>
         </charts:chart>
 
-        <calendar:calendar id="calendarSample" width="100%" height="20em"
+        <calendar:calendar id="calendarSample" width="100%" height="20em" minHeight="20em"
                            initialDisplayMode="DAY_GRID_MONTH"/>
         <hr width="100%" height="2em"></hr>
         <pvttbl:pivotTable id="pivotTableSample" dataContainer="ordersDc" width="100%" height="16em"
                            showUI="true"/>
 
-        <kanban:kanban id="kanbanSample" dataContainer="ordersDc" width="100%" height="20em">
+        <kanban:kanban id="kanbanSample" dataContainer="ordersDc" width="100%" height="20em" minHeight="20em">
             <kanban:propertiesMapping id="id" status="status" text="number"/>
             <kanban:columns>
                 <kanban:column dataField="a" width="5"/>
             </kanban:columns>
         </kanban:kanban>
 
-        <dashb:dashboard id="dashboardSample" maximumColumnCount="2">
+        <dashb:dashboard id="dashboardSample" maximumColumnCount="2" minHeight="12em">
             <dashb:dashboardWidget id="dashboardWidgetSample" title="Widget">
                 <dashb:content>
                     <span id="dashboardWidgetSpan" text="Widget content"/>
@@ -561,6 +578,93 @@
         </dashb:dashboard>
 
         <sprd:spreadsheet id="spreadsheetSample" width="100%" height="20em"/>
+
+        <!-- ============================================================= -->
+        <!-- 12. Attribute-loading matrix                                  -->
+        <!-- Attribute-rich variants to verify preview loads them          -->
+        <!-- ============================================================= -->
+        <h3 text="12. Attribute matrix"/>
+
+        <badge id="badgeSample" text="badge" number="7" icon="CHECK" themeNames="success pill"/>
+
+        <comboBoxPicker id="comboBoxPickerSample" label="comboBoxPicker" placeholder="Pick a value">
+            <actions>
+                <action id="comboBoxPickerClear" type="value_clear"/>
+            </actions>
+        </comboBoxPicker>
+
+        <textField id="textFieldFull" label="textField (full attrs)" placeholder="Placeholder"
+                   helperText="Helper text below the field" title="Tooltip via title"
+                   required="true" requiredMessage="Required!" clearButtonVisible="true"
+                   themeNames="small" width="24em" maxLength="20" tabIndex="3" autofocus="true">
+            <prefix>
+                <icon icon="SEARCH"/>
+            </prefix>
+            <suffix>
+                <icon icon="CHECK"/>
+            </suffix>
+            <tooltip text="Tooltip element text" position="TOP_START"/>
+        </textField>
+
+        <textField id="textFieldReadOnly" label="textField readOnly" value="Read-only value" readOnly="true" width="24em"/>
+        <textField id="textFieldDisabled" label="textField disabled" value="Disabled value" enabled="false" width="24em"/>
+
+        <textArea id="textAreaFull" label="textArea (full attrs)" helperText="Area helper"
+                  maxLength="100" required="true" themeNames="small" width="24em" height="6em" minHeight="6em"/>
+
+        <comboBox id="comboBoxFull" label="comboBox (full attrs)" placeholder="Choose..."
+                  helperText="Combo helper" required="true" allowCustomValue="true"
+                  clearButtonVisible="true" autoOpen="false" themeNames="small align-center" width="24em"/>
+
+        <datePicker id="datePickerFull" label="datePicker (full attrs)" placeholder="dd.mm.yyyy"
+                    helperText="Date helper" clearButtonVisible="true" weekNumbersVisible="true"
+                    min="2020-01-01" max="2030-12-31" width="24em"/>
+
+        <numberField id="numberFieldFull" label="numberField (full attrs)" helperText="Number helper"
+                     min="0" max="100" step="5" stepButtonsVisible="true" value="25" width="24em"/>
+
+        <checkbox id="checkboxIndeterminate" label="checkbox indeterminate" indeterminate="true"/>
+        <checkbox id="checkboxReadOnly" label="checkbox readOnly checked" value="true" readOnly="true"/>
+
+        <hbox id="buttonMatrix" spacing="true" alignItems="CENTER">
+            <button id="buttonPrimary" text="primary" themeNames="primary"/>
+            <button id="buttonError" text="error small" themeNames="error small"/>
+            <button id="buttonIconAfter" text="icon after" icon="ARROW_RIGHT" iconAfterText="true"/>
+            <button id="buttonDisabled" text="disabled" enabled="false"/>
+            <button id="buttonTertiary" text="tertiary inline" themeNames="tertiary-inline" title="native tooltip"/>
+        </hbox>
+
+        <progressBar id="progressBarIndeterminate" width="14em" indeterminate="true"/>
+        <progressBar id="progressBarContrast" width="14em" min="0" max="10" value="7" themeNames="contrast"/>
+
+        <details id="detailsThemed" summaryText="Details filled+small" opened="true" themeNames="filled small">
+            <span id="detailsThemedSpan" text="Filled details content"/>
+        </details>
+
+        <span id="spanThemed" text="span with themeNames badge" themeNames="badge success"/>
+        <div id="divStyled" css="color: red; border: 1px dashed gray; padding: 4px" text="div with css attr"/>
+
+        <vbox id="vboxStyled" classNames="my-custom-class" alignItems="END" width="24em"
+              css="background: lightyellow">
+            <span id="vboxStyledSpan" text="vbox alignItems=END + css"/>
+        </vbox>
+
+        <!-- ============================================================= -->
+        <!-- 13. Action-bound buttons                                      -->
+        <!-- ============================================================= -->
+        <h3 text="13. Action buttons"/>
+
+        <hbox id="actionButtonsBox" spacing="true">
+            <!-- qualified refs to the dataGrid actions declared in section 5 -->
+            <button id="actionCreateButton" action="clientsDataGrid.clientsGridCreate"/>
+            <button id="actionEditButton" action="clientsDataGrid.clientsGridEdit"/>
+            <button id="actionRemoveButton" action="clientsDataGrid.clientsGridRemove"/>
+            <!-- view-level action with own text/icon -->
+            <button id="actionViewButton" action="sampleViewAction"/>
+            <!-- button's own text/icon must win over the action -->
+            <button id="actionOverrideButton" action="clientsDataGrid.clientsGridCreate"
+                    text="Custom text" icon="STAR"/>
+        </hbox>
 
     </layout>
 </view>
