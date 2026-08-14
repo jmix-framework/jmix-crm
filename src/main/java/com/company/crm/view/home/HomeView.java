@@ -53,7 +53,6 @@ import io.jmix.chartsflowui.kit.data.chart.ListChartItems;
 import io.jmix.core.Messages;
 import io.jmix.core.Metadata;
 import io.jmix.core.metamodel.datatype.DatatypeFormatter;
-import io.jmix.core.security.CurrentAuthentication;
 import io.jmix.flowui.DialogWindows;
 import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.Views;
@@ -97,7 +96,7 @@ public class HomeView extends StandardView {
     public static final String ROUTE = "";
 
     private static final String WEBINAR_URL =
-            "https://forms.jmix.io/whats-new-in-jmix-3.0?utm_source=demo&utm_medium=site&utm_campaign=webinar";
+            "https://forms.jmix.io/jmix-workshop-ai-coding?utm_source=b2b&utm_medium=b2b&utm_campaign=webinar";
 
     @Autowired
     private Metadata metadata;
@@ -128,8 +127,6 @@ public class HomeView extends StandardView {
     private DialogWindows dialogWindows;
     @Autowired
     private DateFormatter<LocalDate> localDateFormatter;
-    @Autowired
-    private CurrentAuthentication currentAuthentication;
 
     @ViewComponent
     private VerticalLayout webinarBannerBox;
@@ -163,10 +160,6 @@ public class HomeView extends StandardView {
     }
 
     private boolean isWebinarBannerVisible() {
-        if ("ru".equals(currentAuthentication.getLocale().getLanguage())) {
-            return false;
-        }
-
         VaadinRequest request = VaadinService.getCurrentRequest();
         if (request == null) {
             return false;

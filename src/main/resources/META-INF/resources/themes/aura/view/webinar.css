@@ -33,8 +33,8 @@
     border: none;
     cursor: pointer;
     z-index: 2;
-    left: 97%;
-    top: 24.1%;
+    left: 97.3%;
+    top: 32%;
     width: 2.9%;
     height: 23%;
 }
@@ -47,10 +47,10 @@
     }
 
     .webinar-banner-close {
-        left: 97.3%;
-        top: 36%;
-        width: 2.3%;
-        height: 17%;
+        left: 95.6%;
+        top: 21.6%;
+        width: 3%;
+        height: 20%;
     }
 }
 
@@ -62,8 +62,8 @@
     }
 
     .webinar-banner-close {
-        left: 93.2%;
-        top: 15.5%;
+        left: 89.5%;
+        top: 15%;
         width: 3.5%;
         height: 23%;
     }
@@ -78,7 +78,7 @@
 
     .webinar-banner-close {
         left: 90.2%;
-        top: 13.3%;
+        top: 29%;
         width: 8%;
         height: 11%;
     }
