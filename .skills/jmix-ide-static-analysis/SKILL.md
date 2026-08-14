@@ -45,6 +45,45 @@ flags the same Java errors a compile would). Rules when you use one:
   only generic/non-Jmix findings on a file you KNOW has a descriptor (a `*-view.xml`
   you just edited), treat the inspection as UNAVAILABLE for this run — do NOT call
   the file clean. Fall through to `compileJava` + the mechanical descriptor checks.
+- **A compile-only fallback leaves debt — record it.** When no inspection is
+  connected, LIST the files that got only `compileJava` in your completion report,
+  and re-inspect them the next time a session has the inspection available. A green
+  compile is not a substitute: it misses every Jmix semantic finding below.
+
+### Jmix semantic findings only this inspection catches — fix them
+
+These are TRUE positives. They are invisible to `compileJava`, to the mechanical
+checks, and to a green `clean test`:
+
+- **Unresolved `msg://` key** — renders as the literal key at runtime.
+- **Invalid property path / missing data container** in a `*-view.xml`.
+- **Unfetched-attribute risk** on a property a view reads but the fetch plan omits
+  (see `jmix-configure-fetch-plan`).
+- **`Result of DataManager.save() is not used; use saveWithoutReload()`** —
+  `save()` re-selects the entity after persisting; when the caller discards the
+  result that reload is wasted work. See `jmix-create-service`.
+
+### Known false positives — do NOT chase these
+
+Expected noise; state them as understood and move on:
+
+| Finding | Why it is not a defect |
+|---|---|
+| "Method is never used" on `@ConfigurationProperties` getters/setters | called by Spring through reflection |
+| "Method is never used" on entity getters/setters | called by Jmix/JPA through reflection and by view descriptors |
+| "Unused property" on an i18n key | normal when the view that references it does not exist yet (e.g. a detail-view title key added while building the list view) |
+| "Field can be converted to a local variable" in a test class | fields hold `@Autowired`/fixture state across methods |
+| "Result of `DataManager.save()` is not used" in a TEST that keeps the entity for cleanup | only a false positive if the returned instance IS used (e.g. added to a cleanup list); if the result is truly discarded it is the real finding above |
+
+### What NO static check covers
+
+- A CSS custom property that does not exist in the app's active theme. A
+  `--lumo-*` variable in an Aura-themed app is undefined: the browser silently
+  falls back (color → inherited, `border-radius` → 0), nothing errors, and every
+  gate stays green. Only reading the COMPUTED style in a real browser catches it.
+  See `jmix-style-ui`.
+- Code paths that only run outside a user request — schedulers, `@Async`,
+  message listeners. See `jmix-run-background-code`.
 
 ## 2. Compile — Java ground truth, and floor when no inspection
 

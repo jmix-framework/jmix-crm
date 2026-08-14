@@ -225,6 +225,47 @@ loader takes a `:container_*` / `:component_*` parameter that
 
 Before finishing, verify that saved reference entities can appear in the component data provider. If a field is required, do not leave a reference component without a working item source or lookup action.
 
+## To-many data grid
+
+To show a to-many composition or association (`Order.products`, `Customer.tags`) on a detail
+view, nest a property-bound `<collection>` INSIDE the `<instance>` container and
+bind a `dataGrid` to it. The container infers its metaclass from the property, so
+a `class` attribute here is a descriptor defect:
+
+```xml
+<instance id="orderDc" class="com.company.app.entity.Order">
+    <fetchPlan extends="_base">
+        <property name="products" fetchPlan="_instance_name"/>
+    </fetchPlan>
+    <loader id="orderDl"/>
+    <!-- property-bound: NO class, NO loader, NO query -->
+    <collection id="productsDc" property="products"/>
+</instance>
+```
+
+```xml
+<dataGrid id="productsDataGrid" dataContainer="productsDc" width="100%">
+    <columns>
+        <column property="name"/>
+    </columns>
+</dataGrid>
+```
+
+The trap is that a TOP-LEVEL `<collection>` (a list view's own loader) REQUIRES
+`class`. A nested property-bound collection takes `property` and nothing else — no `class`,
+no loader, no query. The parent's fetch plan must include the property, or the
+grid is empty (see `jmix-configure-fetch-plan`).
+
+For a read-only grid, declare no `list_create` / `list_edit` / `list_remove`
+actions on it.
+
+## Styling
+
+Styling a field, a card, or a component you build in the controller — CSS classes,
+component theme variants, `getStyle().set(...)`, `--aura-*` / `--lumo-*` tokens —
+is covered by `jmix-style-ui`. Read it before typing a CSS custom property: a
+token the active theme does not define fails silently and passes every gate.
+
 ## Cross-field validation
 
 For cross-field/manual validation, add a `@Subscribe` handler on `ValidationEvent` and report failures via `event.getErrors().add("...")`; for programmatic checks (e.g. before a custom save) use the `ViewValidation` bean (`validateUiComponents`, `showValidationErrors`).
@@ -240,3 +281,6 @@ For cross-field/manual validation, add a `@Subscribe` handler on `ValidationEven
 - Hardcoded labels or titles.
 - Hiding required fields without setting defaults elsewhere.
 - Missing view policy for dialog-opened detail views.
+- A `class` attribute on a nested property-bound `<collection property="..."/>`.
+- `<markdown>` with an empty or absent `content` attribute (throws at view load), or a guessed `io.jmix.flowui...Markdown` import.
+- CSS custom properties from a theme the app does not run (e.g. `--lumo-*` in an Aura app) — see `jmix-style-ui`.

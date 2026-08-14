@@ -38,10 +38,15 @@ If a seed test is RED after your changes, YOU broke it — fix it to green. Do
 not call a red `clean test` "pre-existing".
 
 A green Gate 2 is necessary but NOT sufficient: the seed tests load the context
-but do NOT open your new views or exercise your new roles. It catches
-catastrophic breakage (broken view registry, schema/Liquibase error, missing
-`@JmixEntity`), not render-time UI defects — those are caught by the mechanical
-checks and the optional Gate 3.
+but do NOT open your new views, exercise your new roles, or fire code that only
+runs outside a user request (see `jmix-run-background-code`). It catches catastrophic 
+breakage (broken view registry, schema/Liquibase error, missing `@JmixEntity`), 
+not render-time UI defects — those are caught by the mechanical checks and Gate 3.
+
+The rule behind it: a defect survives every gate when nothing enters its code
+path. So when you add a path that nothing yet calls, ADD THE CALLER — a test or a
+render walk — or report it as unverified. Never write "all gates passed" for a
+path no gate entered.
 
 ## Gate 3 — render walk (REQUIRED for every view/role you created or changed)
 
@@ -75,10 +80,33 @@ property above (verify with `./gradlew dependencies | grep actuator`). If you
 cannot add/configure it, use the `@UiTest` path instead, or an alternative
 readiness signal: tail the boot log for `Started <App>Application in ...`.
 
+**Before you start it — decide which database the walk writes into.** A walk of a
+data-driven view usually has to CREATE data: the view shows nothing until
+reference records, their parents, and the child rows that give them amounts all
+exist. Those records are written by the walk and left behind, and there is no
+undo step below. The configured development datasource is frequently the
+developer's own working dataset, so choose deliberately:
+
+- **A throwaway datasource — the default choice.** Select it on the run command
+  line so the properties file is never touched:
+  ```bash
+  nohup ./gradlew --no-daemon bootRun \
+        --args="--main.datasource.url=jdbc:hsqldb:file:/tmp/renderwalk" > /tmp/jmix_app.log 2>&1 &
+  ```
+  Do NOT edit `application.properties` to point it elsewhere: that file is
+  tracked, and it often carries a local change of the developer's that you would
+  then be committing or reverting by accident.
+- **The configured development database — only for a read-only walk**, where
+  every view you open already has the data it needs and you create nothing.
+
+The fixture data is a side effect you own. Report what you created and where it
+landed.
+
 If you do have one, run the mechanical checks first, then:
 
 1. Start the app in the BACKGROUND so it does not block your turn, capturing its
-   log — e.g. `nohup ./gradlew --no-daemon bootRun > /tmp/jmix_app.log 2>&1 &`.
+   log — e.g. `nohup ./gradlew --no-daemon bootRun > /tmp/jmix_app.log 2>&1 &`,
+   adding the datasource override above unless the walk is read-only.
 2. Poll readiness on the Spring Boot Actuator health endpoint, then proceed — do
    not wait on the (non-terminating) process:
    ```bash
@@ -91,7 +119,9 @@ If you do have one, run the mechanical checks first, then:
    each button/action, fill each field, and confirm no error overlay or server
    exception.
 4. **Shut the background app down** when finished (`kill` the bootRun PID; if the
-   port stays held, kill whatever holds it). Always leave the port free.
+   port stays held, kill whatever holds it). Always leave the port free, and state
+   in your report which database the walk ran against and what data it created
+   there.
 
 ## Honest scope — Gate 3 is a render gate
 

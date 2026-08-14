@@ -64,14 +64,45 @@ List<Customer> activeCustomers = dataManager.load(Customer.class)
         .list();
 ```
 
+### DataManager saving
+
+When the result is unused — `saveWithoutReload()`.
+
+`save()` re-selects the entity from the database after persisting, so the caller
+gets a fresh instance. When the caller does NOT use the returned instance, that
+reload is wasted work:
+
+```java
+// result discarded → the reload is pointless
+dataManager.save(repository);
+
+// right call for a fire-and-forget persist
+dataManager.saveWithoutReload(repository);
+```
+
+Rule: use `save()` when you consume the return value (you need the generated id,
+the new version, or the reloaded state); use `saveWithoutReload()` when you do
+not. The Jmix IDE inspection reports the discarded-result case as *"Result of
+DataManager.save() is not used; use saveWithoutReload() to avoid a redundant
+reload"* — it is a true finding, and `compileJava` never reports it, so a
+compile-only Gate 1 lets it through (see `jmix-ide-static-analysis`).
+
 ## Gotchas
 
 - New vs detached: a null id does not mean "new" (ids can be generated early). Use `io.jmix.core.EntityStates#isNew(entity)`.
 - `DataManager` does more than `load`/`save`: `loadValues()` for scalar/aggregate data, the Condition API (`PropertyCondition` / `LogicalCondition`) as a JPQL alternative, pessimistic `lockMode()`, and hard delete by setting the `PersistenceHints.SOFT_DELETION` hint to `false` (e.g. `saveContext.setHint(PersistenceHints.SOFT_DELETION, false)`).
 
+## Called from a scheduler, `@Async`, or a listener?
+
+A service method reached from a thread with no logged-in user needs
+`@Authenticated` (or a `SystemAuthenticator` block), or its first `DataManager`
+call throws `IllegalStateException: Authentication is not set`. No gate catches
+this — see `jmix-run-background-code`.
+
 ## Forbidden
 
 - Business logic in view controllers.
+- `dataManager.save(...)` with the result discarded — use `saveWithoutReload(...)`.
 - UI components, dialogs, or notifications in services.
 - Constructor calls for Jmix entities.
 - `EntityManager` for regular CRUD.
