@@ -201,6 +201,9 @@
 
         <checkboxGroup id="checkboxGroupSample" label="checkboxGroup"/>
         <radioButtonGroup id="radioButtonGroupSample" label="radioButtonGroup"/>
+        <!-- enum-bound group: runtime populates ClientType constants, preview should mirror them -->
+        <radioButtonGroup id="radioButtonGroupEnum" label="radioButtonGroup (enum)"
+                          dataContainer="clientDc" property="type"/>
         <listBox id="listBoxSample" height="6em"/>
         <multiSelectListBox id="multiSelectListBoxSample" height="6em"/>
         <twinColumn id="twinColumnSample" label="twinColumn"
