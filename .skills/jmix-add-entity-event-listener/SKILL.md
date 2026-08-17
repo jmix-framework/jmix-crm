@@ -111,6 +111,19 @@ Use normal Spring `@EventListener` for logic that must affect the current save/r
 
 Use `EntityChangedEvent.Type.DELETED` to detect deletes. Deleted entity instances cannot be loaded by `event.getEntityId()` because they have already been removed, so delete-side logic must use the old values and old reference ids available from `event.getChanges()`.
 
+For `Type.DELETED`, `event.getChanges()` snapshots every non-read-only property of the entity with its last-known pre-delete value — unlike `Type.UPDATED`, where only actually-mutated attributes appear. So `getOldValue(name)` works for scalar (non-reference) attributes too, and references come back as ids:
+
+```java
+@EventListener
+public void onOrderLineChanged(EntityChangedEvent<OrderLine> event) {
+    if (event.getType() == EntityChangedEvent.Type.DELETED) {
+        LocalDate postingDate = event.getChanges().getOldValue("postingDate"); // scalar pre-delete value
+        Id<Order> orderId = event.getChanges().getOldReferenceId("order");     // reference as id
+        // validate against the pre-delete state, e.g. reject the delete
+    }
+}
+```
+
 ## EntitySavingEvent and EntityLoadingEvent
 
 `EntitySavingEvent` contains the entity instance before it is written to the data store. Use it for required defaults, value normalization, and transformations that must be persisted with the current save operation.

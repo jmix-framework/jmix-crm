@@ -14,7 +14,7 @@ Use this skill when creating a top-level list/search view for an entity.
 3. Add `@Route(value = "...", layout = MainView.class)`.
 4. Add `@ViewController(id = "Entity.list")`.
 5. Add `@ViewDescriptor(path = "entity-list-view.xml")`.
-6. Add `@LookupComponent("<entities>DataGrid")`.
+6. Add `@LookupComponent("<entities>DataGrid")` when the view can be opened as a lookup — an entity-picker dialog via `@PrimaryLookupView` or an explicit lookup builder call. A pure management/browse screen that is never used as a picker can omit it; the annotation only backs `getLookupComponent()`/`findLookupComponent()` in the lookup flow.
 7. Create XML descriptor with collection container, loader, `dataLoadCoordinator`, grid actions, toolbar buttons, and columns. Add `<urlQueryParameters>` when the view includes filter or pagination — always paired with the matching components (see below).
 8. Verify every JPQL query uses the JPA/Jmix entity name, not the database table name.
 9. Render a visible button for every grid action that users must trigger.

@@ -127,6 +127,29 @@ Set it with the `fetch` attribute on a fetch-plan property (the XML attribute is
 </fetchPlan>
 ```
 
+### `BATCH` may do nothing for a NESTED collection — measure, do not assume
+
+A plan built with `FetchPlanBuilder` is installed as a `LOAD_GROUP`, not a `FETCH_GROUP`, because its `loadPartialEntities()` is false. The mode is still recorded — the DEBUG log of `io.jmix.eclipselink.impl.FetchGroupManager` prints `Fetch modes for ...: e.orderLines=BATCH` — but EclipseLink loads such a collection with one query per parent anyway:
+
+```
+... WHERE ORDER_ID = ?        -- repeated once for every row of the page
+```
+
+Calling `partial()` does not change it. So `fetch="BATCH"` is not a reliable cure for N+1 on a nested collection. When a measurement shows the per-parent queries, take the collection OUT of the fetch plan and load it for the whole page with one repository query instead:
+
+```java
+// one query for the page, not one per parent
+List<OrderLine> lines = orderLineRepository.findByOrderIdIn(orderIds);
+```
+
+Only a count of executed SQL proves which shape you got: `compileJava`, the IDE inspection, and a green `clean test` all pass either way. A test that asserts the query count does not grow with page size is the guard.
+
+Never set `FetchMode.JOIN` on a to-one nested INSIDE a `BATCH` collection. It looks like a way to fold that reference into the collection query, but EclipseLink throws at query time:
+
+```
+NullPointerException: Cannot invoke "java.util.Collection.toArray()" because "c" is null
+```
+
 ## JmixDataRepository
 
 Select the plan in one of two ways: pass a `FetchPlan` as the **last** method argument, or annotate the method with `@FetchPlan("name")` (`io.jmix.core.repository.FetchPlan`). A plain `String` parameter is bound as an ordinary query parameter, NOT a plan selector. Build complex plans with the `FetchPlans` bean: `fetchPlans.builder(Order.class).addFetchPlan(FetchPlan.BASE).add("customer", FetchPlan.INSTANCE_NAME).build()`.
@@ -176,6 +199,8 @@ never the compiler.
 - Casting a base-class-typed load to a subclass and reading a subclass-only attribute.
 - Reading local attributes omitted from a partial fetch plan.
 - Loading references inside loops when a fetch plan can load them with the root query.
+- `FetchMode.JOIN` on a to-one nested inside a `FetchMode.BATCH` collection — EclipseLink throws at query time.
+- Trusting `fetch="BATCH"` to remove N+1 on a nested collection without counting the executed SQL.
 - Deep multi-collection graphs in a single list load.
 - Using fetch plans as a security boundary.
 - `@Table` names in JPQL queries.

@@ -153,6 +153,33 @@ It breaks Studio round-tripping and the code-as-source-of-truth convention, and 
 is found by nothing but this check. Do it as you write the column, not as a later
 audit.
 
+### Make it unique when the column is a natural key
+
+For a single-column natural key that must be unique, add `unique = true` to the
+`@Index` and mirror it with `unique="true"` on the `<createIndex>`:
+
+```java
+@Table(name = "DEPARTMENT", indexes = @Index(
+        name = "IDX_DEPARTMENT_ON_NAME", columnList = "NAME", unique = true))
+```
+
+```xml
+<createIndex indexName="IDX_DEPARTMENT_ON_NAME" tableName="DEPARTMENT" unique="true">
+    <column name="NAME"/>
+</createIndex>
+```
+
+For a rule that spans several columns, use a unique **constraint** rather than a
+unique index — `@Table(uniqueConstraints = @UniqueConstraint(name = "UK_ORDER_LINE",
+columnNames = {"ORDER_ID", "PRODUCT_ID"}))` paired with `<addUniqueConstraint
+tableName="ORDER_LINE" columnNames="ORDER_ID, PRODUCT_ID"
+constraintName="UK_ORDER_LINE"/>`. Same name on both sides, as above.
+
+One rule neither can express: a **case-insensitive** uniqueness constraint cannot be
+declared with `@Index`/`@UniqueConstraint` at all — it needs a functional index on
+`lower(column)` and dialect-specific SQL, so decide it at design time, not when
+writing the changelog.
+
 ## Required-field defaults — at the ENTITY layer, not elsewhere
 
 When a required field "defaults to X" or is "auto-set on create/update"
@@ -223,6 +250,14 @@ pattern see `jmix-add-entity-event-listener`.
 | Default set only in a service mutator that runs on UPDATE | The initial INSERT has no default; `@NotNull` fails. And a test calling `DataManager` directly never enters the service. |
 | Default set in an `EntityChangedEvent` listener    | The listener fires AFTER persist — too late for `@NotNull`. It reacts to saves; it does not default them. |
 | Default set only in the calling UI controller      | Programmatic paths (services, REST, tests) bypass it. |
+
+## Accessors
+
+Match what the project's entities already do. A codebase where every entity carries
+`@Getter @Setter` is a working configuration — the enhancer runs over those classes
+and the suite passes — so writing the one new entity with hand-written accessors
+makes it the odd one out for a breakage that does not occur. In a project with
+hand-written accessors, write them by hand.
 
 ## Composition Checklist
 
@@ -305,7 +340,7 @@ Apply common Java validation and persistence mappings when the field semantics a
 
 - Missing `@JmixEntity`.
 - Constructor-based entity creation.
-- Lombok annotations (`@Data`, `@Getter`, `@Setter`, etc.) on Jmix entities — they interfere with the entity enhancer and break JPA/Jmix metadata.
+- `@Data`, `@EqualsAndHashCode` or `@ToString` on a Jmix entity: they generate `equals`/`hashCode`/`toString` over mutable persistent fields, replacing the identity semantics the framework relies on and touching lazy references while doing it.
 - `FetchType.EAGER`.
 - Missing Liquibase changelog for persistent changes.
 - A required `@ManyToOne` with `optional = false` but no `@JoinColumn(nullable = false)` — the metamodel then treats it as optional and the UI does not require it.
