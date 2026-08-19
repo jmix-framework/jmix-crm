@@ -45,6 +45,59 @@ flags the same Java errors a compile would). Rules when you use one:
   only generic/non-Jmix findings on a file you KNOW has a descriptor (a `*-view.xml`
   you just edited), treat the inspection as UNAVAILABLE for this run — do NOT call
   the file clean. Fall through to `compileJava` + the mechanical descriptor checks.
+- **Never trust an ALL-ERRORS result either — the IDE may not index the file.**
+  If the inspection reports "Cannot resolve symbol" for practically EVERY symbol,
+  including JDK types such as `String`, `List`, `Map`, that signature means "the
+  IDE is not indexing this file" — the result is garbage, not a broken file. The
+  bogus findings carry severity ERROR, so an errors-only filter does not remove
+  them; do NOT fix code from them. Disregard the whole result and fall back to
+  `compileJava` + the mechanical descriptor checks. For an XML-only edit, where
+  there are no JDK types to look for, the analogue is "message not found" on
+  `msg://` keys that grep DOES resolve in the module's `messages_*.properties`.
+  The most common cause is a git worktree nested under the project root (agent
+  tooling creates these routinely) while the IDE is opened on the main checkout:
+  the file IS inside the project directory, so the inspection accepts the path
+  and returns bogus findings instead of refusing loudly. Mechanical precondition
+  for any file type: `git rev-parse --show-toplevel` run in the edited file's
+  directory must equal `projectPath` — if it differs, the file lives in another
+  worktree and the inspection of that path is not authoritative. The same
+  signature also arises from a file outside any source root, a never-imported
+  Gradle project, or indexing lag right after files were written from outside
+  the IDE.
+- **A compile-only fallback leaves debt — record it.** When no inspection is
+  connected, LIST the files that got only `compileJava` in your completion report,
+  and re-inspect them the next time a session has the inspection available. A green
+  compile is not a substitute: it misses every Jmix semantic finding below.
+
+### Jmix semantic findings only this inspection catches — fix them
+
+These are TRUE positives. They are invisible to `compileJava`, to the mechanical
+checks, and to a green `clean test`:
+
+- **Unresolved `msg://` key** — renders as the literal key at runtime.
+- **Invalid property path / missing data container** in a `*-view.xml`.
+- **Unfetched-attribute risk** on a property a view reads but the fetch plan omits
+  (see `jmix-configure-fetch-plan`).
+- **`Result of DataManager.save() is not used; use saveWithoutReload()`** —
+  `save()` re-selects the entity after persisting; when the caller discards the
+  result that reload is wasted work. See `jmix-create-service`.
+
+### Known false positives — do NOT chase these
+
+Expected noise; state them as understood and move on:
+
+| Finding | Why it is not a defect |
+|---|---|
+| "Method is never used" on `@ConfigurationProperties` getters/setters | called by Spring through reflection |
+| "Method is never used" on entity getters/setters | called by Jmix/JPA through reflection and by view descriptors |
+| "Unused property" on an i18n key | normal when the view that references it does not exist yet (e.g. a detail-view title key added while building the list view) |
+| "Field can be converted to a local variable" in a test class | fields hold `@Autowired`/fixture state across methods |
+| "Result of `DataManager.save()` is not used" in a TEST that keeps the entity for cleanup | only a false positive if the returned instance IS used (e.g. added to a cleanup list); if the result is truly discarded it is the real finding above |
+
+### What NO static check covers
+
+- Code paths that only run outside a user request — schedulers, `@Async`,
+  message listeners. See `jmix-run-background-code`.
 
 ## 2. Compile — Java ground truth, and floor when no inspection
 
