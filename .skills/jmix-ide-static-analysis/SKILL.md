@@ -131,6 +131,11 @@ automatically a failure, but you MUST explain every hit (e.g. each `msg://` key
 must actually resolve in a `messages_*.properties`; each `= :` loader param must
 be bound/guarded).
 
+For `*-view.xml`, the file must start cleanly with an XML tag: either
+`<?xml ...?>` or `<view ...>`. Any BOM, whitespace, or stray content before the
+first `<` is a defect; it can surface as `SAXParseException: Content is not
+allowed in prolog`.
+
 ```bash
 # package line on every new .java (missing → view-registry / import breakage)
 find src/main/java -name '*.java' | while read f; do head -1 "$f" | grep -q '^package ' || echo "MISSING package: $f"; done
@@ -146,6 +151,8 @@ grep -rn "itemsQuery" src/main/resources --include='*-view.xml'
 grep -rn "com.vaadin.flow.component.dialog.Dialog" src/main/java --include='*.java'
 # every msg:// key must resolve in a messages_*.properties (else literal key renders)
 grep -rhoE 'msg://[^"<> ]+' src/main/resources --include='*.xml' | sort -u
+# no BOM / leading content before the XML tag (else SAX "Content is not allowed in prolog")
+find src/main/resources -name '*-view.xml' | while read f; do LC_ALL=C head -c 1 "$f" | grep -q '<' || echo "BAD XML prolog/BOM: $f"; done
 # no 0-byte source file (empty role drops policies; empty *-view.xml poisons registry)
 find src/main -type f \( -name '*.java' -o -name '*.xml' \) -size 0
 ```

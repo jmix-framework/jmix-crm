@@ -60,8 +60,17 @@ For anything NOT already in the project, verify it before you type it:
    ```
 
    Every cached jar on one classpath, so you need not know which artifact owns the
-   class (`-p` also lists non-public members). If the cache holds several versions
-   and a signature looks wrong, check which one the build resolves.
+   class (`-p` also lists non-public members).
+
+   **Read the version the project resolves, not the newest one cached.** Whenever
+   verification reads a framework artifact — a jar, an XSD, a sources archive —
+   resolve the pinned version first (`gradle.properties`, the BOM, or
+   `./gradlew dependencies`) and read only that artifact. The cache commonly holds
+   several versions of the same module side by side, newest first, and the newest
+   is often an unreleased `*.999-SNAPSHOT` whose API and XSD are supersets of the
+   released one. This bites hardest on **XML descriptor attributes**: an attribute
+   that exists only in the snapshot XSD compiles fine and surfaces as an IDE
+   inspection error or a render-time failure, never at `compileJava`.
 
 4. **Floor: grep a known-good example and reuse only what is actually there.**
    Find a real call site in the wider codebase or a reference app and copy its

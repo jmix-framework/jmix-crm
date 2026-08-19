@@ -1,11 +1,12 @@
 ---
 name: jmix-create-liquibase-changelog
-description: Create Liquibase changelogs that exactly match Jmix entity model changes.
+description: Create Liquibase changelogs that exactly match Jmix entity model changes, and register database changelogs supplied by Jmix add-ons that own persistent entities.
 ---
 
 # Create Liquibase Changelog
 
-Use this skill for every persistent entity or schema change.
+Use this skill for every persistent entity or schema change, including adding a
+Jmix add-on that owns database tables.
 
 ## Steps
 
@@ -13,13 +14,14 @@ Use this skill for every persistent entity or schema change.
 2. Follow the existing naming style: sequential files or date/time folders.
 3. Create a new changelog file for the schema change.
 4. Make sure it is reachable from the root `changelog.xml`: usually by placing it under the directory covered by the project's `<includeAll>`, or by adding an explicit `<include>` only when the project uses explicit includes.
-5. Use a changeset id and author that match project style; do not reuse an id within the same changelog file.
-6. Add `ID` and `VERSION` columns for standard Jmix entities.
-7. Add every persistent entity field with exact type, length, precision, scale, and nullability.
-8. Add foreign keys for references.
-9. Add indexes and unique constraints required by the entity or domain.
-10. Verify the table and column names match Java annotations.
-11. Use only type macros already present in the project. If no macro exists, use the standard Liquibase type.
+5. When adding a Jmix add-on that owns persistent entities, add its module changelog to the root changelog with an explicit `<include>`.
+6. Use a changeset id and author that match project style; do not reuse an id within the same changelog file.
+7. Add `ID` and `VERSION` columns for standard Jmix entities.
+8. Add every persistent entity field with exact type, length, precision, scale, and nullability.
+9. Add foreign keys for references.
+10. Add indexes and unique constraints required by the entity or domain.
+11. Verify the table and column names match Java annotations.
+12. Use only type macros already present in the project. If no macro exists, use the standard Liquibase type.
 
 ## Standard Types
 
@@ -36,11 +38,18 @@ Use this skill for every persistent entity or schema change.
 | OffsetDateTime / ZonedDateTime | `timestamp with time zone` |
 | `@Lob` String (unlimited text) | `clob` |
 | `@Lob` byte[] | `blob` |
+| FileRef | `varchar(1024)` |
 | Enum id string | `varchar(50)` |
 
 An entity with an **assigned natural key** takes the id column type of its Java
 field — `bigint` for a `Long` id, not `${uuid.type}`. See `jmix-create-entity`
 (Id strategy).
+
+An entity extending a framework `@MappedSuperclass` inherits its key, and usually
+a version and a tenant column with it. No field in the subclass names them, but
+the table must still create them: read the superclass and take each inherited
+column's name and type from there — do not assume `${uuid.type}` for the primary
+key, these base classes are commonly keyed by an `int`.
 
 ## Entity Table Skeleton
 
@@ -203,6 +212,38 @@ If the project uses explicit includes instead of `includeAll`, follow that exist
 <include file="/com/company/app/liquibase/changelog/030-customer.xml"/>
 ```
 
+## Jmix add-on changelogs
+
+Adding an add-on dependency does not make its module changelog reachable from a
+project master changelog that lists module changelogs explicitly. When the add-on
+owns persistent entities, find its changelog resource and add an explicit include
+to the root `changelog.xml`. For example, the Audit add-on requires:
+
+```xml
+<include file="/io/jmix/audit/liquibase/changelog.xml"/>
+```
+
+Jmix module changelogs commonly use this path pattern:
+
+```xml
+<include file="/io/jmix/<addon>/liquibase/changelog.xml"/>
+```
+
+Confirm the actual resource path in the add-on before adding it. Do not assume
+that the application's `<includeAll>` covers changelogs packaged in add-on JARs.
+
+After startup, verify that the add-on tables exist and exercise a feature that
+uses them. Also search the complete startup log for missing-schema errors:
+
+```bash
+rg -n 'does not exist|relation .* does not exist' /path/to/startup.log
+```
+
+Treat every match as a failure until it is explained. A green `clean test` proves
+that the context loads, but it does not prove the add-on schema was created when
+no test accesses its tables. Some add-ons log the missing-table error and allow
+the application to continue running with the feature unavailable.
+
 ## Forbidden
 
 - New changelog file that is not reachable from the root changelog.
@@ -219,3 +260,5 @@ If the project uses explicit includes instead of `includeAll`, follow that exist
 - `nullable="false"` on a column added to a populated table without a default or a backfill.
 - `value=""` where NULL is meant — omit the value attribute instead.
 - An index in the changelog with no matching `@Index` in the entity's `@Table`.
+- A Jmix add-on with persistent entities whose module changelog is not explicitly
+  reachable from the root changelog.

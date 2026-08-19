@@ -34,8 +34,40 @@ and executed.
 Gate-2 check.** bootRun does not exit — it hangs your turn and leaves the HTTP
 port locked by a zombie process. bootRun is not a gate; Gate 2 is `clean test`.
 
-If a seed test is RED after your changes, YOU broke it — fix it to green. Do
-not call a red `clean test` "pre-existing".
+### When the first Gate 2 failure hides the real cause
+
+The Gradle console tail may show only a wrapper exception such as
+`RuntimeException at HikariConfig.java:514`. Read the generated JUnit XML before
+diagnosing the failure:
+
+```bash
+rg -n -C 3 "Failed to load driver class|Caused by" \
+  build/test-results/test/*.xml
+```
+
+One known failure in a freshly generated project is:
+
+```text
+Failed to load driver class org.hsqldb.jdbc.JDBCDriver in either of
+HikariConfig class loader or Thread context classloader
+```
+
+If `src/test/resources/application-test.properties` configures HSQLDB but
+`build.gradle` declares only the production database driver, the test runtime is
+incomplete. Add the HSQLDB test-runtime driver:
+
+```groovy
+testRuntimeOnly 'org.hsqldb:hsqldb'
+```
+
+Then rerun `./gradlew --no-daemon clean test`. Do not change the test datasource
+or investigate unrelated application code when the XML report shows this exact
+missing-driver failure.
+
+If the test suite passed before your changes and a seed test is now RED, assume
+you broke it and fix it to green. Do not call that failure "pre-existing". On the
+first Gate 2 run of a freshly generated project, inspect the JUnit XML and build
+dependencies before deciding whether your changes caused the failure.
 
 A green Gate 2 is necessary but NOT sufficient: the seed tests load the context
 but do NOT open your new views, exercise your new roles, or fire code that only
@@ -124,8 +156,11 @@ the gate. The numbered steps below are for when you start and own the process.
    never becomes ready, tail the log, skip Gate 3, and shut the process down.
 3. With your browser/UI-automation tool, navigate to each view you created, click
    each button/action, fill each field, and confirm no error overlay or server
-   exception. A Jmix UI is a Vaadin web-component UI, so it does not respond to a
-   browser tool the way a plain HTML page does — see the next section.
+   exception. If the application accepts file uploads, select and upload a real
+   file through the browser, then confirm the UI reports success and the file can
+   be opened or otherwise read back.
+   A Jmix UI is a Vaadin web-component UI, so it does not respond to a browser
+   tool the way a plain HTML page does — see the next section.
    Drive the walk **only through real input events** — a genuine click,
    real typing, `Enter`. Never assign a component's `.value` or set a component
    property from the page or console: in a server-driven UI the server holds the
@@ -154,6 +189,20 @@ working after the HTTP response is done:
   current snapshot, falling back to a DOM query on tag name and visible text.
 - **A disabled action is usually a precondition, not a defect.** Jmix actions enable
   on state — find and satisfy what this one waits for before reporting it broken.
+
+### File uploads in a non-root container
+
+If the deliverable includes a container image, a local upload does not verify the
+container filesystem permissions. Run the upload check against the built image or
+the deployed application.
+
+For an image that runs as a non-root `app` user with `/app` as its working
+directory, create the Jmix temporary directory and give the application user
+ownership before switching to that user:
+
+```dockerfile
+RUN mkdir -p /app/.jmix/temp && chown -R app:app /app/.jmix
+```
 
 ## Honest scope — Gate 3 is a render gate
 
