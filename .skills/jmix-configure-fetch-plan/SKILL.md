@@ -74,6 +74,20 @@ This is easy to miss because the one-argument form is perfectly correct for a
 argument: `FetchPlan.INSTANCE_NAME` when a grid or caption shows the reference,
 `FetchPlan.BASE` when code reads its other attributes.
 
+### A dotted path `add("a.b", PLAN)` leaves `a` without its own attributes
+
+```java
+.add("product.supplier", FetchPlan.BASE)          // WRONG if you also read product's own fields
+.add("product", p -> p.addFetchPlan(FetchPlan.BASE)
+        .add("supplier", FetchPlan.BASE))         // RIGHT
+```
+
+A dotted path pulls the intermediate reference in only as a HOLDER for the nested
+attribute. `product` enters the plan for the sake of `supplier`, and its own
+attributes are NOT loaded — so the first read of `product.getName()` throws the same
+`Cannot get unfetched attribute` as the one-argument form above. Read it as
+"product at a minimum, plus its supplier", not "product in full, plus its supplier".
+
 ### Single-table inheritance — a base-class load does not fetch subclass attributes
 
 Given an abstract `Payment` with concrete subclasses `CardPayment` and
@@ -153,6 +167,14 @@ NullPointerException: Cannot invoke "java.util.Collection.toArray()" because "c"
 ## JmixDataRepository
 
 Select the plan in one of two ways: pass a `FetchPlan` as the **last** method argument, or annotate the method with `@FetchPlan("name")` (`io.jmix.core.repository.FetchPlan`). A plain `String` parameter is bound as an ordinary query parameter, NOT a plan selector. Build complex plans with the `FetchPlans` bean: `fetchPlans.builder(Order.class).addFetchPlan(FetchPlan.BASE).add("customer", FetchPlan.INSTANCE_NAME).build()`.
+
+## What a missing attribute does depends on its KIND
+
+| missing from the plan | behaviour |
+| --- | --- |
+| a local (scalar) attribute | `IllegalStateException: Cannot get unfetched attribute` — no rescue |
+| a reference, ordinary code | lazy-loaded: a silent extra SELECT per row, and the reference arrives with all its local attributes |
+| a reference, inside `EntitySavingEvent` | `IllegalStateException` — lazy loading is not available there |
 
 ## Partial Entity Audit
 

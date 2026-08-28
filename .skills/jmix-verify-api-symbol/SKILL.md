@@ -56,11 +56,12 @@ For anything NOT already in the project, verify it before you type it:
 
    ```bash
    CP=$(find ~/.gradle/caches -name '*.jar' ! -name '*sources*' | tr '\n' ':')
-   javap -p -cp "$CP" io.jmix.flowui.Dialogs
+   "$JAVA_HOME/bin/javap" -p -cp "$CP" io.jmix.flowui.Dialogs
    ```
 
    Every cached jar on one classpath, so you need not know which artifact owns the
-   class (`-p` also lists non-public members).
+   class (`-p` also lists non-public members). `javap` ships inside the JDK and is
+   often NOT on `PATH` — call it as `$JAVA_HOME/bin/javap`.
 
    **Read the version the project resolves, not the newest one cached.** Whenever
    verification reads a framework artifact — a jar, an XSD, a sources archive —
@@ -76,6 +77,9 @@ For anything NOT already in the project, verify it before you type it:
    Find a real call site in the wider codebase or a reference app and copy its
    exact shape — useful when the symbol IS used somewhere, but blind when it is
    new to the project (use step 3 then).
+   A grep HIT proves the symbol exists; a grep MISS proves nothing. Use step 3 
+   whenever the question is "which overloads exist" — including when the class is 
+   already called elsewhere in the project.
 
 Never invent and ship. If nothing confirms a symbol, do not type it — pick one you
 CAN confirm, or omit the optional decoration (e.g. drop an icon attribute rather
@@ -94,19 +98,20 @@ another package, another annotation member. Then use `javap` (step 3).
 
 Symbols commonly invented. NEVER type these — verify first:
 
-| You might type                                       | Reality                                                      |
-|------------------------------------------------------|--------------------------------------------------------------|
-| an invented `VaadinIcon` constant                    | does not exist; the icon enum is small and irregular — pick from existing constants or omit |
-| `JmixButton.ClickEvent`                              | use `com.vaadin.flow.component.ClickEvent<JmixButton>`       |
-| `DataGrid.ReadEvent`, `DataGrid.SelectionEvent`      | use `com.vaadin.flow.data.selection.SelectionEvent<DataGrid<E>, E>` |
-| `Target.DATA_GRID`                                   | not a Jmix `@Subscribe` target — use `Target.COMPONENT` with explicit id |
-| `io.jmix.flowui.dialogs.Dialogs`                     | actual: `io.jmix.flowui.Dialogs`                             |
-| `io.jmix.core.entity.EntityStates`                   | actual: `io.jmix.core.EntityStates`                          |
-| `io.jmix.flowui.component.datagrid.DataGrid`         | actual: `io.jmix.flowui.component.grid.DataGrid`             |
+| You might type                                       | Reality                                                                                                                                                     |
+|------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| an invented `VaadinIcon` constant                    | does not exist; the icon enum is small and irregular — pick from existing constants or omit                                                                 |
+| `JmixButton.ClickEvent`                              | use `com.vaadin.flow.component.ClickEvent<JmixButton>`                                                                                                      |
+| `DataGrid.ReadEvent`, `DataGrid.SelectionEvent`      | use `com.vaadin.flow.data.selection.SelectionEvent<DataGrid<E>, E>`                                                                                         |
+| `Target.DATA_GRID`                                   | not a Jmix `@Subscribe` target — use `Target.COMPONENT` with explicit id                                                                                    |
+| `io.jmix.flowui.dialogs.Dialogs`                     | actual: `io.jmix.flowui.Dialogs`                                                                                                                            |
+| `io.jmix.core.entity.EntityStates`                   | actual: `io.jmix.core.EntityStates`                                                                                                                         |
+| `io.jmix.flowui.component.datagrid.DataGrid`         | actual: `io.jmix.flowui.component.grid.DataGrid`                                                                                                            |
 | `io.jmix.flowui.component.markdown.Markdown`         | actual: `com.vaadin.flow.component.markdown.Markdown` — the `<markdown>` component is Vaadin's; `io.jmix.flowui` has a DIFFERENT `markdowneditor` component |
-| `dialogs.createDetailView(this, entity, View.class)` | use `dialogWindows.detail(this, EntityClass.class).editEntity(entity).withViewClass(View.class)` |
-| `dataGrid.addItemChangeListener(...)`                | use `addSelectionListener(...)` or `asSingleSelect().addValueChangeListener(...)` |
-| `dataGrid.getSingleSelected()`                       | use `getSingleSelectedItem()`                                |
+| `dialogs.createDetailView(this, entity, View.class)` | use `dialogWindows.detail(this, EntityClass.class).editEntity(entity).withViewClass(View.class)`                                                            |
+| `dataGrid.addItemChangeListener(...)`                | use `addSelectionListener(...)` or `asSingleSelect().addValueChangeListener(...)`                                                                           |
+| `dataGrid.getSingleSelected()`                       | use `getSingleSelectedItem()`                                                                                                                               |
+| an add-on entity's JPQL name derived from its class name (`audit_EntityLogItem`) | actual: `audit_EntityLog` — an add-on entity's name comes from `@Entity(name = ...)` and need not match the class name; read it from the jar (step 3)       |
 
 ## Cost vs benefit
 
