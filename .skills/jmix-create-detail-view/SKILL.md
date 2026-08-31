@@ -272,6 +272,37 @@ grid is empty (see `jmix-configure-fetch-plan`).
 For a read-only grid, declare no `list_create` / `list_edit` / `list_remove`
 actions on it.
 
+## Asking for confirmation before saving
+
+`ValidationEvent` can only REJECT a save; it cannot ask a question and continue.
+The only hook that suspends a save and resumes it afterwards is
+`StandardDetailView.BeforeSaveEvent` with `preventSave()` / `resume()`:
+
+```java
+@Autowired
+private Dialogs dialogs;
+
+@Subscribe
+public void onBeforeSave(final BeforeSaveEvent event) {
+    if (!reissuesRelatedCodes()) {
+        return;
+    }
+    event.preventSave();
+    dialogs.createOptionDialog()
+            .withHeader(messageBundle.getMessage("confirmDialog.header"))
+            .withText(messageBundle.getMessage("confirmDialog.text"))
+            .withActions(
+                    new DialogAction(DialogAction.Type.YES)
+                            .withHandler(e -> event.resume()),
+                    new DialogAction(DialogAction.Type.NO))
+            .open();
+}
+```
+
+Note `Dialogs.createOptionDialog()` takes NO view argument, unlike
+`createInputDialog(View)`. Without `preventSave()` the save runs on regardless of what
+a dialog is showing, so a home-made confirmation dialog does not hold anything back.
+
 ## Cross-field validation
 
 For cross-field/manual validation, add a `@Subscribe` handler on `ValidationEvent` and report failures via `event.getErrors().add("...")`; for programmatic checks (e.g. before a custom save) use the `ViewValidation` bean (`validateUiComponents`, `showValidationErrors`).

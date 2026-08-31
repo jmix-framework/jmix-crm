@@ -187,6 +187,35 @@ Omitting it does not fail loudly: the beans simply never get defined, and the te
 runs against the real collaborator (a live HTTP call, or a `NoSuchBeanDefinition`
 far from the cause).
 
+## Reaching what is NOT a component on the form
+
+`UiTestUtils.getComponent(...)` only finds components in the view. Dialogs and
+notifications are NOT children of the `UI` — walking `UI.getCurrent().getChildren()`
+compiles, runs, and finds nothing (the UI's children are just the main view). The
+resulting failure reads as "the dialog never opened", accusing correct view code.
+
+```java
+DialogInfo dialog = UiTestUtils.getLastOpenedDialog();
+assertThat(dialog.getText()).contains("...");
+dialog.getButtons().stream()
+        .filter(b -> "YES".equals(b.getText()))
+        .findFirst().orElseThrow()
+        .click();
+```
+
+The same class also provides `getOpenedDialogs()`, `getLastOpenedNotification()`,
+`getOpenedNotifications()` and `validateView(detailView)` — assert dialogs,
+notifications and validation errors through these, never by traversing the tree.
+
+Data containers are reached through `ViewControllerUtils`, because `View.getViewData()`
+is protected and the compiler does not point anywhere:
+
+```java
+CollectionContainer<Category> dc =
+        ViewControllerUtils.getViewData(view).getContainer("categoriesDc");
+assertThat(dc.getItems()).allMatch(Category::isApplicable);
+```
+
 ## Testing code that runs outside a user session
 
 A scheduler / `@Async` / application event listener path has no authenticated user, and a test that
