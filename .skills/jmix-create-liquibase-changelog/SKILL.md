@@ -14,14 +14,15 @@ Jmix add-on that owns database tables.
 2. Follow the existing naming style: sequential files or date/time folders.
 3. Create a new changelog file for the schema change.
 4. Make sure it is reachable from the root `changelog.xml`: usually by placing it under the directory covered by the project's `<includeAll>`, or by adding an explicit `<include>` only when the project uses explicit includes.
-5. When adding a Jmix add-on that owns persistent entities, add its module changelog to the root changelog with an explicit `<include>`.
-6. Use a changeset id and author that match project style; do not reuse an id within the same changelog file.
-7. Add `ID` and `VERSION` columns for standard Jmix entities.
-8. Add every persistent entity field with exact type, length, precision, scale, and nullability.
-9. Add foreign keys for references.
-10. Add indexes and unique constraints required by the entity or domain.
-11. Verify the table and column names match Java annotations.
-12. Use only type macros already present in the project. If no macro exists, use the standard Liquibase type.
+5. Check whether the project also keeps a **baseline** changelog — one that creates the whole schema for a fresh database. If it does, mirror the change there too. See "Baseline changelogs" below.
+6. When adding a Jmix add-on that owns persistent entities, add its module changelog to the root changelog with an explicit `<include>`.
+7. Use a changeset id and author that match project style; do not reuse an id within the same changelog file.
+8. Add `ID` and `VERSION` columns for standard Jmix entities.
+9. Add every persistent entity field with exact type, length, precision, scale, and nullability.
+10. Add foreign keys for references.
+11. Add indexes and unique constraints required by the entity or domain.
+12. Verify the table and column names match Java annotations.
+13. Use only type macros already present in the project. If no macro exists, use the standard Liquibase type.
 
 ## Standard Types
 
@@ -212,6 +213,30 @@ If the project uses explicit includes instead of `includeAll`, follow that exist
 <include file="/com/company/app/liquibase/changelog/030-customer.xml"/>
 ```
 
+## Baseline changelogs — the dated file is not always the whole job
+
+Some projects keep a BASELINE alongside the dated migrations: one changelog that
+creates every table for a fresh database, and usually a second one that adds every
+FK and index. A fresh database builds the schema from the baseline and MARK_RANs the
+dated migrations through their own preconditions, instead of replaying years of
+history.
+
+Read the root `changelog.xml` and look at what else it includes. Two signs of a
+baseline: it creates tables that predate the current release, and its changesets carry
+`<validCheckSum>ANY</validCheckSum>`. That marker is there so the baseline can be
+APPENDED TO in place — it is the one exception to "never edit an applied changeset".
+
+When a project has one, a schema change lands in both places, in the same commit:
+
+- the dated migration — for databases that already exist;
+- the baseline — put the `createTable` (or a new `<column>` on the table's existing
+  `createTable`) INSIDE the existing changeset, next to related tables; add the FK and
+  each index as a NEW changeset in the constraints changelog, following that file's own
+  pattern.
+
+Keep every name identical across the dated file, the baseline and the entity's
+`@Table(indexes = ...)`.
+
 ## Jmix add-on changelogs
 
 Adding an add-on dependency does not make its module changelog reachable from a
@@ -262,3 +287,5 @@ the application to continue running with the feature unavailable.
 - An index in the changelog with no matching `@Index` in the entity's `@Table`.
 - A Jmix add-on with persistent entities whose module changelog is not explicitly
   reachable from the root changelog.
+- A dated migration with no matching entry in the project's baseline changelogs, when
+  the project keeps one.
