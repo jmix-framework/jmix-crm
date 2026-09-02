@@ -1,3 +1,16 @@
+/*
+ * Online course banner.
+ *
+ * Two artwork sets, picked by domain in HomeView: `webinar-banner-en` on jmix.io,
+ * `webinar-banner-ru` on jmix.ru. Each set has four breakpoint variants with its own
+ * intrinsic size, so `aspect-ratio` must be restated per set per breakpoint — the
+ * artwork is stretched to the box via `background-size: 100% 100%`, and a wrong ratio
+ * distorts it.
+ *
+ * The close cross is part of the artwork, so the close button is an invisible hit area
+ * positioned over it. `left`/`top` are the cross centre as a percentage of the artwork.
+ */
+
 .webinar-banner-container {
     padding: 1em 1em 0 1em;
 }
@@ -6,13 +19,10 @@
     display: none;
 }
 
-/* Default: 1920px.svg — 936x116, cross center at (908, 28) */
 .webinar-banner {
     position: relative;
     background-repeat: no-repeat;
     background-size: 100% 100%;
-    background-image: url('../images/webinar/1920px.svg');
-    aspect-ratio: 936 / 116;
     max-width: 1400px;
     margin-inline: auto;
 }
@@ -26,6 +36,9 @@
 .webinar-banner-close {
     position: absolute;
     transform: translate(-50%, -50%);
+    /* the cross glyph is 14px in every artwork variant; pad the hit area out to 24px */
+    width: 24px;
+    height: 24px;
     margin: 0;
     padding: 0;
     min-width: 0;
@@ -33,53 +46,98 @@
     border: none;
     cursor: pointer;
     z-index: 2;
-    left: 97.3%;
-    top: 32%;
-    width: 2.9%;
-    height: 23%;
 }
 
-/* 1024px.svg — 1176x161, cross center at (1144, 58) */
+/* en/1920px.svg — 1176x116, cross centre (1144, 32) */
+.webinar-banner-en {
+    background-image: url('../images/webinar/en/1920px.svg');
+    aspect-ratio: 1176 / 116;
+}
+
+.webinar-banner-en .webinar-banner-close {
+    left: 97.26%;
+    top: 27.37%;
+}
+
+/* ru/1920px.svg — 1176x148, cross centre (1144, 64) */
+.webinar-banner-ru {
+    background-image: url('../images/webinar/ru/1920px.svg');
+    aspect-ratio: 1176 / 148;
+}
+
+.webinar-banner-ru .webinar-banner-close {
+    left: 97.26%;
+    top: 43.07%;
+}
+
 @media (max-width: 1450px) {
-    .webinar-banner {
-        background-image: url('../images/webinar/1024px.svg');
-        aspect-ratio: 1176 / 161;
+    /* en/1024px.svg — 936x132, cross centre (908, 28) */
+    .webinar-banner-en {
+        background-image: url('../images/webinar/en/1024px.svg');
+        aspect-ratio: 936 / 132;
     }
 
-    .webinar-banner-close {
-        left: 95.6%;
-        top: 21.6%;
-        width: 3%;
-        height: 20%;
+    .webinar-banner-en .webinar-banner-close {
+        left: 96.98%;
+        top: 21.02%;
+    }
+
+    /* ru/1024px.svg — 936x148, cross centre (908, 60) */
+    .webinar-banner-ru {
+        background-image: url('../images/webinar/ru/1024px.svg');
+        aspect-ratio: 936 / 148;
+    }
+
+    .webinar-banner-ru .webinar-banner-close {
+        left: 96.98%;
+        top: 40.37%;
     }
 }
 
-/* 750px.svg — 783x116, cross center at (730, 18) */
 @media (max-width: 900px) {
-    .webinar-banner {
-        background-image: url('../images/webinar/750px.svg');
-        aspect-ratio: 783 / 116;
+    /* en/750px.svg — 750x132, cross centre (722, 28) */
+    .webinar-banner-en {
+        background-image: url('../images/webinar/en/750px.svg');
+        aspect-ratio: 750 / 132;
     }
 
-    .webinar-banner-close {
-        left: 89.5%;
-        top: 15%;
-        width: 3.5%;
-        height: 23%;
+    .webinar-banner-en .webinar-banner-close {
+        left: 96.23%;
+        top: 21.02%;
+    }
+
+    /* ru/750px.svg — 750x148, cross centre (722, 60) */
+    .webinar-banner-ru {
+        background-image: url('../images/webinar/ru/750px.svg');
+        aspect-ratio: 750 / 148;
+    }
+
+    .webinar-banner-ru .webinar-banner-close {
+        left: 96.23%;
+        top: 40.37%;
     }
 }
 
-/* 360px.svg — 328x240, cross center at (296, 32) */
 @media (max-width: 600px) {
-    .webinar-banner {
-        background-image: url('../images/webinar/360px.svg');
+    /* en/360px.svg — 328x155, cross centre (296, 32) */
+    .webinar-banner-en {
+        background-image: url('../images/webinar/en/360px.svg');
+        aspect-ratio: 328 / 155;
+    }
+
+    .webinar-banner-en .webinar-banner-close {
+        left: 90.19%;
+        top: 20.54%;
+    }
+
+    /* ru/360px.svg — 328x240, cross centre (296, 32) */
+    .webinar-banner-ru {
+        background-image: url('../images/webinar/ru/360px.svg');
         aspect-ratio: 328 / 240;
     }
 
-    .webinar-banner-close {
-        left: 90.2%;
-        top: 29%;
-        width: 8%;
-        height: 11%;
+    .webinar-banner-ru .webinar-banner-close {
+        left: 90.19%;
+        top: 13.26%;
     }
 }

@@ -72,6 +72,7 @@ import io.jmix.flowui.view.Subscribe;
 import io.jmix.flowui.view.ViewComponent;
 import io.jmix.flowui.view.ViewController;
 import io.jmix.flowui.view.ViewDescriptor;
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;
@@ -95,8 +96,16 @@ public class HomeView extends StandardView {
 
     public static final String ROUTE = "";
 
-    private static final String WEBINAR_URL =
-            "https://forms.jmix.io/jmix-workshop-ai-coding?utm_source=b2b&utm_medium=b2b&utm_campaign=webinar";
+    private static final String DOMAIN_EN = "jmix.io";
+    private static final String DOMAIN_RU = "jmix.ru";
+
+    private static final String WEBINAR_URL_EN =
+            "https://forms.jmix.io/online-course-ai-development"
+                    + "?utm_source=b2bcrm&utm_medium=site&utm_campaign=course";
+
+    private static final String WEBINAR_URL_RU =
+            "https://event.jmix.ru/jmix_online_course_2026"
+                    + "?utm_source=b2bcrm&utm_medium=site&utm_campaign=course";
 
     @Autowired
     private Metadata metadata;
@@ -148,37 +157,83 @@ public class HomeView extends StandardView {
     }
 
     private void initWebinarBanner() {
-        Anchor link = new Anchor(WEBINAR_URL, "");
+        WebinarBannerVariant variant = resolveWebinarBannerVariant(getRequestHost());
+        if (variant == null) {
+            webinarBannerBox.setVisible(false);
+            return;
+        }
+
+        Anchor link = new Anchor(variant.url(), "");
         link.setTarget(AnchorTarget.BLANK);
         link.getElement().setAttribute("rel", "noopener");
-        link.getElement().setAttribute("aria-label", "Open webinar page");
+        link.getElement().setAttribute("aria-label", "Open course page");
         link.addClassName("webinar-banner-link");
         webinarBanner.add(link);
+        webinarBanner.addClassName(variant.styleName());
 
         webinarBannerCloseButton.getElement().setAttribute("aria-label", "Close banner");
-        webinarBannerBox.setVisible(isWebinarBannerVisible());
+        webinarBannerBox.setVisible(true);
     }
 
-    private boolean isWebinarBannerVisible() {
+    /**
+     * The banner language follows the domain, not the user locale: jmix.io always shows the English
+     * course, jmix.ru always shows the Russian one. Any other host (local runs, previews, forks
+     * deployed elsewhere) shows no banner at all.
+     *
+     * @param host lower-case host name without a port, or {@code null} if it could not be determined
+     * @return the variant to render, or {@code null} if the banner must stay hidden
+     */
+    @Nullable
+    static WebinarBannerVariant resolveWebinarBannerVariant(@Nullable String host) {
+        if (host == null) {
+            return null;
+        }
+
+        if (isWithinDomain(host, DOMAIN_EN)) {
+            return new WebinarBannerVariant("webinar-banner-en", WEBINAR_URL_EN);
+        }
+        if (isWithinDomain(host, DOMAIN_RU)) {
+            return new WebinarBannerVariant("webinar-banner-ru", WEBINAR_URL_RU);
+        }
+        return null;
+    }
+
+    private static boolean isWithinDomain(String host, String domain) {
+        return host.equals(domain) || host.endsWith("." + domain);
+    }
+
+    @Nullable
+    private static String getRequestHost() {
         VaadinRequest request = VaadinService.getCurrentRequest();
         if (request == null) {
-            return false;
+            return null;
         }
 
         // behind a reverse proxy the original host arrives in X-Forwarded-Host
-        String host = request.getHeader("X-Forwarded-Host");
-        if (host == null) {
-            host = request.getHeader("Host");
+        String forwardedHost = request.getHeader("X-Forwarded-Host");
+        return normalizeHost(forwardedHost != null ? forwardedHost : request.getHeader("Host"));
+    }
+
+    /**
+     * Reduces a {@code Host} / {@code X-Forwarded-Host} header value to a bare lower-case host name:
+     * a chain of proxies appends to the header, so only the first entry is the original client-facing
+     * host, and it may carry a port.
+     */
+    @Nullable
+    static String normalizeHost(@Nullable String hostHeader) {
+        if (hostHeader == null) {
+            return null;
         }
 
-        if (host == null) {
-            return false;
-        }
-
-        return host.split(",")[0]
+        String host = hostHeader.split(",")[0]
                 .trim()
                 .split(":")[0]
-                .endsWith(".io");
+                .toLowerCase();
+
+        return host.isEmpty() ? null : host;
+    }
+
+    record WebinarBannerVariant(String styleName, String url) {
     }
 
     @Subscribe("webinarBannerCloseButton")
