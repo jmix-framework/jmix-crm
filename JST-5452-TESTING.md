@@ -20,7 +20,7 @@ Studio implementation under test:
 | `settings.gradle`     | Includes the `crm-theme` module                                            |
 | `build.gradle`        | Uses the module dependency by default and contains an optional JAR variant |
 | `CRMApplication.java` | Contains mutually exclusive annotation scenarios                           |
-| `themes/crm-preview/` | Project theme that inherits dependency theme `cobalt` for case 4           |
+| `src/main/frontend/themes/crm-preview/` | Project theme that inherits dependency theme `cobalt` for case 4 |
 
 The dependency publishes these CSS entry points:
 
@@ -112,7 +112,7 @@ Comment out all `@StyleSheet` annotations and case 3, then uncomment:
 @Theme("crm-preview")
 ```
 
-The project file `src/main/resources/META-INF/resources/themes/crm-preview/theme.json` declares:
+The project file `src/main/frontend/themes/crm-preview/theme.json` declares:
 
 ```json
 {
@@ -131,6 +131,7 @@ Expected:
 - a green project-theme banner and the brown cobalt parent-theme banner are both visible;
 - the generated JAR contains dependency resources but no `themes/crm-preview` project resources;
 - parent styles are registered before child styles.
+- the running application opens without Vaadin reporting that `crm-preview` exists both in the project and a JAR.
 
 After this case, restore the default annotations before testing cases 5–8.
 
@@ -184,9 +185,15 @@ dependency banner is absent and no theme-preview JAR is generated. Enable the ke
 
 ## Case 8 — cache behavior
 
-Start the same preview twice without modifying resources. The second start must reuse the same
-`<hash>.jar`. Then edit a CSS file under `crm-theme/src/main/resources` and restart preview. A different
-hash must be generated even if file size or timestamp happens to be unchanged.
+Keep the default case 1 annotation active and start the same preview twice without modifying resources.
+The second start must reuse the same `<hash>.jar`. Then edit the active
+`crm-theme/src/main/resources/META-INF/resources/cobalt/master.css` stylesheet (for example, change the
+top banner text or color) and restart preview. A different hash must be generated even if file size or
+timestamp happens to be unchanged, and the updated top banner must be visible in Preview.
+
+The bottom banner belongs to case 2 and must not appear while only case 1 is active. To run this cache
+check with the bottom banner instead, activate case 2, deactivate case 1, and edit
+`crm-theme/src/main/resources/META-INF/resources/themes/cobalt/styles.css`.
 
 The cache is cleaned on preview startup. JARs unused for seven days are eligible for deletion.
 
@@ -255,4 +262,4 @@ variant A and enable the Registry key.
 
 To remove the fixture completely, remove `crm-theme`, its `settings.gradle` include, the JST-5452 block
 from `build.gradle`, the four JST-5452 annotation lines/import from `CRMApplication`, this document, and
-`src/main/resources/META-INF/resources/themes/crm-preview`.
+`src/main/frontend/themes/crm-preview`.
