@@ -46,8 +46,6 @@ only the model in the editor; nothing reaches the running application until the 
   collection of participants and a menu reorder — and keeps the existing fields, screens and data.
 - **Clear boundaries.** The agent refuses to read business data ("sum up all deals of a client") and
   refuses unsafe changes to a published model (changing a field type).
-- **Full history.** **Admin → Agent history** shows every conversation with its plans, results and
-  publications as read-only snapshots, and the execution trace of each run.
 
 ## 💻 Stands
 
@@ -159,9 +157,9 @@ database with the CRM demo data. The stand's log is `instances/<name>/applicatio
 
 | Scenario | For | What it covers |
 |---|---|---|
-| [Demo](scenarios/demo-scenario.md) | presenters, marketing | 14 steps: create entities with AI, refine and approve the plan, edit by hand, publish, enter data, extend the model in a new conversation, show the boundaries and the history |
-| [Regression](scenarios/regression-scenario.md) | developers, QA | 35 browser checks of the agent and the editor: plan revisions, manual edits, cancellation, conflicts, invalid input, history, restart |
-| [Stand checklist](scenarios/stand-checklist.md) | developers, QA | Checks per theme, plus tabbed mode on 8096: publication message, permissions, errors, history, layout |
+| [Demo](scenarios/demo-scenario.md) | presenters, marketing | 13 steps: create entities with AI, refine and approve the plan, edit by hand, publish, enter data, extend the model in a new conversation, show the boundaries |
+| [Regression](scenarios/regression-scenario.md) | developers, QA | 35 browser checks of the agent and the editor: plan revisions, manual edits, cancellation, conflicts, invalid input, recorded history, restart |
+| [Stand checklist](scenarios/stand-checklist.md) | developers, QA | Checks per theme, plus tabbed mode on 8096: publication message, permissions, errors, layout |
 
 The scenarios are written in Russian for the Russian UI: the prompts and the expected labels are
 Russian. The agent also understands English and writes plan titles and summaries in the language of
@@ -182,13 +180,16 @@ the user's message.
   existing entity was missing. Start a new task with **Reset dialog**.
 - DeepSeek Flash sometimes answers the same request differently. If an answer looks odd, repeat it.
 - After a page reload the AI mode is not restored from the address; select it in the switch again.
+- The agent records every conversation and run in the database, but this preview has no screen for
+  them. Developers can look at the `dmagent_*` entities in the Entity Inspector at
+  `/b2b-crm/datatl/entity-inspector`.
 
 ## 🧩 What is in the branch
 
 Compared with `main`:
 
 - **The agent in the CRM** — the Dynamic Model, AI chat and agent starters, their Liquibase changelogs,
-  the **Dynamic model settings** and **Agent history** menu items, and the agent's own model
+  the **Dynamic model settings** menu item, and the agent's own model
   connection: an OpenAI-compatible chat model on OpenRouter (`DynamicModelAgentConfiguration`,
   `crm.dynmodel.*` properties), separate from the CRM's AI assistant. `DynamicModelAgentIntegrationTest`
   checks that the agent and the agent's Settings view are in place alongside the CRM.
