@@ -2,6 +2,8 @@
 
 🖥️ [Online Demo](https://demo.jmix.io/b2b-crm/login)
 
+🤖 This branch previews the [Dynamic Model AI Agent](demo/dynmodel-ai-agent/README.md): describe new data in plain words, review the agent's plan, publish it with one click. Building it needs Jmix Premium.
+
 🌐 Languages: [English](README.md) | [Русский](readme/README_ru.md) | [Deutsch](readme/README_de.md) | [Italiano](readme/README_it.md) | [Español](readme/README_es.md) | [Tiếng Việt](readme/README_vi.md) | [Srpski](readme/README_sr.md)
 
 `B2B CRM` is an enterprise demo application based on `Jmix framework` with built-in `AI` that showcases how to develop
