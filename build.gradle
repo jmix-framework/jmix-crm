@@ -1,6 +1,6 @@
 plugins {
     id 'java'
-    id 'io.jmix' version '3.0.3'
+    id 'io.jmix' version '3.1.999-SNAPSHOT'
     id 'org.jetbrains.gradle.plugin.idea-ext' version '1.4.1'
 }
 
@@ -11,12 +11,12 @@ group = 'com.company'
 version = '3.0.3'
 
 jmix {
-    bomVersion = version
+    bomVersion = '3.1.999-SNAPSHOT'
 }
 
 vaadin {
     optimizeBundle = false
-    productionMode = false
+    productionMode = true
 }
 
 bootJar {
@@ -29,6 +29,14 @@ java {
 }
 
 repositories {
+    // All of Jmix, its BOM included, comes from the OSS and premium branches published to the local Maven:
+    // mixing them with the nightly broke Apply once the nightly moved to another Vaadin version.
+    exclusiveContent {
+        forRepository { mavenLocal() }
+        filter {
+            includeGroupByRegex 'io\\.jmix(\\..+)?'
+        }
+    }
     mavenCentral()
 
     maven {
@@ -45,6 +53,8 @@ repositories {
 }
 
 dependencies {
+    // Stand-only direct Claude adapter; the product repositories are untouched.
+    implementation 'org.springframework.ai:spring-ai-anthropic'
     //              --- [ JMIX ] ---
 
     // ---------- { CORE } ----------
@@ -85,6 +95,14 @@ dependencies {
     // dynamic attributes
     implementation 'io.jmix.dynattr:jmix-dynattr-starter'
     implementation 'io.jmix.dynattr:jmix-dynattr-flowui-starter'
+
+    // Dynamic Model and its agent are built from the sibling premium checkout.
+    implementation 'io.jmix.dynmodel:jmix-dynmodel-starter'
+    implementation 'io.jmix.dynmodel:jmix-dynmodel-flowui-starter'
+    implementation 'io.jmix.aichat:jmix-aichat-flowui-starter'
+    implementation 'io.jmix.dynmodel:jmix-dynmodel-ai-agent-starter'
+    implementation 'io.jmix.dynmodel:jmix-dynmodel-ai-agent-flowui-starter'
+    implementation 'com.embabel.agent:embabel-agent-starter-byok'
 
     // reports
     implementation 'io.jmix.reports:jmix-reports-rest-starter'

@@ -1,1 +1,16 @@
+pluginManagement {
+    repositories {
+        mavenLocal()
+        maven { url = 'https://nexus.jmix.io/repository/public' }
+        gradlePluginPortal()
+    }
+    resolutionStrategy {
+        eachPlugin {
+            if (requested.id.id == 'io.jmix') {
+                useModule("io.jmix.gradle:jmix-gradle-plugin:${requested.version}")
+            }
+        }
+    }
+}
+
 rootProject.name = 'jmix-crm'

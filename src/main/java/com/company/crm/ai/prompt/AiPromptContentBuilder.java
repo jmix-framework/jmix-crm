@@ -58,7 +58,7 @@ public class AiPromptContentBuilder {
             return this;
         }
         String sectionTitle = StringUtils.hasText(title) ? title.strip() : "Context";
-        return appendParagraph("%s:%n%n%s".formatted(sectionTitle, body.strip()));
+        return appendParagraph("%s:\n\n%s".formatted(sectionTitle, body.strip()));
     }
 
     public AiPromptContentBuilder appendSectionIf(boolean condition, String title, String body) {

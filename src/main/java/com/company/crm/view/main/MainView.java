@@ -45,6 +45,9 @@ import io.jmix.flowui.component.virtuallist.JmixVirtualList;
 import io.jmix.flowui.kit.action.ActionPerformedEvent;
 import io.jmix.flowui.kit.component.button.JmixButton;
 import io.jmix.flowui.kit.component.sidedialog.SideDialogPosition;
+import com.company.crm.view.home.HomeView;
+import com.vaadin.flow.router.BeforeEnterEvent;
+import com.vaadin.flow.router.Route;
 import io.jmix.flowui.view.Install;
 import io.jmix.flowui.view.MessageBundle;
 import io.jmix.flowui.view.Subscribe;
@@ -61,9 +64,20 @@ import java.util.Optional;
 
 import static com.company.crm.app.util.demo.DemoUtils.defaultSleepForClientsSearching;
 
+// A route of its own lets Close and Discard of views inside this layout go back to it: FlowUI returns
+// to the route of the parent layout, and without one they did nothing. The layout itself shows Home.
+@Route("main")
 @ViewController(id = CrmConstants.ViewIds.MAIN)
 @ViewDescriptor(path = "main-view.xml")
 public class MainView extends StandardMainView {
+
+    @Override
+    public void beforeEnter(BeforeEnterEvent event) {
+        super.beforeEnter(event);
+        if (event.getNavigationTarget() == MainView.class) {
+            event.forwardTo(HomeView.class);
+        }
+    }
 
     @Autowired
     private Messages messages;
