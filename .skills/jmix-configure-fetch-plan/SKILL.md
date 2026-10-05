@@ -11,13 +11,19 @@ Use this skill when a task changes what entity attributes or references are load
 
 1. Identify every property read by the view, service, listener, renderer, mapper, or assertion.
 2. Start with `_base` unless there is a measured reason to load a partial entity.
-3. Add reference properties explicitly when a loaded entity is detached or when a list/grid displays reference attributes.
+3. Check the effective inherited plan before adding references for detached access or list/grid display. Add only missing properties or nested attributes.
 4. For list views, include only references and scalar columns that are displayed or used by renderers/actions.
 5. For detail views and compositions, include edited reference properties and child collections that the form or grid uses.
 6. For service/listener code, add a fluent `DataManager.fetchPlan(...)` or named plan before reading references after load.
 7. Avoid deep nested collections; prefer a second focused load when a graph becomes wide or multi-collection.
 8. Check custom fetch plans against every `getX()` call after load.
 9. Verify property names and run the load path before trusting the plan (see **Verify** below).
+
+`_base` can already include references needed by an `@InstanceName` method's
+`@DependsOnProperties`. Inspect those dependencies and the effective nested plan
+before repeating the reference or introducing a shared plan. Inclusion alone does
+not prove that every nested attribute a consumer reads is fetched: compare against
+step 1 and exercise the actual detached access path.
 
 ## XML Pattern
 

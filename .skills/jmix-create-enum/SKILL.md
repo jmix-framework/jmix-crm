@@ -55,6 +55,10 @@ public enum TransactionType implements EnumClass<String> {
 }
 ```
 
+A constant may carry further constructor arguments and accessors beside the stable id. They are invisible to the
+metamodel, so extra state needs no message key and appears in no fetch plan. Only the **stable id** is ever persisted —
+never a second field, however convenient its value looks as a column.
+
 ## Entity Mapping
 
 ```java

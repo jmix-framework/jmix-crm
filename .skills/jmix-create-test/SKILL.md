@@ -35,6 +35,15 @@ class PriceCalculatorTest {
 }
 ```
 
+Do not invent an unregistered anonymous or local subclass of a Jmix entity for
+an in-memory fixture. The class still enters the test classpath: Jmix metadata
+discovery in another test can encounter it and fail with a missing metaclass,
+even when the fixture's own plain unit test passes. To exercise a missing-handler
+branch, vary the injected registry or collaborator list while using an existing
+entity type. If a new subtype is genuinely needed, register it through the
+supported test configuration and run the full suite with a fresh context; running
+only the fixture's unit test does not check metamodel discovery.
+
 ## Integration Test Pattern
 
 ```java
