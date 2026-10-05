@@ -82,9 +82,14 @@
 
 ## 🔨 Сборка
 
-Ветка берёт все артефакты `io.jmix*`, включая BOM, **только из локального Maven-репозитория** (см.
-`build.gradle`), поэтому сначала обе ветки Jmix публикуются туда. Смешивать их с nightly нельзя.
-На Windows вместо `./gradlew` используйте `.\gradlew.bat`.
+Ветка собирается на Jmix и Jmix Premium `3.1.999-SNAPSHOT`, которые вы публикуете сами: `mavenLocal()`
+стоит первым репозиторием в `settings.gradle` и `build.gradle`, поэтому тот, кто работает с этой веткой,
+перед сборкой публикует оба репозитория в локальный Maven. Публикуйте их целиком: открытый модуль
+`io.jmix`, которого нет локально, молча возьмётся из ночной сборки Jmix той же версии, а она собрана не из
+этих веток; без premium-модуля сборка остановится.
+Если в локальном Maven нет Gradle-плагина Jmix, сборка сразу остановится с сообщением
+«Plugin [id: 'io.jmix', version: '3.1.999-SNAPSHOT'] was not found». На Windows вместо `./gradlew`
+используйте `.\gradlew.bat`.
 
 1. Склонируйте три репозитория на ветках `50-dynmodel-ai-agent`:
 
@@ -108,7 +113,8 @@
    ./gradlew publishToMavenLocal -x test -x javadoc
    ```
 
-4. В `jmix-crm`: `./gradlew bootJar`. Стенды запускают `build/libs/crm.jar`.
+4. В `jmix-crm`: `./gradlew bootJar`. Стенды запускают `build/libs/crm.jar`. После каждого обновления
+   `jmix` или `jmix-premium` повторите шаги 2–3.
 
 5. Только для стенда со вкладками — собрать ветку `50-dynmodel-ai-agent-tabbed` в соседнем worktree:
 
@@ -189,8 +195,9 @@ Windows, PowerShell:
   OpenAI-совместимая чат-модель на OpenRouter (`DynamicModelAgentConfiguration`, свойства
   `crm.dynmodel.*`), независимая от AI-ассистента CRM. `DynamicModelAgentIntegrationTest` проверяет, что
   агент и его экран настроек на месте рядом с CRM.
-- **Сборка** — Gradle-плагин Jmix и все артефакты `io.jmix*` из локального Maven (`settings.gradle`,
-  `build.gradle`), production-режим Vaadin с production-бандлом, пересобранным под Vaadin 25.3.
+- **Сборка** — Jmix `3.1.999-SNAPSHOT` с локальным Maven первым репозиторием для Gradle-плагина и
+  библиотек (`settings.gradle`, `build.gradle`), production-режим Vaadin с production-бандлом,
+  пересобранным под Vaadin 25.3.
 - **Переключатели стендов** — тема, цвет и направление из системных свойств `stand.theme`,
   `stand.color`, `stand.direction` (`CRMApplication`), стили CRM под Lumo (`themes/lumo`) и прямое
   подключение Claude для одного стенда (`StandAnthropicConfiguration`, `spring-ai-anthropic`).
@@ -198,5 +205,5 @@ Windows, PowerShell:
   экрана возвращало на «Главную», и инициализация динамических атрибутов после старта приложения.
 - **Запуск стендов** — `stands.sh`, `stands.ps1` и `Shutdown.java` (корректная остановка через JMX).
 
-Ветка `50-dynmodel-ai-agent-tabbed` добавляет сверху один коммит: аддон Tabbed Mode и главный экран
+Ветка `50-dynmodel-ai-agent-tabbed` идёт следом за этой и добавляет аддон Tabbed Mode и главный экран
 со вкладками.

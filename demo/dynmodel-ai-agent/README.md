@@ -81,9 +81,14 @@ Open `http://localhost:<port>/b2b-crm/` and log in as `admin` / `admin`.
 
 ## 🔨 Build
 
-The branch takes every `io.jmix*` artifact — the BOM included — **only from the local Maven
-repository** (see `build.gradle`), so both Jmix branches are published there first. Never mix them
-with nightly builds. On Windows use `.\gradlew.bat` instead of `./gradlew`.
+The branch builds against Jmix and Jmix Premium `3.1.999-SNAPSHOT`, which you publish yourself:
+`mavenLocal()` is the first repository in `settings.gradle` and `build.gradle`, so whoever works on
+this branch publishes both repositories to the local Maven before building it. Publish them
+completely — an open-source `io.jmix` module missing locally is quietly taken from the Jmix nightly
+snapshot of the same version, which is not built from these branches; a missing premium module stops
+the build. Without the Jmix Gradle plugin in the local Maven the
+build stops at once with "Plugin [id: 'io.jmix', version: '3.1.999-SNAPSHOT'] was not found".
+On Windows use `.\gradlew.bat` instead of `./gradlew`.
 
 1. Clone the three repositories on their `50-dynmodel-ai-agent` branches:
 
@@ -107,7 +112,8 @@ with nightly builds. On Windows use `.\gradlew.bat` instead of `./gradlew`.
    ./gradlew publishToMavenLocal -x test -x javadoc
    ```
 
-4. In `jmix-crm`: `./gradlew bootJar`. The stands run `build/libs/crm.jar`.
+4. In `jmix-crm`: `./gradlew bootJar`. The stands run `build/libs/crm.jar`. Republish steps 2–3
+   whenever you pull new commits of `jmix` or `jmix-premium`.
 
 5. For the tabbed stand only, build the `50-dynmodel-ai-agent-tabbed` branch in a sibling worktree:
 
@@ -186,9 +192,9 @@ Compared with `main`:
   connection: an OpenAI-compatible chat model on OpenRouter (`DynamicModelAgentConfiguration`,
   `crm.dynmodel.*` properties), separate from the CRM's AI assistant. `DynamicModelAgentIntegrationTest`
   checks that the agent and the agent's Settings view are in place alongside the CRM.
-- **The build** — the Jmix Gradle plugin and every `io.jmix*` artifact from the local Maven
-  (`settings.gradle`, `build.gradle`), and Vaadin production mode with a production bundle rebuilt for
-  Vaadin 25.3.
+- **The build** — Jmix `3.1.999-SNAPSHOT` with the local Maven as the first repository for the Gradle
+  plugin and the libraries (`settings.gradle`, `build.gradle`), and Vaadin production mode with a
+  production bundle rebuilt for Vaadin 25.3.
 - **Stand switches** — theme, colour and direction from the system properties `stand.theme`,
   `stand.color`, `stand.direction` (`CRMApplication`), CRM styles for Lumo (`themes/lumo`), and a direct
   Claude connection for one stand (`StandAnthropicConfiguration`, `spring-ai-anthropic`).
@@ -196,5 +202,5 @@ Compared with `main`:
   closing a view returns to Home, and dynamic attributes initialised after application start.
 - **The stand launcher** — `stands.sh`, `stands.ps1` and `Shutdown.java` (graceful stop over JMX).
 
-The `50-dynmodel-ai-agent-tabbed` branch adds one commit on top: the Tabbed Mode add-on and a tabbed
+The `50-dynmodel-ai-agent-tabbed` branch follows this one and adds the Tabbed Mode add-on and a tabbed
 main view.
