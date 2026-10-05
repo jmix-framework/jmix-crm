@@ -87,7 +87,8 @@ import static io.jmix.flowui.component.UiComponentUtils.traverseComponents;
 @ViewDescriptor(path = "home-view.xml")
 public class HomeView extends StandardView {
 
-    public static final String ROUTE = "";
+    // The tabbed mode needs the main view on the root route; Home opens in a tab as the default view.
+    public static final String ROUTE = "home";
 
     @Autowired
     private Metadata metadata;

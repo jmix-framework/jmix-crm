@@ -98,6 +98,8 @@ dependencies {
 
     // Dynamic Model and its agent are built from the sibling premium checkout.
     implementation 'io.jmix.dynmodel:jmix-dynmodel-starter'
+    // Tabbed mode stand: views open in tabs of the main view.
+    implementation 'io.jmix.tabbedmode:jmix-tabbedmode-flowui-starter'
     implementation 'io.jmix.dynmodel:jmix-dynmodel-flowui-starter'
     implementation 'io.jmix.aichat:jmix-aichat-flowui-starter'
     implementation 'io.jmix.dynmodel:jmix-dynmodel-ai-agent-starter'

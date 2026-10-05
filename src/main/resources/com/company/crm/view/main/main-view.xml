@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<mainView xmlns="http://jmix.io/schema/flowui/main-view"
+<mainView xmlns="http://jmix.io/schema/tabmod/main-view"
           title="B2B CRM">
     <actions>
         <action id="logoutAction" text="msg:///actions.logout.text" type="logout"/>
@@ -69,6 +69,19 @@
             </header>
         </navigationBar>
 
-        <initialLayout padding="false"/>
+        <workArea id="workArea"
+                  classNames="jmix-work-area">
+            <mainTabSheet id="mainTabSheet"
+                          classNames="jmix-main-tabsheet"
+                          tabsDraggable="true"
+                          width="100%" height="100%">
+                <actions>
+                    <action id="closeThisTabAction" type="tabmod_closeThisTab"/>
+                    <action id="closeOthersTabsAction" type="tabmod_closeOtherTabs"/>
+                    <action id="closeAllTabsAction" type="tabmod_closeAllTabs"/>
+                </actions>
+            </mainTabSheet>
+            <initialLayout id="initialLayout" classNames="jmix-initial-layout"/>
+        </workArea>
     </appLayout>
 </mainView>

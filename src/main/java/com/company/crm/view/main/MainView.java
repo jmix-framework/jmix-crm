@@ -36,7 +36,8 @@ import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.ViewNavigators;
 import io.jmix.flowui.Views;
 import io.jmix.flowui.accesscontext.UiShowViewContext;
-import io.jmix.flowui.app.main.StandardMainView;
+import com.vaadin.flow.router.Route;
+import io.jmix.tabbedmode.app.main.StandardTabbedModeMainView;
 import io.jmix.flowui.asynctask.UiAsyncTasks;
 import io.jmix.flowui.component.SupportsTypedValue.TypedValueChangeEvent;
 import io.jmix.flowui.component.sidedialog.SideDialog;
@@ -45,9 +46,6 @@ import io.jmix.flowui.component.virtuallist.JmixVirtualList;
 import io.jmix.flowui.kit.action.ActionPerformedEvent;
 import io.jmix.flowui.kit.component.button.JmixButton;
 import io.jmix.flowui.kit.component.sidedialog.SideDialogPosition;
-import com.company.crm.view.home.HomeView;
-import com.vaadin.flow.router.BeforeEnterEvent;
-import com.vaadin.flow.router.Route;
 import io.jmix.flowui.view.Install;
 import io.jmix.flowui.view.MessageBundle;
 import io.jmix.flowui.view.Subscribe;
@@ -64,20 +62,10 @@ import java.util.Optional;
 
 import static com.company.crm.app.util.demo.DemoUtils.defaultSleepForClientsSearching;
 
-// A route of its own lets Close and Discard of views inside this layout go back to it: FlowUI returns
-// to the route of the parent layout, and without one they did nothing. The layout itself shows Home.
-@Route("main")
+@Route("")
 @ViewController(id = CrmConstants.ViewIds.MAIN)
 @ViewDescriptor(path = "main-view.xml")
-public class MainView extends StandardMainView {
-
-    @Override
-    public void beforeEnter(BeforeEnterEvent event) {
-        super.beforeEnter(event);
-        if (event.getNavigationTarget() == MainView.class) {
-            event.forwardTo(HomeView.class);
-        }
-    }
+public class MainView extends StandardTabbedModeMainView {
 
     @Autowired
     private Messages messages;
@@ -122,7 +110,7 @@ public class MainView extends StandardMainView {
     final Popover[] notificationsPopover = {null};
 
     @Subscribe
-    private void onReady(final ReadyEvent event) {
+    private void onCrmReady(final ReadyEvent event) {
         checkChatButtonPermission();
         if (onlineDemoDataCreator != null) {
             onlineDemoDataCreator.createDemoDataIfNeeded();
