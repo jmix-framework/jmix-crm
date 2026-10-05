@@ -1,15 +1,8 @@
 pluginManagement {
     repositories {
+        // The Jmix Gradle plugin 3.1.999-SNAPSHOT comes from the local Maven: demo/dynmodel-ai-agent/README.md
         mavenLocal()
-        maven { url = 'https://nexus.jmix.io/repository/public' }
         gradlePluginPortal()
-    }
-    resolutionStrategy {
-        eachPlugin {
-            if (requested.id.id == 'io.jmix') {
-                useModule("io.jmix.gradle:jmix-gradle-plugin:${requested.version}")
-            }
-        }
     }
 }
 

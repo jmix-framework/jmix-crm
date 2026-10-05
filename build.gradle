@@ -29,14 +29,8 @@ java {
 }
 
 repositories {
-    // All of Jmix, its BOM included, comes from the OSS and premium branches published to the local Maven:
-    // mixing them with the nightly broke Apply once the nightly moved to another Vaadin version.
-    exclusiveContent {
-        forRepository { mavenLocal() }
-        filter {
-            includeGroupByRegex 'io\\.jmix(\\..+)?'
-        }
-    }
+    // Jmix and Jmix Premium 3.1.999-SNAPSHOT come from the local Maven: demo/dynmodel-ai-agent/README.md
+    mavenLocal()
     mavenCentral()
 
     maven {
