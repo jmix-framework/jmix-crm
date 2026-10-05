@@ -33,3 +33,10 @@ src/main/frontend/generated/
 pnpmfile.js
 vite.generated.ts
 webpack.generated.js
+/package.json
+/package-lock.json
+/tsconfig.json
+/types.d.ts
+
+# Dynamic Model AI Agent demo stands: per-stand databases, logs and pids
+/demo/dynmodel-ai-agent/instances/

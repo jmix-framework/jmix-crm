@@ -1,0 +1,7 @@
+html { --vaadin-clickable-cursor: pointer; --lumo-clickable-cursor: pointer; --lumo-font-family: 'Montserrat', system-ui, sans-serif; }
+.clickable { cursor: pointer; }
+.sortable-grab-handle { cursor: grab; }
+.card-background-success { background-image: linear-gradient(45deg, transparent 40%, var(--lumo-success-color-10pct)) !important; }
+.card-background-error { background-image: linear-gradient(45deg, transparent 40%, var(--lumo-error-color-10pct)) !important; }
+.card-background-default { background-image: linear-gradient(45deg, transparent 40%, var(--lumo-contrast-5pct)) !important; }
+
