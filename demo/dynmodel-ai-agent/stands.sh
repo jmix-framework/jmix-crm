@@ -46,7 +46,7 @@ while read -r id port theme color dir jar; do
                 model=Claude
                 export STAND_ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY" DYNMODEL_MODEL="${STAND_CLAUDE_MODEL:-claude-sonnet-5}"
                 # Anthropic rejects the agent's JSON Schema as too large; the agent then describes JSON in the prompt.
-                provider=(--crm.dynmodel.provider=anthropic --jmix.dynmodel.ai-agent.native-structured-output=false)
+                provider=(--crm.dynmodel.provider=anthropic --jmix.dynmodel.ai.native-structured-output=false)
             fi
             (cd "$inst" && nohup "$JAVA" -Xms128m -Xmx768m -Djava.awt.headless=true \
                 -Dstand.theme="$theme" -Dstand.color="$color" -Dstand.direction="$dir" \
@@ -59,7 +59,7 @@ while read -r id port theme color dir jar; do
                 "--main.datasource.url=jdbc:hsqldb:file:$inst/.jmix/hsqldb/crm;shutdown=true" \
                 --jmix.core.conf-dir="$inst/.jmix/conf" --jmix.core.work-dir="$inst/.jmix/work" \
                 --jmix.core.temp-dir="$inst/.jmix/temp" --jmix.localfs.storage-dir="$inst/.jmix/storage" \
-                --crm.dynmodel.max-output-tokens=4096 --jmix.dynmodel.ai-agent.plan-approval-mode=MANUAL \
+                --crm.dynmodel.max-output-tokens=4096 --jmix.dynmodel.ai.plan-approval-mode=MANUAL \
                 --logging.file.name="$inst/application.log" "${provider[@]}" > "$inst/console.log" 2>&1 &
              echo $! > "$inst/pid")
             echo "$id: started $(cat "$inst/pid") with $model, http://localhost:$port/b2b-crm/"

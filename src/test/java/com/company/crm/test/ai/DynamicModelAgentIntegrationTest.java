@@ -2,8 +2,8 @@ package com.company.crm.test.ai;
 
 import com.company.crm.AbstractTest;
 import com.embabel.agent.spi.support.springai.SpringAiLlmService;
-import io.jmix.dynmodelaiagent.DynamicModelAgentService;
-import io.jmix.dynmodelaiagentflowui.view.settings.AgentDynamicModelSettingsView;
+import io.jmix.dynmodelai.DynamicModelAgentService;
+import io.jmix.dynmodelaiflowui.view.settings.AgentDynamicModelSettingsView;
 import io.jmix.flowui.view.ViewRegistry;
 import org.junit.jupiter.api.Test;
 import org.springframework.ai.openai.OpenAiChatModel;
@@ -36,7 +36,7 @@ class DynamicModelAgentIntegrationTest extends AbstractTest {
         assertThat(dynamicModelLlm.getChatModel()).isNotSameAs(crmChatModel);
         assertThat(dynamicModelLlm.getName()).isEqualTo(
                 applicationContext.getEnvironment().getRequiredProperty("crm.dynmodel.model"));
-        assertThat(applicationContext.getEnvironment().getProperty("jmix.dynmodel.ai-agent.plan-approval-mode"))
+        assertThat(applicationContext.getEnvironment().getProperty("jmix.dynmodel.ai.plan-approval-mode"))
                 .isEqualTo("MANUAL");
     }
 }
