@@ -57,7 +57,7 @@ foreach ($v in $variants) {
                 $env:STAND_ANTHROPIC_API_KEY = Get-StandSecret 'ANTHROPIC_API_KEY'
                 $env:DYNMODEL_MODEL = if ($env:STAND_CLAUDE_MODEL) { $env:STAND_CLAUDE_MODEL } else { 'claude-sonnet-5' }
                 # Anthropic rejects the agent's JSON Schema as too large; the agent then describes JSON in the prompt.
-                $provider = @('--crm.dynmodel.provider=anthropic', '--jmix.dynmodel.ai-agent.native-structured-output=false')
+                $provider = @('--crm.dynmodel.provider=anthropic', '--jmix.dynmodel.ai.native-structured-output=false')
             }
             $d = $dir.Replace('\', '/')
             $arguments = @('-Xms128m', '-Xmx768m', '-Djava.awt.headless=true',
@@ -72,7 +72,7 @@ foreach ($v in $variants) {
                 "--main.datasource.url=jdbc:hsqldb:file:$d/.jmix/hsqldb/crm;shutdown=true",
                 "--jmix.core.conf-dir=$d/.jmix/conf", "--jmix.core.work-dir=$d/.jmix/work",
                 "--jmix.core.temp-dir=$d/.jmix/temp", "--jmix.localfs.storage-dir=$d/.jmix/storage",
-                '--crm.dynmodel.max-output-tokens=4096', '--jmix.dynmodel.ai-agent.plan-approval-mode=MANUAL',
+                '--crm.dynmodel.max-output-tokens=4096', '--jmix.dynmodel.ai.plan-approval-mode=MANUAL',
                 "--logging.file.name=$d/application.log") + $provider
             $p = Start-Process -FilePath $java -ArgumentList $arguments -WorkingDirectory $dir -WindowStyle Hidden -PassThru
             $p.Id | Out-File -Encoding ascii (Join-Path $dir 'pid')
