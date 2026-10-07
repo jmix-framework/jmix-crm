@@ -199,22 +199,31 @@ For `@ManyToOne` and other entity references, pick the pattern by candidate-set 
 The combo passes a `searchString` parameter for type-ahead, so the
 JPQL MUST `like :searchString`; ignoring it throws `DevelopmentException:
 Parameter 'searchString' is not used in the query` at dropdown fetch.
-The JPQL must use the JPA/Jmix entity name, not the database table
-name.
+The parameter is the BARE combo input unless `searchStringFormat` wraps it:
+an empty string when the dropdown opens, so `like ''` returns no rows, and
+the exact, case-sensitive text afterwards. Set the format and the escaping
+on the `itemsQuery` element — without them every gate stays green and only
+the browser shows an empty dropdown. The JPQL must use the JPA/Jmix entity
+name, not the database table name.
 
 ```xml
 <entityComboBox id="refField" property="ref">
-    <itemsQuery class="com.company.app.entity.Ref">
+    <itemsQuery class="com.company.app.entity.Ref"
+                searchStringFormat="(?i)%${inputString}%"
+                escapeValueForLike="true">
         <query>
             <![CDATA[
             select e from Ref e
-            where e.name like :searchString
+            where e.name like :searchString escape '\'
             order by e.name
             ]]>
         </query>
     </itemsQuery>
 </entityComboBox>
 ```
+
+A UI test that fetches the picker's items only with a partial filter does not
+catch a missing `searchStringFormat` — fetch with the empty filter too.
 
 `itemsQuery` does NOT auto-bind `:container_*` / `:component_*`
 parameters — when the reference list depends on another component or

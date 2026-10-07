@@ -225,6 +225,20 @@ CollectionContainer<Category> dc =
 assertThat(dc.getItems()).allMatch(Category::isApplicable);
 ```
 
+Components inside a fragment are not found by id from the view. The fragment loader
+keeps a component's XML id as fragment-scoped data, not as the element id, so
+`UiTestUtils.getComponent(view, "ordersGrid")` and any walk comparing
+`Component.getId()` report "no component" for a correct descriptor. The fragment itself
+IS a view component — take it from the view, then ask the fragment for its content:
+
+```java
+OrderListFragment fragment = UiTestUtils.getComponent(view, "orderListFragment");
+DataGrid<Order> grid = (DataGrid<Order>) FragmentUtils.getComponent(fragment, "ordersGrid");
+```
+
+`FragmentUtils.findComponent(fragment, id)` is the `Optional` form; both live in
+`io.jmix.flowui.fragment`.
+
 ## Testing code that runs outside a user session
 
 A scheduler / `@Async` / application event listener path has no authenticated user, and a test that

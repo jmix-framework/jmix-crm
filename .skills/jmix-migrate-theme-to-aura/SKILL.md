@@ -250,7 +250,7 @@ one declaration:
 | `text-secondary`, `text-body` | `color: var(--vaadin-text-color-secondary)` / `--vaadin-text-color` |
 | `text-error`, `text-success` | `color: var(--aura-red-text)` / `var(--aura-green-text)` |
 | `bg-contrast-*`, `bg-base` | `background: var(--vaadin-background-container*)` — no alpha scale, see Step 5 |
-| `rounded-*` | `border-radius: var(--aura-base-radius)` |
+| `rounded-*` | `border-radius: var(--vaadin-radius-s/-m/-l)` — not `--aura-base-radius`, a unitless multiplier that computes to `0` as a length |
 | `shadow-*` | `box-shadow: var(--aura-shadow-xs/-s/-m)` |
 | `flex`, `flex-col`, `items-center`, `justify-between`, `w-full`, `hidden`, … | plain CSS — no token involved, write the property directly |
 

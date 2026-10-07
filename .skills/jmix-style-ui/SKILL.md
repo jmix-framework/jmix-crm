@@ -41,7 +41,7 @@ inspectable, and it keeps values out of Java:
 /* src/main/resources/META-INF/resources/themes/<app>/<view>.css */
 .order-card {
     border: 1px solid var(--aura-accent-border-color);
-    border-radius: var(--aura-base-radius);
+    border-radius: var(--vaadin-radius-m);
 }
 ```
 
@@ -162,7 +162,7 @@ read in full. The ones you reach for most:
 | border | `--aura-accent-border-color` |
 | panel / card background | `--aura-surface-color`, `--aura-surface-color-solid` |
 | page background | `--aura-background-color`, `--aura-app-background` |
-| corner radius | `--aura-base-radius` |
+| corner radius | `--vaadin-radius-s` / `-m` / `-l`. Aura derives them from `--aura-base-radius`, which is a unitless multiplier (`3`), not a length — `border-radius: var(--aura-base-radius)` is invalid and computes to `0` |
 | font size | `--aura-font-size-xs` … `-xl` |
 | font weight | `--aura-font-weight-regular` / `-medium` / `-semibold` |
 | line height | `--aura-line-height-xs` … `-xl` |
