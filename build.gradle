@@ -96,8 +96,8 @@ dependencies {
     implementation 'io.jmix.tabbedmode:jmix-tabbedmode-flowui-starter'
     implementation 'io.jmix.dynmodel:jmix-dynmodel-flowui-starter'
     implementation 'io.jmix.aichat:jmix-aichat-flowui-starter'
-    implementation 'io.jmix.dynmodel:jmix-dynmodel-ai-agent-starter'
-    implementation 'io.jmix.dynmodel:jmix-dynmodel-ai-agent-flowui-starter'
+    implementation 'io.jmix.dynmodel:jmix-dynmodel-ai-starter'
+    implementation 'io.jmix.dynmodel:jmix-dynmodel-ai-flowui-starter'
     implementation 'com.embabel.agent:embabel-agent-starter-byok'
 
     // reports
