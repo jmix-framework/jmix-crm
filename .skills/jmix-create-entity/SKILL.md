@@ -18,6 +18,8 @@ Use this skill when adding or changing a database-backed Jmix entity.
 5. Add `@InstanceName` on a stable human-readable field or method.
 6. Define columns with exact `nullable`, `length`, `precision`, and `scale` constraints from requirements.
    **Check every column name against the reserved words of every targeted dialect** — see "Column names" below.
+   **A `length` of 255 is `@Column`'s own default — omit it** and let the changelog spell
+   `varchar(255)`; see "Constraint Audit" below.
 7. Use `FetchType.LAZY` for relationships.
 8. Create the Liquibase changelog using `jmix-create-liquibase-changelog`.
 9. Add entity and attribute message keys using `jmix-add-i18n-keys`.
@@ -338,6 +340,25 @@ instead:
 you almost never want, because it assumes the Jmix default of soft delete. A hard-deleted
 composition parent is the exception that wording allows for.
 
+### Delete policies on a plain reference to a hard-deleted entity
+
+The same rule covers `@OnDeleteInverse(DeletePolicy.DENY)` / `UNLINK` on an ordinary
+`@ManyToOne`: Jmix runs the delete-policy processor only when the entity being
+DELETED supports soft delete. The trait that matters is on the reference's target
+(`Product` when the annotation sits on `OrderLine.product`), not on the entity that
+carries the annotation. On a hard-deleted target the annotation is just an indicator 
+for Studio to generate a FK constraint with `ON DELETE`. 
+DENY surfaces as a foreign-key violation from the database — a persistence exception, never
+`DeletePolicyException`.
+
+For a hard-deleted target put the policy on the foreign key in the changelog instead
+(see `jmix-create-liquibase-changelog`, "Two referential actions on one row"):
+
+- UNLINK → `onDelete="SET NULL"` on the FK; the column must be nullable.
+- DENY → a plain FK with no `onDelete`; the database rejects the delete. Tests and
+  error handling must expect the persistence exception, not `DeletePolicyException`.
+- CASCADE → `onDelete="CASCADE"`, as in the composition branch above.
+
 ## Auditing and Soft Delete
 
 Add audit fields with the Spring Data annotations from `org.springframework.data.annotation`: `@CreatedBy`, `@CreatedDate`, `@LastModifiedBy`, `@LastModifiedDate`. For soft delete add `@DeletedBy` and `@DeletedDate` from `io.jmix.core.annotation` — soft-deleted rows are then auto-filtered out of `DataManager`/JPQL queries.
@@ -397,12 +418,23 @@ drift is silent. Check Java annotations and the Liquibase changelog side
 by side:
 
 - `nullable` / `@NotNull`
-- `length`
+- `length` — compare the **effective** length, not whether the attribute is written.
+  `@Column`'s own default is 255, so a 255-character column omits `length` from the
+  annotation while the changelog must still spell `varchar(255)`, because SQL has no such default.
+  An attribute present on one side and absent on the other is not drift here. `precision` and `scale` default to 0,
+  which is never the requirement, so those are always written on both sides.
 - `precision` and `scale`
 - enum id values and column type
 - foreign key nullability
 - indexes and unique constraints
 - default values for required fields
+
+When a field uses `@PropertyDatatype`, inspect the datatype class's `@Ddl` too.
+Compare its SQL type with the intended column and verify the effective generated
+DDL; matching `@Column` and Liquibase alone can hide a conflicting datatype
+declaration. Do not assume the field annotation wins. Use a compatible datatype
+or separate display formatting from schema typing, and review generated migrations
+for unintended precision or scale changes before applying them.
 
 ## Semantic Constraint Checks
 

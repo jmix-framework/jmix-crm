@@ -18,6 +18,11 @@ false-clean, not a pass.
 
 ## Gate 2 — `clean test` (NEVER bootRun)
 
+Before rebuilding, check whether an existing application process consumes this
+checkout's output JARs. Replacing an archive it holds open can cause ZIP/resource
+read failures. Coordinate an approved stop/rebuild/restart with its owner, or use
+isolated build outputs. Do not overwrite a running process's archives blindly.
+
 Run the project's terminating context-load test:
 
 ```bash
@@ -156,11 +161,13 @@ landed.
 If you do have one, run the mechanical checks first, then:
 
 **If the application is already running** — the owner started it, possibly on a
-non-default port — take that base URL and port as given, do the walk against it,
-and do NOT run steps 1, 2 or 4: never start a second instance, and never shut down
-a process you do not own (the "leave the port free" in step 4 is only for the case
-where you started it yourself). Note in the report that the app was not started by
-the gate. The numbered steps below are for when you start and own the process.
+non-default port — take that base URL and port as given. Confirm it loads the
+verified artifacts before the walk. If a restart is needed, obtain the owner's
+approval; without it report the new build's browser check as unverified. Do NOT
+run steps 1, 2 or 4 against an owner-managed process: never start a second instance
+or shut theirs down without approval ("leave the port free" applies only when
+you started it yourself). Note in the report that the app was not started by the
+gate. The numbered steps below are for when you start and own the process.
 
 1. Start the app in the BACKGROUND so it does not block your turn, capturing its
    log — e.g. `nohup ./gradlew --no-daemon bootRun > /tmp/jmix_app.log 2>&1 &`,
@@ -193,6 +200,15 @@ the gate. The numbered steps below are for when you start and own the process.
    port stays held, kill whatever holds it). Always leave the port free, and state
    in your report which database the walk ran against and what data it created
    there.
+
+### When the browser sees older resources than the tests
+
+If a fresh-context test passes but the running view cannot find a component or
+`@Subscribe` target, compare the source, built resource and effective runtime
+resource. Inspect the process classpath and configured overrides, including the
+exact descriptor under a module's `.jmix/conf/`, before changing valid code.
+Remove the entire `.jmix/conf/` directory if it exists. 
+Archive-read failures after a rebuild need the approved restart above. Repeat the walk against the verified artifacts.
 
 ### Driving a Jmix/Vaadin UI
 

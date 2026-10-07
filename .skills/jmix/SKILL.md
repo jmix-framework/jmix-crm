@@ -54,6 +54,7 @@ READ the most specific skill for each artifact:
 - DTO / non-persistent UI-bound model: `jmix-create-dto-entity`
 - Reusable Flow UI fragment: `jmix-create-fragment`
 - Component styling / theme tokens (`--aura-*`, `--lumo-*`) / CSS classes: `jmix-style-ui`
+- Moving a project upgraded from Jmix 2.x off Lumo onto Aura: `jmix-migrate-theme-to-aura`
 
 ## A skill's framework rule beats sample code in a plan or brief
 

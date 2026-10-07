@@ -35,6 +35,15 @@ class PriceCalculatorTest {
 }
 ```
 
+Do not invent an unregistered anonymous or local subclass of a Jmix entity for
+an in-memory fixture. The class still enters the test classpath: Jmix metadata
+discovery in another test can encounter it and fail with a missing metaclass,
+even when the fixture's own plain unit test passes. To exercise a missing-handler
+branch, vary the injected registry or collaborator list while using an existing
+entity type. If a new subtype is genuinely needed, register it through the
+supported test configuration and run the full suite with a fresh context; running
+only the fixture's unit test does not check metamodel discovery.
+
 ## Integration Test Pattern
 
 ```java
@@ -215,6 +224,20 @@ CollectionContainer<Category> dc =
         ViewControllerUtils.getViewData(view).getContainer("categoriesDc");
 assertThat(dc.getItems()).allMatch(Category::isApplicable);
 ```
+
+Components inside a fragment are not found by id from the view. The fragment loader
+keeps a component's XML id as fragment-scoped data, not as the element id, so
+`UiTestUtils.getComponent(view, "ordersGrid")` and any walk comparing
+`Component.getId()` report "no component" for a correct descriptor. The fragment itself
+IS a view component — take it from the view, then ask the fragment for its content:
+
+```java
+OrderListFragment fragment = UiTestUtils.getComponent(view, "orderListFragment");
+DataGrid<Order> grid = (DataGrid<Order>) FragmentUtils.getComponent(fragment, "ordersGrid");
+```
+
+`FragmentUtils.findComponent(fragment, id)` is the `Optional` form; both live in
+`io.jmix.flowui.fragment`.
 
 ## Testing code that runs outside a user session
 

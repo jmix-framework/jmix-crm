@@ -145,6 +145,19 @@ Choose form components by property type:
 | Jmix enum | `select` or `comboBox` |
 | Entity reference | `entityComboBox` or `entityPicker` |
 
+For free-text fields with `EAGER`, `LAZY`, or `TIMEOUT` value updates, set
+`trimEnabled="false"`. Otherwise a client-originated update can trim the trailing
+space or newline and rewrite the text before the user types the next word:
+
+```xml
+<textArea id="descriptionField" property="description"
+          valueChangeMode="TIMEOUT" trimEnabled="false"/>
+```
+
+If normalization is required, do it at an explicit commit or validation boundary.
+Test a client-originated value ending in a space and a newline (or real typing),
+not only server-side `setValue`, which bypasses this trimming branch.
+
 For a `Boolean` property annotated with `@NotNull`, `false` is still a valid
 value: the constraint rejects only `null`. A bound checkbox inherits the
 required state from the entity metadata, but Vaadin treats an unchecked checkbox
@@ -169,6 +182,7 @@ After creating or editing the descriptor, inspect each field:
   checkbox bound to an `@NotNull Boolean` that may be `false` declares
   `required="false"` explicitly.
 - Entity references use reference components, not text fields.
+- Live free-text editors preserve whitespace while typing (`trimEnabled="false"`).
 
 If an existing project uses a different compiled pattern for a type, follow the existing pattern and keep it consistent.
 
@@ -185,22 +199,31 @@ For `@ManyToOne` and other entity references, pick the pattern by candidate-set 
 The combo passes a `searchString` parameter for type-ahead, so the
 JPQL MUST `like :searchString`; ignoring it throws `DevelopmentException:
 Parameter 'searchString' is not used in the query` at dropdown fetch.
-The JPQL must use the JPA/Jmix entity name, not the database table
-name.
+The parameter is the BARE combo input unless `searchStringFormat` wraps it:
+an empty string when the dropdown opens, so `like ''` returns no rows, and
+the exact, case-sensitive text afterwards. Set the format and the escaping
+on the `itemsQuery` element — without them every gate stays green and only
+the browser shows an empty dropdown. The JPQL must use the JPA/Jmix entity
+name, not the database table name.
 
 ```xml
 <entityComboBox id="refField" property="ref">
-    <itemsQuery class="com.company.app.entity.Ref">
+    <itemsQuery class="com.company.app.entity.Ref"
+                searchStringFormat="(?i)%${inputString}%"
+                escapeValueForLike="true">
         <query>
             <![CDATA[
             select e from Ref e
-            where e.name like :searchString
+            where e.name like :searchString escape '\'
             order by e.name
             ]]>
         </query>
     </itemsQuery>
 </entityComboBox>
 ```
+
+A UI test that fetches the picker's items only with a partial filter does not
+catch a missing `searchStringFormat` — fetch with the empty filter too.
 
 `itemsQuery` does NOT auto-bind `:container_*` / `:component_*`
 parameters — when the reference list depends on another component or
@@ -313,6 +336,13 @@ a dialog is showing, so a home-made confirmation dialog does not hold anything b
 ## Cross-field validation
 
 For cross-field/manual validation, add a `@Subscribe` handler on `ValidationEvent` and report failures via `event.getErrors().add("...")`; for programmatic checks (e.g. before a custom save) use the `ViewValidation` bean (`validateUiComponents`, `showValidationErrors`).
+
+Do not rely solely on `required` or field validators for an invariant on a
+secondary `tabSheet` tab. Inactive tab content is disabled, and field validation
+skips disabled components. Keep those checks as UI affordances, but enforce the
+save invariant in a `ValidationEvent` handler reading `getEditedEntity()`, not
+only the currently enabled fields. Test saving without visiting the secondary
+tab and after switching away from it; neither path may persist invalid state.
 
 ## Forbidden
 
