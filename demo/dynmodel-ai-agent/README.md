@@ -13,9 +13,11 @@ describes a change. The agent proposes a plan, and the user approves it. Approvi
 only the model in the editor; nothing reaches the running application until the user presses
 **Apply**. After that the new screens appear in the menu straight away, ready for data entry.
 
-> **Preview.** The agent is not released yet. The branch builds against Jmix `3.1.999-SNAPSHOT` and
-> Jmix Premium from the `50-dynmodel-ai-agent` branches, so building it requires read access to the
-> Jmix Premium repository. Inside the Jmix team the stands can also be run from prebuilt jars.
+> **Preview.** The agent — the Dynamic Model AI Builder,
+> [jmix-framework/jmix#5779](https://github.com/jmix-framework/jmix/issues/5779) — is merged into Jmix
+> `master` and ships in Jmix 3.1, which is not released yet. Until then the branch builds against Jmix
+> and Jmix Premium `3.1.999-SNAPSHOT` from their `master` branches, so building it requires read access
+> to the Jmix Premium repository. Inside the Jmix team the stands can also be run from prebuilt jars.
 
 ## 📑 Table of Contents
 
@@ -36,6 +38,9 @@ only the model in the editor; nothing reaches the running application until the 
 - **The human stays in control.** The user can refine the plan in the same chat, approve it, review
   the result in the visual editor and publish it with **Apply** — or not publish it at all. The agent
   never publishes by itself, and the editor is locked while it works.
+- **Every step is visible.** A progress bar shows the stage — Request, Plan, Prepare, Review, Apply —
+  and the **Workspace** next to the chat shows the current plan or model changes and any issues.
+  Replies link to read-only snapshots of the plan, the prepared and applied changes and the run steps.
 - **AI and manual editing work on the same model.** Add a field in the **Visual** editor, rename a
   caption in **Code**, then ask the agent — it sees the unpublished manual changes.
 - **Small precise changes.** "Put the next-contact date right before the amount" becomes a plan with
@@ -49,7 +54,7 @@ only the model in the editor; nothing reaches the running application until the 
 
 ## 💻 Stands
 
-The stands differ in appearance, so the agent can be shown — and checked — in each theme; `aura-dark`
+The stands differ in appearance, so the agent can be shown in each theme; `aura-dark`
 can also run on Claude, and `aura-light-tabbed` opens views in tabs. Every stand has its own database,
 so changes on one are not visible on another.
 
@@ -79,20 +84,20 @@ Open `http://localhost:<port>/b2b-crm/` and log in as `admin` / `admin`.
 
 ## 🔨 Build
 
-The branch builds against Jmix and Jmix Premium `3.1.999-SNAPSHOT`, which you publish yourself:
-`mavenLocal()` is the first repository in `settings.gradle` and `build.gradle`, so whoever works on
-this branch publishes both repositories to the local Maven before building it. Publish them
-completely — an open-source `io.jmix` module missing locally is quietly taken from the Jmix nightly
-snapshot of the same version, which is not built from these branches; a missing premium module stops
-the build. Without the Jmix Gradle plugin in the local Maven the
-build stops at once with "Plugin [id: 'io.jmix', version: '3.1.999-SNAPSHOT'] was not found".
-On Windows use `.\gradlew.bat` instead of `./gradlew`.
+The branch builds against Jmix and Jmix Premium `3.1.999-SNAPSHOT`, which you publish yourself from
+their `master` branches: `mavenLocal()` is the first repository in `settings.gradle` and `build.gradle`,
+so whoever works on this branch publishes both repositories to the local Maven before building it.
+Publish them completely — an open-source `io.jmix` module missing locally is quietly taken from the
+Jmix nightly snapshot of the same version, which may differ from your checkout; a missing premium
+module stops the build. Without the Jmix Gradle plugin in the local Maven the build stops at once with
+"Plugin [id: 'io.jmix', version: '3.1.999-SNAPSHOT'] was not found". On Windows use `.\gradlew.bat`
+instead of `./gradlew`.
 
-1. Clone the three repositories on their `50-dynmodel-ai-agent` branches:
+1. Clone `jmix` and `jmix-premium` on `master`, and `jmix-crm` on `50-dynmodel-ai-agent`:
 
    ```bash
-   git clone -b 50-dynmodel-ai-agent https://github.com/jmix-framework/jmix.git
-   git clone -b 50-dynmodel-ai-agent https://github.com/jmix-framework/jmix-premium.git   # needs access
+   git clone -b master https://github.com/jmix-framework/jmix.git
+   git clone -b master https://github.com/jmix-framework/jmix-premium.git   # needs access
    git clone -b 50-dynmodel-ai-agent https://github.com/jmix-framework/jmix-crm.git
    ```
 
@@ -158,41 +163,43 @@ database with the CRM demo data. The stand's log is `instances/<name>/applicatio
 | Scenario | For | What it covers |
 |---|---|---|
 | [Demo](scenarios/demo-scenario.md) | presenters, marketing | 13 steps: create entities with AI, refine and approve the plan, edit by hand, publish, enter data, extend the model in a new conversation, show the boundaries |
-| [Regression](scenarios/regression-scenario.md) | developers, QA | 35 browser checks of the agent and the editor: plan revisions, manual edits, cancellation, conflicts, invalid input, recorded history, restart |
-| [Stand checklist](scenarios/stand-checklist.md) | developers, QA | Checks per theme, plus tabbed mode on 8096: publication message, permissions, errors, layout |
 
-The scenarios are written in Russian for the Russian UI: the prompts and the expected labels are
+The scenario is written in Russian for the Russian UI: the prompts and the expected labels are
 Russian. The agent also understands English and writes plan titles and summaries in the language of
 the user's message.
 
 ## 💡 Good to know
 
 - The agent never publishes by itself: after plan approval the changes are in the editor, and a person
-  publishes them with **Apply**.
-- The agent works with Dynamic Model entities. In this preview it cannot extend an existing application
+  publishes them with **Apply** (in AI mode it sits at the bottom of the Workspace).
+- The agent works with Dynamic Model entities. In Jmix 3.1 it cannot extend an existing application
   entity for the first time, create screens or menu items for one, or create enumeration and calculated
   fields.
 - The stands raise the agent's limits in `application.properties` — up to 24 steps per plan and four
-  minutes per request, with manual plan approval. The demo's plans are larger than the defaults allow.
+  minutes per request. The demo's plans are larger than the defaults allow.
 - Ask for a field position ("put the date before the amount") as a separate request. Inside a large
   creation request it sometimes makes planning fail.
 - In a long conversation the model can lose track — once, after 14 requests, it decided that an
-  existing entity was missing. Start a new task with **Reset dialog**.
+  existing entity was missing. Before a new task, clear the conversation with the eraser button
+  (**Clear conversation**); unpublished model changes stay in the editor unless you choose to discard
+  them in the confirmation.
 - DeepSeek Flash sometimes answers the same request differently. If an answer looks odd, repeat it.
 - After a page reload the AI mode is not restored from the address; select it in the switch again.
-- The agent records every conversation and run in the database, but this preview has no screen for
-  them. Developers can look at the `dmagent_*` entities in the Entity Inspector at
+- The agent records every conversation and run in the database, but there is no screen for them.
+  Developers can look at the `dmagent_*` entities in the Entity Inspector at
   `/b2b-crm/datatl/entity-inspector`.
 
 ## 🧩 What is in the branch
 
 Compared with `main`:
 
-- **The agent in the CRM** — the Dynamic Model, AI chat and agent starters, their Liquibase changelogs,
-  the **Dynamic model settings** menu item, and the agent's own model
+- **The agent in the CRM** — the Dynamic Model and AI chat starters with
+  `io.jmix.dynmodel:jmix-dynmodel-ai-starter` and `jmix-dynmodel-ai-flowui-starter`, their Liquibase
+  includes (the agent's is `/io/jmix/dynmodelai/liquibase/changelog.xml`), the **Dynamic model
+  settings** menu item, the agent's limits (`jmix.dynmodel.ai.*` properties) and its own model
   connection: an OpenAI-compatible chat model on OpenRouter (`DynamicModelAgentConfiguration`,
   `crm.dynmodel.*` properties), separate from the CRM's AI assistant. `DynamicModelAgentIntegrationTest`
-  checks that the agent and the agent's Settings view are in place alongside the CRM.
+  checks that the agent and its Settings view are in place alongside the CRM.
 - **The build** — Jmix `3.1.999-SNAPSHOT` with the local Maven as the first repository for the Gradle
   plugin and the libraries (`settings.gradle`, `build.gradle`), and Vaadin production mode with a
   production bundle rebuilt for Vaadin 25.3.
