@@ -18,6 +18,11 @@ false-clean, not a pass.
 
 ## Gate 2 — `clean test` (NEVER bootRun)
 
+Before rebuilding, check whether an existing application process consumes this
+checkout's output JARs. Replacing an archive it holds open can cause ZIP/resource
+read failures. Coordinate an approved stop/rebuild/restart with its owner, or use
+isolated build outputs. Do not overwrite a running process's archives blindly.
+
 Run the project's terminating context-load test:
 
 ```bash
@@ -68,6 +73,25 @@ If the test suite passed before your changes and a seed test is now RED, assume
 you broke it and fix it to green. Do not call that failure "pre-existing". On the
 first Gate 2 run of a freshly generated project, inspect the JUnit XML and build
 dependencies before deciding whether your changes caused the failure.
+
+Common causes when a seed test goes red after your change:
+
+- **`NoSuchViewException` after you added views** → you broke the VIEW REGISTRY;
+  it scans all `@ViewController` classes at startup and one broken view poisons
+  navigation to EVERY view, including pre-existing ones. Check, in order: (1) every
+  new view `.java` has a `package` line matching its directory — a class in the
+  default package registers its `@Route`/`@ViewController` wrong; (2) no two
+  `@ViewController(id=…)` share an id; (3) every `@ViewDescriptor` path resolves
+  to a real XML next to the class; (4) no `*-view.xml` is empty or malformed — an
+  empty descriptor throws `SAXParseException: Premature end of file` and poisons
+  the registry.
+- **`MetaClass not found for class X`** → the entity is missing `@JmixEntity`, or
+  its package is outside the application scan root.
+- **`ConstraintViolationException` on save** → a `@NotNull` persistent field has
+  no value on the `DataManager` path (see `jmix-create-entity`).
+
+A test that goes red and you cannot explain is a blocker, never a footnote in
+your "done" summary.
 
 A green Gate 2 is necessary but NOT sufficient: the seed tests load the context
 but do NOT open your new views, exercise your new roles, or fire code that only
@@ -137,11 +161,13 @@ landed.
 If you do have one, run the mechanical checks first, then:
 
 **If the application is already running** — the owner started it, possibly on a
-non-default port — take that base URL and port as given, do the walk against it,
-and do NOT run steps 1, 2 or 4: never start a second instance, and never shut down
-a process you do not own (the "leave the port free" in step 4 is only for the case
-where you started it yourself). Note in the report that the app was not started by
-the gate. The numbered steps below are for when you start and own the process.
+non-default port — take that base URL and port as given. Confirm it loads the
+verified artifacts before the walk. If a restart is needed, obtain the owner's
+approval; without it report the new build's browser check as unverified. Do NOT
+run steps 1, 2 or 4 against an owner-managed process: never start a second instance
+or shut theirs down without approval ("leave the port free" applies only when
+you started it yourself). Note in the report that the app was not started by the
+gate. The numbered steps below are for when you start and own the process.
 
 1. Start the app in the BACKGROUND so it does not block your turn, capturing its
    log — e.g. `nohup ./gradlew --no-daemon bootRun > /tmp/jmix_app.log 2>&1 &`,
@@ -174,6 +200,15 @@ the gate. The numbered steps below are for when you start and own the process.
    port stays held, kill whatever holds it). Always leave the port free, and state
    in your report which database the walk ran against and what data it created
    there.
+
+### When the browser sees older resources than the tests
+
+If a fresh-context test passes but the running view cannot find a component or
+`@Subscribe` target, compare the source, built resource and effective runtime
+resource. Inspect the process classpath and configured overrides, including the
+exact descriptor under a module's `.jmix/conf/`, before changing valid code.
+Remove the entire `.jmix/conf/` directory if it exists. 
+Archive-read failures after a rebuild need the approved restart above. Repeat the walk against the verified artifacts.
 
 ### Driving a Jmix/Vaadin UI
 

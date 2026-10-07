@@ -18,16 +18,12 @@ catch for the descriptor defects a compiler cannot see: unresolved `msg://` keys
 invalid property paths, missing data containers, broken component bindings (and it
 flags the same Java errors a compile would). Rules when you use one:
 
-- **Always pass `projectPath` — your project's absolute root (`pwd`).** The project
-  you work in is opened as its own root, so `projectPath` = your current working
-  directory. Pass it on EVERY JetBrains MCP call (`get_file_problems`,
-  `get_project_modules`, `create_new_file`, …): with more than one project open the
-  IDE cannot tell which you mean and the call fails — `No exact project is specified`
-  or a malformed `-32602` response — so the gate silently does nothing. **If you do
-  not know the root:** issue any JetBrains MCP call once WITHOUT `projectPath`; the
-  error lists every open project as `Currently open projects: {"projects":[{"path":
-  …}]}`. Pick the entry equal to (or the deepest one containing) your `pwd`, then
-  reuse it as `projectPath` for all later calls.
+- **Read the connected tool schema before choosing the project.** When a call
+  supports `projectPath`, pass the absolute root of the intended open project on
+  every call. Use the server's documented project-discovery mechanism if needed;
+  do not assume omitting the argument will return a list. Some servers expose no
+  project argument: do not invent one. Confirm the intended project with a known
+  diagnostic as described below, or report the inspection unavailable.
 - **Surface WARNINGS, not just errors.** Jmix-plugin findings (unresolved
   `msg://`, bad fetch/entity refs, broken bindings) are typically reported as
   WARNINGS — an errors-only view looks clean when it is not. Include warnings and
@@ -35,7 +31,14 @@ flags the same Java errors a compile would). Rules when you use one:
 - **Never trust an EMPTY result you did not confirm.** An inspection that
   silently targeted the wrong project/module returns "no problems" on a file it
   never looked at — that is false-clean. Confirm the file was actually inspected
-  before calling it clean.
+  before calling it clean. Require a result for every requested path; a batch
+  omission or timeout means UNVERIFIED, not clean. Prefer individual calls for
+  descriptors. Check a file with a known diagnostic in the intended project. If
+  necessary, inspect a disposable descriptor copy with a deliberately invalid
+  `msg://` key in an IDE-indexed resource directory; confirm the defect is reported,
+  then remove only that probe. Leave the original unchanged. A property-path
+  check with no resolvable data container in an abstract descriptor does not prove
+  that its bindings are valid; inspect or test the concrete inheriting view too.
 - **The inspection needs the project opened as a STANDALONE Gradle project** (its
   own root, not a subdirectory of another open project) — a nested path resolves to
   the wrong module and returns generic noise (e.g. "URI is not registered"), not
@@ -59,7 +62,8 @@ flags the same Java errors a compile would). Rules when you use one:
   the file IS inside the project directory, so the inspection accepts the path
   and returns bogus findings instead of refusing loudly. Mechanical precondition
   for any file type: `git rev-parse --show-toplevel` run in the edited file's
-  directory must equal `projectPath` — if it differs, the file lives in another
+  directory must equal the confirmed IDE project root (`projectPath` when
+  supported) — if it differs, the file lives in another
   worktree and the inspection of that path is not authoritative. The same
   signature also arises from a file outside any source root, a never-imported
   Gradle project, or indexing lag right after files were written from outside
