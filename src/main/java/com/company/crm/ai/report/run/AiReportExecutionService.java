@@ -25,6 +25,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
@@ -38,6 +39,12 @@ import static io.jmix.reports.entity.ReportOutputType.valueOf;
 public class AiReportExecutionService {
 
     private static final Logger log = LoggerFactory.getLogger(AiReportExecutionService.class);
+
+    /**
+     * Run parameter that tells a report data loader its output goes to the model, so it must leave out
+     * attributes marked {@link io.jmix.aitools.ExcludeFromAi}.
+     */
+    public static final String AI_RUN_PARAMETER = "crmAiRun";
 
     private final DataManager dataManager;
     private final FileStorage fileStorage;
@@ -143,8 +150,10 @@ public class AiReportExecutionService {
                 return ReportExecutionResult.failed(reportCode, ReportExecutionErrorCode.BINARY_OUTPUT_NOT_SUPPORTED_YET, "Binary output formats (like PDF, XLSX) are not yet supported for LLM analysis.");
             }
 
+            Map<String, Object> runParameters = new HashMap<>(conversionResult.convertedParameters());
+            runParameters.put(AI_RUN_PARAMETER, Boolean.TRUE);
             var runner = reportRunner.byReportEntity(runnableReport)
-                    .withParams(conversionResult.convertedParameters());
+                    .withParams(runParameters);
 
             if (effectiveTemplateCode != null) {
                 runner.withTemplateCode(effectiveTemplateCode);

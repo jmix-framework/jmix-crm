@@ -2,6 +2,7 @@ package com.company.crm.model.contact;
 
 import com.company.crm.model.base.FullAuditEntity;
 import com.company.crm.model.client.Client;
+import io.jmix.aitools.ExcludeFromAi;
 import io.jmix.core.metamodel.annotation.InstanceName;
 import io.jmix.core.metamodel.annotation.JmixEntity;
 import jakarta.persistence.Column;
@@ -38,10 +39,13 @@ public class Contact extends FullAuditEntity {
     @Column(name = "END_DATE")
     private LocalDate endDate;
 
+    // Personal data: visible in the application, never sent to the AI assistant
+    @ExcludeFromAi
     @Column(name = "PHONE")
     private String phone;
 
     @Email
+    @ExcludeFromAi
     @Column(name = "EMAIL")
     private String email;
 

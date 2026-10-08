@@ -1,6 +1,7 @@
 package com.company.crm.test.report.dataloader;
 
 import com.company.crm.AbstractTest;
+import com.company.crm.ai.report.run.AiReportExecutionService;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.contact.Contact;
 import com.company.crm.report.dataloader.ContactsReportDataLoader;
@@ -63,6 +64,22 @@ class ContactsReportDataLoaderTest extends AbstractTest {
 
         // Check all fields are present
         assertThat(result.getFirst()).containsKeys("person", "position", "phone", "email", "startDate", "endDate");
+    }
+
+    @Test
+    void testAiRunLeavesOutAttributesExcludedFromAi() {
+        Client client = entities.client("AI Run Client");
+        Contact contact = entities.contact(client, "John Doe", "Manager");
+        contact.setPhone("+1234567890");
+        contact.setEmail("john.doe@example.com");
+        dataManager.save(contact);
+
+        List<Map<String, Object>> result = dataLoader.loadData(null, null,
+                Map.of("client", client, AiReportExecutionService.AI_RUN_PARAMETER, Boolean.TRUE));
+
+        assertThat(result).singleElement().satisfies(fields -> assertThat(fields)
+                .containsEntry("person", "John Doe")
+                .doesNotContainKeys("phone", "email"));
     }
 
     @Test
