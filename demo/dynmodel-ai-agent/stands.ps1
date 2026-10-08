@@ -47,12 +47,21 @@ foreach ($v in $variants) {
             if (-not (Test-Path $v.Jar)) { Write-Warning "$($v.Id): skipped, missing $($v.Jar) (see README, Build)"; continue }
             $java = Get-Java
             $openRouter = Get-StandSecret 'OPENROUTER_API_KEY'
-            if (-not $openRouter) { Write-Warning 'OPENROUTER_API_KEY is not set: the agent will answer that the model call failed' }
             New-Item -ItemType Directory -Force $dir | Out-Null
             $env:OPENROUTER_API_KEY = $openRouter
             $env:DYNMODEL_MODEL = 'deepseek/deepseek-v4.1-flash'
             $env:DYNMODEL_BASE_URL = 'https://openrouter.ai/api/v1'
             $provider = @('--crm.dynmodel.provider=openrouter')
+            Remove-Item Env:DYNMODEL_API_KEY -ErrorAction SilentlyContinue
+            if ($env:STAND_PROVIDER -eq 'openai' -or -not $openRouter) {
+                # OpenAI-only setup: the agent uses the CRM AI key, passed through the environment, not the command line.
+                $openAi = Get-StandSecret 'SPRING_AI_OPENAI_APIKEY'
+                if ($openAi) { $env:DYNMODEL_API_KEY = $openAi }
+                else { Write-Warning 'Neither OPENROUTER_API_KEY nor SPRING_AI_OPENAI_APIKEY is set: the agent will answer that the model call failed' }
+                $env:DYNMODEL_MODEL = if ($env:STAND_OPENAI_MODEL) { $env:STAND_OPENAI_MODEL } else { 'gpt-5.4' }
+                $env:DYNMODEL_BASE_URL = 'https://api.openai.com/v1'
+                $provider = @('--crm.dynmodel.provider=openai')
+            }
             if ($v.Claude -and (Get-StandSecret 'ANTHROPIC_API_KEY')) {
                 $env:STAND_ANTHROPIC_API_KEY = Get-StandSecret 'ANTHROPIC_API_KEY'
                 $env:DYNMODEL_MODEL = if ($env:STAND_CLAUDE_MODEL) { $env:STAND_CLAUDE_MODEL } else { 'claude-sonnet-5' }
@@ -76,7 +85,7 @@ foreach ($v in $variants) {
                 "--logging.file.name=$d/application.log") + $provider
             $p = Start-Process -FilePath $java -ArgumentList $arguments -WorkingDirectory $dir -WindowStyle Hidden -PassThru
             $p.Id | Out-File -Encoding ascii (Join-Path $dir 'pid')
-            $model = if ($provider[0] -like '*anthropic') { 'Claude' } else { 'DeepSeek' }
+            $model = if ($provider[0] -like '*anthropic') { 'Claude' } elseif ($provider[0] -like '*openai') { "OpenAI $env:DYNMODEL_MODEL" } else { 'DeepSeek' }
             "$($v.Id): started $($p.Id) with $model, http://localhost:$($v.Port)/b2b-crm/"
         }
         'status' {

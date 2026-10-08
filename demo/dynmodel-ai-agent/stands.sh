@@ -37,11 +37,18 @@ while read -r id port theme color dir jar; do
             if listening "$port"; then echo "$id: already running on $port"; continue; fi
             [ "$jar" = tabbed ] && jarfile="$TABBED_JAR" || jarfile="$PLAIN_JAR"
             [ -f "$jarfile" ] || { echo "$id: skipped, missing $jarfile (see README, Build)" >&2; continue; }
-            [ -n "${OPENROUTER_API_KEY:-}" ] || echo "warning: OPENROUTER_API_KEY is not set, model calls will fail" >&2
             mkdir -p "$inst"
             model=DeepSeek
             provider=(--crm.dynmodel.provider=openrouter)
             export DYNMODEL_MODEL=deepseek/deepseek-v4.1-flash DYNMODEL_BASE_URL=https://openrouter.ai/api/v1
+            if [ "${STAND_PROVIDER:-}" = openai ] || [ -z "${OPENROUTER_API_KEY:-}" ]; then
+                # OpenAI-only setup: the agent uses the CRM AI key, passed through the environment, not argv.
+                if [ -n "${SPRING_AI_OPENAI_APIKEY:-}" ]; then export DYNMODEL_API_KEY="$SPRING_AI_OPENAI_APIKEY"
+                else echo "warning: neither OPENROUTER_API_KEY nor SPRING_AI_OPENAI_APIKEY is set, model calls will fail" >&2; fi
+                export DYNMODEL_MODEL="${STAND_OPENAI_MODEL:-gpt-5.4}" DYNMODEL_BASE_URL=https://api.openai.com/v1
+                model="OpenAI $DYNMODEL_MODEL"
+                provider=(--crm.dynmodel.provider=openai)
+            fi
             if [ "$id" = aura-dark ] && [ -n "${ANTHROPIC_API_KEY:-}" ]; then
                 model=Claude
                 export STAND_ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY" DYNMODEL_MODEL="${STAND_CLAUDE_MODEL:-claude-sonnet-5}"
