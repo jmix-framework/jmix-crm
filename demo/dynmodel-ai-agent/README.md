@@ -29,6 +29,7 @@ only the model in the editor; nothing reaches the running application until the 
 - [Scenarios](#-scenarios)
 - [Good to know](#-good-to-know)
 - [What is in the branch](#-what-is-in-the-branch)
+- [The demo/ai-app branch](#-the-demoai-app-branch)
 
 ## ✨ What the demo shows
 
@@ -212,3 +213,26 @@ Compared with `main`:
 
 The `50-dynmodel-ai-agent-tabbed` branch follows this one and adds the Tabbed Mode add-on and a tabbed
 main view.
+
+## 🎤 The demo/ai-app branch
+
+`demo/ai-app` extends this branch for the "AI × Jmix" talk: the CRM AI assistant, AI-generated JPQL in
+reports and the Dynamic Model agent on the same stand.
+
+- **JPQL in the log** — `logging.level.io.jmix.aitools.dataload=DEBUG`: the stand's
+  `instances/<name>/application.log` shows the query the assistant wrote (`executeQuery(jpql=…)`) and the
+  row-level conditions AI Tools added to it (`Access conditions applied`).
+- **Personal data closed to the AI** — `Contact.phone` and `Contact.email` carry `@ExcludeFromAi` (AI
+  Tools, Jmix 3.1). The CRM's own channels to the model honour it too: a client added to the chat context
+  comes without them, and the Client 360 report run by the assistant leaves them out. In the application
+  they stay visible.
+- **Row-level rights in value queries** — the Manager role may read `User.id`, which the Only My Accounts
+  conditions compare; without it a joined query by `alice` (AI Tools or an AI-generated JPQL band) is
+  refused.
+- **AI-generated JPQL reports** — `demo/reports/ai-jpql-reports.zip` holds «Выручка клиентов (AI JPQL)»
+  (stored query, `fromDate` and `toDate` date parameters, a Table template) and «Выручка клиентов (живая
+  генерация)» (the same band without a query, for **Generate query**). Reports live in the stand database:
+  import the archive in **Administration → Reports → Reports → Import** after every stand reset. The stored
+  query was written by hand in the format the generator stores; generate it again with a model key to show
+  the model's own wording. `AiJpqlReportsArchiveTest` imports the archive and runs it as admin and as alice.
+- **Users** — `admin` / `admin` sees all 30 clients, `alice` / `alice` (Manager + Only My Accounts) her 13.
