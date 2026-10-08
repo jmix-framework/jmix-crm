@@ -41,10 +41,14 @@ while read -r id port theme color dir jar; do
             model=DeepSeek
             provider=(--crm.dynmodel.provider=openrouter)
             export DYNMODEL_MODEL=deepseek/deepseek-v4.1-flash DYNMODEL_BASE_URL=https://openrouter.ai/api/v1
-            if [ "${STAND_PROVIDER:-}" = openai ] || [ -z "${OPENROUTER_API_KEY:-}" ]; then
+            unset DYNMODEL_API_KEY
+            if [ "$jar" = tabbed ]; then
+                # The tabbed branch has only the OpenRouter connection.
+                [ -n "${OPENROUTER_API_KEY:-}" ] || echo "warning: $id needs OPENROUTER_API_KEY, model calls will fail" >&2
+            elif [ "${STAND_PROVIDER:-}" = openai ] || [ -z "${OPENROUTER_API_KEY:-}" ]; then
                 # OpenAI-only setup: the agent uses the CRM AI key, passed through the environment, not argv.
                 if [ -n "${SPRING_AI_OPENAI_APIKEY:-}" ]; then export DYNMODEL_API_KEY="$SPRING_AI_OPENAI_APIKEY"
-                else echo "warning: neither OPENROUTER_API_KEY nor SPRING_AI_OPENAI_APIKEY is set, model calls will fail" >&2; fi
+                else echo "warning: SPRING_AI_OPENAI_APIKEY is not set, model calls will fail" >&2; fi
                 export DYNMODEL_MODEL="${STAND_OPENAI_MODEL:-gpt-5.4}" DYNMODEL_BASE_URL=https://api.openai.com/v1
                 model="OpenAI $DYNMODEL_MODEL"
                 provider=(--crm.dynmodel.provider=openai)
@@ -55,7 +59,9 @@ while read -r id port theme color dir jar; do
                 # Anthropic rejects the agent's JSON Schema as too large; the agent then describes JSON in the prompt.
                 provider=(--crm.dynmodel.provider=anthropic --jmix.dynmodel.ai.native-structured-output=false)
             fi
-            (cd "$inst" && nohup "$JAVA" -Xms128m -Xmx768m -Djava.awt.headless=true \
+            # Only java goes to the background, with no inherited stdin/stdout: $! is the java pid, and
+            # start returns at once even when its output is piped.
+            (cd "$inst" || exit; nohup "$JAVA" -Xms128m -Xmx768m -Djava.awt.headless=true \
                 -Dstand.theme="$theme" -Dstand.color="$color" -Dstand.direction="$dir" \
                 -Dcom.sun.management.jmxremote.port="$jmx" -Dcom.sun.management.jmxremote.authenticate=false \
                 -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.host=127.0.0.1 \
@@ -67,7 +73,7 @@ while read -r id port theme color dir jar; do
                 --jmix.core.conf-dir="$inst/.jmix/conf" --jmix.core.work-dir="$inst/.jmix/work" \
                 --jmix.core.temp-dir="$inst/.jmix/temp" --jmix.localfs.storage-dir="$inst/.jmix/storage" \
                 --crm.dynmodel.max-output-tokens=4096 --jmix.dynmodel.ai.plan-approval-mode=MANUAL \
-                --logging.file.name="$inst/application.log" "${provider[@]}" > "$inst/console.log" 2>&1 &
+                --logging.file.name="$inst/application.log" "${provider[@]}" > "$inst/console.log" 2>&1 < /dev/null &
              echo $! > "$inst/pid")
             echo "$id: started $(cat "$inst/pid") with $model, http://localhost:$port/b2b-crm/"
             ;;
