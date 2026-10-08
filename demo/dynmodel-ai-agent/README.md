@@ -303,7 +303,10 @@ reports and the Dynamic Model agent on the same stand. The talk uses one stand, 
     `--vaadin.devmode.devTools.enabled=false`: from source Vaadin runs in development mode, from the
     committed `src/main/bundles/dev.bundle`. The key is `--crm.dynmodel.api-key=${SPRING_AI_OPENAI_APIKEY:setup-required}`:
     Spring takes it from the environment IDEA passes on, so the key is in neither the configuration nor
-    the command line. On macOS IDEA reads the login shell environment when it starts: restart it after
+    the command line. Keep the `:setup-required` default, and a default in every `${…}` of the configuration:
+    IDEA itself expands a bare `${NAME}` in program arguments from its own environment, so
+    `${SPRING_AI_OPENAI_APIKEY}` would put the key value on the java command line (in `ps` and in the Run
+    console header); `${NAME:default}` is no name IDEA knows, so it leaves the text for Spring. On macOS IDEA reads the login shell environment when it starts: restart it after
     adding `export SPRING_AI_OPENAI_APIKEY=…` to `~/.zshrc`. Stop it with one press of **Stop** or with
     `stands.sh stop aura-light`; never force-stop it (see [Run and stop](#-run-and-stop)).
     The project's own **CRM APP** configuration is not the stand: it runs the app on port 8080 with the

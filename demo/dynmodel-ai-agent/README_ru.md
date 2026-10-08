@@ -307,7 +307,11 @@ Windows, PowerShell:
     на OpenAI, и ещё `--vaadin.devmode.devTools.enabled=false`: из исходников Vaadin работает в режиме
     разработки, на закоммиченном `src/main/bundles/dev.bundle`. Ключ —
     `--crm.dynmodel.api-key=${SPRING_AI_OPENAI_APIKEY:setup-required}`: Spring берёт его из окружения,
-    которое передаёт IDEA, так что ключа нет ни в конфигурации, ни в командной строке. На macOS IDEA
+    которое передаёт IDEA, так что ключа нет ни в конфигурации, ни в командной строке. Умолчание
+    `:setup-required` не убирайте, как и умолчание в любом `${…}` конфигурации: IDEA сама подставляет голый
+    `${NAME}` в аргументах программы из своего окружения, и `${SPRING_AI_OPENAI_APIKEY}` положил бы значение
+    ключа в командную строку java (в `ps` и в заголовок консоли Run); имени `${NAME:default}` IDEA не знает
+    и оставляет текст Spring. На macOS IDEA
     читает окружение login-shell при старте: после `export SPRING_AI_OPENAI_APIKEY=…` в `~/.zshrc`
     перезапустите её. Останавливайте одним нажатием **Stop** или `stands.sh stop aura-light`; не убивайте
     процесс принудительно (см. [Запуск и остановка](#-запуск-и-остановка)).
