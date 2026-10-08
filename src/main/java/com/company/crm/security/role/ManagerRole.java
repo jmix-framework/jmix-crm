@@ -108,6 +108,9 @@ public interface ManagerRole extends UiMinimalRole, ReportsRunRole {
     @EntityPolicy(entityClass = UserActivity.class, actions = EntityPolicyAction.READ)
     void userActivity();
 
+    // User.id is read by the Only My Accounts conditions ({E}.accountManager.id = :current_user_id) that
+    // AI Tools and the AI-generated JPQL report band weave into value queries, which check attribute access
+    @EntityAttributePolicy(entityClass = User.class, attributes = "id", action = EntityAttributePolicyAction.VIEW)
     @EntityPolicy(entityClass = User.class, actions = EntityPolicyAction.READ)
     void user();
 
