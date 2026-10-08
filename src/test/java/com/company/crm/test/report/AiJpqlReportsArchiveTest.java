@@ -1,11 +1,13 @@
 package com.company.crm.test.report;
 
 import com.company.crm.AbstractTest;
+import com.company.crm.app.util.init.DemoReportsInitializer;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.order.OrderStatus;
 import com.company.crm.model.user.User;
 import io.jmix.core.UnconstrainedDataManager;
 import io.jmix.core.entity.KeyValueEntity;
+import io.jmix.core.security.CurrentAuthentication;
 import io.jmix.core.SaveContext;
 import io.jmix.core.impl.StandardSerialization;
 import io.jmix.data.PersistenceHints;
@@ -32,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.groups.Tuple.tuple;
@@ -56,6 +59,10 @@ class AiJpqlReportsArchiveTest extends AbstractTest {
     private StandardSerialization standardSerialization;
     @Autowired
     private UnconstrainedDataManager unconstrainedDataManager;
+    @Autowired
+    private DemoReportsInitializer demoReportsInitializer;
+    @Autowired
+    private CurrentAuthentication currentAuthentication;
 
     private final List<Report> imported = new ArrayList<>();
 
@@ -93,6 +100,20 @@ class AiJpqlReportsArchiveTest extends AbstractTest {
         assertThat(withUser(alice, this::runRevenueReport)).containsExactly("Alice Client");
     }
 
+    @Test
+    void startupImportAddsTheReportsOnceWhenAbsent() {
+        assertThat(archiveReports()).isEmpty();
+
+        importOnThreadWithoutUser();
+        List<Report> reports = archiveReports();
+        imported.addAll(reports);
+        assertThat(reports).extracting(Report::getName).containsExactlyInAnyOrder(REVENUE_REPORT, LIVE_REPORT);
+
+        importOnThreadWithoutUser();
+        assertThat(archiveReports()).extracting(Report::getVersion)
+                .containsExactlyInAnyOrderElementsOf(reports.stream().map(Report::getVersion).toList());
+    }
+
     @AfterEach
     void removeImportedReports() {
         systemAuthenticator.runWithSystem(() -> imported.forEach(report -> {
@@ -113,6 +134,21 @@ class AiJpqlReportsArchiveTest extends AbstractTest {
     private void importArchive() throws IOException {
         byte[] archive = Files.readAllBytes(ARCHIVE);
         imported.addAll(systemAuthenticator.withSystem(() -> reportImportExport.importReports(archive)));
+    }
+
+    // Like the startup thread: no user is authenticated there.
+    private void importOnThreadWithoutUser() {
+        CompletableFuture.runAsync(() -> {
+            assertThat(currentAuthentication.isSet()).isFalse();
+            demoReportsInitializer.importIfAbsent();
+        }).join();
+    }
+
+    private List<Report> archiveReports() {
+        return systemAuthenticator.withSystem(() -> unconstrainedDataManager.load(Report.class)
+                .query("e.id in :ids")
+                .parameter("ids", DemoReportsInitializer.REPORT_IDS)
+                .list());
     }
 
     private Report structure(String name) {

@@ -28,6 +28,9 @@ java {
     targetCompatibility = JavaVersion.VERSION_21
 }
 
+// demo/reports/ai-jpql-reports.zip goes on the classpath: DemoReportsInitializer imports it at stand start
+sourceSets.main.resources.srcDir 'demo/reports'
+
 repositories {
     // Jmix and Jmix Premium 3.1.999-SNAPSHOT come from the local Maven: demo/dynmodel-ai-agent/README.md
     mavenLocal()
