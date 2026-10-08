@@ -1,5 +1,6 @@
 package com.company.crm.report.dataloader;
 
+import com.company.crm.ai.context.AiContextEntityRegistry;
 import com.company.crm.ai.report.run.AiReportExecutionService;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.contact.Contact;
@@ -67,7 +68,7 @@ public class ContactsReportDataLoader implements ReportDataLoader {
     private Map<String, Object> withoutExcludedFromAi(Map<String, Object> fields) {
         Map<String, Object> allowed = new HashMap<>(fields);
         metadata.getClass(Contact.class).getProperties().stream()
-                .filter(property -> property.getAnnotations().containsKey(ExcludeFromAi.class.getName()))
+                .filter(AiContextEntityRegistry::isExcludedFromAi)
                 .map(MetaProperty::getName)
                 .forEach(allowed::remove);
         return allowed;

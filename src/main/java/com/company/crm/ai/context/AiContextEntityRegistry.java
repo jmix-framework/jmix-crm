@@ -7,6 +7,7 @@ import io.jmix.core.FetchPlanProperty;
 import io.jmix.core.FetchPlans;
 import io.jmix.core.Metadata;
 import io.jmix.core.metamodel.model.MetaClass;
+import io.jmix.core.metamodel.model.MetaProperty;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
@@ -54,6 +55,13 @@ public class AiContextEntityRegistry {
                 .map(this::withoutExcludedFromAi);
     }
 
+    /**
+     * Whether the attribute is marked {@link ExcludeFromAi}, so the CRM must not hand its value to the model.
+     */
+    public static boolean isExcludedFromAi(MetaProperty property) {
+        return property.getAnnotations().containsKey(ExcludeFromAi.class.getName());
+    }
+
     private FetchPlan withoutExcludedFromAi(FetchPlan fetchPlan) {
         FetchPlanBuilder builder = fetchPlans.builder(fetchPlan.getEntityClass());
         addAllowedProperties(builder, fetchPlan);
@@ -63,8 +71,7 @@ public class AiContextEntityRegistry {
     private void addAllowedProperties(FetchPlanBuilder builder, FetchPlan fetchPlan) {
         MetaClass metaClass = metadata.getClass(fetchPlan.getEntityClass());
         for (FetchPlanProperty property : fetchPlan.getProperties()) {
-            if (metaClass.getProperty(property.getName()).getAnnotations()
-                    .containsKey(ExcludeFromAi.class.getName())) {
+            if (isExcludedFromAi(metaClass.getProperty(property.getName()))) {
                 continue;
             }
             FetchPlan nested = property.getFetchPlan();
