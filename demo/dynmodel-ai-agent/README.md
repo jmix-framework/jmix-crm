@@ -57,7 +57,8 @@ only the model in the editor; nothing reaches the running application until the 
 
 The stands differ in appearance, so the agent can be shown in each theme; `aura-dark`
 can also run on Claude, and `aura-light-tabbed` opens views in tabs. Every stand has its own database,
-so changes on one are not visible on another.
+so changes on one are not visible on another. Without `OPENROUTER_API_KEY` the stands run the agent on
+OpenAI `gpt-5.4` instead of DeepSeek (see [OpenAI-only setup](#openai-only-setup)).
 
 | Name | Port | Theme | Colour | Direction | Model |
 |---|---|---|---|---|---|
@@ -74,14 +75,57 @@ Open `http://localhost:<port>/b2b-crm/` and log in as `admin` / `admin`.
 
 - JDK 21 or newer, in `JAVA_HOME` or on `PATH` (a JDK, not a JRE: `stop` runs `Shutdown.java` as a
   source file).
-- An [OpenRouter](https://openrouter.ai) key in the `OPENROUTER_API_KEY` environment variable. The stands
-  start without it, but every request to the agent then fails with a model error.
+- A model key for the agent: an [OpenRouter](https://openrouter.ai) key in the `OPENROUTER_API_KEY`
+  environment variable (DeepSeek v4.1 Flash), or only an OpenAI key in `SPRING_AI_OPENAI_APIKEY` (see
+  [OpenAI-only setup](#openai-only-setup)). The stands start without a key, but every request to the
+  agent then fails with a model error.
 - Optionally `ANTHROPIC_API_KEY`: with it the `aura-dark` stand runs on `claude-sonnet-5`; set
   `STAND_CLAUDE_MODEL` to use another Claude model.
 - Memory: each stand's heap is capped at 768 MB, so plan on about 1 GB of free memory per running stand.
 - Free ports 8091–8096 (HTTP) and 9191–9196 (JMX). The stands listen on `127.0.0.1` only; do not
   expose these ports.
 - Read access to Jmix Premium for the build.
+
+### OpenAI-only setup
+
+With only an OpenAI key, the one the CRM AI assistant of `demo/ai-app` already reads, the agent runs on
+OpenAI too. `stands.sh` and `stands.ps1` switch to OpenAI when `OPENROUTER_API_KEY` is not set, or when
+`STAND_PROVIDER=openai`:
+
+| Variable | Meaning |
+|---|---|
+| `SPRING_AI_OPENAI_APIKEY` | The OpenAI key. The script hands it to the agent as `DYNMODEL_API_KEY` through the environment, so it never appears on the `java` command line. |
+| `STAND_OPENAI_MODEL` | The agent's model, `gpt-5.4` by default (the model the CRM AI assistant uses). |
+| `STAND_PROVIDER=openai` | Use OpenAI even when `OPENROUTER_API_KEY` is set. |
+
+```bash
+export SPRING_AI_OPENAI_APIKEY=…    # once, for example in ~/.zshrc
+./stands.sh start aura-light        # prints "aura-light: started … with OpenAI gpt-5.4"
+```
+
+The agent then calls `https://api.openai.com/v1` through `crm.dynmodel.provider=openai`
+(`DynamicModelAgentConfiguration`). The OpenRouter connection cannot be reused as is: api.openai.com
+rejects its request fields (`Unknown parameter: 'provider'`) and, for GPT-5 models, `max_tokens`, so this
+connection sends `max_completion_tokens` and no sampling parameters. Native structured output
+(`jmix.dynmodel.ai.native-structured-output=true`) stays on: OpenAI accepts the agent's strict JSON
+Schema. `aura-dark` still runs on Claude when `ANTHROPIC_API_KEY` is set.
+
+Measured with `gpt-5.4` on 9 October 2026, the whole demo scenario on fresh `aura-light` and `aura-dark`
+stands, the UI driven by a Playwright script. Model turns, from sending a request to the agent's answer:
+
+| Turn | Runs | Seconds |
+|---|---|---|
+| Step 1: the clients and deals plan | 7 | 18–27 |
+| Step 2: the plan extended | 6 | 22–23 |
+| Step 3: plan approval until the draft is ready | 6 | 1–4 |
+| Step 8: **Apply** until the changes are published | 6 | 1–5 |
+| Step 10: the extension in a new conversation | 3 | 17–18 |
+| Step 13: each of the two boundary questions | 8 | 3–4 |
+
+Every plan was complete on the first attempt, both boundary questions were refused without a plan, and
+no turn came near the four-minute limit. The full version (steps 1, 2, 3, 8, 9, 13) took 88–91 s of
+script time, 51–55 s of it waiting for the model; the short version (steps 1, 3, 8, 9, 13) 61 s, 28 s of
+it waiting for the model; the reserve steps 10–11 another 27–29 s. A presenter adds the talking on top.
 
 ## 🔨 Build
 
@@ -184,7 +228,9 @@ the user's message.
   existing entity was missing. Before a new task, clear the conversation with the eraser button
   (**Clear conversation**); unpublished model changes stay in the editor unless you choose to discard
   them in the confirmation.
-- DeepSeek Flash sometimes answers the same request differently. If an answer looks odd, repeat it.
+- The model sometimes answers the same request differently: DeepSeek Flash in content, `gpt-5.4` in
+  details such as captions in lower case («телефон» instead of «Телефон»). If an answer looks odd,
+  repeat it.
 - After a page reload the AI mode is not restored from the address; select it in the switch again.
 - The agent records every conversation and run in the database, but there is no screen for them.
   Developers can look at the `dmagent_*` entities in the Entity Inspector at
@@ -198,8 +244,9 @@ Compared with `main`:
   `io.jmix.dynmodel:jmix-dynmodel-ai-starter` and `jmix-dynmodel-ai-flowui-starter`, their Liquibase
   includes (the agent's is `/io/jmix/dynmodelai/liquibase/changelog.xml`), the **Dynamic model
   settings** menu item, the agent's limits (`jmix.dynmodel.ai.*` properties) and its own model
-  connection: an OpenAI-compatible chat model on OpenRouter (`DynamicModelAgentConfiguration`,
-  `crm.dynmodel.*` properties), separate from the CRM's AI assistant. `DynamicModelAgentIntegrationTest`
+  connection: an OpenAI-compatible chat model on OpenRouter, or directly on OpenAI with
+  `crm.dynmodel.provider=openai` (`DynamicModelAgentConfiguration`, `crm.dynmodel.*` properties),
+  separate from the CRM's AI assistant. `DynamicModelAgentIntegrationTest`
   checks that the agent and its Settings view are in place alongside the CRM.
 - **The build** — Jmix `3.1.999-SNAPSHOT` with the local Maven as the first repository for the Gradle
   plugin and the libraries (`settings.gradle`, `build.gradle`), and Vaadin production mode with a
@@ -250,7 +297,10 @@ reports and the Dynamic Model agent on the same stand.
   генерация)» (the same band without a query, for **Generate query**). Reports live in the stand database:
   import the archive in **Administration → Reports → Reports → Import** after every stand reset. The stored
   query was written by hand in the format the generator stores; generate it again with a model key to show
-  the model's own wording. A repeated import updates the reports with the same ids and overwrites what was
+  the model's own wording. With `gpt-5.4` **Generate query** took 6–7 s, and in three runs the model named
+  the columns `orderCount` and `totalSum` instead of the template's `ordersCount` and `ordersTotal`; the
+  editor then warns that the template can no longer print them. Save a regenerated query only when the
+  columns stay the same. A repeated import updates the reports with the same ids and overwrites what was
   saved on the stand, so after saving a regenerated query export both reports, replace the archive and run
   `AiJpqlReportsArchiveTest`: it imports the archive and runs it as admin and as alice.
 - **Users** — `admin` / `admin` sees all 30 clients, `alice` / `alice` (Manager + Only My Accounts) her 13.
