@@ -306,6 +306,8 @@ reports and the Dynamic Model agent on the same stand. The talk uses one stand, 
     the command line. On macOS IDEA reads the login shell environment when it starts: restart it after
     adding `export SPRING_AI_OPENAI_APIKEY=…` to `~/.zshrc`. Stop it with one press of **Stop** or with
     `stands.sh stop aura-light`; never force-stop it (see [Run and stop](#-run-and-stop)).
+    The project's own **CRM APP** configuration is not the stand: it runs the app on port 8080 with the
+    project's own database, and in the talk 8080 belongs to the crm-from-db app of demo B. Do not start it here.
 
   `STAND_OPENAI_MODEL` changes the agent's model in both ways (`gpt-5.4` by default). `aura-dark` (8092) is
   optional and not part of the talk: `STAND_JAR="$HOME/demo-jars/crm.jar" ./stands.sh start aura-dark`.
