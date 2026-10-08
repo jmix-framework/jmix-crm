@@ -57,17 +57,19 @@ only the model in the editor; nothing reaches the running application until the 
 
 The stands differ in appearance, so the agent can be shown in each theme; `aura-dark`
 can also run on Claude, and `aura-light-tabbed` opens views in tabs. Every stand has its own database,
-so changes on one are not visible on another. Without `OPENROUTER_API_KEY` the stands run the agent on
-OpenAI `gpt-5.4` instead of DeepSeek (see [OpenAI-only setup](#openai-only-setup)).
+so changes on one are not visible on another. Without `OPENROUTER_API_KEY` the stands that run the
+`demo/ai-app` jar use OpenAI `gpt-5.4` instead of DeepSeek (see [OpenAI-only setup](#openai-only-setup)).
+`aura-light-tabbed` runs the `50-dynmodel-ai-agent-tabbed` jar, which has only the OpenRouter connection,
+so it always needs `OPENROUTER_API_KEY`.
 
 | Name | Port | Theme | Colour | Direction | Model |
 |---|---|---|---|---|---|
-| `aura-light` | 8091 | Aura | light | left to right | DeepSeek v4.1 Flash |
-| `aura-dark` | 8092 | Aura | dark | left to right | Claude if `ANTHROPIC_API_KEY` is set, otherwise DeepSeek |
-| `lumo-light` | 8093 | Lumo | light | left to right | DeepSeek |
-| `lumo-dark` | 8094 | Lumo | dark | left to right | DeepSeek |
-| `aura-rtl` | 8095 | Aura | light | right to left | DeepSeek |
-| `aura-light-tabbed` | 8096 | Aura, views in tabs | light | left to right | DeepSeek |
+| `aura-light` | 8091 | Aura | light | left to right | DeepSeek v4.1 Flash (`gpt-5.4` in the OpenAI-only setup) |
+| `aura-dark` | 8092 | Aura | dark | left to right | Claude if `ANTHROPIC_API_KEY` is set, otherwise DeepSeek (`gpt-5.4` in the OpenAI-only setup) |
+| `lumo-light` | 8093 | Lumo | light | left to right | DeepSeek (`gpt-5.4` in the OpenAI-only setup) |
+| `lumo-dark` | 8094 | Lumo | dark | left to right | DeepSeek (`gpt-5.4` in the OpenAI-only setup) |
+| `aura-rtl` | 8095 | Aura | light | right to left | DeepSeek (`gpt-5.4` in the OpenAI-only setup) |
+| `aura-light-tabbed` | 8096 | Aura, views in tabs | light | left to right | DeepSeek only, needs `OPENROUTER_API_KEY` |
 
 Open `http://localhost:<port>/b2b-crm/` and log in as `admin` / `admin`.
 
@@ -89,8 +91,8 @@ Open `http://localhost:<port>/b2b-crm/` and log in as `admin` / `admin`.
 ### OpenAI-only setup
 
 With only an OpenAI key, the one the CRM AI assistant of `demo/ai-app` already reads, the agent runs on
-OpenAI too. `stands.sh` and `stands.ps1` switch to OpenAI when `OPENROUTER_API_KEY` is not set, or when
-`STAND_PROVIDER=openai`:
+OpenAI too. `stands.sh` and `stands.ps1` switch every stand except `aura-light-tabbed` to OpenAI when
+`OPENROUTER_API_KEY` is not set, or when `STAND_PROVIDER=openai`:
 
 | Variable | Meaning |
 |---|---|
@@ -100,8 +102,13 @@ OpenAI too. `stands.sh` and `stands.ps1` switch to OpenAI when `OPENROUTER_API_K
 
 ```bash
 export SPRING_AI_OPENAI_APIKEY=…    # once, for example in ~/.zshrc
-./stands.sh start aura-light        # prints "aura-light: started … with OpenAI gpt-5.4"
+STAND_JAR="$HOME/demo-jars/crm.jar" ./stands.sh start aura-light
+# prints "aura-light: started … with OpenAI gpt-5.4"
 ```
+
+`STAND_JAR` points at the jar built from `demo/ai-app` (see [The demo/ai-app branch](#-the-demoai-app-branch));
+without it the script takes `build/libs/crm.jar`, which may be a build of another branch with no OpenAI
+connection for the agent.
 
 The agent then calls `https://api.openai.com/v1` through `crm.dynmodel.provider=openai`
 (`DynamicModelAgentConfiguration`). The OpenRouter connection cannot be reused as is: api.openai.com
@@ -115,17 +122,17 @@ stands, the UI driven by a Playwright script. Model turns, from sending a reques
 
 | Turn | Runs | Seconds |
 |---|---|---|
-| Step 1: the clients and deals plan | 7 | 18–27 |
-| Step 2: the plan extended | 6 | 22–23 |
-| Step 3: plan approval until the draft is ready | 6 | 1–4 |
-| Step 8: **Apply** until the changes are published | 6 | 1–5 |
-| Step 10: the extension in a new conversation | 3 | 17–18 |
-| Step 13: each of the two boundary questions | 8 | 3–4 |
+| Step 1: the clients and deals plan | 9 | 18–28 |
+| Step 2: the plan extended | 7 | 22–26 |
+| Step 3: plan approval until the draft is ready | 8 | 1–4 |
+| Step 8: **Apply** until the changes are published | 8 | 1–5 |
+| Step 10: the extension in a new conversation | 4 | 17–25 |
+| Step 13: each of the two boundary questions | 12 | 3–4 |
 
 Every plan was complete on the first attempt, both boundary questions were refused without a plan, and
-no turn came near the four-minute limit. The full version (steps 1, 2, 3, 8, 9, 13) took 88–91 s of
+no turn came near the four-minute limit. The full version (steps 1, 2, 3, 8, 9, 13) took 88–93 s of
 script time, 51–55 s of it waiting for the model; the short version (steps 1, 3, 8, 9, 13) 61 s, 28 s of
-it waiting for the model; the reserve steps 10–11 another 27–29 s. A presenter adds the talking on top.
+it waiting for the model; the reserve steps 10–11 another 27–35 s. A presenter adds the talking on top.
 
 ## 🔨 Build
 
@@ -296,11 +303,11 @@ reports and the Dynamic Model agent on the same stand.
   (stored query, `fromDate` and `toDate` date parameters, a Table template) and «Выручка клиентов (живая
   генерация)» (the same band without a query, for **Generate query**). Reports live in the stand database:
   import the archive in **Administration → Reports → Reports → Import** after every stand reset. The stored
-  query was written by hand in the format the generator stores; generate it again with a model key to show
-  the model's own wording. With `gpt-5.4` **Generate query** took 6–7 s, and in three runs the model named
-  the columns `orderCount` and `totalSum` instead of the template's `ordersCount` and `ordersTotal`; the
-  editor then warns that the template can no longer print them. Save a regenerated query only when the
-  columns stay the same. A repeated import updates the reports with the same ids and overwrites what was
+  query was written by hand in the format the generator stores. With `gpt-5.4` **Generate query** took
+  6–7 s, and in six runs (three on each report) the model named the columns `orderCount` and `totalSum`
+  instead of the template's `ordersCount` and `ordersTotal`; on the report with the stored query the editor
+  then warns that the template can no longer print them. Save a regenerated query only when the columns
+  stay the same. A repeated import updates the reports with the same ids and overwrites what was
   saved on the stand, so after saving a regenerated query export both reports, replace the archive and run
   `AiJpqlReportsArchiveTest`: it imports the archive and runs it as admin and as alice.
 - **Users** — `admin` / `admin` sees all 30 clients, `alice` / `alice` (Manager + Only My Accounts) her 13.
