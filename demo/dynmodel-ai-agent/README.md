@@ -229,7 +229,7 @@ reports and the Dynamic Model agent on the same stand.
   cd demo/dynmodel-ai-agent && STAND_JAR="$HOME/demo-jars/crm.jar" ./stands.sh start aura-light
   ```
 
-  Stop the stands before replacing the jar and wait until `./stands.sh status` shows them `stopped`: a
+  Stop the stands before replacing the jar and wait until `demo/dynmodel-ai-agent/stands.sh status` shows them `stopped`: a
   running stand loads classes from its jar on demand, and a jar overwritten under it breaks the stand.
   Copy to `crm.jar.new` and `mv` it over `crm.jar`: the rename is atomic, so nothing ever sees a
   half-written jar. The copy outside the repository keeps the stand's jar intact when the checkout

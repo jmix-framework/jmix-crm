@@ -232,7 +232,7 @@ Windows, PowerShell:
   cd demo/dynmodel-ai-agent && STAND_JAR="$HOME/demo-jars/crm.jar" ./stands.sh start aura-light
   ```
 
-  Перед заменой jar остановите стенды и дождитесь `stopped` в `./stands.sh status`: запущенный стенд
+  Перед заменой jar остановите стенды и дождитесь `stopped` в `demo/dynmodel-ai-agent/stands.sh status`: запущенный стенд
   подгружает классы из своего jar по мере надобности, и jar, перезаписанный под ним, ломает стенд.
   Копируйте в `crm.jar.new` и переименовывайте `mv` поверх `crm.jar`: переименование атомарно,
   недописанный jar никто не увидит. Копия вне репозитория не меняется, когда рабочая копия переключается
