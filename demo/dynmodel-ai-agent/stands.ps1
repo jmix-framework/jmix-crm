@@ -61,7 +61,7 @@ foreach ($v in $variants) {
                 # OpenAI-only setup: the agent uses the CRM AI key, passed through the environment, not the command line.
                 $openAi = Get-StandSecret 'SPRING_AI_OPENAI_APIKEY'
                 if ($openAi) { $env:DYNMODEL_API_KEY = $openAi }
-                else { Write-Warning 'SPRING_AI_OPENAI_APIKEY is not set: the agent will answer that the model call failed' }
+                else { $env:DYNMODEL_API_KEY = 'setup-required'; Write-Warning 'SPRING_AI_OPENAI_APIKEY is not set: the agent will answer that the model call failed' }
                 $env:DYNMODEL_MODEL = if ($env:STAND_OPENAI_MODEL) { $env:STAND_OPENAI_MODEL } else { 'gpt-5.4' }
                 $env:DYNMODEL_BASE_URL = 'https://api.openai.com/v1'
                 $provider = @('--crm.dynmodel.provider=openai')

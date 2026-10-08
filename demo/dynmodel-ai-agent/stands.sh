@@ -48,7 +48,7 @@ while read -r id port theme color dir jar; do
             elif [ "${STAND_PROVIDER:-}" = openai ] || [ -z "${OPENROUTER_API_KEY:-}" ]; then
                 # OpenAI-only setup: the agent uses the CRM AI key, passed through the environment, not argv.
                 if [ -n "${SPRING_AI_OPENAI_APIKEY:-}" ]; then export DYNMODEL_API_KEY="$SPRING_AI_OPENAI_APIKEY"
-                else echo "warning: SPRING_AI_OPENAI_APIKEY is not set, model calls will fail" >&2; fi
+                else export DYNMODEL_API_KEY=setup-required; echo "warning: SPRING_AI_OPENAI_APIKEY is not set, model calls will fail" >&2; fi
                 export DYNMODEL_MODEL="${STAND_OPENAI_MODEL:-gpt-5.4}" DYNMODEL_BASE_URL=https://api.openai.com/v1
                 model="OpenAI $DYNMODEL_MODEL"
                 provider=(--crm.dynmodel.provider=openai)

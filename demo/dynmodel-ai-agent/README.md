@@ -127,7 +127,7 @@ stands, the UI driven by a Playwright script. Model turns, from sending a reques
 | Step 3: plan approval until the draft is ready | 8 | 1–4 |
 | Step 8: **Apply** until the changes are published | 8 | 1–5 |
 | Step 10: the extension in a new conversation | 4 | 17–25 |
-| Step 13: each of the two boundary questions | 12 | 3–4 |
+| Step 13: each of the two boundary questions | 14 | 3–5 |
 
 Every plan was complete on the first attempt, both boundary questions were refused without a plan, and
 no turn came near the four-minute limit. The full version (steps 1, 2, 3, 8, 9, 13) took 88–93 s of
