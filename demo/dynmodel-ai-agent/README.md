@@ -219,6 +219,17 @@ main view.
 `demo/ai-app` extends this branch for the "AI × Jmix" talk: the CRM AI assistant, AI-generated JPQL in
 reports and the Dynamic Model agent on the same stand.
 
+- **Build** — steps 2–3 of [Build](#-build), then in `jmix-crm` on `demo/ai-app` (not on
+  `50-dynmodel-ai-agent` from step 1):
+
+  ```bash
+  ./gradlew bootJar && mkdir -p ~/demo-jars && cp build/libs/crm.jar ~/demo-jars/crm.jar
+  cd demo/dynmodel-ai-agent && STAND_JAR="$HOME/demo-jars/crm.jar" ./stands.sh start aura-light
+  ```
+
+  The copy outside the repository keeps the stand's jar intact when the checkout switches branches or
+  `build/` is cleaned. Pass `STAND_JAR` on every start (also for `aura-dark`): without it `stands.sh` runs
+  `build/libs/crm.jar` of the repository.
 - **JPQL in the log** — `logging.level.io.jmix.aitools.dataload=DEBUG`: the stand's
   `instances/<name>/application.log` shows the query the assistant wrote (`executeQuery(jpql=…)`) and the
   row-level conditions AI Tools added to it (`Access conditions applied`).
@@ -234,5 +245,7 @@ reports and the Dynamic Model agent on the same stand.
   генерация)» (the same band without a query, for **Generate query**). Reports live in the stand database:
   import the archive in **Administration → Reports → Reports → Import** after every stand reset. The stored
   query was written by hand in the format the generator stores; generate it again with a model key to show
-  the model's own wording. `AiJpqlReportsArchiveTest` imports the archive and runs it as admin and as alice.
+  the model's own wording. A repeated import updates the reports with the same ids and overwrites what was
+  saved on the stand, so after saving a regenerated query export both reports, replace the archive and run
+  `AiJpqlReportsArchiveTest`: it imports the archive and runs it as admin and as alice.
 - **Users** — `admin` / `admin` sees all 30 clients, `alice` / `alice` (Manager + Only My Accounts) her 13.
