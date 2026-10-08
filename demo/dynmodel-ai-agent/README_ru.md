@@ -226,13 +226,18 @@ Windows, PowerShell:
   `50-dynmodel-ai-agent` из шага 1):
 
   ```bash
-  ./gradlew bootJar && mkdir -p ~/demo-jars && cp build/libs/crm.jar ~/demo-jars/crm.jar
+  demo/dynmodel-ai-agent/stands.sh stop     # сначала: запущенные стенды читают ~/demo-jars/crm.jar
+  ./gradlew bootJar && mkdir -p ~/demo-jars
+  cp build/libs/crm.jar ~/demo-jars/crm.jar.new && mv ~/demo-jars/crm.jar.new ~/demo-jars/crm.jar
   cd demo/dynmodel-ai-agent && STAND_JAR="$HOME/demo-jars/crm.jar" ./stands.sh start aura-light
   ```
 
-  Копия вне репозитория не меняется, когда рабочая копия переключается на другую ветку или `build/`
-  очищается. `STAND_JAR` указывайте при каждом старте (и для `aura-dark`): без него `stands.sh` запускает
-  `build/libs/crm.jar` из репозитория.
+  Перед заменой jar остановите стенды и дождитесь `stopped` в `./stands.sh status`: запущенный стенд
+  подгружает классы из своего jar по мере надобности, и jar, перезаписанный под ним, ломает стенд.
+  Копируйте в `crm.jar.new` и переименовывайте `mv` поверх `crm.jar`: переименование атомарно,
+  недописанный jar никто не увидит. Копия вне репозитория не меняется, когда рабочая копия переключается
+  на другую ветку или `build/` очищается. `STAND_JAR` указывайте при каждом старте (и для `aura-dark`):
+  без него `stands.sh` запускает `build/libs/crm.jar` из репозитория.
 - **JPQL в логе** — `logging.level.io.jmix.aitools.dataload=DEBUG`: в `instances/<имя>/application.log`
   стенда видны запрос, который написал ассистент (`executeQuery(jpql=…)`), и row-level условия, которые
   AI Tools добавили к нему (`Access conditions applied`).
