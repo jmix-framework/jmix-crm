@@ -271,24 +271,44 @@ main view.
 ## 🎤 The demo/ai-app branch
 
 `demo/ai-app` extends this branch for the "AI × Jmix" talk: the CRM AI assistant, AI-generated JPQL in
-reports and the Dynamic Model agent on the same stand.
+reports and the Dynamic Model agent on the same stand. The talk uses one stand, `aura-light` (port 8091).
 
-- **Build** — steps 2–3 of [Build](#-build), then in `jmix-crm` on `demo/ai-app` (not on
-  `50-dynmodel-ai-agent` from step 1):
+- **Worktree** — the stand runs from its own worktree of `demo/ai-app`, `jmix-crm-stand`, opened in
+  IntelliJ IDEA as a separate project; the main `jmix-crm` checkout stays on `main`:
+
+  ```bash
+  cd ~/IdeaProjects/jmix-crm && git worktree add ../jmix-crm-stand demo/ai-app
+  ```
+
+- **Build** — steps 2–3 of [Build](#-build), then in `jmix-crm-stand`:
 
   ```bash
   demo/dynmodel-ai-agent/stands.sh stop     # first: running stands read ~/demo-jars/crm.jar
   ./gradlew bootJar && mkdir -p ~/demo-jars
   cp build/libs/crm.jar ~/demo-jars/crm.jar.new && mv ~/demo-jars/crm.jar.new ~/demo-jars/crm.jar
-  cd demo/dynmodel-ai-agent && STAND_JAR="$HOME/demo-jars/crm.jar" ./stands.sh start aura-light
   ```
 
   Stop the stands before replacing the jar and wait until `demo/dynmodel-ai-agent/stands.sh status` shows them `stopped`: a
   running stand loads classes from its jar on demand, and a jar overwritten under it breaks the stand.
   Copy to `crm.jar.new` and `mv` it over `crm.jar`: the rename is atomic, so nothing ever sees a
   half-written jar. The copy outside the repository keeps the stand's jar intact when the checkout
-  switches branches or `build/` is cleaned. Pass `STAND_JAR` on every start (also for `aura-dark`):
-  without it `stands.sh` runs `build/libs/crm.jar` of the repository.
+  switches branches or `build/` is cleaned.
+- **Run `aura-light`: two equivalent ways.** Both use port 8091, JMX port 9191, the database and files in
+  `demo/dynmodel-ai-agent/instances/aura-light` and the log `instances/aura-light/application.log`, so
+  `stands.sh status`, `stands.sh stop aura-light` and a reset work the same for either. Run one at a time.
+  - Terminal, from the jar: `cd demo/dynmodel-ai-agent && STAND_JAR="$HOME/demo-jars/crm.jar" ./stands.sh start aura-light`.
+    Pass `STAND_JAR` on every start: without it `stands.sh` runs `build/libs/crm.jar` of the repository.
+  - IntelliJ IDEA, from source: the run configuration **Stand aura-light (OpenAI)** (`.run/`, Spring Boot,
+    builds the project first). It passes the arguments `stands.sh` passes to `aura-light` on OpenAI, plus
+    `--vaadin.devmode.devTools.enabled=false`: from source Vaadin runs in development mode, from the
+    committed `src/main/bundles/dev.bundle`. The key is `--crm.dynmodel.api-key=${SPRING_AI_OPENAI_APIKEY:setup-required}`:
+    Spring takes it from the environment IDEA passes on, so the key is in neither the configuration nor
+    the command line. On macOS IDEA reads the login shell environment when it starts: restart it after
+    adding `export SPRING_AI_OPENAI_APIKEY=…` to `~/.zshrc`. Stop it with one press of **Stop** or with
+    `stands.sh stop aura-light`; never force-stop it (see [Run and stop](#-run-and-stop)).
+
+  `STAND_OPENAI_MODEL` changes the agent's model in both ways (`gpt-5.4` by default). `aura-dark` (8092) is
+  optional and not part of the talk: `STAND_JAR="$HOME/demo-jars/crm.jar" ./stands.sh start aura-dark`.
 - **JPQL in the log** — `logging.level.io.jmix.aitools.dataload=DEBUG`: the stand's
   `instances/<name>/application.log` shows the query the assistant wrote (`executeQuery(jpql=…)`) and the
   row-level conditions AI Tools added to it (`Access conditions applied`).
@@ -301,13 +321,17 @@ reports and the Dynamic Model agent on the same stand.
   refused.
 - **AI-generated JPQL reports** — `demo/reports/ai-jpql-reports.zip` holds «Выручка клиентов (AI JPQL)»
   (stored query, `fromDate` and `toDate` date parameters, a Table template) and «Выручка клиентов (живая
-  генерация)» (the same band without a query, for **Generate query**). Reports live in the stand database:
-  import the archive in **Administration → Reports → Reports → Import** after every stand reset. The stored
-  query was written by hand in the format the generator stores. With `gpt-5.4` **Generate query** took
+  генерация)» (the same band without a query, for **Generate query**). Reports live in the stand database,
+  and the stand imports them itself: on start, when either report is missing, `DemoReportsInitializer`
+  imports the archive (`demo/reports` is a resource root in `build.gradle`, so the jar carries it) and logs
+  `AI JPQL demo reports imported`; otherwise it logs `AI JPQL demo reports are present, import skipped` and
+  leaves them as they are. After a reset the next start brings them back; no manual import is needed. The
+  stored query was written by hand in the format the generator stores. With `gpt-5.4` **Generate query** took
   6–7 s, and in six runs (three on each report) the model named the columns `orderCount` and `totalSum`
   instead of the template's `ordersCount` and `ordersTotal`; on the report with the stored query the editor
   then warns that the template can no longer print them. Save a regenerated query only when the columns
-  stay the same. A repeated import updates the reports with the same ids and overwrites what was
-  saved on the stand, so after saving a regenerated query export both reports, replace the archive and run
-  `AiJpqlReportsArchiveTest`: it imports the archive and runs it as admin and as alice.
+  stay the same. An import updates the reports with the same ids and overwrites what was saved on the
+  stand: a start does so only when a report is missing, and then restores both. So after saving a
+  regenerated query export both reports, replace the archive and run `AiJpqlReportsArchiveTest`: it
+  imports the archive, runs it as admin and as alice, and checks the import on start.
 - **Users** — `admin` / `admin` sees all 30 clients, `alice` / `alice` (Manager + Only My Accounts) her 13.

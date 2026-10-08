@@ -274,24 +274,46 @@ Windows, PowerShell:
 ## 🎤 Ветка demo/ai-app
 
 `demo/ai-app` дополняет эту ветку для доклада «AI × Jmix»: AI-ассистент CRM, ИИ-сгенерированный JPQL в
-отчётах и агент Dynamic Model на одном стенде.
+отчётах и агент Dynamic Model на одном стенде. Доклад использует один стенд — `aura-light` (порт 8091).
 
-- **Сборка** — шаги 2–3 раздела [Сборка](#-сборка), затем в `jmix-crm` на ветке `demo/ai-app` (а не на
-  `50-dynmodel-ai-agent` из шага 1):
+- **Worktree** — стенд запускается из отдельного worktree ветки `demo/ai-app`, `jmix-crm-stand`, который
+  открыт в IntelliJ IDEA отдельным проектом; основная копия `jmix-crm` остаётся на `main`:
+
+  ```bash
+  cd ~/IdeaProjects/jmix-crm && git worktree add ../jmix-crm-stand demo/ai-app
+  ```
+
+- **Сборка** — шаги 2–3 раздела [Сборка](#-сборка), затем в `jmix-crm-stand`:
 
   ```bash
   demo/dynmodel-ai-agent/stands.sh stop     # сначала: запущенные стенды читают ~/demo-jars/crm.jar
   ./gradlew bootJar && mkdir -p ~/demo-jars
   cp build/libs/crm.jar ~/demo-jars/crm.jar.new && mv ~/demo-jars/crm.jar.new ~/demo-jars/crm.jar
-  cd demo/dynmodel-ai-agent && STAND_JAR="$HOME/demo-jars/crm.jar" ./stands.sh start aura-light
   ```
 
   Перед заменой jar остановите стенды и дождитесь `stopped` в `demo/dynmodel-ai-agent/stands.sh status`: запущенный стенд
   подгружает классы из своего jar по мере надобности, и jar, перезаписанный под ним, ломает стенд.
   Копируйте в `crm.jar.new` и переименовывайте `mv` поверх `crm.jar`: переименование атомарно,
   недописанный jar никто не увидит. Копия вне репозитория не меняется, когда рабочая копия переключается
-  на другую ветку или `build/` очищается. `STAND_JAR` указывайте при каждом старте (и для `aura-dark`):
-  без него `stands.sh` запускает `build/libs/crm.jar` из репозитория.
+  на другую ветку или `build/` очищается.
+- **Запуск `aura-light`: два равноценных способа.** Оба используют порт 8091, JMX-порт 9191, базу и файлы в
+  `demo/dynmodel-ai-agent/instances/aura-light` и лог `instances/aura-light/application.log`, поэтому
+  `stands.sh status`, `stands.sh stop aura-light` и сброс работают одинаково для любого из них. Запускайте
+  только один.
+  - Терминал, из jar: `cd demo/dynmodel-ai-agent && STAND_JAR="$HOME/demo-jars/crm.jar" ./stands.sh start aura-light`.
+    `STAND_JAR` указывайте при каждом старте: без него `stands.sh` запускает `build/libs/crm.jar` из репозитория.
+  - IntelliJ IDEA, из исходников: конфигурация запуска **Stand aura-light (OpenAI)** (`.run/`, Spring Boot,
+    перед запуском собирает проект). Она передаёт те же аргументы, что `stands.sh` передаёт `aura-light`
+    на OpenAI, и ещё `--vaadin.devmode.devTools.enabled=false`: из исходников Vaadin работает в режиме
+    разработки, на закоммиченном `src/main/bundles/dev.bundle`. Ключ —
+    `--crm.dynmodel.api-key=${SPRING_AI_OPENAI_APIKEY:setup-required}`: Spring берёт его из окружения,
+    которое передаёт IDEA, так что ключа нет ни в конфигурации, ни в командной строке. На macOS IDEA
+    читает окружение login-shell при старте: после `export SPRING_AI_OPENAI_APIKEY=…` в `~/.zshrc`
+    перезапустите её. Останавливайте одним нажатием **Stop** или `stands.sh stop aura-light`; не убивайте
+    процесс принудительно (см. [Запуск и остановка](#-запуск-и-остановка)).
+
+  `STAND_OPENAI_MODEL` меняет модель агента в обоих способах (по умолчанию `gpt-5.4`). `aura-dark` (8092)
+  необязателен и в доклад не входит: `STAND_JAR="$HOME/demo-jars/crm.jar" ./stands.sh start aura-dark`.
 - **JPQL в логе** — `logging.level.io.jmix.aitools.dataload=DEBUG`: в `instances/<имя>/application.log`
   стенда видны запрос, который написал ассистент (`executeQuery(jpql=…)`), и row-level условия, которые
   AI Tools добавили к нему (`Access conditions applied`).
@@ -304,14 +326,17 @@ Windows, PowerShell:
 - **Отчёты с ИИ-сгенерированным JPQL** — в `demo/reports/ai-jpql-reports.zip` два отчёта: «Выручка
   клиентов (AI JPQL)» (сохранённый запрос, параметры `fromDate` и `toDate` типа «Дата», шаблон «Таблица»)
   и «Выручка клиентов (живая генерация)» (та же полоса без запроса, для кнопки «Сгенерировать запрос»).
-  Отчёты живут в базе стенда: архив импортируется в **Администрирование → Отчёты → Отчёты →
-  Импортировать** после каждого сброса. Сохранённый запрос написан вручную в том формате, в котором его
-  хранит генератор. На `gpt-5.4` «Сгенерировать запрос» занимает 6–7 с, и в шести прогонах (по три на
+  Отчёты живут в базе стенда, и стенд импортирует их сам: при старте, если какого-то из двух отчётов нет,
+  `DemoReportsInitializer` импортирует архив (`demo/reports` — каталог ресурсов в `build.gradle`, поэтому
+  архив лежит в jar) и пишет в лог `AI JPQL demo reports imported`; иначе пишет `AI JPQL demo reports are
+  present, import skipped` и отчёты не трогает. После сброса следующий старт возвращает их; вручную
+  импортировать не нужно. Сохранённый запрос написан вручную в том формате, в котором его хранит генератор. На `gpt-5.4` «Сгенерировать запрос» занимает 6–7 с, и в шести прогонах (по три на
   каждом отчёте) модель назвала колонки `orderCount` и `totalSum` вместо `ordersCount` и `ordersTotal`
   из шаблона; на отчёте с сохранённым запросом редактор тогда предупреждает, что шаблон больше не сможет
   их вывести. Сохраняйте перегенерированный запрос, только если колонки не изменились.
-  Повторный импорт обновляет отчёты с теми же id и затирает сохранённое на стенде, поэтому после сохранения
-  перегенерированного запроса экспортируйте оба отчёта, замените архив и запустите
-  `AiJpqlReportsArchiveTest`: он импортирует архив и запускает отчёт под admin и под alice.
+  Импорт обновляет отчёты с теми же id и затирает сохранённое на стенде: старт делает это, только если
+  какого-то отчёта нет, и тогда восстанавливает оба. Поэтому после сохранения перегенерированного запроса
+  экспортируйте оба отчёта, замените архив и запустите `AiJpqlReportsArchiveTest`: он импортирует архив,
+  запускает отчёт под admin и под alice и проверяет импорт при старте.
 - **Пользователи** — `admin` / `admin` видит всех 30 клиентов, `alice` / `alice` (Manager + Only My
   Accounts) — своих 13.
