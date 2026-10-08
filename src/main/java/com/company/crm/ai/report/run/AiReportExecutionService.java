@@ -221,7 +221,7 @@ public class AiReportExecutionService {
                 attachment.setFileName(fileName);
                 attachment.setTitle(reportAttachmentTitle(result.reportCode(), reportName, primaryEntityName));
                 attachment.setOrigin(AiAttachmentOrigin.AI_GENERATED);
-                dataManager.save(attachment);
+                dataManager.saveWithoutReload(attachment);
             } catch (Exception e) {
                 cleanupReportFile(fileRef);
                 throw e;

@@ -98,7 +98,7 @@ class AiJpqlReportsArchiveTest extends AbstractTest {
         systemAuthenticator.runWithSystem(() -> imported.forEach(report -> {
             Report loaded = unconstrainedDataManager.load(Report.class).id(report.getId()).one();
             loaded.setDefaultTemplate(null);
-            unconstrainedDataManager.save(loaded);
+            unconstrainedDataManager.saveWithoutReload(loaded);
             SaveContext templates = new SaveContext().setHint(PersistenceHints.SOFT_DELETION, false);
             unconstrainedDataManager.load(Report.class).id(report.getId())
                     .fetchPlan(fp -> fp.addFetchPlan("_base").add("templates", "_base"))

@@ -72,7 +72,7 @@ class ContactsReportDataLoaderTest extends AbstractTest {
         Contact contact = entities.contact(client, "John Doe", "Manager");
         contact.setPhone("+1234567890");
         contact.setEmail("john.doe@example.com");
-        dataManager.save(contact);
+        dataManager.saveWithoutReload(contact);
 
         List<Map<String, Object>> result = dataLoader.loadData(null, null,
                 Map.of("client", client, AiReportExecutionService.AI_RUN_PARAMETER, Boolean.TRUE));
