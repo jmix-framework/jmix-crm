@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+
+    <changeSet id="1" author="crm">
+        <createTable tableName="CONTRACT">
+            <column name="ID" type="${uuid.type}">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_CONTRACT"/>
+            </column>
+            <column name="CREATED_BY" type="VARCHAR(255)"/>
+            <column name="CREATED_DATE" type="${offsetDateTime.type}"/>
+            <column name="UPDATED_BY" type="VARCHAR(255)"/>
+            <column name="UPDATED_DATE" type="${offsetDateTime.type}"/>
+            <column name="DELETED_BY" type="VARCHAR(255)"/>
+            <column name="DELETED_DATE" type="${offsetDateTime.type}"/>
+            <column name="VERSION" type="INT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="NUMBER" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CLIENT_ID" type="${uuid.type}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="SIGNED_DATE" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="VALID_UNTIL" type="DATE"/>
+            <column name="AMOUNT" type="DECIMAL(19, 2)"/>
+            <column name="COMMENT_" type="CLOB"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="2" author="crm">
+        <addForeignKeyConstraint baseTableName="CONTRACT" baseColumnNames="CLIENT_ID"
+                                 constraintName="FK_CONTRACT_ON_CLIENT"
+                                 referencedTableName="CLIENT" referencedColumnNames="ID"/>
+
+        <createIndex indexName="IDX_CONTRACT_CLIENT" tableName="CONTRACT">
+            <column name="CLIENT_ID"/>
+        </createIndex>
+
+        <createIndex indexName="IDX_CONTRACT_ON_NUMBER" tableName="CONTRACT" unique="true">
+            <column name="NUMBER"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

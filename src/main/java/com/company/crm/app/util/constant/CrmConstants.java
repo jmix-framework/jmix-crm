@@ -27,6 +27,9 @@ public final class CrmConstants {
 
         public static final String CONTACT_DETAIL = "Contact.detail";
 
+        public static final String CONTRACT_LIST = "Contract.list";
+        public static final String CONTRACT_DETAIL = "Contract.detail";
+
         public static final String HOME = "HomeView";
 
         public static final String INVOICE_LIST = "Invoice.list";

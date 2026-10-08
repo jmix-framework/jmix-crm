@@ -10,6 +10,7 @@ import com.company.crm.model.catalog.item.CategoryItem;
 import com.company.crm.model.catalog.item.CategoryItemComment;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.contact.Contact;
+import com.company.crm.model.contract.Contract;
 import com.company.crm.model.invoice.Invoice;
 import com.company.crm.model.order.Order;
 import com.company.crm.model.order.OrderItem;
@@ -48,6 +49,7 @@ public class DataCleaner implements AfterAllCallback, AfterEachCallback {
             OrderItem.class,
             Order.class,
             Contact.class,
+            Contract.class,
             Client.class,
             CategoryItemComment.class,
             CategoryItem.class,

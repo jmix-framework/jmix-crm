@@ -22,6 +22,8 @@
 
     <item view="Client.list" id="clients" title="msg:///menu_config.clients.title" icon="vaadin:users"/>
 
+    <item view="Contract.list" id="contracts" title="msg:///menu_config.contracts.title" icon="vaadin:handshake"/>
+
     <item view="Order.list" id="orders" title="msg:///menu_config.orders.title" icon="vaadin:cart"/>
 
     <menu opened="true" id="finance" title="msg:///menu_config.finance.title" icon="vaadin:pie-chart">

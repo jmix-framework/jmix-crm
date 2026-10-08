@@ -32,7 +32,7 @@ import io.jmix.securityflowui.role.annotation.MenuPolicy;
 import io.jmix.securityflowui.role.annotation.ViewPolicy;
 
 @ResourceRole(name = "Manager", code = ManagerRole.CODE, scope = SecurityScope.UI)
-public interface ManagerRole extends UiMinimalRole, ReportsRunRole {
+public interface ManagerRole extends UiMinimalRole, ReportsRunRole, ContractManagerRole {
 
     String CODE = "manager";
     String NAME = "Manager";

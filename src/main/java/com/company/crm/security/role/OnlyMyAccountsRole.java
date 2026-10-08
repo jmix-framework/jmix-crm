@@ -2,6 +2,7 @@ package com.company.crm.security.role;
 
 import com.company.crm.model.client.Client;
 import com.company.crm.model.contact.Contact;
+import com.company.crm.model.contract.Contract;
 import com.company.crm.model.invoice.Invoice;
 import com.company.crm.model.order.Order;
 import com.company.crm.model.order.OrderItem;
@@ -29,6 +30,10 @@ public interface OnlyMyAccountsRole {
     @JpqlRowLevelPolicy(entityClass = Contact.class,
             where = "{E}.client.accountManager.id = :current_user_id")
     void contact();
+
+    @JpqlRowLevelPolicy(entityClass = Contract.class,
+            where = "{E}.client.accountManager.id = :current_user_id")
+    void contract();
 
     @JpqlRowLevelPolicy(entityClass = Payment.class,
             where = "{E}.invoice.client.accountManager.id = :current_user_id")

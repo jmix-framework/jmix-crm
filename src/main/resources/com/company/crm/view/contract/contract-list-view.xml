@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      title="msg://contractListView.title"
+      focusComponent="contractsDataGrid">
+    <data>
+        <collection id="contractsDc"
+                    class="com.company.crm.model.contract.Contract">
+            <fetchPlan extends="_base">
+                <property name="client" fetchPlan="_instance_name"/>
+            </fetchPlan>
+            <loader id="contractsDl" readOnly="true">
+                <query>
+                    <![CDATA[select e from Contract e order by e.signedDate desc]]>
+                </query>
+            </loader>
+        </collection>
+    </data>
+    <actions>
+        <action id="selectAction" type="lookup_select"/>
+        <action id="discardAction" type="lookup_discard"/>
+    </actions>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+        <urlQueryParameters>
+            <genericFilter component="genericFilter"/>
+            <pagination component="pagination"/>
+        </urlQueryParameters>
+    </facets>
+    <layout>
+        <genericFilter id="genericFilter" dataLoader="contractsDl" maxWidth="48em">
+            <properties include="(number)|(client)|(signedDate)|(validUntil)|(amount)"/>
+        </genericFilter>
+        <hbox id="buttonsPanel" classNames="buttons-panel">
+            <startSlot>
+                <button id="createButton" action="contractsDataGrid.createAction"/>
+                <button id="editButton" action="contractsDataGrid.editAction"/>
+                <button id="removeButton" action="contractsDataGrid.removeAction"/>
+            </startSlot>
+            <endSlot>
+                <simplePagination id="pagination" dataLoader="contractsDl" itemsPerPageVisible="true"/>
+            </endSlot>
+        </hbox>
+        <dataGrid id="contractsDataGrid" dataContainer="contractsDc"
+                  width="100%"
+                  minHeight="20em"
+                  columnReorderingAllowed="true">
+            <actions>
+                <action id="createAction" type="list_create"/>
+                <action id="editAction" type="list_edit"/>
+                <action id="removeAction" type="list_remove"/>
+            </actions>
+            <columns resizable="true" sortable="true">
+                <column property="number"/>
+                <column property="client"/>
+                <column property="signedDate"/>
+                <column property="validUntil"/>
+                <column property="amount"/>
+            </columns>
+        </dataGrid>
+        <hbox id="lookupActions" visible="false">
+            <button id="selectButton" action="selectAction"/>
+            <button id="discardButton" action="discardAction"/>
+        </hbox>
+    </layout>
+</view>
