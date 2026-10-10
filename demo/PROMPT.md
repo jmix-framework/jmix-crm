@@ -1,1 +1,22 @@
-Добавь в B2B CRM договоры с клиентами. 1) Сущность Contract в пакете com.company.crm.model.contract, наследник FullAuditEntity: client — обязательная ссылка на Client; number — обязательный уникальный номер до 50 символов; signedDate — обязательная дата подписания; validUntil — дата окончания; amount — сумма, не может быть отрицательной, тот же тип данных, что у Payment.amount; comment — длинный текст. Liquibase changelog 050-contract.xml рядом с существующими 010–040. 2) Экраны Contract.list и Contract.detail в пакете com.company.crm.view.contract, пункт меню contracts сразу после clients, подписи для всех языков проекта. 3) Ресурсная роль ContractManagerRole с кодом contract-manager: полный доступ к Contract, политики экранов и меню; ManagerRole её расширяет. Row-level политика для Contract в OnlyMyAccountsRole по client.accountManager, как у Invoice. 4) Тесты в пакете com.company.crm.test.contract: интеграционный — менеджер создаёт и читает договор, договор с отрицательной суммой не сохраняется, пользователь только с UiMinimalRole получает пустой список договоров; UI-тест на базе AbstractUiTest — Contract.list и Contract.detail открываются. Закрой задачу тремя гейтами из skill jmix; Gate 3 — через этот UI-тест, приложение (bootRun) не запускай. Перечисли доказательства по гейтам в сообщении коммита. Результат — один коммит.
+Добавь в B2B CRM договоры с клиентами. 
+
+1) Сущность Contract в пакете com.company.crm.model.contract, наследник FullAuditEntity:
+client — обязательная ссылка на Client;
+number — обязательный уникальный номер до 50 символов;
+signedDate — обязательная дата подписания; 
+validUntil — дата окончания; amount — сумма, не может быть отрицательной, тот же тип данных, что у Payment.amount; 
+comment — длинный текст. 
+Liquibase changelog 050-contract.xml рядом с существующими 010–040. 
+
+2) Экраны Contract.list и Contract.detail в пакете com.company.crm.view.contract, 
+пункт меню contracts сразу после clients, подписи для всех языков проекта.
+
+3) Ресурсная роль ContractManagerRole с кодом contract-manager: полный
+доступ к Contract, политики экранов и меню; ManagerRole её расширяет. Row-level политика для Contract в
+OnlyMyAccountsRole по client.accountManager, как у Invoice. 
+
+4) Тесты в пакете com.company.crm.test.contract:
+интеграционный — менеджер создаёт и читает договор, договор с отрицательной суммой не сохраняется, пользователь только с
+UiMinimalRole получает пустой список договоров; UI-тест на базе AbstractUiTest — Contract.list и Contract.detail
+открываются. Закрой задачу тремя гейтами из skill jmix; Gate 3 — через этот UI-тест, приложение (bootRun) не запускай.
+Перечисли доказательства по гейтам в сообщении коммита. Результат — один коммит.
