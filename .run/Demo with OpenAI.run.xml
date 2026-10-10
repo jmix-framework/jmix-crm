@@ -1,14 +1,10 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Stand aura-light (OpenAI)" type="JmixRunApplication">
+  <configuration default="false" name="Demo with OpenAI" type="JmixRunApplication">
     <option name="MAIN_CLASS_NAME" value="com.company.crm.CRMApplication" />
     <module name="jmix-crm.main" />
-    <option name="VM_PARAMETERS" value="-Xms128m -Xmx768m -Djava.awt.headless=true -Dstand.theme=aura -Dstand.color=light -Dstand.direction=ltr -Dcom.sun.management.jmxremote.port=9191 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.host=127.0.0.1 -Djava.rmi.server.hostname=127.0.0.1" />
-    <!-- Keep a default in every ${NAME:default} below. IDEA expands a bare ${NAME} in program arguments from its own
-         environment before it starts java, so ${SPRING_AI_OPENAI_APIKEY} would put the key value on the command line
-         (ps, the Run console header). ${NAME:default} is no name IDEA knows: it stays as is and Spring resolves it. -->
     <option name="PROGRAM_PARAMETERS" value="--server.address=127.0.0.1 --server.port=8091 --server.servlet.session.cookie.name=DM_aura_light --spring.profiles.active=local --vaadin.launch-browser=false --vaadin.devmode.devTools.enabled=false --spring.application.admin.enabled=true &quot;--main.datasource.url=jdbc:hsqldb:file:$PROJECT_DIR$/demo/dynmodel-ai-agent/instances/aura-light/.jmix/hsqldb/crm;shutdown=true&quot; &quot;--jmix.core.conf-dir=$PROJECT_DIR$/demo/dynmodel-ai-agent/instances/aura-light/.jmix/conf&quot; &quot;--jmix.core.work-dir=$PROJECT_DIR$/demo/dynmodel-ai-agent/instances/aura-light/.jmix/work&quot; &quot;--jmix.core.temp-dir=$PROJECT_DIR$/demo/dynmodel-ai-agent/instances/aura-light/.jmix/temp&quot; &quot;--jmix.localfs.storage-dir=$PROJECT_DIR$/demo/dynmodel-ai-agent/instances/aura-light/.jmix/storage&quot; --crm.dynmodel.max-output-tokens=4096 --jmix.dynmodel.ai.plan-approval-mode=MANUAL &quot;--logging.file.name=$PROJECT_DIR$/demo/dynmodel-ai-agent/instances/aura-light/application.log&quot; --crm.dynmodel.provider=openai --crm.dynmodel.base-url=https://api.openai.com/v1 --crm.dynmodel.model=${STAND_OPENAI_MODEL:gpt-5.4} --crm.dynmodel.api-key=${SPRING_AI_OPENAI_APIKEY:setup-required}" />
-    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
     <shortenClasspath name="ARGS_FILE" />
+    <option name="VM_PARAMETERS" value="-Xms128m -Xmx768m -Djava.awt.headless=true -Dstand.theme=aura -Dstand.color=light -Dstand.direction=ltr -Dcom.sun.management.jmxremote.port=9191 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.host=127.0.0.1 -Djava.rmi.server.hostname=127.0.0.1" />
     <method v="2">
       <option name="Make" enabled="true" />
       <option name="JmixCleanConf" enabled="false" />
