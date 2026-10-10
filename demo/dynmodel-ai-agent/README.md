@@ -298,7 +298,7 @@ reports and the Dynamic Model agent on the same stand. The talk uses one stand, 
   `stands.sh status`, `stands.sh stop aura-light` and a reset work the same for either. Run one at a time.
   - Terminal, from the jar: `cd demo/dynmodel-ai-agent && STAND_JAR="$HOME/demo-jars/crm.jar" ./stands.sh start aura-light`.
     Pass `STAND_JAR` on every start: without it `stands.sh` runs `build/libs/crm.jar` of the repository.
-  - IntelliJ IDEA, from source: the run configuration **Stand aura-light (OpenAI)** (`.run/`, Spring Boot,
+  - IntelliJ IDEA, from source: the run configuration **Stand aura-light (OpenAI)** (`.run/`, Jmix Application,
     builds the project first). It passes the arguments `stands.sh` passes to `aura-light` on OpenAI, plus
     `--vaadin.devmode.devTools.enabled=false`: from source Vaadin runs in development mode, from the
     committed `src/main/bundles/dev.bundle`. The key is `--crm.dynmodel.api-key=${SPRING_AI_OPENAI_APIKEY:setup-required}`:

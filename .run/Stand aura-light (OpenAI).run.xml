@@ -1,7 +1,7 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Stand aura-light (OpenAI)" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
+  <configuration default="false" name="Stand aura-light (OpenAI)" type="JmixRunApplication">
+    <option name="MAIN_CLASS_NAME" value="com.company.crm.CRMApplication" />
     <module name="jmix-crm.main" />
-    <option name="SPRING_BOOT_MAIN_CLASS" value="com.company.crm.CRMApplication" />
     <option name="VM_PARAMETERS" value="-Xms128m -Xmx768m -Djava.awt.headless=true -Dstand.theme=aura -Dstand.color=light -Dstand.direction=ltr -Dcom.sun.management.jmxremote.port=9191 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.host=127.0.0.1 -Djava.rmi.server.hostname=127.0.0.1" />
     <!-- Keep a default in every ${NAME:default} below. IDEA expands a bare ${NAME} in program arguments from its own
          environment before it starts java, so ${SPRING_AI_OPENAI_APIKEY} would put the key value on the command line
@@ -11,6 +11,10 @@
     <shortenClasspath name="ARGS_FILE" />
     <method v="2">
       <option name="Make" enabled="true" />
+      <option name="JmixCleanConf" enabled="false" />
+      <option name="JmixCheckIncludes" enabled="false" />
+      <option name="JmixSyncDb" enabled="false" />
+      <option name="JmixAssemble" enabled="false" />
     </method>
   </configuration>
 </component>

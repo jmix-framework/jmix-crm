@@ -302,7 +302,7 @@ Windows, PowerShell:
   только один.
   - Терминал, из jar: `cd demo/dynmodel-ai-agent && STAND_JAR="$HOME/demo-jars/crm.jar" ./stands.sh start aura-light`.
     `STAND_JAR` указывайте при каждом старте: без него `stands.sh` запускает `build/libs/crm.jar` из репозитория.
-  - IntelliJ IDEA, из исходников: конфигурация запуска **Stand aura-light (OpenAI)** (`.run/`, Spring Boot,
+  - IntelliJ IDEA, из исходников: конфигурация запуска **Stand aura-light (OpenAI)** (`.run/`, Jmix Application,
     перед запуском собирает проект). Она передаёт те же аргументы, что `stands.sh` передаёт `aura-light`
     на OpenAI, и ещё `--vaadin.devmode.devTools.enabled=false`: из исходников Vaadin работает в режиме
     разработки, на закоммиченном `src/main/bundles/dev.bundle`. Ключ —
