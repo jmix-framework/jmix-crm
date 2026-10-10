@@ -32,9 +32,15 @@ java {
 sourceSets.main.resources.srcDir 'demo/reports'
 
 repositories {
-    // Jmix and Jmix Premium 3.1.999-SNAPSHOT come from the local Maven: demo/dynmodel-ai-agent/README.md
-    mavenLocal()
     mavenCentral()
+
+    maven {
+        url = 'https://nexus.jmix.io/repository/premium'
+        credentials {
+            username = rootProject['premiumRepoUser']
+            password = rootProject['premiumRepoPass']
+        }
+    }
 
     maven {
         url = 'https://global.repo.jmix.io/repository/public'
