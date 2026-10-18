@@ -11,7 +11,7 @@ Use this skill when creating a top-level list/search view for an entity.
 
 1. Create Java controller under `view/<entityname>/`.
 2. Extend `StandardListView<Entity>`.
-3. Add `@Route(value = "...", layout = MainView.class)`.
+3. Add `@Route(value = "...", layout = MainView.class)`. In a Jmix add-on module, which has no `MainView` and must not reference the application, use `layout = DefaultMainViewParent.class` (`io.jmix.flowui.view.DefaultMainViewParent`); the application's main view is used as the parent at runtime.
 4. Add `@ViewController(id = "Entity.list")`.
 5. Add `@ViewDescriptor(path = "entity-list-view.xml")`.
 6. Add `@LookupComponent("<entities>DataGrid")` when the view can be opened as a lookup — an entity-picker dialog via `@PrimaryLookupView` or an explicit lookup builder call. A pure management/browse screen that is never used as a picker can omit it; the annotation only backs `getLookupComponent()`/`findLookupComponent()` in the lookup flow.
@@ -89,6 +89,21 @@ leaves `list_create` and `list_remove` in place — drop them only when
 creation or deletion is explicitly forbidden. A list with only a read
 action and no create/remove is almost always wrong unless a fully
 read-only list was specifically requested.
+
+## Hierarchical list
+
+For an entity with a reference to its own class (`Department.parent`), show the list as a tree:
+
+```xml
+<treeDataGrid id="departmentsDataGrid" dataContainer="departmentsDc"
+              hierarchyProperty="parent" width="100%">
+    <!-- actions and columns as in dataGrid -->
+</treeDataGrid>
+```
+
+Actions and buttons are the same as for `dataGrid`. `showOrphans="true"` shows as a root a record whose parent is not in the container (default `false`: with a filter applied such records disappear).
+
+A tree over a self-reference requires the application to forbid cycles (`A` is its own parent, `A → B → A`): records in a cycle are never shown, together with their subtrees. Enforce the ban at the data level (see `jmix-create-entity` / `jmix-add-entity-event-listener`), not in the view — a direct `DataManager.save` bypasses the view. Removing the edited record from its own parent picker is a convenience, not the ban.
 
 ## Custom (non-standard) buttons MUST carry their own caption
 

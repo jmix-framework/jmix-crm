@@ -47,7 +47,7 @@ READ the most specific skill for each artifact:
 - Detail dialog from a button/action, OR master-row selection → filtered child grid: `jmix-add-dialog-detail-flow`
 - Entity lifecycle/event business logic: `jmix-add-entity-event-listener`
 - Database schema: `jmix-create-liquibase-changelog`
-- Resource roles: `jmix-create-resource-role`
+- Resource roles, row-level roles, role assignments in seed data: `jmix-create-resource-role`
 - User-visible text / entity-enum captions: `jmix-add-i18n-keys`
 - Tests: `jmix-create-test`
 - Fetch plans / unfetched-reference / N+1 tuning: `jmix-configure-fetch-plan`

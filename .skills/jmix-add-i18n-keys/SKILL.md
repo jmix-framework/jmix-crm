@@ -10,7 +10,7 @@ validation messages, or a non-English application locale.
 
 ## Steps
 
-1. For a non-English application, add the official Jmix translation dependency for the target language before writing framework or add-on message overrides.
+1. For a non-English application, add the official Jmix translation dependency for the target language before writing framework or add-on message overrides, and list the locale in the application's `jmix.core.available-locales`.
 2. Find all locale files in the application message bundle.
 3. Add the same application-owned keys to every locale file.
 4. Use entity keys for entity captions and attributes.
@@ -39,8 +39,7 @@ Existing locales: `ar` (Arabic), `ckb` (Central Kurdish), `cs` (Czech), `da`
 
 Replace `<locale>` with one of these codes. Add only the dependencies for the
 application's supported locales. Do not add a version: let the Jmix BOM resolve
-the compatible version. Keep `jmix.core.available-locales` configured for the
-locales exposed by the application.
+the compatible version.
 
 Add this dependency before creating files such as
 `src/main/resources/io/jmix/core/messages_<lang>.properties` or message bundles
@@ -56,6 +55,12 @@ translation is not active or does not contain those keys. Only add narrow
 application overrides for messages that the official translation does not
 provide or that the application intentionally changes.
 
+## Available locales
+
+The login view offers the locales in `jmix.core.available-locales`. Set the full list
+(`jmix.core.available-locales=en,es`) in the APPLICATION's `application.properties`:
+an add-on's `module.properties` has the lowest precedence and cannot add a locale.
+
 ## Key Patterns
 
 ```properties
@@ -69,6 +74,10 @@ customerListView.title=Customers
 customerDetailView.title=Customer
 createOrderButton.text=Create order
 ```
+
+Follow the key style of the project's existing views: a generated project may use
+`UserListView.title` where this example uses `customerListView.title`. Mixing the two
+renders raw keys as titles.
 
 ## XML Usage
 

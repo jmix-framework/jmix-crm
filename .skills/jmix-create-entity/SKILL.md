@@ -336,6 +336,16 @@ instead:
                          onDelete="CASCADE"/>
 ```
 
+Also, add the `@OnDeleteInverse(DeletePolicy.CASCADE)` to the entity attribute. It doesn't affect the runtime behavior, 
+but it's an indicator for Studio when it generates changelogs: 
+
+```java
+@OnDeleteInverse(DeletePolicy.CASCADE)
+@JoinColumn(name = "PARENT_ID", nullable = false)
+@ManyToOne(fetch = FetchType.LAZY, optional = false)
+private Parent parent;
+```
+
 `jmix-create-liquibase-changelog` presents a DB-level `onDelete="CASCADE"` as the option
 you almost never want, because it assumes the Jmix default of soft delete. A hard-deleted
 composition parent is the exception that wording allows for.
@@ -382,6 +392,8 @@ dataManager.save(new SaveContext()
 ## Calculated and Transient Properties
 
 Non-persistent derived attributes use `@JmixProperty` + `@Transient` + `@DependsOnProperties({"a", "b"})` (`@JmixProperty` from `io.jmix.core.metamodel.annotation`). The same applies to an `@InstanceName` method: it must carry `@DependsOnProperties` listing every attribute it reads so they are fetched.
+
+`@DependsOnProperties` lists only the entity's own attributes; a referenced entity is fetched with its instance name only, so don't read its other attributes in a calculated property.
 
 ## File attributes
 
