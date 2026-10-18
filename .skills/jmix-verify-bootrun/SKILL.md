@@ -182,9 +182,11 @@ gate. The numbered steps below are for when you start and own the process.
    never becomes ready, tail the log, skip Gate 3, and shut the process down.
 3. With your browser/UI-automation tool, navigate to each view you created, click
    each button/action, fill each field, and confirm no error overlay or server
-   exception. If the application accepts file uploads, select and upload a real
-   file through the browser, then confirm the UI reports success and the file can
-   be opened or otherwise read back.
+   exception. When you created roles, log in through the login form as one user of
+   each role, not only as `admin`: `admin` usually holds `system-full-access`, which
+   hides missing login, view and menu policies. If the application accepts file
+   uploads, select and upload a real file through the browser, then confirm the UI
+   reports success and the file can be opened or otherwise read back.
    A Jmix UI is a Vaadin web-component UI, so it does not respond to a browser
    tool the way a plain HTML page does — see the next section.
    Drive the walk **only through real input events** — a genuine click,
@@ -209,6 +211,13 @@ resource. Inspect the process classpath and configured overrides, including the
 exact descriptor under a module's `.jmix/conf/`, before changing valid code.
 Remove the entire `.jmix/conf/` directory if it exists. 
 Archive-read failures after a rebuild need the approved restart above. Repeat the walk against the verified artifacts.
+
+Remove `.jmix/conf/` also after every walk during which code was edited while the app
+was running, and before the next Gate 2 run. The IDE hot deploy writes changed controller
+classes there, `clean test` does not clean `.jmix/`, and Jmix then loads the stale class
+with its own class loader. The symptom is a `ClassCastException` between two classes with
+the same name (`OrderDetailView cannot be cast to OrderDetailView`) in every test that
+opens the view.
 
 ### Driving a Jmix/Vaadin UI
 

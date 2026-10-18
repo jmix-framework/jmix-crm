@@ -87,6 +87,9 @@ Optional<Customer> result = systemAuthenticator.withUser(
 
 Use this when the expected result depends on Jmix security policies.
 
+Test row-level rules by loading data as the user and asserting which rows come back;
+a permission API such as `SecureOperations` proves only that a policy exists.
+
 ## UI Integration Test Pattern
 
 ```java
@@ -107,6 +110,15 @@ class CustomerUiTest {
 ```
 
 Use the project's helper for component lookup if it exists. Otherwise keep a local typed helper small and explicit. A `@UiTest` that navigates to a view will fail to find it if the view's id or the component id is wrong — the test, not just `compileJava`, is what catches that.
+
+**Find components by id, not by localized text.** In a `@UiTest` the UI and session
+locale is the JVM default (`Locale.getDefault()`), while `Messages` takes the locale
+from `CurrentAuthentication`, which has no client locale there and falls back to the
+first entry of `jmix.core.available-locales`. Comparing a caption with
+`messages.getMessage(key)` passes only where the two happen to agree — on a developer
+machine, not on an `en_US` CI runner. Look components up by id; when the test must
+assert localized text, resolve it with the locale the component used, or pin the UI
+locale in the test setup.
 
 `UiTestUtils.getCurrentView()` works as the navigation origin even before the
 test navigates anywhere: `@UiTest` opens the initial view before each test, so a
@@ -216,6 +228,19 @@ The same class also provides `getOpenedDialogs()`, `getLastOpenedNotification()`
 `getOpenedNotifications()` and `validateView(detailView)` — assert dialogs,
 notifications and validation errors through these, never by traversing the tree.
 
+These helpers read static registries (`OpenedDialogs`, `OpenedNotifications`).
+`JmixUiTestExtension` empties them after each test, but within a test they still hold
+whatever was opened before the action under test — by the initial view or by setup
+steps. Before asserting "no dialog opened" or on the LAST notification, clear them
+right before the action:
+
+```java
+openedDialogs.closeOpenedDialogs();             // @Autowired OpenedDialogs
+openedNotifications.closeOpenedNotifications(); // @Autowired OpenedNotifications
+approveAction.actionPerform(ordersDataGrid);
+assertThat(UiTestUtils.getOpenedDialogs()).isEmpty();
+```
+
 Data containers are reached through `ViewControllerUtils`, because `View.getViewData()`
 is protected and the compiler does not point anywhere:
 
@@ -224,6 +249,8 @@ CollectionContainer<Category> dc =
         ViewControllerUtils.getViewData(view).getContainer("categoriesDc");
 assertThat(dc.getItems()).allMatch(Category::isApplicable);
 ```
+
+### Components inside a fragment
 
 Components inside a fragment are not found by id from the view. The fragment loader
 keeps a component's XML id as fragment-scoped data, not as the element id, so
@@ -238,6 +265,37 @@ DataGrid<Order> grid = (DataGrid<Order>) FragmentUtils.getComponent(fragment, "o
 
 `FragmentUtils.findComponent(fragment, id)` is the `Optional` form; both live in
 `io.jmix.flowui.fragment`.
+
+### dropdownButton items
+
+Items of a `dropdownButton` are not view components either, so
+`UiTestUtils.getComponent(view, itemId)` does not find them. Get the button by its
+component id and ask it for the item:
+
+```java
+DropdownButton createButton = UiTestUtils.getComponent(view, "createButton");
+assertThat(createButton.getItem("createFromTemplate")).isNull(); // null, not an exception
+
+ActionItem blankItem = (ActionItem) createButton.getItem("createBlank");
+blankItem.getAction().actionPerform(createButton);
+```
+
+`getItems()` lists the items and skips separators.
+
+## Hidden grid columns
+
+A grid column whose attribute the current role may not view is removed from the Vaadin
+grid, but `DataGrid` still keeps it by key: `getColumnByKey("discount")` returns the
+column and its `isVisible()` is `true`, so an assertion on visibility reports a hidden
+column as shown. Assert the removal through the column's element:
+
+```java
+Grid.Column<Order> column = grid.getColumnByKey("discount");
+assertThat(column == null || column.getElement().getParent() == null).isTrue();
+```
+
+A form field bound to such an attribute is hidden with `setVisible(false)`, so
+`assertThat(field.isVisible()).isFalse()` is correct for fields.
 
 ## Testing code that runs outside a user session
 
@@ -275,6 +333,7 @@ Before finishing, check:
     ```
 - Test data has unique values to avoid collisions.
 - Assertions verify persisted or visible behavior, not just absence of exceptions.
+- A test that compares a stored date-time with its in-memory original (equality, "same event", `isEqual`) creates the value at the column precision — e.g. `OffsetDateTime.now().truncatedTo(ChronoUnit.MICROS)` for a PostgreSQL `timestamp`. `now()` carries nanoseconds on Linux JDKs and microseconds on macOS, and the driver rounds the value to the column on write, so a reloaded value differs from the original about half the time: green on a developer Mac, red on Linux CI.
 - UI tests that depend on who is viewing the data authenticate as a real database user around navigation, interaction, and assertions.
 - UI tests select the containing `tabSheet` tab before calling `click()` on a component in that tab, unless they intentionally fire the server-side event directly and explain why.
 - The test command can run one class or method without running the full suite.
