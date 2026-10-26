@@ -89,7 +89,7 @@
             </startSlot>
             <endSlot>
                 <simplePagination id="invoices_pagination" dataLoader="invoicesDl" itemsPerPageVisible="true"/>
-                <gridColumnVisibility dataGrid="invoicesDataGrid" icon="COG_O"
+                <gridColumnVisibility dataGrid="invoicesDataGrid" icon="COG"
                                       themeNames="tertiary" hideAllEnabled="false"/>
             </endSlot>
         </hbox>

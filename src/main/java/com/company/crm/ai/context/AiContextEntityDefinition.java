@@ -111,7 +111,7 @@ public enum AiContextEntityDefinition {
      * but are not directly select-able as a top-level chat context by the user in the UI.
      * Therefore, we configure {@code addMenuVisible = false} and {@code toolsAllowed = true}.
      */
-    ORDER_ITEM(OrderItem.class, "orderItem", VaadinIcon.CART_O, "contextEntity.orderItems", false, true,
+    ORDER_ITEM(OrderItem.class, "orderItem", VaadinIcon.CART, "contextEntity.orderItems", false, true,
             fp -> fp.builder(OrderItem.class)
                     .addFetchPlan(FetchPlan.BASE)
                     .add("order", order -> order.addFetchPlan(FetchPlan.BASE)

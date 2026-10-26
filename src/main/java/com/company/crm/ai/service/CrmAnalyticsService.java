@@ -15,7 +15,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
 import org.springframework.ai.chat.messages.Message;
-import org.springframework.ai.tool.ToolCallback;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
@@ -135,7 +134,7 @@ public class CrmAnalyticsService {
                 .system(system -> system
                         .text(systemPrompt)
                         .param("responseLanguage", resolveResponseLanguage()))
-                .tools(aiToolRegistry.getAllCallbacks().toArray(new ToolCallback[0]));
+                .tools(aiToolRegistry.getAllCallbacks());
 
         Map<String, Object> toolContext = buildToolContext(conversationUuid, assistantMessageId, uiStatusUpdateCallback);
         return toolContext.isEmpty() ? baseSpec : baseSpec.toolContext(toolContext);

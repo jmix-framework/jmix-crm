@@ -22,7 +22,7 @@
         <action id="saveCloseAction" type="detail_saveClose" text="msg:///actions.Save"/>
         <action id="closeAction" type="detail_close" text="msg:///actions.Close" icon="CLOSE"/>
         <action id="cloneAction" text="msg:///clone" icon="COPY"/>
-        <action id="emailAction" text="msg:///email" icon="ENVELOPE_O"/>
+        <action id="emailAction" text="msg:///email" icon="ENVELOPE"/>
         <action id="downloadAction" text="msg:///download" icon="DOWNLOAD_ALT"/>
         <action id="chatAboutThis" text="msg://chatAboutThis" icon="crm:sparkles"/>
     </actions>

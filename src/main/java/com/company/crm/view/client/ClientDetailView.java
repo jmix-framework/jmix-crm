@@ -295,7 +295,7 @@ public class ClientDetailView extends StandardDetailView<Client> {
         Runnable closeDialog = addressDialog::close;
 
         var closeButton = uiComponents.create(JmixButton.class);
-        closeButton.setIcon(VaadinIcon.CLOSE_SMALL.create());
+        closeButton.setIcon(VaadinIcon.CLOSE.create());
         closeButton.addThemeVariants(ButtonVariant.TERTIARY);
         closeButton.addClickListener(e -> closeDialog.run());
         addressDialog.getHeader().add(closeButton);

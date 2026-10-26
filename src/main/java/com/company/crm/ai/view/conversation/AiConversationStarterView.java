@@ -42,6 +42,7 @@ import io.jmix.flowui.component.textfield.TypedTextField;
 import io.jmix.flowui.kit.component.button.JmixButton;
 import io.jmix.flowui.kit.component.sidedialog.SideDialogPosition;
 import io.jmix.flowui.model.CollectionContainer;
+import io.jmix.flowui.view.DialogModalityMode;
 import io.jmix.flowui.view.DialogWindow;
 import io.jmix.flowui.view.MessageBundle;
 import io.jmix.flowui.view.StandardOutcome;
@@ -440,7 +441,7 @@ public class AiConversationStarterView extends StandardView {
                     .withViewClass(AiConversationDetailView.class)
                     .build();
 
-            detailDialog.setModal(false);
+            detailDialog.setModality(DialogModalityMode.MODELESS);
             detailDialog.setLeft("65%");
             detailDialog.setResizable(true);
             detailDialog.setTop("5%");

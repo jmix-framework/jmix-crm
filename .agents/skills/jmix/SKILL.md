@@ -34,6 +34,7 @@ gates, not how-to. They do not replace the artifact skill.
 
 READ the most specific skill for each artifact:
 
+- New project / application scaffold with Jmix CLI: `jmix-create-project`
 - Verify a Jmix/Vaadin API: `jmix-verify-api-symbol`
 - Static checks / inspections / mechanical floor: `jmix-ide-static-analysis`
 - Gate-2 context-load test (+ optional Gate-3 render walk): `jmix-verify-bootrun`

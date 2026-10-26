@@ -51,11 +51,11 @@
                 <button id="editButton" action="categoryItemsDataGrid.editAction"/>
                 <button id="removeButton" action="categoryItemsDataGrid.removeAction"/>
                 <button id="downloadXlsButton" action="categoryItemsDataGrid.downloadXls"/>
-                <fileUploadField id="updateCatalogField" uploadIcon="UPLOAD_ALT" uploadText="msg://updateFromXlsx" acceptedFileTypes=".xlsx"/>
+                <fileUploadField id="updateCatalogField" uploadIcon="UPLOAD_ALT" uploadText="msg://updateFromXlsx" acceptedFileExtensions=".xlsx"/>
             </startSlot>
             <endSlot>
                 <simplePagination id="items_pagination" dataLoader="categoryItemsDl" itemsPerPageVisible="true"/>
-                <gridColumnVisibility dataGrid="categoryItemsDataGrid" icon="COG_O"
+                <gridColumnVisibility dataGrid="categoryItemsDataGrid" icon="COG"
                                       themeNames="tertiary" hideAllEnabled="false"/>
             </endSlot>
         </hbox>
