@@ -74,6 +74,7 @@ import io.jmix.flowui.view.Target;
 import io.jmix.flowui.view.ViewComponent;
 import io.jmix.flowui.view.ViewController;
 import io.jmix.flowui.view.ViewDescriptor;
+import io.jmix.reportsflowui.runner.ParametersDialogShowMode;
 import io.jmix.reportsflowui.runner.UiReportRunner;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -195,6 +196,7 @@ public class ClientDetailView extends StandardDetailView<Client> {
         Date toDate = Date.from(now.atStartOfDay(ZoneId.systemDefault()).toInstant());
 
         uiReportRunner.byReportCode("client-360-report")
+                .withParametersDialogShowMode(ParametersDialogShowMode.NO)
                 .addParam("client", getEditedEntity())
                 .addParam("fromDate", fromDate)
                 .addParam("toDate", toDate)

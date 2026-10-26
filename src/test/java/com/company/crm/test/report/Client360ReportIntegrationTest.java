@@ -8,7 +8,9 @@ import com.company.crm.model.order.Order;
 import com.company.crm.model.order.OrderStatus;
 import io.jmix.reports.runner.ReportRunner;
 import io.jmix.reports.yarg.reporting.ReportOutputDocument;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;
@@ -16,6 +18,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Date;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -26,12 +29,11 @@ class Client360ReportIntegrationTest extends AbstractTest {
 
     private static final LocalDate BASE_DATE = LocalDate.of(2025, 2, 1);
 
-    @Test
-    void testBasicReportGeneration() {
+    @ParameterizedTest(name = "date parameters: {0}, {1}")
+    @MethodSource("dateParameters")
+    void testBasicReportGeneration(Object fromDate, Object toDate) {
         // given
         Client client = entities.client("Test Client for Report");
-        LocalDate fromDate = BASE_DATE.minusDays(30);
-        LocalDate toDate = BASE_DATE;
         Order order = entities.order(client, BASE_DATE.minusDays(10), OrderStatus.DONE);
         order.setTotal(new BigDecimal("1250.00"));
         order = dataManager.save(order);
@@ -67,17 +69,22 @@ class Client360ReportIntegrationTest extends AbstractTest {
         assertThat(htmlContent).contains("Status Distribution");
     }
 
-    private String generateReport(Client client, LocalDate fromDate, LocalDate toDate) {
-        Date fromDateAsDate = fromDate != null ?
-                Date.from(fromDate.atStartOfDay(ZoneId.systemDefault()).toInstant()) : null;
-        Date toDateAsDate = toDate != null ?
-                Date.from(toDate.atStartOfDay(ZoneId.systemDefault()).toInstant()) : null;
+    private static Stream<Arguments> dateParameters() {
+        LocalDate fromDate = BASE_DATE.minusDays(30);
+        LocalDate toDate = BASE_DATE;
+        return Stream.of(
+                Arguments.of(
+                        Date.from(fromDate.atStartOfDay(ZoneId.systemDefault()).toInstant()),
+                        Date.from(toDate.atStartOfDay(ZoneId.systemDefault()).toInstant())),
+                Arguments.of(fromDate, toDate));
+    }
 
+    private String generateReport(Client client, Object fromDate, Object toDate) {
         ReportOutputDocument document = reportRunner
                 .byReportCode("client-360-report")
                 .addParam("client", client)
-                .addParam("fromDate", fromDateAsDate)
-                .addParam("toDate", toDateAsDate)
+                .addParam("fromDate", fromDate)
+                .addParam("toDate", toDate)
                 .run();
 
         return new String(document.getContent(), StandardCharsets.UTF_8);
