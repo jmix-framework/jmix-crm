@@ -147,11 +147,11 @@ class ClientServiceTest extends AbstractServiceTest<ClientService> {
         Client client = entities.client("Sum Client");
         entities.createAndSaveEntity(Invoice.class, i -> {
             i.setClient(client);
-            i.setTotal(new BigDecimal("100"));
+            i.setSubtotal(new BigDecimal("100"));
         });
         entities.createAndSaveEntity(Invoice.class, i -> {
             i.setClient(client);
-            i.setTotal(new BigDecimal("50"));
+            i.setSubtotal(new BigDecimal("50"));
         });
 
         assertThat(service.getInvoicesTotalSum(client)).isEqualByComparingTo("150");
@@ -162,14 +162,14 @@ class ClientServiceTest extends AbstractServiceTest<ClientService> {
         Client client = entities.client("Balance Client");
         entities.createAndSaveEntity(Invoice.class, i -> {
             i.setClient(client);
-            i.setTotal(new BigDecimal("100"));
+            i.setSubtotal(new BigDecimal("100"));
         });
         entities.createAndSaveEntity(Payment.class, (Payment p) -> {
             p.setInvoice(entities.createAndSaveEntity(Invoice.class, (Invoice i) -> i.setClient(client)));
             p.setAmount(new BigDecimal("40"));
         });
 
-        // Outstanding balance = 100 (first invoice) + 0 (second invoice total is null/0 by default) - 40 (payment)
+        // Outstanding balance = 100 (first invoice) + 0 (second invoice) - 40 (payment)
         assertThat(service.getOutstandingBalance(client)).isEqualByComparingTo("60");
     }
 

@@ -148,13 +148,30 @@ public final class PriceCalculator {
                 .divide(BigDecimal.valueOf(100), DEFAULT_SCALE, DEFAULT_ROUNDING);
     }
 
-    public static void calculateInvoiceFieldsFromOrder(Order order, Invoice invoice, BigDecimal vatPercent) {
-        BigDecimal unbilledTotal = order.getTotal().subtract(order.getInvoiced());
-        if (unbilledTotal.compareTo(BigDecimal.ZERO) > 0) {
-            invoice.setSubtotal(unbilledTotal);
-            invoice.setVat(calculateVat(invoice, vatPercent));
-            invoice.setTotal(calculateTotal(invoice));
+    public static void calculateInvoiceFieldsFromOrder(Order order, Invoice invoice) {
+        BigDecimal remainingSubtotal = order.getSubTotal();
+        BigDecimal remainingVat = order.getVat();
+        BigDecimal remainingGross = order.getTotal();
+        List<Invoice> invoices = order.getInvoices();
+        if (invoices != null) {
+            for (Invoice existingInvoice : invoices) {
+                if (existingInvoice == invoice || (invoice.getId() != null
+                        && invoice.getId().equals(existingInvoice.getId()))) {
+                    continue;
+                }
+                remainingSubtotal = remainingSubtotal.subtract(zeroIfNull(existingInvoice.getSubtotal()));
+                remainingVat = remainingVat.subtract(zeroIfNull(existingInvoice.getVat()));
+                remainingGross = remainingGross.subtract(existingInvoice.getTotal());
+            }
         }
+        remainingGross = remainingGross.max(BigDecimal.ZERO);
+        BigDecimal subtotal = remainingSubtotal.max(BigDecimal.ZERO).min(remainingGross)
+                .setScale(DEFAULT_SCALE, DEFAULT_ROUNDING);
+        BigDecimal vat = remainingVat.max(BigDecimal.ZERO).min(remainingGross.subtract(subtotal))
+                .setScale(DEFAULT_SCALE, DEFAULT_ROUNDING);
+        invoice.setSubtotal(subtotal);
+        invoice.setVat(vat);
+        invoice.setTotal(calculateTotal(invoice));
     }
 
     public static BigDecimal calculateTotal(Invoice invoice) {
