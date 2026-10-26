@@ -130,6 +130,8 @@ public class Entities {
         return createAndSaveEntity(Invoice.class, invoice -> {
             invoice.setClient(client);
             invoice.setOrder(order);
+            invoice.setSubtotal(total);
+            invoice.setVat(BigDecimal.ZERO);
             invoice.setTotal(total);
             invoice.setStatus(status);
             invoice.setDate(invoiceDate);

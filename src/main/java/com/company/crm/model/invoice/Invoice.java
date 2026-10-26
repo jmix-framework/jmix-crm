@@ -1,5 +1,6 @@
 package com.company.crm.model.invoice;
 
+import com.company.crm.app.util.price.PriceCalculator;
 import com.company.crm.model.HasUniqueNumber;
 import com.company.crm.model.base.FullAuditEntity;
 import com.company.crm.model.client.Client;
@@ -23,11 +24,14 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.PositiveOrZero;
 import org.apache.commons.lang3.StringUtils;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -64,17 +68,17 @@ public class Invoice extends FullAuditEntity implements HasUniqueNumber {
     @PositiveOrZero
     @PropertyDatatype(PriceDataType.NAME)
     @Column(name = "SUBTOTAL")
-    private BigDecimal subtotal;
+    private BigDecimal subtotal = BigDecimal.ZERO;
 
     @PositiveOrZero
     @PropertyDatatype(PriceDataType.NAME)
     @Column(name = "VAT")
-    private BigDecimal vat;
+    private BigDecimal vat = BigDecimal.ZERO;
 
     @PositiveOrZero
     @PropertyDatatype(PriceDataType.NAME)
     @Column(name = "TOTAL")
-    private BigDecimal total;
+    private BigDecimal total = BigDecimal.ZERO;
 
     @Column(name = "STATUS")
     private Integer status;
@@ -126,19 +130,32 @@ public class Invoice extends FullAuditEntity implements HasUniqueNumber {
     }
 
     public BigDecimal getVat() {
-        return vat;
+        return vat == null ? BigDecimal.ZERO : vat;
     }
 
     public void setVat(BigDecimal vat) {
-        this.vat = vat;
+        this.vat = roundAmount(vat == null ? BigDecimal.ZERO : vat);
     }
 
     public BigDecimal getSubtotal() {
-        return subtotal;
+        return subtotal == null ? BigDecimal.ZERO : subtotal;
     }
 
     public void setSubtotal(BigDecimal subtotal) {
-        this.subtotal = subtotal;
+        this.subtotal = roundAmount(subtotal == null ? BigDecimal.ZERO : subtotal);
+    }
+
+    @PrePersist
+    @PreUpdate
+    private void updateTotals() {
+        setSubtotal(getSubtotal());
+        setVat(getVat());
+        setTotal(PriceCalculator.calculateTotal(this));
+    }
+
+    private BigDecimal roundAmount(BigDecimal amount) {
+        // Keep negative sub-cent amounts intact so Bean Validation rejects them.
+        return amount.signum() < 0 ? amount : amount.setScale(2, RoundingMode.HALF_UP);
     }
 
     public LocalDate getDueDate() {

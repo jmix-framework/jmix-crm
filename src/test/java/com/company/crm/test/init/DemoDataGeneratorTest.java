@@ -15,9 +15,6 @@ import io.jmix.core.FetchPlan;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-
 import static org.assertj.core.api.Assertions.assertThat;
 
 class DemoDataGeneratorTest extends AbstractTest {
@@ -53,16 +50,17 @@ class DemoDataGeneratorTest extends AbstractTest {
 
         var invoices = dataManager.load(Invoice.class).all()
                 .fetchPlan(fp -> fp.addFetchPlan(FetchPlan.BASE)
-                        .add("order", FetchPlan.BASE)
+                        .add("order", order -> order.addFetchPlan(FetchPlan.BASE)
+                                .add("orderItems", FetchPlan.BASE))
                         .add("payments", FetchPlan.BASE))
                 .list();
         assertThat(invoices).hasSize(142);
         for (Invoice invoice : invoices) {
             assertThat(invoice.getSubtotal()).as("Subtotal of %s", invoice.getNumber())
-                    .isEqualByComparingTo(invoice.getOrder().getTotal());
-            assertThat(invoice.getVat()).isEqualByComparingTo(invoice.getSubtotal()
-                    .multiply(new BigDecimal("0.20")).setScale(2, RoundingMode.HALF_UP));
-            assertThat(invoice.getTotal()).isEqualByComparingTo(PriceCalculator.calculateTotal(invoice));
+                    .isEqualByComparingTo(invoice.getOrder().getSubTotal());
+            assertThat(invoice.getVat()).isEqualByComparingTo(invoice.getOrder().getVat());
+            assertThat(invoice.getTotal()).isEqualByComparingTo(invoice.getOrder().getTotal())
+                    .isEqualByComparingTo(PriceCalculator.calculateTotal(invoice));
             if (invoice.getStatus() == InvoiceStatus.PAID) {
                 assertThat(invoice.getPaymentsSum()).as("Payments for %s", invoice.getNumber())
                         .isEqualByComparingTo(invoice.getTotal());

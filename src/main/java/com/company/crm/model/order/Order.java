@@ -196,7 +196,7 @@ public class Order extends FullAuditEntity implements HasUniqueNumber {
         return getOrderService().getPaid(this);
     }
 
-    /// invoiced = sum of {@link Invoice#getSubtotal()}
+    /// invoiced = sum of {@link Invoice#getTotal()}
     @JmixProperty
     @DependsOnProperties({"invoices"})
     @PropertyDatatype("price")
@@ -207,7 +207,7 @@ public class Order extends FullAuditEntity implements HasUniqueNumber {
         }
 
         return invoices.stream()
-                .map(Invoice::getSubtotal)
+                .map(Invoice::getTotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 

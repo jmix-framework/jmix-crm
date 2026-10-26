@@ -57,7 +57,7 @@
             <datePicker id="dueDateField" property="dueDate"/>
             <textField id="subtotalField" property="subtotal"/>
             <textField id="vatField" property="vat"/>
-            <textField id="totalField" property="total"/>
+            <textField id="totalField" property="total" readOnly="true"/>
             <select id="statusField" property="status"/>
         </formLayout>
         <hbox id="detailActions">
