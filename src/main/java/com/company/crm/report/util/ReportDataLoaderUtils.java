@@ -20,26 +20,32 @@ public class ReportDataLoaderUtils {
      * @return LocalDateRange with the provided date range
      */
     public static LocalDateRange getDateRangeFromParams(Map<String, Object> params) {
-        LocalDate fromDate = convertToLocalDate((Date) params.get("fromDate"));
-        LocalDate toDate = convertToLocalDate((Date) params.get("toDate"));
+        LocalDate fromDate = convertToLocalDate(params.get("fromDate"));
+        LocalDate toDate = convertToLocalDate(params.get("toDate"));
         return new LocalDateRange(fromDate, toDate);
     }
 
     /**
-     * Converts a Date object to LocalDate using the system default time zone.
+     * Converts a report date parameter to LocalDate using the system default time zone for legacy dates.
      *
-     * @param date Date object to convert
+     * @param date LocalDate or Date object to convert
      * @return LocalDate or null if input is null
      */
-    public static LocalDate convertToLocalDate(Date date) {
+    public static LocalDate convertToLocalDate(Object date) {
         if (date == null) {
             return null;
+        }
+        if (date instanceof LocalDate localDate) {
+            return localDate;
         }
         if (date instanceof java.sql.Date sqlDate) {
             return sqlDate.toLocalDate();
         }
-        return date.toInstant()
-                .atZone(ZoneId.systemDefault())
-                .toLocalDate();
+        if (date instanceof Date legacyDate) {
+            return legacyDate.toInstant()
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate();
+        }
+        throw new IllegalArgumentException("Unsupported report date type: " + date.getClass().getName());
     }
 }

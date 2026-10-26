@@ -28,12 +28,12 @@ import org.springframework.beans.factory.annotation.Qualifier;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+
+import static com.company.crm.report.util.ReportDataLoaderUtils.convertToLocalDate;
 
 @ReportDef(
         code = Client360Report.CODE,
@@ -55,7 +55,6 @@ import java.util.Objects;
         name = "Client",
         type = ParameterType.ENTITY,
         required = true,
-        hidden = true,
         entity = @EntityParameterDef(entityClass = Client.class)
 )
 
@@ -63,16 +62,14 @@ import java.util.Objects;
         alias = "fromDate",
         name = "From Date",
         type = ParameterType.DATE,
-        required = true,
-        hidden = true
+        required = true
 )
 
 @InputParameterDef(
         alias = "toDate",
         name = "To Date",
         type = ParameterType.DATE,
-        required = true,
-        hidden = true
+        required = true
 )
 
 @InputParameterDef(
@@ -194,8 +191,8 @@ public class Client360Report {
     @DataSetDelegate(name = "root")
     public ReportDataLoader rootDataLoader() {
         return (reportQuery, parentBand, params) -> {
-            LocalDate fromDate = convertToLocalDate((Date) params.get("fromDate"));
-            LocalDate toDate = convertToLocalDate((Date) params.get("toDate"));
+            LocalDate fromDate = convertToLocalDate(params.get("fromDate"));
+            LocalDate toDate = convertToLocalDate(params.get("toDate"));
 
             Map<String, Object> rootData = new HashMap<>();
             rootData.put("generatedAt", datatypeFormatter.formatLocalDateTime(LocalDateTime.now()));
@@ -234,16 +231,6 @@ public class Client360Report {
     @DataSetDelegate(name = "orders")
     public ReportDataLoader ordersDataLoader() {
         return ordersDataLoader;
-    }
-
-
-    private LocalDate convertToLocalDate(Date date) {
-        if (date == null) {
-            return null;
-        }
-        return date.toInstant()
-                .atZone(ZoneId.systemDefault())
-                .toLocalDate();
     }
 
 
