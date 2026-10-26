@@ -46,14 +46,12 @@ public final class PriceCalculator {
 
     public static BigDecimal calculateTotal(OrderItem item) {
         return zeroIfNull(item.getGrossPrice())
-                .multiply(zeroIfNull(item.getQuantity()))
                 .subtract(zeroIfNull(item.getDiscount()))
                 .setScale(DEFAULT_SCALE, DEFAULT_ROUNDING);
     }
 
     public static BigDecimal calculateNetTotal(OrderItem item) {
         return zeroIfNull(item.getNetPrice())
-                .multiply(zeroIfNull(item.getQuantity()))
                 .subtract(zeroIfNull(item.getDiscount()))
                 .setScale(DEFAULT_SCALE, DEFAULT_ROUNDING);
     }
@@ -74,8 +72,7 @@ public final class PriceCalculator {
     }
 
     /**
-     * Total = sum of gross totals.
-     * Also must equal Subtotal + VAT.
+     * Total = sum of line totals minus the order discount.
      */
     public static BigDecimal calculateTotal(Order order) {
         BigDecimal total = order.getItemsTotal();
@@ -152,7 +149,7 @@ public final class PriceCalculator {
     }
 
     public static BigDecimal calculateVatTotal(OrderItem item) {
-        return calculateVat(item).multiply(zeroIfNull(item.getQuantity()));
+        return calculateVat(item);
     }
 
     public static BigDecimal calculateTotal(Invoice invoice) {

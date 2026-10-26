@@ -23,6 +23,8 @@ import java.time.LocalDate;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Consumer;
 
+import static com.company.crm.app.util.price.PriceCalculator.recalculatePricing;
+
 @TestComponent
 public class Entities {
 
@@ -173,8 +175,7 @@ public class Entities {
             oi.setOrder(order);
             oi.setCategoryItem(item);
             oi.setQuantity(quantity);
-            oi.setNetPrice(item.getPrice());
-            oi.setGrossPrice(item.getPrice());
+            recalculatePricing(oi);
         });
     }
 

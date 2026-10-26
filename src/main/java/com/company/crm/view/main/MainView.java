@@ -24,6 +24,7 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.popover.Popover;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
+import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import io.jmix.core.AccessManager;
 import io.jmix.core.Messages;
@@ -62,10 +63,14 @@ import java.util.List;
 import java.util.Optional;
 
 import static com.company.crm.app.util.demo.DemoUtils.defaultSleepForClientsSearching;
+import static com.company.crm.view.main.MainView.ROUTE;
 
+@Route(value = ROUTE)
 @ViewController(id = CrmConstants.ViewIds.MAIN)
 @ViewDescriptor(path = "main-view.xml")
 public class MainView extends StandardMainView {
+
+    public static final String ROUTE = "main";
 
     @Autowired
     private Messages messages;
