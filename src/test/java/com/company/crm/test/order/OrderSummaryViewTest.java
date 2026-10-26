@@ -9,6 +9,8 @@ import com.company.crm.model.order.OrderStatus;
 import com.company.crm.util.UniqueValues;
 import com.company.crm.view.order.OrderDetailView;
 import com.company.crm.view.order.item.OrderItemDetailView;
+import com.vaadin.flow.component.Component;
+import com.vaadin.flow.internal.nodefeature.ElementPropertyMap;
 import io.jmix.flowui.OpenedDialogWindows;
 import io.jmix.flowui.component.combobox.EntityComboBox;
 import io.jmix.flowui.component.grid.DataGrid;
@@ -111,7 +113,7 @@ class OrderSummaryViewTest extends AbstractUiTest {
         addItem(view, product("Added percentage discount product", "100"), "0");
 
         JmixBigDecimalField percent = viewTestSupport.getComponent(view, "discountPercentField");
-        assertField(view, "subtotalField", "200");
+        assertField(view, "subtotalField", "180");
         assertThat(percent.getValue()).isEqualByComparingTo("10");
         assertField(view, "discountValueField", "20");
         assertField(view, "totalField", "180");
@@ -129,10 +131,121 @@ class OrderSummaryViewTest extends AbstractUiTest {
         addItem(view, product("Added fixed discount product", "100"), "0");
 
         JmixBigDecimalField percent = viewTestSupport.getComponent(view, "discountPercentField");
-        assertField(view, "subtotalField", "200");
+        assertField(view, "subtotalField", "175");
         assertThat(percent.getValue()).isEqualByComparingTo("12.50");
         assertField(view, "discountValueField", "25");
         assertField(view, "totalField", "175");
+    }
+
+    @Test
+    void percentageDiscountUpdatesSubtotalAndVat() {
+        Order order = savedOrder("120");
+        savedItem(order, product("Percentage summary product", "100"), "20");
+        OrderDetailView view = viewTestSupport.navigateToDetailView(order, OrderDetailView.class);
+
+        setClientValue(view, "discountPercentField", "10");
+
+        assertSummary(view, "90", "18", "108");
+        assertField(view, "discountValueField", "12");
+    }
+
+    @Test
+    void fixedDiscountUsesTheLatestClientValueAndCanBeCleared() {
+        Order order = savedOrder("120");
+        savedItem(order, product("Fixed summary product", "100"), "20");
+        OrderDetailView view = viewTestSupport.navigateToDetailView(order, OrderDetailView.class);
+
+        setClientValue(view, "discountValueField", "12");
+        assertSummary(view, "90", "18", "108");
+
+        setClientValue(view, "discountValueField", "24");
+        assertSummary(view, "80", "16", "96");
+        assertField(view, "discountValueField", "24");
+
+        setClientValue(view, "discountValueField", "");
+        assertSummary(view, "100", "20", "120");
+    }
+
+    @Test
+    void clearingOrZeroingPercentageDiscountRestoresTheSummary() {
+        Order order = savedOrder("120");
+        savedItem(order, product("Cleared discount product", "100"), "20");
+        OrderDetailView view = viewTestSupport.navigateToDetailView(order, OrderDetailView.class);
+
+        setClientValue(view, "discountPercentField", "10");
+        setClientValue(view, "discountPercentField", "");
+        assertSummary(view, "100", "20", "120");
+        assertField(view, "discountValueField", "0");
+
+        setClientValue(view, "discountPercentField", "10");
+        setClientValue(view, "discountPercentField", "0");
+        assertSummary(view, "100", "20", "120");
+        assertField(view, "discountValueField", "0");
+    }
+
+    @Test
+    void fixedDiscountKeepsItsExactAmountAfterReopeningAndAddingAnItem() {
+        Order order = savedOrder("1000");
+        savedItem(order, product("Exact fixed discount product", "1000"), "0");
+        OrderDetailView view = viewTestSupport.navigateToDetailView(order, OrderDetailView.class);
+
+        setClientValue(view, "discountValueField", "0.05");
+        assertSummary(view, "999.95", "0", "999.95");
+
+        setClientValue(view, "discountValueField", "0.06");
+        assertSummary(view, "999.94", "0", "999.94");
+
+        view = saveAndReopen(view);
+        assertField(view, "discountValueField", "0.06");
+        assertSummary(view, "999.94", "0", "999.94");
+
+        addItem(view, product("Added exact fixed discount product", "1000"), "0");
+        assertField(view, "discountValueField", "0.06");
+        assertSummary(view, "1999.94", "0", "1999.94");
+    }
+
+    @Test
+    void percentageDiscountKeepsItsRateAfterReopeningAndAddingAnItem() {
+        Order order = savedOrder("120");
+        savedItem(order, product("Saved percentage discount product", "100"), "20");
+        OrderDetailView view = viewTestSupport.navigateToDetailView(order, OrderDetailView.class);
+
+        setClientValue(view, "discountPercentField", "10");
+        view = saveAndReopen(view);
+        assertSummary(view, "90", "18", "108");
+
+        addItem(view, product("Added saved percentage discount product", "50"), "10");
+
+        JmixBigDecimalField percent = viewTestSupport.getComponent(view, "discountPercentField");
+        assertThat(percent.getValue()).isEqualByComparingTo("10");
+        assertField(view, "discountValueField", "18");
+        assertSummary(view, "135", "27", "162");
+    }
+
+    @Test
+    void removingAnItemValidatesAFixedDiscountAgainstTheRemainingAmount() {
+        Order order = savedOrder("120");
+        OrderItem removed = savedItem(order, product("Removed discounted product", "100"), "0");
+        savedItem(order, product("Remaining discounted product", "20"), "0");
+        OrderDetailView view = viewTestSupport.navigateToDetailView(order, OrderDetailView.class);
+        setClientValue(view, "discountValueField", "25");
+        TypedTextField<BigDecimal> discount = viewTestSupport.getComponent(view, "discountValueField");
+        CollectionContainer<OrderItem> items = ViewControllerUtils.getViewData(view).getContainer("orderItemsDc");
+        OrderItem loadedItem = items.getItems().stream()
+                .filter(item -> item.getId().equals(removed.getId()))
+                .findFirst().orElseThrow();
+
+        items.getMutableItems().remove(loadedItem);
+
+        assertField(view, "discountValueField", "25");
+        assertThat(UiTestUtils.validateView(view).getAll())
+                .extracting(ValidationErrors.Item::getComponent)
+                .contains(discount);
+
+        setClientValue(view, "discountValueField", "15");
+
+        assertSummary(view, "5", "0", "5");
+        assertThat(UiTestUtils.validateView(view).getAll()).isEmpty();
     }
 
     @Test
@@ -226,6 +339,26 @@ class OrderSummaryViewTest extends AbstractUiTest {
 
     private OpenedDialogWindows openedDialogWindows() {
         return applicationContext.getBean(OpenedDialogWindows.class);
+    }
+
+    private void setClientValue(OrderDetailView view, String id, String value) {
+        Component field = viewTestSupport.getComponent(view, id);
+        field.getElement().getNode().getFeature(ElementPropertyMap.class).updateFromClient("value", value);
+    }
+
+    private OrderDetailView saveAndReopen(OrderDetailView view) {
+        Order order = view.getEditedEntity();
+        assertThat(UiTestUtils.validateView(view).getAll()).isEmpty();
+        viewTestSupport.click(view, "saveAndCloseButton");
+        Order saved = dataManager.load(Order.class).id(order.getId()).one();
+        assertThat(saved.getDiscountType()).isEqualTo(order.getDiscountType());
+        return viewTestSupport.navigateToDetailView(saved, OrderDetailView.class);
+    }
+
+    private void assertSummary(OrderDetailView view, String subtotal, String vat, String total) {
+        assertField(view, "subtotalField", subtotal);
+        assertField(view, "vatField", vat);
+        assertField(view, "totalField", total);
     }
 
     private void assertField(OrderDetailView view, String id, String expected) {

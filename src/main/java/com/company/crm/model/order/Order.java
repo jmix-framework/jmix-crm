@@ -89,6 +89,9 @@ public class Order extends FullAuditEntity implements HasUniqueNumber {
     @Column(name = "DISCOUNT_PERCENT")
     private BigDecimal discountPercent;
 
+    @Column(name = "DISCOUNT_TYPE", length = 50)
+    private String discountType;
+
     @Column(name = "STATUS")
     private Integer status;
 
@@ -132,6 +135,14 @@ public class Order extends FullAuditEntity implements HasUniqueNumber {
         this.discountValue = discountValue;
     }
 
+    public OrderDiscountType getDiscountType() {
+        return OrderDiscountType.fromId(discountType);
+    }
+
+    public void setDiscountType(OrderDiscountType discountType) {
+        this.discountType = discountType == null ? null : discountType.getId();
+    }
+
     public BigDecimal getTotal() {
         return total == null ? PriceCalculator.calculateTotal(this) : total;
     }
@@ -141,14 +152,14 @@ public class Order extends FullAuditEntity implements HasUniqueNumber {
     }
 
     @JmixProperty
-    @DependsOnProperties({"orderItems"})
+    @DependsOnProperties({"orderItems", "discountType", "discountPercent", "discountValue"})
     @PropertyDatatype("price")
     public BigDecimal getSubTotal() {
         return calculateSubtotal(this);
     }
 
     @JmixProperty
-    @DependsOnProperties({"orderItems"})
+    @DependsOnProperties({"orderItems", "discountType", "discountPercent", "discountValue"})
     @PropertyDatatype("price")
     public BigDecimal getVat() {
         return PriceCalculator.calculateVat(this);

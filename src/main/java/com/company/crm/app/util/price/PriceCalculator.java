@@ -2,6 +2,7 @@ package com.company.crm.app.util.price;
 
 import com.company.crm.model.invoice.Invoice;
 import com.company.crm.model.order.Order;
+import com.company.crm.model.order.OrderDiscountType;
 import com.company.crm.model.order.OrderItem;
 
 import java.math.BigDecimal;
@@ -57,7 +58,7 @@ public final class PriceCalculator {
     }
 
     /**
-     * Subtotal = sum of net totals after discounts.
+     * Subtotal = net line totals after line and order discounts.
      */
     public static BigDecimal calculateSubtotal(Order order) {
         List<OrderItem> orderItems = order.getOrderItems();
@@ -65,10 +66,16 @@ public final class PriceCalculator {
             return BigDecimal.ZERO;
         }
 
-        return orderItems.stream()
+        BigDecimal subtotal = orderItems.stream()
                 .map(PriceCalculator::calculateNetTotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add)
                 .setScale(DEFAULT_SCALE, DEFAULT_ROUNDING);
+        BigDecimal itemsTotal = order.getItemsTotal();
+        if (itemsTotal.signum() == 0) {
+            return subtotal;
+        }
+        return subtotal.multiply(calculateTotal(order))
+                .divide(itemsTotal, DEFAULT_SCALE, DEFAULT_ROUNDING);
     }
 
     /**
@@ -79,7 +86,7 @@ public final class PriceCalculator {
         BigDecimal discountValue = order.getDiscountValue();
         BigDecimal discountPercent = order.getDiscountPercent();
 
-        if (discountPercent.compareTo(BigDecimal.ZERO) > 0) {
+        if (resolveDiscountType(order) == OrderDiscountType.PERCENT) {
             total = total.subtract(total.multiply(discountPercent)
                     .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP));
         } else if (discountValue.compareTo(BigDecimal.ZERO) > 0) {
@@ -89,18 +96,20 @@ public final class PriceCalculator {
         return total.setScale(DEFAULT_SCALE, DEFAULT_ROUNDING);
     }
 
+    public static OrderDiscountType resolveDiscountType(Order order) {
+        OrderDiscountType discountType = order.getDiscountType();
+        if (discountType != null) {
+            return discountType;
+        }
+        // Preserve the discount priority of orders saved before the type was stored.
+        return order.getDiscountPercent().signum() > 0 ? OrderDiscountType.PERCENT : OrderDiscountType.AMOUNT;
+    }
+
     /**
-     * VAT = sum of VAT for all items.
+     * Allocate the rounding remainder to VAT so Subtotal + VAT always equals Total.
      */
     public static BigDecimal calculateVat(Order order) {
-        List<OrderItem> orderItems = order.getOrderItems();
-        if (orderItems == null || orderItems.isEmpty()) {
-            return BigDecimal.ZERO;
-        }
-
-        return orderItems.stream()
-                .map(PriceCalculator::calculateVatTotal)
-                .reduce(BigDecimal.ZERO, BigDecimal::add)
+        return calculateTotal(order).subtract(calculateSubtotal(order))
                 .setScale(DEFAULT_SCALE, DEFAULT_ROUNDING);
     }
 
@@ -146,10 +155,6 @@ public final class PriceCalculator {
             invoice.setVat(calculateVat(invoice, vatPercent));
             invoice.setTotal(calculateTotal(invoice));
         }
-    }
-
-    public static BigDecimal calculateVatTotal(OrderItem item) {
-        return calculateVat(item);
     }
 
     public static BigDecimal calculateTotal(Invoice invoice) {
