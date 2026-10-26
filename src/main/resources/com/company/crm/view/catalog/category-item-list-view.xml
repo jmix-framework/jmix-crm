@@ -9,6 +9,7 @@
             </fetchPlan>
             <loader id="categoryItemsDl" readOnly="true"/>
         </collection>
+        <instance id="productPreviewDc" class="com.company.crm.model.catalog.item.CategoryItem"/>
     </data>
     <facets>
         <settings auto="true"/>
@@ -23,7 +24,7 @@
         <action id="selectAction" type="lookup_select"/>
         <action id="discardAction" type="lookup_discard"/>
     </actions>
-    <layout>
+    <layout classNames="product-list-view">
         <div width="100%" maxWidth="40em">
             <formLayout width="100%">
                 <responsiveSteps>
@@ -51,7 +52,8 @@
                 <button id="editButton" action="categoryItemsDataGrid.editAction"/>
                 <button id="removeButton" action="categoryItemsDataGrid.removeAction"/>
                 <button id="downloadXlsButton" action="categoryItemsDataGrid.downloadXls"/>
-                <fileUploadField id="updateCatalogField" uploadIcon="UPLOAD_ALT" uploadText="msg://updateFromXlsx" acceptedFileExtensions=".xlsx"/>
+                <fileUploadField id="updateCatalogField" uploadIcon="UPLOAD_ALT" uploadText="msg://updateFromXlsx"
+                                 acceptedFileExtensions=".xlsx"/>
             </startSlot>
             <endSlot>
                 <simplePagination id="items_pagination" dataLoader="categoryItemsDl" itemsPerPageVisible="true"/>
@@ -59,35 +61,68 @@
                                       themeNames="tertiary" hideAllEnabled="false"/>
             </endSlot>
         </hbox>
-        <dataGrid id="categoryItemsDataGrid"
-                  dataContainer="categoryItemsDc"
-                  width="100%"
-                  minHeight="20em"
-                  multiSort="true"
-                  selectionMode="MULTI"
-                  columnReorderingAllowed="true">
-            <actions>
-                <action id="createAction" type="list_create">
-                    <properties>
-                        <property name="openMode" value="DIALOG"/>
-                    </properties>
-                </action>
-                <action id="editAction" type="list_edit">
-                    <properties>
-                        <property name="openMode" value="DIALOG"/>
-                    </properties>
-                </action>
-                <action id="removeAction" type="list_remove"/>
-                <action id="downloadXls" text="msg://downloadXlsx" icon="DOWNLOAD_ALT"/>
-            </actions>
-            <columns resizable="true" sortable="true">
-                <column property="name"/>
-                <column property="code"/>
-                <column property="category"/>
-                <column property="uom"/>
-                <column property="price" filterable="true"/>
-            </columns>
-        </dataGrid>
+        <sidePanelLayout id="productPreview" width="100%" height="100%" minHeight="0px"
+                         sidePanelPosition="RIGHT" sidePanelOverlay="true" modal="false"
+                         sidePanelHorizontalSize="24rem" sidePanelHorizontalMaxSize="100%"
+                         closeOnOutsideClick="false">
+            <dataGrid id="categoryItemsDataGrid"
+                      dataContainer="categoryItemsDc"
+                      width="100%"
+                      height="100%"
+                      minHeight="20em"
+                      multiSort="true"
+                      selectionMode="MULTI"
+                      columnReorderingAllowed="true">
+                <actions>
+                    <action id="createAction" type="list_create">
+                        <properties>
+                            <property name="openMode" value="DIALOG"/>
+                        </properties>
+                    </action>
+                    <action id="editAction" type="list_edit">
+                        <properties>
+                            <property name="openMode" value="DIALOG"/>
+                        </properties>
+                    </action>
+                    <action id="removeAction" type="list_remove"/>
+                    <action id="downloadXls" text="msg://downloadXlsx" icon="DOWNLOAD_ALT"/>
+                </actions>
+                <columns resizable="true" sortable="true">
+                    <column property="image" width="6.5rem" flexGrow="0" sortable="false" resizable="false"/>
+                    <column property="name"/>
+                    <column property="code"/>
+                    <column property="category"/>
+                    <column property="uom"/>
+                    <column property="price" filterable="true"/>
+                </columns>
+            </dataGrid>
+            <vbox width="100%" height="100%" padding="false" spacing="false"
+                  classNames="product-preview">
+                <hbox width="100%" alignItems="CENTER" justifyContent="BETWEEN"
+                      classNames="product-preview-header">
+                    <h3 id="previewName" dataContainer="productPreviewDc" property="name"/>
+                    <sidePanelLayoutCloser id="productPreviewCloser" ariaLabel="msg:///actions.Close"/>
+                </hbox>
+                <scroller width="100%" height="100%" scrollBarsDirection="VERTICAL">
+                    <vbox width="100%" classNames="product-preview-content">
+                        <image id="previewImage" resource="images/no_image.svg" classNames="product-preview-image"/>
+                        <span id="previewCategory" dataContainer="productPreviewDc" property="category"
+                              classNames="product-preview-category"/>
+                        <hbox width="100%" alignItems="BASELINE" justifyContent="BETWEEN">
+                            <span id="previewCode" dataContainer="productPreviewDc" property="code"
+                                  classNames="product-preview-code"/>
+                            <hbox alignItems="BASELINE" spacing="false" classNames="product-preview-pricing">
+                                <span id="previewPrice" classNames="product-preview-price"/>
+                                <span id="previewUom" dataContainer="productPreviewDc" property="uom"
+                                      classNames="product-preview-uom"/>
+                            </hbox>
+                        </hbox>
+                        <span id="previewDescription" dataContainer="productPreviewDc" property="description"
+                              classNames="product-preview-description"/>
+                    </vbox>
+                </scroller>
+            </vbox>
+        </sidePanelLayout>
         <hbox id="lookupActions" visible="false">
             <button id="selectButton" action="selectAction"/>
             <button id="discardButton" action="discardAction"/>
