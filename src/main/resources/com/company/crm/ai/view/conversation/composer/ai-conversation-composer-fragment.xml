@@ -17,7 +17,7 @@
                   alignItems="CENTER">
                 <upload id="attachmentUpload"
                         classNames="ai-timeline-attachment-upload"
-                        acceptedFileTypes=".pdf,.csv,.doc,.docx,.xls,.xlsx,.html,.htm,.txt,.md,.png,.jpg,.jpeg,.gif,.webp"
+                        acceptedFileExtensions=".pdf,.csv,.doc,.docx,.xls,.xlsx,.html,.htm,.txt,.md,.png,.jpg,.jpeg,.gif,.webp"
                         uploadText="msg://com.company.crm.ai.view.conversation/attachmentUploadField.uploadText"
                         dropAllowed="false"
                         uploadHandlerType="FILE_TEMPORARY_STORAGE"

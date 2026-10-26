@@ -44,7 +44,7 @@
                     </textField>
                 </div>
                 <button id="chatButton" icon="crm:sparkles" themeNames="icon tertiary"/>
-                <button id="notificationsButton" icon="BELL_O" themeNames="icon tertiary"/>
+                <button id="notificationsButton" icon="BELL" themeNames="icon tertiary"/>
 
                 <userMenu id="userMenu" themeNames="tertiary">
                     <items>

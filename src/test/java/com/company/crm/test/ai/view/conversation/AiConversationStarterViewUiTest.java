@@ -9,11 +9,15 @@ import com.company.crm.ai.model.ChatMessageEntityReference;
 import com.company.crm.ai.model.ChatMessageType;
 import com.company.crm.ai.service.CrmAnalyticsService;
 import com.company.crm.ai.service.PendingAttachmentInput;
+import com.company.crm.ai.view.component.support.AiContextCardActionSurface;
 import com.company.crm.ai.view.conversation.AiConversationDetailView;
 import com.company.crm.ai.view.conversation.AiConversationStarterView;
 import com.company.crm.ai.view.conversation.composer.AiConversationComposerFragment;
 import com.company.crm.model.catalog.category.Category;
+import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.ComponentUtil;
+import com.vaadin.flow.component.ModalityMode;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.messages.MessageInput;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -23,7 +27,9 @@ import io.jmix.core.FetchPlan;
 import io.jmix.core.FileRef;
 import io.jmix.core.Id;
 import io.jmix.core.IdSerialization;
+import io.jmix.flowui.DialogWindows;
 import io.jmix.flowui.ViewNavigators;
+import io.jmix.flowui.component.UiComponentUtils;
 import io.jmix.flowui.component.gridlayout.GridLayout;
 import io.jmix.flowui.component.sidepanellayout.SidePanelLayout;
 import io.jmix.flowui.component.textfield.TypedTextField;
@@ -54,6 +60,9 @@ public class AiConversationStarterViewUiTest extends AbstractUiTest {
 
     @Autowired
     private ViewNavigators viewNavigators;
+
+    @Autowired
+    private DialogWindows dialogWindows;
 
     @Autowired
     private DataManager dataManager;
@@ -271,6 +280,38 @@ public class AiConversationStarterViewUiTest extends AbstractUiTest {
         assertThat(recentGrid.getElement().getTextRecursively())
                 .as("rendered recent grid must surface the conversation's title")
                 .contains(recent.getTitle());
+    }
+
+    @Test
+    void testSelectingRecentConversationReplacesStarterDialogWithModelessDetail() {
+        AiConversation conversation = createAndSaveEntity(AiConversation.class, conv -> {
+            conv.setTitle("Dialog History " + UUID.randomUUID());
+            conv.setCreatedDate(OffsetDateTime.now().minusMinutes(5));
+            conv.setFirstMessageSent(true);
+        });
+        var starterWindow = dialogWindows.view(UiTestUtils.getCurrentView(), AiConversationStarterView.class)
+                .withViewConfigurer(view -> view.setOpenedInDialog(true))
+                .build();
+        starterWindow.open();
+        AiConversationStarterView starterView = starterWindow.getView();
+        Dialog starterDialog = UiComponentUtils.findDialog(starterView);
+        assertThat(starterDialog).isNotNull();
+        assertThat(starterDialog.isOpened()).isTrue();
+
+        GridLayout<AiConversation> recentGrid = UiTestUtils.getComponent(starterView, "recentConversationsGridLayout");
+        AiContextCardActionSurface conversationLink = viewTestSupport
+                .findDescendant(recentGrid, AiContextCardActionSurface.class).orElseThrow();
+        ComponentUtil.fireEvent(conversationLink, new ClickEvent<>(conversationLink));
+
+        AiConversationDetailView detailView = UiTestUtils.getLastOpenedViewDialog();
+        assertThat(detailView).isNotNull();
+        assertThat(starterDialog.isOpened()).isFalse();
+        assertThat(UiTestUtils.getOpenedViewDialogs()).containsExactly(detailView);
+        assertThat(detailView.getEditedEntity().getId()).isEqualTo(conversation.getId());
+        Dialog detailDialog = UiComponentUtils.findDialog(detailView);
+        assertThat(detailDialog).isNotNull();
+        assertThat(detailDialog.isOpened()).isTrue();
+        assertThat(detailDialog.getModality()).isEqualTo(ModalityMode.MODELESS);
     }
 
     @Test

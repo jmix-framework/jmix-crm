@@ -35,7 +35,7 @@
             </startSlot>
             <endSlot>
                 <simplePagination id="pagination" dataLoader="categoriesDl" itemsPerPageVisible="true"/>
-                <gridColumnVisibility dataGrid="categoriesDataGrid" icon="COG_O"
+                <gridColumnVisibility dataGrid="categoriesDataGrid" icon="COG"
                                       themeNames="tertiary small" hideAllEnabled="false"/>
             </endSlot>
         </hbox>

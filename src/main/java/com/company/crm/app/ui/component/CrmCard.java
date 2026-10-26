@@ -221,7 +221,7 @@ public class CrmCard extends JmixCard implements ApplicationContextAware {
         }
 
         if (hasEllipsisButton) {
-            Button settingsButton = new Button(VaadinIcon.ELLIPSIS_DOTS_V.create());
+            Button settingsButton = new Button(VaadinIcon.ELLIPSIS_V.create());
             settingsButton.addThemeVariants(ButtonVariant.TERTIARY, ButtonVariant.SMALL);
             horizontalLayout.add(settingsButton);
         }
