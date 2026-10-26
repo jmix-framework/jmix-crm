@@ -40,6 +40,8 @@ import io.jmix.flowui.download.Downloader;
 import io.jmix.flowui.exception.ValidationException;
 import io.jmix.flowui.kit.action.ActionPerformedEvent;
 import io.jmix.flowui.kit.action.ActionVariant;
+import io.jmix.flowui.model.CollectionChangeType;
+import io.jmix.flowui.model.CollectionContainer;
 import io.jmix.flowui.model.InstanceContainer;
 import io.jmix.flowui.view.EditedEntityContainer;
 import io.jmix.flowui.view.Install;
@@ -121,6 +123,8 @@ public class OrderDetailView extends StandardDetailView<Order> {
     private DetailSaveCloseAction<Order> saveCloseAction;
     @ViewComponent
     private H2 orderNumberTitle;
+    @ViewComponent
+    private InstanceContainer<Order> orderDc;
 
     @Override
     public void setReadOnly(boolean readOnly) {
@@ -149,6 +153,16 @@ public class OrderDetailView extends StandardDetailView<Order> {
     private void onOrderDcItemPropertyChange(final InstanceContainer.ItemPropertyChangeEvent<Order> event) {
         selectStatusInPipeline();
         updateFooter();
+    }
+
+    @Subscribe(id = "orderItemsDc", target = Target.DATA_CONTAINER)
+    private void onOrderItemsDcCollectionChange(CollectionContainer.CollectionChangeEvent<OrderItem> event) {
+        // Rebinding the order also refreshes its property collection.
+        if (event.getChangeType() != CollectionChangeType.REFRESH) {
+            Order order = getEditedEntity();
+            recalculateTotal(order.getDiscountPercent().signum() > 0 ? discountPercentField : discountValueField);
+            orderDc.setItem(order);
+        }
     }
 
     @Install(to = "orderDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
