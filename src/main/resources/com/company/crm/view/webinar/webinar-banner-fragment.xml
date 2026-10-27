@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<fragment xmlns="http://jmix.io/schema/flowui/fragment">
+    <content>
+        <vbox classNames="webinar-banner-container" width="100%" justifyContent="CENTER" alignItems="CENTER">
+            <hbox classNames="webinar-banner" width="100%">
+                <button id="webinarBannerCloseButton" classNames="webinar-banner-close" themeNames="tertiary"
+                        ariaLabel="Close banner"/>
+                <anchor id="webinarBannerLink" classNames="webinar-banner-link" target="BLANK"
+                        ariaLabel="Open webinar page"/>
+            </hbox>
+        </vbox>
+    </content>
+</fragment>

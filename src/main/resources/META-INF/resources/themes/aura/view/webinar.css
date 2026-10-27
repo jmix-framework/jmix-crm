@@ -1,28 +1,28 @@
 /*
- * Online course banner.
+ * Webinar banner (WebinarBannerFragment).
  *
- * Two artwork sets, picked by domain in HomeView: `webinar-banner-en` on jmix.io,
- * `webinar-banner-ru` on jmix.ru. Each set has four breakpoint variants with its own
- * intrinsic size, so `aspect-ratio` must be restated per set per breakpoint — the
- * artwork is stretched to the box via `background-size: 100% 100%`, and a wrong ratio
- * distorts it.
+ * One artwork set with four breakpoint variants, each with its own intrinsic size, so
+ * `aspect-ratio` must be restated per breakpoint — the artwork is stretched to the box via
+ * `background-size: 100% 100%`, and a wrong ratio distorts it. Every variant carries a
+ * drop-shadow margin around the card, which is included in its size.
  *
  * The close cross is part of the artwork, so the close button is an invisible hit area
  * positioned over it. `left`/`top` are the cross centre as a percentage of the artwork.
+ * It needs `themeNames="tertiary"` in the fragment descriptor: Aura paints every other button
+ * with a surface fill and shadow via a selector that outranks `background: transparent` below.
  */
 
 .webinar-banner-container {
     padding: 1em 1em 0 1em;
 }
 
-.webinar-banner-container.webinar-banner-closed {
-    display: none;
-}
-
+/* 1920px.svg — 1186x126, cross centre (1149, 35) */
 .webinar-banner {
     position: relative;
+    background-image: url('../images/webinar/1920px.svg');
     background-repeat: no-repeat;
     background-size: 100% 100%;
+    aspect-ratio: 1186 / 126;
     max-width: 1400px;
     margin-inline: auto;
 }
@@ -35,6 +35,8 @@
 
 .webinar-banner-close {
     position: absolute;
+    left: 96.88%;
+    top: 27.78%;
     transform: translate(-50%, -50%);
     /* the cross glyph is 14px in every artwork variant; pad the hit area out to 24px */
     width: 24px;
@@ -48,96 +50,41 @@
     z-index: 2;
 }
 
-/* en/1920px.svg — 1176x116, cross centre (1144, 32) */
-.webinar-banner-en {
-    background-image: url('../images/webinar/en/1920px.svg');
-    aspect-ratio: 1176 / 116;
-}
-
-.webinar-banner-en .webinar-banner-close {
-    left: 97.26%;
-    top: 27.37%;
-}
-
-/* ru/1920px.svg — 1176x148, cross centre (1144, 64) */
-.webinar-banner-ru {
-    background-image: url('../images/webinar/ru/1920px.svg');
-    aspect-ratio: 1176 / 148;
-}
-
-.webinar-banner-ru .webinar-banner-close {
-    left: 97.26%;
-    top: 43.07%;
-}
-
 @media (max-width: 1450px) {
-    /* en/1024px.svg — 936x132, cross centre (908, 28) */
-    .webinar-banner-en {
-        background-image: url('../images/webinar/en/1024px.svg');
-        aspect-ratio: 936 / 132;
+    /* 1024px.svg — 946x142, cross centre (913, 31) */
+    .webinar-banner {
+        background-image: url('../images/webinar/1024px.svg');
+        aspect-ratio: 946 / 142;
     }
 
-    .webinar-banner-en .webinar-banner-close {
-        left: 96.98%;
-        top: 21.02%;
-    }
-
-    /* ru/1024px.svg — 936x148, cross centre (908, 60) */
-    .webinar-banner-ru {
-        background-image: url('../images/webinar/ru/1024px.svg');
-        aspect-ratio: 936 / 148;
-    }
-
-    .webinar-banner-ru .webinar-banner-close {
-        left: 96.98%;
-        top: 40.37%;
+    .webinar-banner-close {
+        left: 96.51%;
+        top: 21.83%;
     }
 }
 
 @media (max-width: 900px) {
-    /* en/750px.svg — 750x132, cross centre (722, 28) */
-    .webinar-banner-en {
-        background-image: url('../images/webinar/en/750px.svg');
-        aspect-ratio: 750 / 132;
+    /* 750px.svg — 760x142, cross centre (727, 31) */
+    .webinar-banner {
+        background-image: url('../images/webinar/750px.svg');
+        aspect-ratio: 760 / 142;
     }
 
-    .webinar-banner-en .webinar-banner-close {
-        left: 96.23%;
-        top: 21.02%;
-    }
-
-    /* ru/750px.svg — 750x148, cross centre (722, 60) */
-    .webinar-banner-ru {
-        background-image: url('../images/webinar/ru/750px.svg');
-        aspect-ratio: 750 / 148;
-    }
-
-    .webinar-banner-ru .webinar-banner-close {
-        left: 96.23%;
-        top: 40.37%;
+    .webinar-banner-close {
+        left: 95.66%;
+        top: 21.83%;
     }
 }
 
 @media (max-width: 600px) {
-    /* en/360px.svg — 328x155, cross centre (296, 32) */
-    .webinar-banner-en {
-        background-image: url('../images/webinar/en/360px.svg');
-        aspect-ratio: 328 / 155;
+    /* 360px.svg — 338x222, cross centre (301, 35) */
+    .webinar-banner {
+        background-image: url('../images/webinar/360px.svg');
+        aspect-ratio: 338 / 222;
     }
 
-    .webinar-banner-en .webinar-banner-close {
-        left: 90.19%;
-        top: 20.54%;
-    }
-
-    /* ru/360px.svg — 328x240, cross centre (296, 32) */
-    .webinar-banner-ru {
-        background-image: url('../images/webinar/ru/360px.svg');
-        aspect-ratio: 328 / 240;
-    }
-
-    .webinar-banner-ru .webinar-banner-close {
-        left: 90.19%;
-        top: 13.26%;
+    .webinar-banner-close {
+        left: 89.05%;
+        top: 15.77%;
     }
 }

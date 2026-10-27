@@ -20,23 +20,18 @@ import com.company.crm.model.order.OrderStatus;
 import com.company.crm.model.payment.Payment;
 import com.company.crm.view.main.MainView;
 import com.company.crm.view.usertask.UserTaskListView;
-import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.card.CardVariant;
 import com.vaadin.flow.component.grid.GridVariant;
-import com.vaadin.flow.component.html.Anchor;
-import com.vaadin.flow.component.html.AnchorTarget;
 import com.vaadin.flow.component.html.H4;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.server.VaadinRequest;
-import com.vaadin.flow.server.VaadinService;
 import io.jmix.chartsflowui.component.Chart;
 import io.jmix.chartsflowui.kit.component.model.DataSet;
 import io.jmix.chartsflowui.kit.component.model.Grid;
@@ -61,7 +56,6 @@ import io.jmix.flowui.component.formatter.DateFormatter;
 import io.jmix.flowui.component.formlayout.JmixFormLayout;
 import io.jmix.flowui.component.grid.DataGrid;
 import io.jmix.flowui.data.grid.ContainerDataGridItems;
-import io.jmix.flowui.kit.component.button.JmixButton;
 import io.jmix.flowui.model.CollectionContainer;
 import io.jmix.flowui.model.CollectionLoader;
 import io.jmix.flowui.model.DataComponents;
@@ -72,7 +66,6 @@ import io.jmix.flowui.view.Subscribe;
 import io.jmix.flowui.view.ViewComponent;
 import io.jmix.flowui.view.ViewController;
 import io.jmix.flowui.view.ViewDescriptor;
-import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;
@@ -95,17 +88,6 @@ import static io.jmix.flowui.component.UiComponentUtils.traverseComponents;
 public class HomeView extends StandardView {
 
     public static final String ROUTE = "";
-
-    private static final String DOMAIN_EN = "jmix.io";
-    private static final String DOMAIN_RU = "jmix.ru";
-
-    private static final String WEBINAR_URL_EN =
-            "https://forms.jmix.io/online-course-ai-development"
-                    + "?utm_source=b2bcrm&utm_medium=site&utm_campaign=course";
-
-    private static final String WEBINAR_URL_RU =
-            "https://event.jmix.ru/jmix_online_course_2026"
-                    + "?utm_source=b2bcrm&utm_medium=site&utm_campaign=course";
 
     @Autowired
     private Metadata metadata;
@@ -138,12 +120,6 @@ public class HomeView extends StandardView {
     private DateFormatter<LocalDate> localDateFormatter;
 
     @ViewComponent
-    private VerticalLayout webinarBannerBox;
-    @ViewComponent
-    private HorizontalLayout webinarBanner;
-    @ViewComponent
-    private JmixButton webinarBannerCloseButton;
-    @ViewComponent
     private JmixFormLayout rightContent;
     @ViewComponent
     private JmixFormLayout leftContent;
@@ -152,93 +128,7 @@ public class HomeView extends StandardView {
 
     @Subscribe
     private void onInit(final InitEvent event) {
-        initWebinarBanner();
         createComponents();
-    }
-
-    private void initWebinarBanner() {
-        WebinarBannerVariant variant = resolveWebinarBannerVariant(getRequestHost());
-        if (variant == null) {
-            webinarBannerBox.setVisible(false);
-            return;
-        }
-
-        Anchor link = new Anchor(variant.url(), "");
-        link.setTarget(AnchorTarget.BLANK);
-        link.getElement().setAttribute("rel", "noopener");
-        link.getElement().setAttribute("aria-label", "Open course page");
-        link.addClassName("webinar-banner-link");
-        webinarBanner.add(link);
-        webinarBanner.addClassName(variant.styleName());
-
-        webinarBannerCloseButton.getElement().setAttribute("aria-label", "Close banner");
-        webinarBannerBox.setVisible(true);
-    }
-
-    /**
-     * The banner language follows the domain, not the user locale: jmix.io always shows the English
-     * course, jmix.ru always shows the Russian one. Any other host (local runs, previews, forks
-     * deployed elsewhere) shows no banner at all.
-     *
-     * @param host lower-case host name without a port, or {@code null} if it could not be determined
-     * @return the variant to render, or {@code null} if the banner must stay hidden
-     */
-    @Nullable
-    static WebinarBannerVariant resolveWebinarBannerVariant(@Nullable String host) {
-        if (host == null) {
-            return null;
-        }
-
-        if (isWithinDomain(host, DOMAIN_EN)) {
-            return new WebinarBannerVariant("webinar-banner-en", WEBINAR_URL_EN);
-        }
-        if (isWithinDomain(host, DOMAIN_RU)) {
-            return new WebinarBannerVariant("webinar-banner-ru", WEBINAR_URL_RU);
-        }
-        return null;
-    }
-
-    private static boolean isWithinDomain(String host, String domain) {
-        return host.equals(domain) || host.endsWith("." + domain);
-    }
-
-    @Nullable
-    private static String getRequestHost() {
-        VaadinRequest request = VaadinService.getCurrentRequest();
-        if (request == null) {
-            return null;
-        }
-
-        // behind a reverse proxy the original host arrives in X-Forwarded-Host
-        String forwardedHost = request.getHeader("X-Forwarded-Host");
-        return normalizeHost(forwardedHost != null ? forwardedHost : request.getHeader("Host"));
-    }
-
-    /**
-     * Reduces a {@code Host} / {@code X-Forwarded-Host} header value to a bare lower-case host name:
-     * a chain of proxies appends to the header, so only the first entry is the original client-facing
-     * host, and it may carry a port.
-     */
-    @Nullable
-    static String normalizeHost(@Nullable String hostHeader) {
-        if (hostHeader == null) {
-            return null;
-        }
-
-        String host = hostHeader.split(",")[0]
-                .trim()
-                .split(":")[0]
-                .toLowerCase();
-
-        return host.isEmpty() ? null : host;
-    }
-
-    record WebinarBannerVariant(String styleName, String url) {
-    }
-
-    @Subscribe("webinarBannerCloseButton")
-    public void onWebinarBannerCloseButtonClick(final ClickEvent<JmixButton> event) {
-        webinarBannerBox.addClassName("webinar-banner-closed");
     }
 
     private void createComponents() {

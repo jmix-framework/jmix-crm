@@ -5,14 +5,13 @@
         <settings id="settingsFacet" auto="true"/>
     </facets>
     <layout padding="false" classNames="dashboard-grid-container">
-        <vbox id="webinarBannerBox" classNames="webinar-banner-container" visible="false" width="100%"
-              justifyContent="CENTER" justifySelf="CENTER" alignSelf="CENTER" alignItems="CENTER">
-            <hbox id="webinarBanner" classNames="webinar-banner" width="100%"
-                  justifyContent="CENTER" justifySelf="CENTER" alignSelf="CENTER" alignItems="CENTER">
-                <button id="webinarBannerCloseButton" classNames="webinar-banner-close"/>
-            </hbox>
-        </vbox>
-
+        <fragment id="webinarBannerFragment" class="com.company.crm.view.webinar.WebinarBannerFragment">
+            <properties>
+                <property name="url"
+                          value="https://forms.jmix.io/jmix-3.1-release-webinar?utm_source=banner&amp;utm_medium=site&amp;utm_campaign=webinar"/>
+                <property name="domain" value="JMIX_IO"/>
+            </properties>
+        </fragment>
         <gridLayout width="100%" classNames="dashboard-grid">
             <vbox id="leftBox" classNames="dashboard-grid-main-content">
                 <formLayout id="leftContent" width="100%"/>
