@@ -11,17 +11,31 @@ import com.company.crm.model.catalog.item.CategoryItem;
 import com.company.crm.model.catalog.item.CategoryItemRepository;
 import com.company.crm.view.main.MainView;
 import com.vaadin.flow.component.AttachEvent;
+import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.grid.ItemClickEvent;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.streams.DownloadResponse;
+import io.jmix.core.FileRef;
+import io.jmix.core.FileStorage;
+import io.jmix.core.metamodel.datatype.DatatypeFormatter;
 import io.jmix.core.querycondition.LogicalCondition;
 import io.jmix.core.repository.JmixDataRepositoryContext;
+import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.component.grid.DataGrid;
+import io.jmix.flowui.component.image.JmixImage;
 import io.jmix.flowui.component.select.JmixSelect;
+import io.jmix.flowui.component.sidepanellayout.SidePanelLayout;
 import io.jmix.flowui.component.textfield.TypedTextField;
 import io.jmix.flowui.component.upload.FileUploadField;
 import io.jmix.flowui.kit.action.ActionPerformedEvent;
+import io.jmix.flowui.kit.component.button.JmixButton;
 import io.jmix.flowui.kit.component.upload.event.FileUploadSucceededEvent;
+import io.jmix.flowui.model.CollectionContainer;
 import io.jmix.flowui.model.CollectionLoader;
+import io.jmix.flowui.model.InstanceContainer;
 import io.jmix.flowui.view.DialogMode;
 import io.jmix.flowui.view.Install;
 import io.jmix.flowui.view.LookupComponent;
@@ -44,7 +58,9 @@ import static com.company.crm.app.util.ui.CrmUiUtils.setSearchHintPopover;
 import static com.company.crm.app.util.ui.datacontext.DataContextUtils.addCondition;
 import static com.company.crm.app.util.ui.datacontext.DataContextUtils.applyFiltersOnValueChange;
 import static com.company.crm.app.util.ui.datacontext.DataContextUtils.installSortByCreatedDate;
+import static com.company.crm.model.datatype.PriceDataType.defaultFormat;
 import static com.company.crm.view.catalog.CategoryItemListView.ROUTE;
+import static com.vaadin.flow.server.streams.DownloadHandler.fromInputStream;
 import static io.jmix.core.querycondition.PropertyCondition.contains;
 import static io.jmix.core.querycondition.PropertyCondition.equal;
 
@@ -65,6 +81,12 @@ public class CategoryItemListView extends StandardListView<CategoryItem> {
     private CategoryRepository categoryRepository;
     @Autowired
     private CatalogService catalogService;
+    @Autowired
+    private UiComponents uiComponents;
+    @Autowired
+    private FileStorage fileStorage;
+    @Autowired
+    private DatatypeFormatter datatypeFormatter;
 
     @ViewComponent
     private TypedTextField<String> items_searchField;
@@ -76,12 +98,21 @@ public class CategoryItemListView extends StandardListView<CategoryItem> {
     private FileUploadField updateCatalogField;
     @ViewComponent
     private DataGrid<CategoryItem> categoryItemsDataGrid;
+    @ViewComponent
+    private SidePanelLayout productPreview;
+    @ViewComponent
+    private InstanceContainer<CategoryItem> productPreviewDc;
+    @ViewComponent
+    private JmixImage<?> previewImage;
+    @ViewComponent
+    private Span previewPrice;
 
     private final LogicalCondition filtersCondition = LogicalCondition.and();
 
     @Subscribe
     private void onInit(final InitEvent event) {
         installSortByCreatedDate(categoryItemsDl);
+        categoryItemsDataGrid.addItemClickListener(this::onProductClick);
     }
 
     @Override
@@ -107,7 +138,69 @@ public class CategoryItemListView extends StandardListView<CategoryItem> {
 
     @Supply(to = "categoryItemsDataGrid.name", subject = "renderer")
     private Renderer<CategoryItem> categoryItemsDataGridNameRenderer() {
-        return crmRenderers.detailLink(categoryItemsDataGrid);
+        return new ComponentRenderer<>(item -> {
+            JmixButton name = uiComponents.create(JmixButton.class);
+            name.setText(item.getName());
+            name.addThemeVariants(ButtonVariant.TERTIARY);
+            name.addClassName("product-name");
+            name.addClickListener(event -> toggleProductPreview(item));
+            return name;
+        });
+    }
+
+    @Supply(to = "categoryItemsDataGrid.image", subject = "renderer")
+    private Renderer<CategoryItem> categoryItemsDataGridImageRenderer() {
+        return new ComponentRenderer<>(item -> {
+            JmixImage<?> image = uiComponents.create(JmixImage.class);
+            image.addClassName("product-thumbnail");
+            setProductImage(image, item);
+            return image;
+        });
+    }
+
+    private void onProductClick(ItemClickEvent<CategoryItem> event) {
+        var column = event.getColumn();
+        if (column == null || "name".equals(column.getKey()) || "code".equals(column.getKey())
+                || "category".equals(column.getKey())) {
+            return;
+        }
+        toggleProductPreview(event.getItem());
+    }
+
+    private void toggleProductPreview(CategoryItem item) {
+        if (getSelectionHandler().isPresent()) {
+            categoryItemsDataGrid.select(item);
+            return;
+        }
+        if (productPreview.isSidePanelOpened() && item.equals(productPreviewDc.getItemOrNull())) {
+            productPreview.closeSidePanel();
+            categoryItemsDataGrid.deselect(item);
+            return;
+        }
+        categoryItemsDataGrid.select(item);
+        productPreviewDc.setItem(item);
+        previewPrice.setText(defaultFormat(item.getPrice(), datatypeFormatter));
+        setProductImage(previewImage, item);
+        productPreview.openSidePanel();
+    }
+
+    @Subscribe(id = "categoryItemsDc", target = Target.DATA_CONTAINER)
+    private void onCategoryItemsDcCollectionChange(CollectionContainer.CollectionChangeEvent<CategoryItem> event) {
+        productPreview.closeSidePanel();
+        productPreviewDc.setItem(null);
+        previewPrice.setText("");
+        previewImage.setSrc("images/no_image.svg");
+    }
+
+    private void setProductImage(JmixImage<?> image, CategoryItem item) {
+        image.setAlt(item.getName());
+        FileRef fileRef = item.getImage();
+        if (fileRef == null || !fileStorage.fileExists(fileRef)) {
+            image.setSrc("images/no_image.svg");
+            return;
+        }
+        image.setSrc(fromInputStream(event -> new DownloadResponse(fileStorage.openStream(fileRef),
+                fileRef.getFileName(), fileRef.getContentType(), -1)));
     }
 
     @Supply(to = "categoryItemsDataGrid.category", subject = "renderer")
@@ -140,7 +233,7 @@ public class CategoryItemListView extends StandardListView<CategoryItem> {
     private void initialize() {
         loadData();
         initializeFilterFields();
-        addRowSelectionInMultiSelectMode(categoryItemsDataGrid, "code");
+        addRowSelectionInMultiSelectMode(categoryItemsDataGrid, "code", "name", "image", "uom", "price");
     }
 
     private void loadData() {
