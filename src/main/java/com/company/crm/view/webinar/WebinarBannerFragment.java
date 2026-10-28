@@ -15,19 +15,24 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Locale;
+import java.util.Set;
 
 /**
  * Webinar banner. It brings its own stylesheet, so embedding it touches no shared theme file.
  * <p>
  * Clicking the banner opens {@link #setUrl(String) url} in a new tab. The banner is shown only where both
- * {@link #setDomain(Domain) domain} and {@link #setLanguage(Language) language} match; both default to {@code ANY}.
+ * {@link #setDomain(Domain) domain} and the language filters match. By default, all domains and languages match.
+ * {@link #setSupportedLanguages(Set) Supported languages} allow multiple languages; an empty set allows all.
+ * {@link #setExcludedLanguages(Set) Excluded languages} take precedence. Values in XML are separated by commas or spaces.
+ * The legacy {@link #setLanguage(Language) language} property remains an additional filter, defaulting to {@code ANY}.
  * Set them on the embedding element:
  * <pre>{@code
  * <fragment id="webinarBannerFragment" class="com.company.crm.view.webinar.WebinarBannerFragment">
  *     <properties>
  *         <property name="url" value="https://forms.jmix.io/some-webinar?utm_source=banner&amp;utm_medium=site"/>
  *         <property name="domain" value="JMIX_IO"/>
- *         <property name="language" value="EN"/>
+ *         <property name="supportedLanguages" value="EN, DE"/>
+ *         <property name="excludedLanguages" value="RU"/>
  *     </properties>
  * </fragment>
  * }</pre>
@@ -89,6 +94,8 @@ public class WebinarBannerFragment extends Fragment<VerticalLayout> {
 
     private Domain domain = Domain.ANY;
     private Language language = Language.ANY;
+    private Set<Language> supportedLanguages = Set.of();
+    private Set<Language> excludedLanguages = Set.of();
 
     /**
      * @return the page the banner opens, or {@code null} if none is set and the banner is not clickable
@@ -121,6 +128,24 @@ public class WebinarBannerFragment extends Fragment<VerticalLayout> {
         updateVisibility();
     }
 
+    public Set<Language> getSupportedLanguages() {
+        return supportedLanguages;
+    }
+
+    public void setSupportedLanguages(Set<Language> supportedLanguages) {
+        this.supportedLanguages = Set.copyOf(supportedLanguages);
+        updateVisibility();
+    }
+
+    public Set<Language> getExcludedLanguages() {
+        return excludedLanguages;
+    }
+
+    public void setExcludedLanguages(Set<Language> excludedLanguages) {
+        this.excludedLanguages = Set.copyOf(excludedLanguages);
+        updateVisibility();
+    }
+
     @Subscribe
     public void onReady(final ReadyEvent event) {
         // the descriptor has no attribute for rel
@@ -135,7 +160,10 @@ public class WebinarBannerFragment extends Fragment<VerticalLayout> {
 
     // setters may run before or after ReadyEvent (XML properties are applied in an init task), so both re-evaluate
     private void updateVisibility() {
+        Locale locale = currentAuthentication.getLocale();
         setVisible(domain.matches(SiteDomainUtils.getCurrentRequestHost())
-                && language.matches(currentAuthentication.getLocale()));
+                && language.matches(locale)
+                && (supportedLanguages.isEmpty() || supportedLanguages.stream().anyMatch(value -> value.matches(locale)))
+                && excludedLanguages.stream().noneMatch(value -> value.matches(locale)));
     }
 }

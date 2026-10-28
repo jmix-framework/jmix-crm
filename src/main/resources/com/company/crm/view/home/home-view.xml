@@ -10,6 +10,7 @@
                 <property name="url"
                           value="https://forms.jmix.io/jmix-3.1-release-webinar?utm_source=banner&amp;utm_medium=site&amp;utm_campaign=webinar"/>
                 <property name="domain" value="JMIX_IO"/>
+                <property name="excludedLanguages" value="RU"/>
             </properties>
         </fragment>
         <gridLayout width="100%" classNames="dashboard-grid">
