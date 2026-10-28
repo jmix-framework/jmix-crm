@@ -80,7 +80,6 @@ public class Client extends FullAuditEntity {
     @OneToMany(mappedBy = "client", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Contact> contacts;
 
-    @DependsOnProperties("invoices")
     public List<Payment> getPayments() {
         List<Payment> payments = new ArrayList<>();
         if (invoices == null) {

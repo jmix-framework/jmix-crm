@@ -124,6 +124,7 @@ dependencies {
         exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
     }
     testImplementation 'io.jmix.flowui:jmix-flowui-test-assist'
+    testImplementation 'com.tngtech.archunit:archunit-junit6:1.5.1'
 }
 
 configurations.implementation {
