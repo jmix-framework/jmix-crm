@@ -1,7 +1,7 @@
 /*
  * Webinar banner (WebinarBannerFragment).
  *
- * One artwork set with four breakpoint variants, each with its own intrinsic size, so
+ * Each artwork set has four breakpoint variants, each with its own intrinsic size, so
  * `aspect-ratio` must be restated per breakpoint — the artwork is stretched to the box via
  * `background-size: 100% 100%`, and a wrong ratio distorts it. Every variant carries a
  * drop-shadow margin around the card, which is included in its size.
@@ -50,6 +50,17 @@
     z-index: 2;
 }
 
+/* DMS AI workshop — 1176x148, cross centre (1144, 64) */
+[data-artwork="DMS_AI"] .webinar-banner {
+    background-image: url('../images/webinar/dms-ai/1920px.svg');
+    aspect-ratio: 1176 / 148;
+}
+
+[data-artwork="DMS_AI"] .webinar-banner-close {
+    left: 97.28%;
+    top: 43.24%;
+}
+
 @media (max-width: 1450px) {
     /* 1024px.svg — 946x142, cross centre (913, 31) */
     .webinar-banner {
@@ -60,6 +71,17 @@
     .webinar-banner-close {
         left: 96.51%;
         top: 21.83%;
+    }
+
+    /* DMS AI workshop — 936x148, cross centre (908, 60) */
+    [data-artwork="DMS_AI"] .webinar-banner {
+        background-image: url('../images/webinar/dms-ai/1024px.svg');
+        aspect-ratio: 936 / 148;
+    }
+
+    [data-artwork="DMS_AI"] .webinar-banner-close {
+        left: 97.01%;
+        top: 40.54%;
     }
 }
 
@@ -74,6 +96,17 @@
         left: 95.66%;
         top: 21.83%;
     }
+
+    /* DMS AI workshop — 790x140, cross centre (722, 52) */
+    [data-artwork="DMS_AI"] .webinar-banner {
+        background-image: url('../images/webinar/dms-ai/750px.svg');
+        aspect-ratio: 790 / 140;
+    }
+
+    [data-artwork="DMS_AI"] .webinar-banner-close {
+        left: 91.39%;
+        top: 37.14%;
+    }
 }
 
 @media (max-width: 600px) {
@@ -86,5 +119,16 @@
     .webinar-banner-close {
         left: 89.05%;
         top: 15.77%;
+    }
+
+    /* DMS AI workshop — 328x240, cross centre (296, 32) */
+    [data-artwork="DMS_AI"] .webinar-banner {
+        background-image: url('../images/webinar/dms-ai/360px.svg');
+        aspect-ratio: 328 / 240;
+    }
+
+    [data-artwork="DMS_AI"] .webinar-banner-close {
+        left: 90.24%;
+        top: 13.33%;
     }
 }

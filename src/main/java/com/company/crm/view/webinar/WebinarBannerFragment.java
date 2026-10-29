@@ -25,6 +25,7 @@ import java.util.Set;
  * {@link #setSupportedLanguages(Set) Supported languages} allow multiple languages; an empty set allows all.
  * {@link #setExcludedLanguages(Set) Excluded languages} take precedence. Values in XML are separated by commas or spaces.
  * The legacy {@link #setLanguage(Language) language} property remains an additional filter, defaulting to {@code ANY}.
+ * Each instance has its own {@link #setArtwork(Artwork) artwork}, URL and filters, so several campaigns can share a view.
  * Set them on the embedding element:
  * <pre>{@code
  * <fragment id="webinarBannerFragment" class="com.company.crm.view.webinar.WebinarBannerFragment">
@@ -40,6 +41,11 @@ import java.util.Set;
 @StyleSheet("themes/aura/view/webinar.css")
 @FragmentDescriptor("webinar-banner-fragment.xml")
 public class WebinarBannerFragment extends Fragment<VerticalLayout> {
+
+    public enum Artwork {
+        RELEASE_3_1,
+        DMS_AI
+    }
 
     /**
      * Site the application is served from; a subdomain matches too, e.g. demo.jmix.io for {@link #JMIX_IO}.
@@ -96,6 +102,16 @@ public class WebinarBannerFragment extends Fragment<VerticalLayout> {
     private Language language = Language.ANY;
     private Set<Language> supportedLanguages = Set.of();
     private Set<Language> excludedLanguages = Set.of();
+    private Artwork artwork = Artwork.RELEASE_3_1;
+
+    public Artwork getArtwork() {
+        return artwork;
+    }
+
+    public void setArtwork(Artwork artwork) {
+        this.artwork = artwork;
+        getContent().getElement().setAttribute("data-artwork", artwork.name());
+    }
 
     /**
      * @return the page the banner opens, or {@code null} if none is set and the banner is not clickable

@@ -13,6 +13,14 @@
                 <property name="excludedLanguages" value="RU"/>
             </properties>
         </fragment>
+        <fragment id="workshopBannerFragment" class="com.company.crm.view.webinar.WebinarBannerFragment">
+            <properties>
+                <property name="url"
+                          value="https://event.jmix.ru/workshop_dms_ai?utm_source=demo&amp;utm_medium=site&amp;utm_campaign=workshop"/>
+                <property name="domain" value="JMIX_RU"/>
+                <property name="artwork" value="DMS_AI"/>
+            </properties>
+        </fragment>
         <gridLayout width="100%" classNames="dashboard-grid">
             <vbox id="leftBox" classNames="dashboard-grid-main-content">
                 <formLayout id="leftContent" width="100%"/>
