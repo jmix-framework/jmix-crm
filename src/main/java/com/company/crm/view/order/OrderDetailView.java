@@ -8,6 +8,7 @@ import com.company.crm.app.util.ui.CrmUiUtils;
 import com.company.crm.app.util.ui.renderer.CrmRenderers;
 import com.company.crm.model.client.Client;
 import com.company.crm.model.order.Order;
+import com.company.crm.model.order.OrderDiscountType;
 import com.company.crm.model.order.OrderItem;
 import com.company.crm.model.order.OrderRepository;
 import com.company.crm.model.order.OrderStatus;
@@ -18,7 +19,6 @@ import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Span;
-import com.vaadin.flow.component.textfield.TextFieldBase;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.router.Route;
@@ -31,6 +31,7 @@ import io.jmix.flowui.Dialogs;
 import io.jmix.flowui.Notifications;
 import io.jmix.flowui.action.DialogAction;
 import io.jmix.flowui.action.view.DetailSaveCloseAction;
+import io.jmix.flowui.component.SupportsTypedValue.TypedValueChangeEvent;
 import io.jmix.flowui.component.combobox.EntityComboBox;
 import io.jmix.flowui.component.grid.DataGrid;
 import io.jmix.flowui.component.select.JmixSelect;
@@ -40,6 +41,8 @@ import io.jmix.flowui.download.Downloader;
 import io.jmix.flowui.exception.ValidationException;
 import io.jmix.flowui.kit.action.ActionPerformedEvent;
 import io.jmix.flowui.kit.action.ActionVariant;
+import io.jmix.flowui.model.CollectionChangeType;
+import io.jmix.flowui.model.CollectionContainer;
 import io.jmix.flowui.model.InstanceContainer;
 import io.jmix.flowui.view.EditedEntityContainer;
 import io.jmix.flowui.view.Install;
@@ -65,6 +68,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import static com.company.crm.app.util.price.PriceCalculator.calculateTotal;
+import static com.company.crm.app.util.price.PriceCalculator.resolveDiscountType;
 import static com.company.crm.app.util.ui.CrmUiUtils.DEFAULT_BADGE;
 import static com.company.crm.app.util.ui.CrmUiUtils.SUCCESS_BADGE;
 import static com.company.crm.app.util.ui.CrmUiUtils.WARNING_BADGE;
@@ -121,6 +125,8 @@ public class OrderDetailView extends StandardDetailView<Order> {
     private DetailSaveCloseAction<Order> saveCloseAction;
     @ViewComponent
     private H2 orderNumberTitle;
+    @ViewComponent
+    private InstanceContainer<Order> orderDc;
 
     @Override
     public void setReadOnly(boolean readOnly) {
@@ -151,6 +157,16 @@ public class OrderDetailView extends StandardDetailView<Order> {
         updateFooter();
     }
 
+    @Subscribe(id = "orderItemsDc", target = Target.DATA_CONTAINER)
+    private void onOrderItemsDcCollectionChange(CollectionContainer.CollectionChangeEvent<OrderItem> event) {
+        // Rebinding the order also refreshes its property collection.
+        if (event.getChangeType() != CollectionChangeType.REFRESH) {
+            Order order = getEditedEntity();
+            recalculateTotal(resolveDiscountType(order));
+            orderDc.setItem(order);
+        }
+    }
+
     @Install(to = "orderDl", target = Target.DATA_LOADER, subject = "loadFromRepositoryDelegate")
     private Optional<Order> loadDelegate(UUID id, JmixDataRepositoryContext context) {
         return orderRepository.findById(id, context.fetchPlan());
@@ -170,12 +186,16 @@ public class OrderDetailView extends StandardDetailView<Order> {
 
     @Subscribe("discountPercentField")
     private void onDiscountPercentFieldTypedValueChange(final ComponentValueChangeEvent<JmixBigDecimalField, BigDecimal> event) {
-        recalculateFieldsIfNeeded(event);
+        if (event.isFromClient() && !event.getSource().isInvalid()) {
+            recalculateTotal(OrderDiscountType.PERCENT);
+        }
     }
 
     @Subscribe("discountValueField")
-    private void onDiscountValueFieldTypedValueChange(final ComponentValueChangeEvent<TypedTextField<BigDecimal>, BigDecimal> event) {
-        recalculateFieldsIfNeeded(event);
+    private void onDiscountValueFieldTypedValueChange(final TypedValueChangeEvent<TypedTextField<BigDecimal>, BigDecimal> event) {
+        if (event.isFromClient() && !event.getSource().isInvalid()) {
+            recalculateTotal(OrderDiscountType.AMOUNT);
+        }
     }
 
     @Supply(to = "orderItemsGrid.[categoryItem.code]", subject = "renderer")
@@ -250,12 +270,6 @@ public class OrderDetailView extends StandardDetailView<Order> {
         statusPipeline.selectUntil(getEditedEntity().getStatus());
     }
 
-    private void recalculateFieldsIfNeeded(ComponentValueChangeEvent<? extends TextFieldBase<?, ?>, BigDecimal> event) {
-        if (event.isFromClient() && !event.getSource().isInvalid()) {
-            recalculateTotal(event.getSource());
-        }
-    }
-
     private void updateHeader() {
         Order order = getEditedEntity();
         String title = entityStates.isNew(order) ? messages.getMessage("newOrder") : order.getNumber();
@@ -267,27 +281,21 @@ public class OrderDetailView extends StandardDetailView<Order> {
         orderItemsCount.setText((orderItems != null ? orderItems.size() : 0) + " pcs");
     }
 
-    private void recalculateTotal(TextFieldBase<?, ?> changesOwner) {
+    private void recalculateTotal(OrderDiscountType discountType) {
         Order order = getEditedEntity();
         BigDecimal itemsTotal = order.getItemsTotal();
+        order.setDiscountType(discountType);
 
-        if (changesOwner.equals(discountValueField)) {
-            BigDecimal discountValue = order.getDiscountValue();
-            if (discountValue != null && itemsTotal.compareTo(BigDecimal.ZERO) > 0) {
-                BigDecimal discountPercent = discountValue
-                        .multiply(BigDecimal.valueOf(100))
-                        .divide(itemsTotal, 2, RoundingMode.HALF_UP);
-                discountPercentField.setValue(discountPercent);
-            }
-        } else if (changesOwner.equals(discountPercentField)) {
-            BigDecimal discountPercent = order.getDiscountPercent();
-            if (discountPercent != null) {
-                BigDecimal discountValue = itemsTotal.multiply(discountPercent)
-                        .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
-                discountValueField.setTypedValue(discountValue);
-            }
+        if (discountType == OrderDiscountType.AMOUNT) {
+            BigDecimal discountPercent = itemsTotal.signum() > 0
+                    ? order.getDiscountValue().multiply(BigDecimal.valueOf(100))
+                    .divide(itemsTotal, 2, RoundingMode.HALF_UP)
+                    : BigDecimal.ZERO;
+            discountPercentField.setValue(discountPercent);
         } else {
-            throw new IllegalStateException("Unknown changes owner for total price calculation");
+            BigDecimal discountValue = itemsTotal.multiply(order.getDiscountPercent())
+                    .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+            discountValueField.setTypedValue(discountValue);
         }
 
         order.setTotal(calculateTotal(order));

@@ -475,7 +475,7 @@ class CrmAnalyticsServiceLLMTest extends AbstractAiTest {
                 entities.createAndSaveEntity(Invoice.class, invoice -> {
                     invoice.setClient(client);
                     invoice.setNumber("INV-RISK-00" + i);
-                    invoice.setTotal(new BigDecimal("2000.00"));
+                    invoice.setSubtotal(new BigDecimal("2000.00"));
                     invoice.setDate(yearReferenceDate.withMonth(6).withDayOfMonth(i));
                     invoice.setStatus(InvoiceStatus.OVERDUE);
                 });

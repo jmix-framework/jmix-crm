@@ -231,6 +231,7 @@
             <column name="TOTAL" type="DECIMAL(19, 2)"/>
             <column name="DISCOUNT_VALUE" type="DECIMAL(19, 2)"/>
             <column name="DISCOUNT_PERCENT" type="DECIMAL(19, 2)"/>
+            <column name="DISCOUNT_TYPE" type="VARCHAR(50)"/>
             <column name="STATUS" type="INT"/>
         </createTable>
 

@@ -9,12 +9,14 @@ import io.jmix.core.LocaleResolver;
 import io.jmix.core.Messages;
 import io.jmix.core.Metadata;
 import io.jmix.core.UnconstrainedDataManager;
+import io.jmix.core.security.Authenticated;
 import io.jmix.dynattr.AttributeType;
 import io.jmix.dynattr.model.Category;
 import io.jmix.dynattr.model.CategoryAttribute;
-import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -28,7 +30,6 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 @Component
-@Order(Ordered.HIGHEST_PRECEDENCE)
 public class DynamicAttributesInitializer {
 
     private static final Logger log = LoggerFactory.getLogger(DynamicAttributesInitializer.class);
@@ -68,8 +69,10 @@ public class DynamicAttributesInitializer {
         this.coreProperties = coreProperties;
     }
 
-    @PostConstruct
-    public void postConstruct() {
+    @Authenticated
+    @Order(Ordered.HIGHEST_PRECEDENCE)
+    @EventListener(ApplicationReadyEvent.class)
+    public void onApplicationReady() {
         if (springProfiles.isLocalProfile()) {
             createDynamicAttributesIfNeeded();
         }
@@ -127,7 +130,7 @@ public class DynamicAttributesInitializer {
 
         log.info("Creating missing category {} with attribute {}", categoryName, attributeName);
         CategoryAttribute attribute = createAttribute(attributeId, category, entityType, attributeName, attributeCode);
-        dataManager.save(attribute);
+        dataManager.saveWithoutReload(attribute);
     }
 
     private void ensureLocalizedCategoryName(Category category, String messageKey) {
@@ -158,7 +161,7 @@ public class DynamicAttributesInitializer {
 
         nameSetter.accept(defaultName);
         localeNamesSetter.accept(localeNames);
-        dataManager.save(entityToSave);
+        dataManager.saveWithoutReload(entityToSave);
     }
 
     private String buildLocaleNames(String messageKey) {

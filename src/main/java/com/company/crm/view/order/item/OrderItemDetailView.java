@@ -152,7 +152,7 @@ public class OrderItemDetailView extends StandardDetailView<OrderItem> {
             throw new ValidationException("Discount cannot be greater than total price");
         }
 
-        BigDecimal total = calculateGrossPrice(item).multiply(quantity);
+        BigDecimal total = calculateGrossPrice(item);
         if (value != null && value.compareTo(total) > 0) {
             throw new ValidationException("Discount cannot be greater than total price");
         }

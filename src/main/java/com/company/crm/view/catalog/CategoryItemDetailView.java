@@ -52,7 +52,7 @@ public class CategoryItemDetailView extends StandardDetailView<CategoryItem> {
 
     @Subscribe
     private void onInit(InitEvent event) {
-        imageUpload.setAcceptedFileTypes("image/*");
+        imageUpload.setAcceptedMimeTypes("image/*");
         imageUpload.addValueChangeListener(this::updateImagePreview);
     }
 
