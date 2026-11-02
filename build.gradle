@@ -11,7 +11,7 @@ group = 'com.company'
 version = '3.1.0'
 
 jmix {
-    bomVersion = '3.1.999-SNAPSHOT'
+    bomVersion = version
 }
 
 vaadin {
@@ -102,9 +102,11 @@ dependencies {
     // Dynamic Model and its agent are built from the sibling premium checkout.
     implementation 'io.jmix.dynmodel:jmix-dynmodel-starter'
     implementation 'io.jmix.dynmodel:jmix-dynmodel-flowui-starter'
-    implementation 'io.jmix.aichat:jmix-aichat-flowui-starter'
+
     implementation 'io.jmix.dynmodel:jmix-dynmodel-ai-starter'
     implementation 'io.jmix.dynmodel:jmix-dynmodel-ai-flowui-starter'
+
+    implementation 'io.jmix.aichat:jmix-aichat-flowui-starter'
     implementation 'com.embabel.agent:embabel-agent-starter-byok'
 
     // reports
