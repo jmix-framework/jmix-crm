@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "jetbrains": {
+      "type": "http",
+      "url": "http://127.0.0.1:64342/stream"
+    },
+    "playwright": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@playwright/mcp@latest"
+      ]
+    }
+  }
+}

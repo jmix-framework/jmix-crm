@@ -79,7 +79,7 @@
             <endSlot>
                 <simplePagination id="pagination" dataLoader="clientsDl" autoLoad="true"
                                   itemsPerPageVisible="true"/>
-                <gridColumnVisibility dataGrid="clientsDataGrid" icon="COG_O"
+                <gridColumnVisibility dataGrid="clientsDataGrid" icon="COG"
                                       themeNames="tertiary" hideAllEnabled="false"/>
             </endSlot>
         </hbox>

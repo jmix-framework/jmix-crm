@@ -25,6 +25,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.popover.Popover;
 import com.vaadin.flow.component.popover.PopoverVariant;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
+import com.vaadin.flow.router.Route;
 import io.jmix.core.AccessManager;
 import io.jmix.core.Messages;
 import io.jmix.core.Metadata;
@@ -63,21 +64,14 @@ import java.util.List;
 import java.util.Optional;
 
 import static com.company.crm.app.util.demo.DemoUtils.defaultSleepForClientsSearching;
+import static com.company.crm.view.main.MainView.ROUTE;
 
-// A route of its own lets Close and Discard of views inside this layout go back to it: FlowUI returns
-// to the route of the parent layout, and without one they did nothing. The layout itself shows Home.
-@Route("main")
+@Route(value = ROUTE)
 @ViewController(id = CrmConstants.ViewIds.MAIN)
 @ViewDescriptor(path = "main-view.xml")
 public class MainView extends StandardMainView {
 
-    @Override
-    public void beforeEnter(BeforeEnterEvent event) {
-        super.beforeEnter(event);
-        if (event.getNavigationTarget() == MainView.class) {
-            event.forwardTo(HomeView.class);
-        }
-    }
+    public static final String ROUTE = "main";
 
     @Autowired
     private Messages messages;

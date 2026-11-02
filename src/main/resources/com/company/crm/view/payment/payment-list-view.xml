@@ -86,7 +86,7 @@
             </startSlot>
             <endSlot>
                 <simplePagination id="payments_pagination" dataLoader="paymentsDl" itemsPerPageVisible="true"/>
-                <gridColumnVisibility dataGrid="paymentsDataGrid" icon="COG_O"
+                <gridColumnVisibility dataGrid="paymentsDataGrid" icon="COG"
                                       themeNames="tertiary" hideAllEnabled="false"/>
             </endSlot>
         </hbox>

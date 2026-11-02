@@ -69,9 +69,9 @@ public class DynamicAttributesInitializer {
         this.coreProperties = coreProperties;
     }
 
-    @EventListener(ApplicationReadyEvent.class)
-    @Order(Ordered.HIGHEST_PRECEDENCE)
     @Authenticated
+    @Order(Ordered.HIGHEST_PRECEDENCE)
+    @EventListener(ApplicationReadyEvent.class)
     public void onApplicationReady() {
         if (springProfiles.isLocalProfile()) {
             createDynamicAttributesIfNeeded();
@@ -130,7 +130,7 @@ public class DynamicAttributesInitializer {
 
         log.info("Creating missing category {} with attribute {}", categoryName, attributeName);
         CategoryAttribute attribute = createAttribute(attributeId, category, entityType, attributeName, attributeCode);
-        dataManager.save(attribute);
+        dataManager.saveWithoutReload(attribute);
     }
 
     private void ensureLocalizedCategoryName(Category category, String messageKey) {
@@ -161,7 +161,7 @@ public class DynamicAttributesInitializer {
 
         nameSetter.accept(defaultName);
         localeNamesSetter.accept(localeNames);
-        dataManager.save(entityToSave);
+        dataManager.saveWithoutReload(entityToSave);
     }
 
     private String buildLocaleNames(String messageKey) {

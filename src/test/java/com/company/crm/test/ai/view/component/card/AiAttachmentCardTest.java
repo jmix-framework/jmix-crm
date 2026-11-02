@@ -43,7 +43,7 @@ class AiAttachmentCardTest extends AbstractUiTest {
                 .isPresent()
                 .get()
                 .extracting(icon -> icon.getElement().getAttribute("icon"))
-                .isEqualTo("vaadin:file-text-o");
+                .isEqualTo("vaadin:file-text");
     }
 
     @Test

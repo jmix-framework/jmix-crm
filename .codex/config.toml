@@ -1,0 +1,7 @@
+[mcp_servers.jetbrains]
+url = "http://127.0.0.1:64342/stream"
+
+[mcp_servers.playwright]
+command = "npx"
+args = ["-y", "@playwright/mcp@latest"]
+startup_timeout_sec = 60
