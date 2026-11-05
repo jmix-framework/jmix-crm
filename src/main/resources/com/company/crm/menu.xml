@@ -37,6 +37,8 @@
           title="msg:///menu_config.administration.title" icon="vaadin:cog">
         <item view="dynat_CategoryView.list" id="dynamic_attributes"
               title="msg://io.jmix.dynattrflowui.panel/category" icon="vaadin:table"/>
+        <item view="dynmod_Settings" id="dynamic_model"
+              title="msg://io.jmix.dynmodelflowui.view/dynamicModelSettingsView.title" icon="vaadin:database"/>
         <item view="appSettings.view" id="app_settings"
               title="msg://io.jmix.appsettingsflowui.view.appsettings/appSettingsEntityView.menu" icon="vaadin:wrench"/>
         <item view="AiConversation.list" id="ai_conversations"

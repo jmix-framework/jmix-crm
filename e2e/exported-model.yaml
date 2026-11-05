@@ -8,14 +8,17 @@ model:
       id: "N"
       messages:
         en: "New"
+        ru: "Новый"
         de: "Neu"
     - name: "ACTIVE"
       id: "A"
       messages:
         en: "Active"
+        ru: "Активный"
         de: "Aktiv"
     messages:
       en: "Contract status"
+      ru: "Статус договора"
       de: "Vertragsstatus"
   entities:
   - name: "E2eContract"
@@ -27,32 +30,38 @@ model:
       instanceName: true
       messages:
         en: "Number"
+        ru: "Номер"
         de: "Nummer"
     - name: "amount"
       javaClass: "java.math.BigDecimal"
       messages:
         en: "Amount"
+        ru: "Сумма"
         de: "Betrag"
     - name: "website"
       javaClass: "java.net.URI"
       messages:
         en: "Website"
+        ru: "Сайт"
         de: "Webseite"
     - name: "status"
       enumeration: "E2eContractStatus"
       messages:
         en: "Status"
+        ru: "Статус"
         de: "Status"
     - name: "client"
       entityName: "Client"
       messages:
         en: "Client"
+        ru: "Клиент"
         de: "Kunde"
     - name: "lines"
       entityName: "E2eContractLine"
       collection: true
       messages:
         en: "Lines"
+        ru: "Позиции"
         de: "Positionen"
     views:
     - type: "list"
@@ -60,6 +69,7 @@ model:
       viewRoute: "e2e-contracts"
       viewTitle:
         en: "E2E contracts"
+        ru: "Договоры E2E"
         de: "E2E Verträge"
       menuItem:
         parentMenu: "e2e"
@@ -68,9 +78,11 @@ model:
       viewRoute: "e2e-contract"
       viewTitle:
         en: "E2E contract"
+        ru: "Договор E2E"
         de: "E2E Vertrag"
     messages:
       en: "E2E contract"
+      ru: "Договор E2E"
       de: "E2E Vertrag"
   - name: "E2eContractLine"
     attributes:
@@ -79,25 +91,30 @@ model:
       instanceName: true
       messages:
         en: "Product"
+        ru: "Товар"
         de: "Produkt"
     - name: "quantity"
       javaClass: "java.lang.Integer"
       messages:
         en: "Quantity"
+        ru: "Количество"
         de: "Menge"
     - name: "price"
       javaClass: "java.math.BigDecimal"
       messages:
         en: "Price"
+        ru: "Цена"
         de: "Preis"
     views:
     - type: "detail"
       viewId: "E2eContractLine.detail"
       viewTitle:
         en: "E2E contract line"
+        ru: "Позиция договора E2E"
         de: "E2E Vertragsposition"
     messages:
       en: "E2E contract line"
+      ru: "Позиция договора E2E"
       de: "E2E Vertragsposition"
   - name: "E2eContractNote"
     attributes:
@@ -106,16 +123,19 @@ model:
       instanceName: true
       messages:
         en: "Text"
+        ru: "Текст"
         de: "Text"
     - name: "contract"
       entityName: "E2eContract"
       messages:
         en: "Contract"
+        ru: "Договор"
         de: "Vertrag"
     - name: "status"
       enumeration: "E2eContractStatus"
       messages:
         en: "Status"
+        ru: "Статус"
         de: "Status"
     views:
     - type: "list"
@@ -123,6 +143,7 @@ model:
       viewRoute: "e2e-contract-notes"
       viewTitle:
         en: "E2E contract notes"
+        ru: "Заметки E2E"
         de: "E2E Vertragsnotizen"
       menuItem:
         parentMenu: "e2e"
@@ -130,7 +151,9 @@ model:
       viewId: "E2eContractNote.detail"
       viewTitle:
         en: "E2E contract note"
+        ru: "Заметка E2E"
         de: "E2E Vertragsnotiz"
     messages:
       en: "E2E contract note"
+      ru: "Заметка E2E"
       de: "E2E Vertragsnotiz"
