@@ -1,6 +1,6 @@
 plugins {
     id 'java'
-    id 'io.jmix' version '3.1.0'
+    id 'io.jmix' version '3.2.999-SNAPSHOT'
     id 'org.jetbrains.gradle.plugin.idea-ext' version '1.4.1'
 }
 
@@ -11,7 +11,7 @@ group = 'com.company'
 version = '3.1.0'
 
 jmix {
-    bomVersion = version
+    bomVersion = '3.2.999-SNAPSHOT'
 }
 
 vaadin {
@@ -29,6 +29,7 @@ java {
 }
 
 repositories {
+    mavenLocal()
     mavenCentral()
 
     maven {
@@ -85,6 +86,10 @@ dependencies {
     // dynamic attributes
     implementation 'io.jmix.dynattr:jmix-dynattr-starter'
     implementation 'io.jmix.dynattr:jmix-dynattr-flowui-starter'
+
+    // dynamic model
+    implementation 'io.jmix.dynmodel:jmix-dynmodel-starter'
+    implementation 'io.jmix.dynmodel:jmix-dynmodel-flowui-starter'
 
     // reports
     implementation 'io.jmix.reports:jmix-reports-rest-starter'

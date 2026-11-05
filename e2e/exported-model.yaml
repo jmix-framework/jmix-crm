@@ -1,0 +1,136 @@
+---
+model:
+  basePackage: "com.company.crm.dynamic"
+  enumerations:
+  - name: "E2eContractStatus"
+    values:
+    - name: "NEW"
+      id: "N"
+      messages:
+        en: "New"
+        de: "Neu"
+    - name: "ACTIVE"
+      id: "A"
+      messages:
+        en: "Active"
+        de: "Aktiv"
+    messages:
+      en: "Contract status"
+      de: "Vertragsstatus"
+  entities:
+  - name: "E2eContract"
+    attributes:
+    - name: "number"
+      javaClass: "java.lang.String"
+      required: true
+      unique: true
+      instanceName: true
+      messages:
+        en: "Number"
+        de: "Nummer"
+    - name: "amount"
+      javaClass: "java.math.BigDecimal"
+      messages:
+        en: "Amount"
+        de: "Betrag"
+    - name: "website"
+      javaClass: "java.net.URI"
+      messages:
+        en: "Website"
+        de: "Webseite"
+    - name: "status"
+      enumeration: "E2eContractStatus"
+      messages:
+        en: "Status"
+        de: "Status"
+    - name: "client"
+      entityName: "Client"
+      messages:
+        en: "Client"
+        de: "Kunde"
+    - name: "lines"
+      entityName: "E2eContractLine"
+      collection: true
+      messages:
+        en: "Lines"
+        de: "Positionen"
+    views:
+    - type: "list"
+      viewId: "E2eContract.list"
+      viewRoute: "e2e-contracts"
+      viewTitle:
+        en: "E2E contracts"
+        de: "E2E Verträge"
+      menuItem:
+        parentMenu: "e2e"
+    - type: "detail"
+      viewId: "E2eContract.detail"
+      viewRoute: "e2e-contract"
+      viewTitle:
+        en: "E2E contract"
+        de: "E2E Vertrag"
+    messages:
+      en: "E2E contract"
+      de: "E2E Vertrag"
+  - name: "E2eContractLine"
+    attributes:
+    - name: "product"
+      javaClass: "java.lang.String"
+      instanceName: true
+      messages:
+        en: "Product"
+        de: "Produkt"
+    - name: "quantity"
+      javaClass: "java.lang.Integer"
+      messages:
+        en: "Quantity"
+        de: "Menge"
+    - name: "price"
+      javaClass: "java.math.BigDecimal"
+      messages:
+        en: "Price"
+        de: "Preis"
+    views:
+    - type: "detail"
+      viewId: "E2eContractLine.detail"
+      viewTitle:
+        en: "E2E contract line"
+        de: "E2E Vertragsposition"
+    messages:
+      en: "E2E contract line"
+      de: "E2E Vertragsposition"
+  - name: "E2eContractNote"
+    attributes:
+    - name: "text"
+      javaClass: "java.lang.String"
+      instanceName: true
+      messages:
+        en: "Text"
+        de: "Text"
+    - name: "contract"
+      entityName: "E2eContract"
+      messages:
+        en: "Contract"
+        de: "Vertrag"
+    - name: "status"
+      enumeration: "E2eContractStatus"
+      messages:
+        en: "Status"
+        de: "Status"
+    views:
+    - type: "list"
+      viewId: "E2eContractNote.list"
+      viewRoute: "e2e-contract-notes"
+      viewTitle:
+        en: "E2E contract notes"
+        de: "E2E Vertragsnotizen"
+      menuItem:
+        parentMenu: "e2e"
+    - type: "detail"
+      viewId: "E2eContractNote.detail"
+      viewTitle:
+        en: "E2E contract note"
+        de: "E2E Vertragsnotiz"
+    messages:
+      en: "E2E contract note"
+      de: "E2E Vertragsnotiz"
