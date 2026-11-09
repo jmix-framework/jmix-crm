@@ -20,7 +20,7 @@ Use this skill when adding or changing tests for Jmix application behavior.
 9. Mock external systems at the boundary; prefer `@MockitoBean` on Spring Boot 3.4+ projects and follow the project's existing compiled pattern otherwise.
 10. Run the smallest relevant Gradle test command.
 
-Before typing any Jmix/Vaadin symbol you didn't copy from this project's `src` — a class, enum constant, action id, component, or event inner-class — confirm it. A guessed symbol survives typing and then breaks `compileJava`. Use the Context7 MCP (`/jmix-framework/jmix-context7`) when available, otherwise the official docs plus a working example already in this repo — see `jmix-verify-api-symbol`.
+Before typing any Jmix/Vaadin symbol you didn't copy from this project's `src` — a class, enum constant, action id, component, or event inner-class — confirm it. A guessed symbol survives typing and then breaks `compileJava`. Use the Context7 MCP (`/jmix-framework/jmix-context7`) when available, or the Jmix docs MCP (`search-jmix-docs`) when Context7 is not, otherwise the official docs plus a working example already in this repo — see `jmix-verify-api-symbol`.
 
 ## Unit Test Pattern
 

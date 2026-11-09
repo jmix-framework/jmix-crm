@@ -136,8 +136,9 @@ when the host view opens.
    `@FragmentDescriptor`, the `Fragments.create(...)` overload you use, and the
    FRAGMENT facet names (`fragmentDataLoadCoordinator` not `dataLoadCoordinator`,
    `fragmentSettings` not `settings`) must exist in this project. Confirm via
-   Context7 (`/jmix-framework/jmix-context7`), IDE symbol search, or an existing
-   fragment in `src/` — see `jmix-verify-api-symbol`.
+   Context7 (`/jmix-framework/jmix-context7`) or the Jmix docs MCP
+   (`search-jmix-docs`), IDE symbol search, or an existing fragment in `src/` —
+   see `jmix-verify-api-symbol`.
 2. **Static inspection (Gate 1).** Run `jmix-ide-static-analysis`
    (get_file_problems) on the fragment descriptor and the host view — the
    Jmix-XSD-aware inspection flags a VIEW facet name used in a fragment, an
