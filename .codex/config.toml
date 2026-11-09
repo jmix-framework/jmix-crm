@@ -5,3 +5,6 @@ url = "http://127.0.0.1:64342/stream"
 command = "npx"
 args = ["-y", "@playwright/mcp@latest"]
 startup_timeout_sec = 60
+
+[mcp_servers.jmix-docs]
+url = "https://docs-mcp.jmix.io/mcp"
