@@ -1,10 +1,9 @@
 /*
  * Webinar banner (WebinarBannerFragment).
  *
- * Each artwork set has four breakpoint variants, each with its own intrinsic size, so
+ * The artwork has four breakpoint variants, each with its own intrinsic size, so
  * `aspect-ratio` must be restated per breakpoint — the artwork is stretched to the box via
- * `background-size: 100% 100%`, and a wrong ratio distorts it. Every variant carries a
- * drop-shadow margin around the card, which is included in its size.
+ * `background-size: 100% 100%`, and a wrong ratio distorts it.
  *
  * The close cross is part of the artwork, so the close button is an invisible hit area
  * positioned over it. `left`/`top` are the cross centre as a percentage of the artwork.
@@ -16,13 +15,13 @@
     padding: 1em 1em 0 1em;
 }
 
-/* 1920px.svg — 1186x126, cross centre (1149, 35) */
+/* 1920 px.svg — 1176x148, cross centre (1144, 64) */
 .webinar-banner {
     position: relative;
-    background-image: url('../images/webinar/1920px.svg');
+    background-image: url('../images/webinar/1920 px.svg');
     background-repeat: no-repeat;
     background-size: 100% 100%;
-    aspect-ratio: 1186 / 126;
+    aspect-ratio: 1176 / 148;
     max-width: 1400px;
     margin-inline: auto;
 }
@@ -35,8 +34,8 @@
 
 .webinar-banner-close {
     position: absolute;
-    left: 96.88%;
-    top: 27.78%;
+    left: 97.28%;
+    top: 43.24%;
     transform: translate(-50%, -50%);
     /* the cross glyph is 14px in every artwork variant; pad the hit area out to 24px */
     width: 24px;
@@ -50,84 +49,40 @@
     z-index: 2;
 }
 
-/* DMS AI workshop — 1176x148, cross centre (1144, 64) */
-[data-artwork="DMS_AI"] .webinar-banner {
-    background-image: url('../images/webinar/dms-ai/1920px.svg');
-    aspect-ratio: 1176 / 148;
-}
-
-[data-artwork="DMS_AI"] .webinar-banner-close {
-    left: 97.28%;
-    top: 43.24%;
-}
-
 @media (max-width: 1450px) {
-    /* 1024px.svg — 946x142, cross centre (913, 31) */
+    /* 1024 px.svg — 980x148, cross centre (952, 60) */
     .webinar-banner {
-        background-image: url('../images/webinar/1024px.svg');
-        aspect-ratio: 946 / 142;
+        background-image: url('../images/webinar/1024 px.svg');
+        aspect-ratio: 980 / 148;
     }
 
     .webinar-banner-close {
-        left: 96.51%;
-        top: 21.83%;
-    }
-
-    /* DMS AI workshop — 936x148, cross centre (908, 60) */
-    [data-artwork="DMS_AI"] .webinar-banner {
-        background-image: url('../images/webinar/dms-ai/1024px.svg');
-        aspect-ratio: 936 / 148;
-    }
-
-    [data-artwork="DMS_AI"] .webinar-banner-close {
-        left: 97.01%;
+        left: 97.14%;
         top: 40.54%;
     }
 }
 
 @media (max-width: 900px) {
-    /* 750px.svg — 760x142, cross centre (727, 31) */
+    /* 750 px.svg — 790x140, cross centre (722, 52) */
     .webinar-banner {
-        background-image: url('../images/webinar/750px.svg');
-        aspect-ratio: 760 / 142;
-    }
-
-    .webinar-banner-close {
-        left: 95.66%;
-        top: 21.83%;
-    }
-
-    /* DMS AI workshop — 790x140, cross centre (722, 52) */
-    [data-artwork="DMS_AI"] .webinar-banner {
-        background-image: url('../images/webinar/dms-ai/750px.svg');
+        background-image: url('../images/webinar/750 px.svg');
         aspect-ratio: 790 / 140;
     }
 
-    [data-artwork="DMS_AI"] .webinar-banner-close {
+    .webinar-banner-close {
         left: 91.39%;
         top: 37.14%;
     }
 }
 
 @media (max-width: 600px) {
-    /* 360px.svg — 338x222, cross centre (301, 35) */
+    /* 360 px.svg — 328x240, cross centre (296, 32) */
     .webinar-banner {
-        background-image: url('../images/webinar/360px.svg');
-        aspect-ratio: 338 / 222;
-    }
-
-    .webinar-banner-close {
-        left: 89.05%;
-        top: 15.77%;
-    }
-
-    /* DMS AI workshop — 328x240, cross centre (296, 32) */
-    [data-artwork="DMS_AI"] .webinar-banner {
-        background-image: url('../images/webinar/dms-ai/360px.svg');
+        background-image: url('../images/webinar/360 px.svg');
         aspect-ratio: 328 / 240;
     }
 
-    [data-artwork="DMS_AI"] .webinar-banner-close {
+    .webinar-banner-close {
         left: 90.24%;
         top: 13.33%;
     }
