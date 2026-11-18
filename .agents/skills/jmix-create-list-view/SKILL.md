@@ -264,6 +264,29 @@ footer cells have different font sizes. Instead, use rem."
 The defect hides itself on narrow tables — the first columns line up — so a small
 grid gives no warning that the rule was broken.
 
+## Adding a settings facet
+
+Add it when the user's grid layout should persist between visits. Place it in
+`<facets>`:
+
+```xml
+<facets>
+    <dataLoadCoordinator auto="true"/>
+    <settings auto="true"/>
+</facets>
+```
+
+- With `auto="true"` the facet manages only components that have an `id`:
+  `dataGrid` / `treeDataGrid` (column order, width, visibility, sorting),
+  `genericFilter` and `details` (opened state), `simplePagination` (page size,
+  when `itemsPerPageVisible="true"`).
+- Storage is the `FLOWUI_USER_SETTINGS` table, provided by
+  `jmix-flowui-data-starter`. Check the module is a dependency.
+- Do NOT add a resource-role policy for `flowui_UserSettingsItem`: the framework
+  reads and writes settings through `UnconstrainedDataManager`.
+- From then on, saved settings override later descriptor changes — see the next
+  section.
+
 ## Saved user settings outrank the descriptor
 
 Applies when the view declares a `<settings>` facet (e.g. `<settings auto="true"/>`).

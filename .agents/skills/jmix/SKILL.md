@@ -52,6 +52,7 @@ READ the most specific skill for each artifact:
 - User-visible text / entity-enum captions: `jmix-add-i18n-keys`
 - Tests: `jmix-create-test`
 - Fetch plans / unfetched-reference / N+1 tuning: `jmix-configure-fetch-plan`
+- Metrics, tracing, Prometheus/OTLP export, MDC log context, custom observations: `jmix-configure-observability`
 - DTO / non-persistent UI-bound model: `jmix-create-dto-entity`
 - Reusable Flow UI fragment: `jmix-create-fragment`
 - Component styling / theme tokens (`--aura-*`, `--lumo-*`) / CSS classes: `jmix-style-ui`

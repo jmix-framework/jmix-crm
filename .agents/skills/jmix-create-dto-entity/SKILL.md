@@ -108,7 +108,7 @@ fails when the view initializes / renders.
 
 ## Forbidden
 
-- `@Entity`, `@Table`, `@Column`, or Liquibase for pure DTO entities.
+- `@Entity`, `@MappedSuperclass`, `@Table`, `@Column`, or Liquibase for pure DTO entities; an abstract DTO ancestor needs only `@JmixEntity`.
 - Constructor calls for UI-bound DTO entities with generated ids.
 - Missing `@JmixId` when identity matters in UI, data containers, or stores.
 - Lombok `@Data` or generated `equals()` / `hashCode()` on Jmix entities.
