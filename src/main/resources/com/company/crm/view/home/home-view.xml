@@ -5,11 +5,19 @@
         <settings id="settingsFacet" auto="true"/>
     </facets>
     <layout padding="false" classNames="dashboard-grid-container">
-        <fragment id="webinarBannerFragment" class="com.company.crm.view.webinar.WebinarBannerFragment">
+        <fragment id="ruWebinarBannerFragment" class="com.company.crm.view.webinar.WebinarBannerFragment">
             <properties>
                 <property name="url"
                           value="https://event.jmix.ru/ai_dev_control_webinar?utm_source=demo-b2b-crm&amp;utm_medium=referral&amp;utm_campaign=ai_dev_control_webinar"/>
                 <property name="domain" value="JMIX_RU"/>
+            </properties>
+        </fragment>
+        <fragment id="ioWebinarBannerFragment" class="com.company.crm.view.webinar.WebinarBannerFragment">
+            <properties>
+                <property name="url"
+                          value="https://forms.jmix.io/workshop/java-dms-ai-rag?utm_source=b2bcrm&amp;utm_medium=site&amp;utm_content=workshop"/>
+                <property name="domain" value="JMIX_IO"/>
+                <property name="artwork" value="DMS"/>
             </properties>
         </fragment>
         <gridLayout width="100%" classNames="dashboard-grid">

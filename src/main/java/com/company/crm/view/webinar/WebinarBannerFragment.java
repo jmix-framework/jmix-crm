@@ -25,12 +25,14 @@ import java.util.Set;
  * {@link #setSupportedLanguages(Set) Supported languages} allow multiple languages; an empty set allows all.
  * {@link #setExcludedLanguages(Set) Excluded languages} take precedence. Values in XML are separated by commas or spaces.
  * The legacy {@link #setLanguage(Language) language} property remains an additional filter, defaulting to {@code ANY}.
- * Set the URL and filters on the embedding element:
+ * Each instance has its own {@link #setArtwork(Artwork) artwork}, URL and filters, so several campaigns can share a view.
+ * Set them on the embedding element:
  * <pre>{@code
  * <fragment id="webinarBannerFragment" class="com.company.crm.view.webinar.WebinarBannerFragment">
  *     <properties>
  *         <property name="url" value="https://forms.jmix.io/some-webinar?utm_source=banner&amp;utm_medium=site"/>
  *         <property name="domain" value="JMIX_IO"/>
+ *         <property name="artwork" value="DMS"/>
  *         <property name="supportedLanguages" value="EN, DE"/>
  *         <property name="excludedLanguages" value="RU"/>
  *     </properties>
@@ -40,6 +42,15 @@ import java.util.Set;
 @StyleSheet("themes/aura/view/webinar.css")
 @FragmentDescriptor("webinar-banner-fragment.xml")
 public class WebinarBannerFragment extends Fragment<VerticalLayout> {
+
+    /**
+     * Artwork set from {@code themes/aura/images/webinar/<name in lower case>/}; {@code webinar.css} selects it
+     * by the {@code data-artwork} attribute, {@link #RU} is the default without one.
+     */
+    public enum Artwork {
+        RU,
+        DMS
+    }
 
     /**
      * Site the application is served from; a subdomain matches too, e.g. demo.jmix.io for {@link #JMIX_IO}.
@@ -96,6 +107,16 @@ public class WebinarBannerFragment extends Fragment<VerticalLayout> {
     private Language language = Language.ANY;
     private Set<Language> supportedLanguages = Set.of();
     private Set<Language> excludedLanguages = Set.of();
+    private Artwork artwork = Artwork.RU;
+
+    public Artwork getArtwork() {
+        return artwork;
+    }
+
+    public void setArtwork(Artwork artwork) {
+        this.artwork = artwork;
+        getContent().getElement().setAttribute("data-artwork", artwork.name());
+    }
 
     /**
      * @return the page the banner opens, or {@code null} if none is set and the banner is not clickable

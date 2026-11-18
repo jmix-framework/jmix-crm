@@ -1,9 +1,13 @@
 /*
  * Webinar banner (WebinarBannerFragment).
  *
- * The artwork has four breakpoint variants, each with its own intrinsic size, so
+ * Each artwork set has four breakpoint variants, each with its own intrinsic size, so
  * `aspect-ratio` must be restated per breakpoint — the artwork is stretched to the box via
  * `background-size: 100% 100%`, and a wrong ratio distorts it.
+ *
+ * The plain rules draw the RU set; a `[data-artwork="..."]` block switches to another set.
+ * Such a block restates all four values at every breakpoint: its selector outranks the plain
+ * rules, so a value it leaves out leaks in from its own block of a wider breakpoint.
  *
  * The close cross is part of the artwork, so the close button is an invisible hit area
  * positioned over it. `left`/`top` are the cross centre as a percentage of the artwork.
@@ -15,10 +19,10 @@
     padding: 1em 1em 0 1em;
 }
 
-/* 1920 px.svg — 1176x148, cross centre (1144, 64) */
+/* ru/1920 px.svg — 1176x148, cross centre (1144, 64) */
 .webinar-banner {
     position: relative;
-    background-image: url('../images/webinar/1920 px.svg');
+    background-image: url('../images/webinar/ru/1920 px.svg');
     background-repeat: no-repeat;
     background-size: 100% 100%;
     aspect-ratio: 1176 / 148;
@@ -49,10 +53,21 @@
     z-index: 2;
 }
 
+/* dms/1920 px.svg — 1176x148, cross centre (1144, 64) */
+[data-artwork="DMS"] .webinar-banner {
+    background-image: url('../images/webinar/dms/1920 px.svg');
+    aspect-ratio: 1176 / 148;
+}
+
+[data-artwork="DMS"] .webinar-banner-close {
+    left: 97.28%;
+    top: 43.24%;
+}
+
 @media (max-width: 1450px) {
-    /* 1024 px.svg — 980x148, cross centre (952, 60) */
+    /* ru/1024 px.svg — 980x148, cross centre (952, 60) */
     .webinar-banner {
-        background-image: url('../images/webinar/1024 px.svg');
+        background-image: url('../images/webinar/ru/1024 px.svg');
         aspect-ratio: 980 / 148;
     }
 
@@ -60,12 +75,23 @@
         left: 97.14%;
         top: 40.54%;
     }
+
+    /* dms/1024 px.svg — 936x148, cross centre (908, 60) */
+    [data-artwork="DMS"] .webinar-banner {
+        background-image: url('../images/webinar/dms/1024 px.svg');
+        aspect-ratio: 936 / 148;
+    }
+
+    [data-artwork="DMS"] .webinar-banner-close {
+        left: 97.01%;
+        top: 40.54%;
+    }
 }
 
 @media (max-width: 900px) {
-    /* 750 px.svg — 790x140, cross centre (722, 52) */
+    /* ru/750 px.svg — 790x140, cross centre (722, 52) */
     .webinar-banner {
-        background-image: url('../images/webinar/750 px.svg');
+        background-image: url('../images/webinar/ru/750 px.svg');
         aspect-ratio: 790 / 140;
     }
 
@@ -73,17 +99,39 @@
         left: 91.39%;
         top: 37.14%;
     }
+
+    /* dms/750 px.svg — 808x140, cross centre (722, 52) */
+    [data-artwork="DMS"] .webinar-banner {
+        background-image: url('../images/webinar/dms/750 px.svg');
+        aspect-ratio: 808 / 140;
+    }
+
+    [data-artwork="DMS"] .webinar-banner-close {
+        left: 89.36%;
+        top: 37.14%;
+    }
 }
 
 @media (max-width: 600px) {
-    /* 360 px.svg — 328x240, cross centre (296, 32) */
+    /* ru/360 px.svg — 328x240, cross centre (296, 32) */
     .webinar-banner {
-        background-image: url('../images/webinar/360 px.svg');
+        background-image: url('../images/webinar/ru/360 px.svg');
         aspect-ratio: 328 / 240;
     }
 
     .webinar-banner-close {
         left: 90.24%;
         top: 13.33%;
+    }
+
+    /* dms/360 px.svg — 328x204, cross centre (296, 32) */
+    [data-artwork="DMS"] .webinar-banner {
+        background-image: url('../images/webinar/dms/360 px.svg');
+        aspect-ratio: 328 / 204;
+    }
+
+    [data-artwork="DMS"] .webinar-banner-close {
+        left: 90.24%;
+        top: 15.69%;
     }
 }
