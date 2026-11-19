@@ -19,6 +19,7 @@
 - [Modello dei ruoli](#-modello-dei-ruoli)
 - [Maggiori informazioni su Jmix](#ℹ-maggiori-informazioni-su-jmix)
 - [FAQ](#-faq)
+- [Licenza](#-licenza)
 
 ## 🛠️ Stack tecnico
 
@@ -239,3 +240,7 @@ Jmix fornisce queste capacità out of the box, permettendo agli sviluppatori di 
 
 B2B CRM è un'applicazione demo progettata per dimostrare un'architettura pronta per la produzione e pratiche di sviluppo aziendale.
 Include scenari di business reali, UI moderna, funzionalità AI, sicurezza, reportistica e pattern di integrazione riutilizzabili nei tuoi progetti aziendali.
+
+## 📄 Licenza
+
+Questo progetto è distribuito con licenza [Apache License 2.0](../LICENSE).

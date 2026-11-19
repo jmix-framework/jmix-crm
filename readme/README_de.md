@@ -19,6 +19,7 @@
 - [Rollenmodell](#-rollenmodell)
 - [Mehr über Jmix](#ℹ-mehr-über-jmix)
 - [FAQ](#-faq)
+- [Lizenz](#-lizenz)
 
 ## 🛠️ Technischer Stack
 
@@ -239,3 +240,7 @@ Jmix bietet diese Fähigkeiten von Anfang an, sodass sich Entwickler auf die Ges
 
 B2B CRM ist eine Demoanwendung, die produktionsreife Architektur und Praktiken der Unternehmensentwicklung demonstrieren soll.
 Sie enthält reale Geschäftsszenarien, eine moderne UI, AI-Funktionen, Sicherheit, Reporting und Integrationsmuster, die in eigenen Unternehmensprojekten wiederverwendet werden können.
+
+## 📄 Lizenz
+
+Dieses Projekt steht unter der [Apache License 2.0](../LICENSE).

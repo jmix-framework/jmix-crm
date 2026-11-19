@@ -19,6 +19,7 @@
 - [Mô hình vai trò](#-mô-hình-vai-trò)
 - [Tìm hiểu thêm về Jmix](#ℹ-tìm-hiểu-thêm-về-jmix)
 - [FAQ](#-faq)
+- [Giấy phép](#-giấy-phép)
 
 ## 🛠️ Ngăn xếp công nghệ
 
@@ -231,3 +232,7 @@ Jmix cung cấp sẵn các khả năng này, giúp nhà phát triển tập trun
 
 B2B CRM là ứng dụng demo được thiết kế để minh họa kiến trúc sẵn sàng cho môi trường sản xuất và các thực tiễn phát triển doanh nghiệp.
 Ứng dụng bao gồm các tình huống nghiệp vụ thực tế, giao diện hiện đại, khả năng AI, bảo mật, báo cáo và các mẫu tích hợp có thể tái sử dụng trong các dự án doanh nghiệp của bạn.
+
+## 📄 Giấy phép
+
+Dự án này được cấp phép theo [Apache License 2.0](../LICENSE).
