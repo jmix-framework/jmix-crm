@@ -96,7 +96,8 @@ fails when the view initializes / renders.
    `@JmixEntity`, `@InstanceName`, `@JmixProperty` from
    `io.jmix.core.metamodel.annotation`. Confirm the package and members of any
    annotation new to the project via Context7 (`/jmix-framework/jmix-context7`)
-   or IDE symbol search — see `jmix-verify-api-symbol`.
+   or the Jmix docs MCP (`search-jmix-docs`), or IDE symbol search — see
+   `jmix-verify-api-symbol`.
 2. **Static inspection (Gate 1).** Run `jmix-ide-static-analysis`
    (get_file_problems) on the view XML that binds the DTO container — it flags
    a container `class` or property path that does not resolve, which the
@@ -107,7 +108,7 @@ fails when the view initializes / renders.
 
 ## Forbidden
 
-- `@Entity`, `@Table`, `@Column`, or Liquibase for pure DTO entities.
+- `@Entity`, `@MappedSuperclass`, `@Table`, `@Column`, or Liquibase for pure DTO entities; an abstract DTO ancestor needs only `@JmixEntity`.
 - Constructor calls for UI-bound DTO entities with generated ids.
 - Missing `@JmixId` when identity matters in UI, data containers, or stores.
 - Lombok `@Data` or generated `equals()` / `hashCode()` on Jmix entities.

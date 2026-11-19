@@ -1,6 +1,6 @@
 ---
 name: jmix-verify-api-symbol
-description: Before typing a class, enum constant, inner-class event, method, or icon name you have not personally verified in this project, confirm it exists. Costs seconds and prevents the most expensive class of failures (hallucinated icon constants, fake event inner classes, wrong package paths). Primary check when connected = the Context7 docs MCP (/jmix-framework/jmix-context7); falls back to grepping the project for a working example or an IDE symbol search.
+description: Before typing a class, enum constant, inner-class event, method, or icon name you have not personally verified in this project, confirm it exists. Costs seconds and prevents the most expensive class of failures (hallucinated icon constants, fake event inner classes, wrong package paths). Primary check when connected = the Context7 docs MCP (/jmix-framework/jmix-context7), or the Jmix docs MCP (tool search-jmix-docs) when Context7 is missing or has no API key; falls back to an IDE symbol search, then javap on the dependency jars, then grepping for a working example.
 ---
 
 # Verify API symbols before you type them
@@ -26,24 +26,38 @@ Before typing any of:
 Skip it only when you can point at the same exact symbol already in use in this
 project's `src/`.
 
-## How to verify — MCP first, floor always
+## How to verify — in order, stop at the first check that confirms
 
 **Free short-circuit:** if the EXACT symbol is already used in this project's
 `src/`, copy that call site — it is ground truth, no lookup needed:
 
 ```bash
-grep -rn "DialogWindows" src/main/java --include='*.java'
-grep -rn "VaadinIcon\." src/main --include='*.xml' --include='*.java'
+grep -rn "DialogWindows" src --include='*.java'
+grep -rn "VaadinIcon\." src --include='*.xml' --include='*.java'
 ```
 
-For anything NOT already in the project, verify it before you type it:
+For anything NOT already in the project, verify it before you type it. Go down
+the list and stop at the first check that confirms the symbol. Use a later step
+only when the earlier ones are not available or do not confirm it.
 
-1. **Context7 — PRIMARY when connected.** Query the Context7 docs MCP with the
-   Jmix library id `/jmix-framework/jmix-context7` for the exact symbol (a class,
-   an `StandardOutcome` constant, the `DialogWindows.detail(...).editEntity(...)`
-   shape, valid `@Install(subject=...)` names, `io.jmix.flowui.Dialogs` vs raw
-   Vaadin `Dialog`). It resolves the API from the official Jmix docs — your best
-   check for a symbol new to the project.
+1. **Docs MCP — PRIMARY when connected.** Query the official Jmix docs for the
+   exact symbol (a class, an `StandardOutcome` constant, the
+   `DialogWindows.detail(...).editEntity(...)` shape, valid
+   `@Install(subject=...)` names, `io.jmix.flowui.Dialogs` vs raw Vaadin
+   `Dialog`). This is your best check for a symbol new to the project. Use the
+   first of these two servers that works:
+
+   - **Context7.** Query it with the Jmix library id
+     `/jmix-framework/jmix-context7`.
+   - **Jmix docs MCP** — use it when no Context7 tool is available (their
+     names contain `context7`; if your tools are loaded on demand, search for
+     them before you decide), or a Context7 call fails because the API key is
+     missing or rejected. It is usually registered as `jmix-docs-mcp`; find it
+     by its tool `search-jmix-docs`. Pass the symbol or the call shape as
+     `queryText`, `jmixVersion: "v3"`, and `maxResults: 5` — without a limit
+     the response can be tens of kilobytes. It needs no API key.
+
+   If neither server is connected, go to step 2.
 
 2. **IDE symbol search — if available.** Confirm the class/constant exists and read
    its fully-qualified name and members to settle package guesses and whether a
@@ -55,12 +69,14 @@ For anything NOT already in the project, verify it before you type it:
    nothing to grep).
 
    ```bash
-   CP=$(find ~/.gradle/caches -name '*.jar' ! -name '*sources*' | tr '\n' ':')
+   V=3.1.0   # the Jmix version the project pins
+   CP=$(find ~/.gradle/caches -name "jmix-*-$V.jar" | tr '\n' ':')
    javap -p -cp "$CP" io.jmix.flowui.Dialogs
    ```
 
-   Every cached jar on one classpath, so you need not know which artifact owns the
-   class (`-p` also lists non-public members).
+   All Jmix jars of the pinned version on one classpath, so you need not know
+   which module owns the class (`-p` also lists non-public members). For a
+   Vaadin or other library class, use that library's pinned jar.
 
    **Read the version the project resolves, not the newest one cached.** Whenever
    verification reads a framework artifact — a jar, an XSD, a sources archive —
@@ -72,7 +88,7 @@ For anything NOT already in the project, verify it before you type it:
    that exists only in the snapshot XSD compiles fine and surfaces as an IDE
    inspection error or a render-time failure, never at `compileJava`.
 
-4. **Floor: grep a known-good example and reuse only what is actually there.**
+4. **Last resort: grep a known-good example and reuse only what is actually there.**
    Find a real call site in the wider codebase or a reference app and copy its
    exact shape — useful when the symbol IS used somewhere, but blind when it is
    new to the project (use step 3 then).
@@ -85,7 +101,8 @@ than guess a constant).
 
 When the fetched example differs from what you need only on a **plain Java or JPA**
 axis — an abstract vs concrete base class, one field more or less, another property
-type — it has already confirmed the API. Stop querying for a closer match.
+type — it has already confirmed the API. Stop querying for a closer match. An
+import line in the example confirms the class's package.
 
 Keep verifying only when the difference IS the Jmix API: another method name,
 another package, another annotation member. Then use `javap` (step 3).
@@ -114,6 +131,7 @@ Symbols commonly invented. NEVER type these — verify first:
 A verification check takes ~1 second; a failed `compileJava` cycle costs
 15–30 seconds plus error-log parsing, and a passed compile that fails at render
 time in a UI test costs the whole test run. The break-even is one prevented
-failure per session — run the check: Context7 if connected, else `javap` on the
-dependency jars (step 3), else grep a known-good call site (step 4); never ship an
-unverified symbol.
+failure per session — run the check: Context7 if connected, else the Jmix docs
+MCP (`search-jmix-docs`) if connected (step 1), else IDE symbol search if
+available (step 2), else `javap` on the dependency jars (step 3), else grep a
+known-good call site (step 4); never ship an unverified symbol.

@@ -11,6 +11,10 @@
         "-y",
         "@playwright/mcp@latest"
       ]
+    },
+    "jmix-docs": {
+      "type": "http",
+      "url": "https://docs-mcp.jmix.io/mcp"
     }
   }
 }
