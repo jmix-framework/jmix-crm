@@ -78,6 +78,26 @@ include the child property so the children load with the parent.
 
 The `<instance>`/`<collection>` containers go inside `<data>`; the `<hbox>` and `<dataGrid>` inside `<layout>` of the detail descriptor.
 
+## Live parent values computed from the children
+
+To update a computed parent value (an order total) while lines are edited, recalculate
+it from the child container's events, using the same bean as the save listener
+(`jmix-add-entity-event-listener`, "Stored values derived from composition children"):
+
+```java
+@Subscribe(id = "linesDc", target = Target.DATA_CONTAINER)
+public void onLinesDcCollectionChange(final CollectionContainer.CollectionChangeEvent<OrderLine> event) {
+    if (event.getChangeType() != CollectionChangeType.REFRESH) {
+        getEditedEntity().setTotal(orderTotals.total(getEditedEntity()));
+    }
+}
+
+@Subscribe(id = "linesDc", target = Target.DATA_CONTAINER)
+public void onLinesDcItemPropertyChange(final InstanceContainer.ItemPropertyChangeEvent<OrderLine> event) {
+    getEditedEntity().setTotal(orderTotals.total(getEditedEntity()));
+}
+```
+
 ## Forbidden
 
 - Child collection actions without a child detail view.

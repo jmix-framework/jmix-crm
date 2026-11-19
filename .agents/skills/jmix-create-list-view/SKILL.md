@@ -145,7 +145,8 @@ constant — crashes the entire view at render time.
 - Reuse only icon names you have seen in this project. Grep existing
   view XML for `icon="` and copy what you find.
 - Before typing a new `VaadinIcon` constant, verify it exists (grep the
-  project, or use Context7 / IDE symbol lookup) — see `jmix-verify-api-symbol`.
+  project, or use Context7 / the Jmix docs MCP (`search-jmix-docs`) / IDE
+  symbol lookup) — see `jmix-verify-api-symbol`.
 
 ## URL Query Parameters — add alongside filter and pagination
 
@@ -262,6 +263,29 @@ footer cells have different font sizes. Instead, use rem."
 
 The defect hides itself on narrow tables — the first columns line up — so a small
 grid gives no warning that the rule was broken.
+
+## Adding a settings facet
+
+Add it when the user's grid layout should persist between visits. Place it in
+`<facets>`:
+
+```xml
+<facets>
+    <dataLoadCoordinator auto="true"/>
+    <settings auto="true"/>
+</facets>
+```
+
+- With `auto="true"` the facet manages only components that have an `id`:
+  `dataGrid` / `treeDataGrid` (column order, width, visibility, sorting),
+  `genericFilter` and `details` (opened state), `simplePagination` (page size,
+  when `itemsPerPageVisible="true"`).
+- Storage is the `FLOWUI_USER_SETTINGS` table, provided by
+  `jmix-flowui-data-starter`. Check the module is a dependency.
+- Do NOT add a resource-role policy for `flowui_UserSettingsItem`: the framework
+  reads and writes settings through `UnconstrainedDataManager`.
+- From then on, saved settings override later descriptor changes — see the next
+  section.
 
 ## Saved user settings outrank the descriptor
 

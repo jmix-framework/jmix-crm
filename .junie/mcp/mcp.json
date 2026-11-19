@@ -1,12 +1,12 @@
 {
-    "mcpServers": {
-        "playwright": {
-            "command": "npx",
-            "args": [
-                "-y",
-                "@playwright/mcp@latest"
-            ]
-        },
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@playwright/mcp@latest"
+      ]
+    },
         "jmix-docs": {
             "command": "npx",
             "args": [
