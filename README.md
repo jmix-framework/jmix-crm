@@ -7,7 +7,10 @@
 `B2B CRM` is an enterprise demo application based on `Jmix framework` with built-in `AI` that showcases how to develop
 production-ready business systems including `customers`, `orders`, `invoicing`, `finance` and `analytics`.
 
-![B2B CRM highlight: home view, sales funnel and CRM AI answering a sales question](images/b2b-crm-highlight.gif)
+<picture>
+  <source srcset="images/b2b-crm-highlight.avif" type="image/avif">
+  <img src="images/b2b-crm-highlight.gif" alt="B2B CRM highlight: home view, sales funnel and CRM AI answering a sales question">
+</picture>
 
 ## 📑 Table of Contents
 
