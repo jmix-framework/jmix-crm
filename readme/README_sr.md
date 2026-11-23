@@ -19,6 +19,7 @@
 - [Model uloga](#-model-uloga)
 - [Više o Jmix-u](#ℹ-više-o-jmix-u)
 - [FAQ](#-faq)
+- [Licenca](#-licenca)
 
 ## 🛠️ Tehnički stek
 
@@ -231,3 +232,7 @@ Jmix pruža te mogućnosti odmah po instalaciji, što razvojnim timovima omoguć
 
 B2B CRM je demonstraciona aplikacija napravljena da prikaže produkcijski spremnu arhitekturu i prakse razvoja poslovnog softvera.
 Uključuje stvarne poslovne scenarije, moderan korisnički interfejs, AI mogućnosti, bezbjednost, izvještavanje i integracione šablone koji se mogu ponovo koristiti u vašim poslovnim projektima.
+
+## 📄 Licenca
+
+Ovaj projekat je licenciran pod [Apache License 2.0](../LICENSE).

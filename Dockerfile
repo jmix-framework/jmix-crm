@@ -1,10 +1,10 @@
-FROM eclipse-temurin:21.0.3_9-jdk AS builder
+FROM eclipse-temurin:21-jdk AS builder
 WORKDIR /application
 COPY . .
 
 RUN --mount=type=cache,target=/root/.gradle chmod +x gradlew && ./gradlew bootJar -i -Pvaadin.productionMode
 
-FROM eclipse-temurin:21.0.3_9-jdk
+FROM eclipse-temurin:21-jdk
 
 RUN mkdir -p /heapdumps
 ENV JAVA_TOOL_OPTIONS="-Xmx2g -Xms1g -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/heapdumps/heapdump.hprof"

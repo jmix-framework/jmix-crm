@@ -22,6 +22,7 @@ production-ready business systems including `customers`, `orders`, `invoicing`, 
 - [Role Model](#-role-model)
 - [More About Jmix](#ℹ-more-about-jmix)
 - [FAQ](#-faq)
+- [License](#-license)
 
 ## 🛠️ Technical Stack
 
@@ -246,3 +247,7 @@ production-ready enterprise applications can be developed using Jmix and AI.
 B2B CRM is a demo application designed to demonstrate production-ready architecture and enterprise development
 practices. It includes real business scenarios, modern UI, AI capabilities, security, reporting, and integration
 patterns that can be reused in your own enterprise projects. 
+
+## 📄 License
+
+This project is licensed under the [Apache License 2.0](LICENSE).
