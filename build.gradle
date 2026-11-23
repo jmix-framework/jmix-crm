@@ -8,7 +8,7 @@ apply plugin: 'com.vaadin'
 apply plugin: 'org.springframework.boot'
 
 group = 'com.company'
-version = '3.1.0'
+version = '3.1.1'
 
 jmix {
     bomVersion = '3.2.999-SNAPSHOT'
