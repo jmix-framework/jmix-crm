@@ -1,118 +1,122 @@
 ---
 name: jmix
-description: Read FIRST before writing or changing any file in a Jmix application. Lists the project stack, maps the task to Jmix artifacts, routes each artifact to the skill that governs it, and names the checks that close a task. Your Jmix/Vaadin priors are the main source of wrong API names and broken descriptors — start here, not from memory.
+description: Use before writing or changing Java code, view descriptors, Liquibase changelogs, or build files in a Jmix 3 application. Says which jmix-* skill covers each kind of artifact, which source to follow, and which checks close a task.
 ---
 
 # Working on a Jmix application
 
-## Project stack
+Stack: Java 21, Jmix 3, Spring Boot 4, Vaadin 25, Gradle, relational database
+with Liquibase migrations.
 
-- Java 21
-- Jmix 3, Spring Boot 4, Vaadin 25
-- Gradle
-- Relational database with Liquibase migrations
+## Before you write
 
-## Step 0 — map the task to artifacts, READ the matching skill BEFORE writing
+Wrong API names and broken descriptors usually come from writing from memory.
 
-The most common cause of defects is writing a Jmix artifact from memory instead
-of from the rule that governs it. Your Jmix/Vaadin priors are the single biggest
-source of wrong API names and broken descriptors.
+1. List the artifacts the task creates or changes, in the order you will
+   write them.
+2. Take them one at a time. Just before you write an artifact, look for a
+   working example in the same module that covers the case you write.
+3. No example → read the matching skill in full at this point. Example →
+   follow it and check your change against the skill's **Forbidden** section.
+   Do not read the skills for later artifacts before you reach them.
+4. Verify every Jmix/Vaadin class, method, constant, or icon not already used in
+   `src/` with `jmix-verify-api-symbol`.
 
-Before writing a single file:
-
-1. List every artifact the task implies — entities, enums, list views, detail
-   views, composition children, services, event listeners, resource roles,
-   changelogs, menu entries, message bundles, scheduled/background entry points.
-2. For EACH artifact, READ the matching skill in **Skill routing** before you
-   write it.
-3. Only then start writing.
-
-The verification skills (`jmix-ide-static-analysis`, `jmix-verify-bootrun`) are
-gates, not how-to. They do not replace the artifact skill.
+Edits to documentation only, or to the text of existing message keys, need none
+of this and no gates.
 
 ## Skill routing
 
-READ the most specific skill for each artifact:
-
-- New project / application scaffold with Jmix CLI: `jmix-create-project`
+- New project with Jmix CLI: `jmix-create-project`
 - Verify a Jmix/Vaadin API: `jmix-verify-api-symbol`
-- Static checks / inspections / mechanical floor: `jmix-ide-static-analysis`
-- Gate-2 context-load test (+ optional Gate-3 render walk): `jmix-verify-bootrun`
+- Static checks / inspections: `jmix-ide-static-analysis`
+- Tests (Gate 2) failures, render walk: `jmix-verify-bootrun`
 - Persistent entity: `jmix-create-entity`
 - Enum used by an entity: `jmix-create-enum`
 - List view: `jmix-create-list-view`
 - Detail view: `jmix-create-detail-view`
-- Parent-child composition editing (property-bound container, NO query loader): `jmix-create-composition-detail-view`
+- Inline editing of composition children (property-bound container, no query loader): `jmix-create-composition-detail-view`
 - Service-layer business logic: `jmix-create-service`
-- Code running outside a user request (Quartz/`@Scheduled` job, `@Async` method, startup runner, message listener): `jmix-run-background-code`
-- Detail dialog from a button/action, OR master-row selection → filtered child grid: `jmix-add-dialog-detail-flow`
-- Entity lifecycle/event business logic: `jmix-add-entity-event-listener`
+- Code outside a user request (Quartz/`@Scheduled` job, `@Async`, startup runner, message listener): `jmix-run-background-code`
+- Detail dialog from a button/action, or master-row selection → filtered child grid: `jmix-add-dialog-detail-flow`
+- Entity lifecycle events: `jmix-add-entity-event-listener`
 - Database schema: `jmix-create-liquibase-changelog`
-- Resource roles, row-level roles, role assignments in seed data: `jmix-create-resource-role`
-- User-visible text / entity-enum captions: `jmix-add-i18n-keys`
+- Resource and row-level roles, role assignments in seed data: `jmix-create-resource-role`
+- User-visible text, entity and enum captions: `jmix-add-i18n-keys`
 - Tests: `jmix-create-test`
-- Fetch plans / unfetched-reference / N+1 tuning: `jmix-configure-fetch-plan`
-- Metrics, tracing, Prometheus/OTLP export, MDC log context, custom observations: `jmix-configure-observability`
+- Fetch plans, unfetched references, N+1: `jmix-configure-fetch-plan`
+- Metrics, tracing, Prometheus/OTLP, MDC log context: `jmix-configure-observability`
 - DTO / non-persistent UI-bound model: `jmix-create-dto-entity`
 - Reusable Flow UI fragment: `jmix-create-fragment`
-- Component styling / theme tokens (`--aura-*`, `--lumo-*`) / CSS classes: `jmix-style-ui`
+- Styling, theme tokens (`--aura-*`, `--lumo-*`), CSS classes: `jmix-style-ui`
 - Moving a project upgraded from Jmix 2.x off Lumo onto Aura: `jmix-migrate-theme-to-aura`
 
-## A skill's framework rule beats sample code in a plan or brief
+A new persistent entity needs an entity, a changelog, a resource role, and
+message keys. A user-facing one also needs a list and/or detail view, a menu
+entry, and a view policy in every role that opens them — including dialog-only
+detail views opened from a composition table.
 
-When a plan, brief, issue, or hand-off note carries verbatim code, that code is a
-SUGGESTION. The skill's rule is the authority. Sample code in a plan is written
-without the skill open, so it drops framework details that look optional and are
-not — and because it arrives as "the code to write", implementers paste it over
-the correct pattern without noticing.
+## Which source to follow
 
-So: when you are handed code to write, READ the skill for that artifact and
-reconcile the two BEFORE writing. Where they disagree, the skill wins — and say in
-your report that you diverged from the sample and why. Check especially entity
-annotations, view descriptors, fetch plans, and lifecycle-method overrides.
+Memory is never a source.
 
-## Cross-cutting checklist for a new entity / view
+- **How this project does things** (id type, packages, naming, architecture):
+  the project's code wins. Do not change existing code to match a skill.
+- **Whether an API exists in this version** (class, method, constant, XML
+  attribute): `jmix-verify-api-symbol` decides — the docs server if connected,
+  otherwise `javap` on the resolved jars; if the two disagree, the jars win. If
+  the feature needs an API this version lacks and you cannot confirm another
+  way, stop and ask.
+- **Known failures** (rules a skill lists under Forbidden, or for which it says
+  what breaks): the skill wins over docs examples. Do not copy such a failure
+  from existing code into new code, and leave the existing code as it is. Any
+  other skill rule is a convention, and the project's way wins.
 
-For each new persistent entity, run through: `jmix-create-entity` +
-`jmix-create-liquibase-changelog` + `jmix-create-resource-role` +
-`jmix-add-i18n-keys`. For a user-facing entity, also add a list and/or detail
-view (`jmix-create-list-view`, `jmix-create-detail-view`) and a view policy in
-every role that can open them — **including dialog-only detail views opened
-from a composition table**.
+Sample code in a plan, brief, or issue ranks below all of these: it is usually
+written without the skill and drops details that look optional. Before writing
+it, read the matching skill in full and compare, especially entity annotations,
+view descriptors, fetch plans, and lifecycle-method overrides.
 
-Service- or listener-level defaulting does NOT relieve the entity from
-defaulting required fields on initial persist — defaults must work through
-`DataManager.create()` + `DataManager.save()` directly (tests bypass the view
-layer). See `jmix-create-entity`.
+In your report, list each conflict (file, skill rule, side followed), each
+departure from sample code and why, each skill API missing in this version, and
+each failure found in existing code.
 
 ## Closing a task — three gates
 
-A task is NOT done after the code compiles. Three gates, in order. READ the skill
-that owns each gate rather than running it from memory, and never assert a gate
-passed without showing the evidence.
+A task is not done when the code compiles. Run the gates in order and show the
+evidence for each.
 
-| Gate            | What it proves                                                                  | Skill that owns it                                  |
-|-----------------|---------------------------------------------------------------------------------|-----------------------------------------------------|
-| 1 API & static  | every Jmix/Vaadin symbol exists, and every file you wrote is free of static defects | `jmix-verify-api-symbol`, `jmix-ide-static-analysis` |
-| 2 Context loads | the Spring/Jmix context boots, Liquibase runs, and the project tests pass        | `jmix-verify-bootrun`                               |
-| 3 Render        | every view, button, and field you created actually renders                      | `jmix-verify-bootrun`                               |
+1. **Gate 1 — API and static checks.** Read `jmix-ide-static-analysis` once per
+   session, then check every file you created or changed.
+2. **Gate 2 — tests pass.** Run `./gradlew --no-daemon test` (in a composite
+   project, see **Gradle tasks in a composite project** below). It passes
+   only with `BUILD SUCCESSFUL` and no failed tests. If it fails, read
+   **When Gate 2 fails** in `jmix-verify-bootrun`.
+3. **Gate 3 — render.** For each view or role you created or changed, write
+   and run a `@UiTest` that opens the view, or the role's views as a user of
+   that role (`jmix-create-test`). If a browser tool is connected (for example
+   Playwright MCP), also read `jmix-verify-bootrun` and walk them in the
+   browser as it describes. Then Gate 3 passes only after the walk. Report the
+   walk as not done only when something blocked it, such as the application
+   not starting, and name what.
 
-NEVER use `bootRun` (or any non-terminating server start) as the Gate-2 check —
-it does not exit and will hang your turn. Gate 2 is `clean test`.
+Report per changed file its static-check verdict, and per created view, button,
+or field how you verified it. "BUILD SUCCESSFUL, all done" is not a report.
 
-Emit the evidence in your completion report. Per file you touched: its
-static-check verdict. Per view/button/field you created: how you verified it
-(inspection, mechanical check, or render walk). "BUILD SUCCESSFUL, all done"
-with no per-file check and no render evidence is a non-answer.
+### Gradle tasks in a composite project
 
-## File-write trap
+If the root `settings.gradle` has `includeBuild` lines, the root project has no
+`compileJava` or `test` task. Run them from the root directory with the path of
+each module that has `src/main/java` (for `compileJava`) or `src/test/java` (for
+`test`): the module directory with `/` replaced by `:`. For example, for
+`products/products` and `sales`, run
+`./gradlew --no-daemon :products:products:test :sales:test`.
 
-Always pass absolute paths to file-writing tools; in nested-project layouts the
-working directory may not be what you assume. After a batch of writes, `ls` the
-path you intended AND confirm each file is NON-EMPTY — a tool that silently
-writes a 0-byte file leaves a defect that compile and `clean test` will NOT
-catch (an empty role class drops all its policies; an empty `*-view.xml`
-poisons the view registry). If a file is missing or empty, find and rewrite
-it; do NOT `rm -rf` to "clean up".
+## Writing files
+
+Pass absolute paths to file-writing tools. After a batch of writes, `ls` the
+paths and confirm each file is non-empty: a 0-byte file passes compile and
+`test` (an empty role drops its policies; an empty `*-view.xml` breaks the
+view registry). Rewrite a missing or empty file; do not `rm -rf`.
 
 Never edit generated frontend files — they are regenerated on every build.

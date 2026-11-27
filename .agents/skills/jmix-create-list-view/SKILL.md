@@ -9,19 +9,19 @@ Use this skill when creating a top-level list/search view for an entity.
 
 ## Steps
 
-1. Create Java controller under `view/<entityname>/`.
-2. Extend `StandardListView<Entity>`.
-3. Add `@Route(value = "...", layout = MainView.class)`. In a Jmix add-on module, which has no `MainView` and must not reference the application, use `layout = DefaultMainViewParent.class` (`io.jmix.flowui.view.DefaultMainViewParent`); the application's main view is used as the parent at runtime.
-4. Add `@ViewController(id = "Entity.list")`.
-5. Add `@ViewDescriptor(path = "entity-list-view.xml")`.
-6. Add `@LookupComponent("<entities>DataGrid")` when the view can be opened as a lookup — an entity-picker dialog via `@PrimaryLookupView` or an explicit lookup builder call. A pure management/browse screen that is never used as a picker can omit it; the annotation only backs `getLookupComponent()`/`findLookupComponent()` in the lookup flow.
-7. Create XML descriptor with collection container, loader, `dataLoadCoordinator`, grid actions, toolbar buttons, and columns. Add `<urlQueryParameters>` when the view includes filter or pagination — always paired with the matching components (see below).
-8. Verify every JPQL query uses the JPA/Jmix entity name, not the database table name.
-9. Render a visible button for every grid action that users must trigger.
-10. For every `<urlQueryParameters>` child, confirm a component with the matching `id` exists in the same descriptor — otherwise the view crashes at init with `Component with id '<x>' not found`.
-11. Add a `menu.xml` item for list views that should appear in navigation.
-12. Add message keys for title, menu, and custom button captions.
-13. Grant access for roles that can open the view with `@ViewPolicy(viewIds = "Entity.list")` and `@MenuPolicy(menuIds = "Entity.list")` — declared on a method of a `@ResourceRole` interface (both are `@Target(METHOD)`), not the view controller. Neither annotation has a `value()` member: `@ViewPolicy("...")` / `@MenuPolicy("...")` do not compile. See `jmix-create-resource-role`.
+1. Create the Java controller under `view/<entityname>/`, extending `StandardListView<Entity>`.
+2. Add `@Route(value = "...", layout = MainView.class)`. In a Jmix add-on module, which has no `MainView` and must not reference the application, use `layout = DefaultMainViewParent.class` (`io.jmix.flowui.view.DefaultMainViewParent`); the application's main view is used as the parent at runtime.
+3. Add `@ViewController(id = "Entity.list")` and `@ViewDescriptor(path = "entity-list-view.xml")`.
+4. Add `@LookupComponent("<entities>DataGrid")` when the view can be opened as a lookup: an entity-picker dialog via `@PrimaryLookupView` or an explicit lookup builder call. A management/browse screen that is never used as a picker can omit it; the annotation only backs `getLookupComponent()`/`findLookupComponent()` in the lookup flow.
+5. Create the XML descriptor with collection container, loader, `dataLoadCoordinator`, grid actions, toolbar buttons, and columns.
+   - If the entity has a reference to its own class, first read `references/hierarchy.md` in this skill's folder.
+   - If the view has a filter, pagination, or other component whose state should survive a page reload, first read `references/url-query-parameters.md` in this skill's folder.
+   - If the view has a `<settings>` facet, or the user's grid layout should persist between visits, first read `references/settings-facet.md` in this skill's folder.
+6. Check that every JPQL query uses the JPA/Jmix entity name, not the database table name.
+7. Render a visible button for every grid action that users must trigger.
+8. Add a `menu.xml` item for list views that should appear in navigation.
+9. Add message keys for title, menu, and custom button captions.
+10. Grant access for roles that can open the view with `@ViewPolicy(viewIds = "Entity.list")` and `@MenuPolicy(menuIds = "Entity.list")`, declared on a method of a `@ResourceRole` interface (both are `@Target(METHOD)`), not on the view controller. Neither annotation has a `value()` member: `@ViewPolicy("...")` / `@MenuPolicy("...")` do not compile. See `jmix-create-resource-role`.
 
 ## Controller Template
 
@@ -74,45 +74,16 @@ public class CustomerListView extends StandardListView<Customer> {
 
 ## Choosing list-action types
 
-The grid action that opens a row is one of:
+- `list_create` opens the detail view for a new entity.
+- `list_edit` opens the detail view in edit mode.
+- `list_read` opens the detail view in read-only mode: existing records are viewed but not modified. It is a mode, not a `readOnly` descriptor attribute.
+- `list_remove` deletes the selected entity.
 
-- `list_create` — opens detail view for a new entity.
-- `list_edit` — opens detail view in edit mode.
-- `list_read` — opens detail view in an open read-only MODE (existing
-  records are viewed but not modified). It is a mode, not a `readOnly`
-  descriptor attribute.
-- `list_remove` — deletes the selected entity.
+`list_read` replaces `list_edit`, not the whole CRUD bar. "The list opens records in read mode" or "use `read` instead of `edit`" still leaves `list_create` and `list_remove` in place; drop them only when creation or deletion is explicitly forbidden. A list with only a read action and no create/remove is almost always wrong unless a fully read-only list was requested.
 
-`list_read` REPLACES `list_edit`, not the whole CRUD bar. "The list
-opens records in read mode" or "use `read` instead of `edit`" still
-leaves `list_create` and `list_remove` in place — drop them only when
-creation or deletion is explicitly forbidden. A list with only a read
-action and no create/remove is almost always wrong unless a fully
-read-only list was specifically requested.
+## Custom buttons need their own caption
 
-## Hierarchical list
-
-For an entity with a reference to its own class (`Department.parent`), show the list as a tree:
-
-```xml
-<treeDataGrid id="departmentsDataGrid" dataContainer="departmentsDc"
-              hierarchyProperty="parent" width="100%">
-    <!-- actions and columns as in dataGrid -->
-</treeDataGrid>
-```
-
-Actions and buttons are the same as for `dataGrid`. `showOrphans="true"` shows as a root a record whose parent is not in the container (default `false`: with a filter applied such records disappear).
-
-A tree over a self-reference requires the application to forbid cycles (`A` is its own parent, `A → B → A`): records in a cycle are never shown, together with their subtrees. Enforce the ban at the data level (see `jmix-create-entity` / `jmix-add-entity-event-listener`), not in the view — a direct `DataManager.save` bypasses the view. Removing the edited record from its own parent picker is a convenience, not the ban.
-
-## Custom (non-standard) buttons MUST carry their own caption
-
-A button bound to a standard grid action (`createAction`, `editAction`,
-`removeAction`) auto-resolves its caption from the action. A CUSTOM
-button or action you add (e.g. one that calls a service or opens a
-dialog) has NO caption unless you give it one — and a UI test locates a
-button by its visible text, so a blank button is untargetable and the
-test fails. Always add `text="msg://..."` and a matching message key.
+A button bound to a standard grid action (`createAction`, `editAction`, `removeAction`) gets its caption from the action. A custom button or action (for example, one that calls a service or opens a dialog) has no caption unless you give it one, and a UI test finds a button by its visible text, so it cannot click a blank one. Always add `text="msg://..."` and a matching key in `messages_en.properties`.
 
 ```xml
 <hbox id="buttonsPanel" classNames="buttons-panel">
@@ -123,67 +94,17 @@ test fails. Always add `text="msg://..."` and a matching message key.
 </hbox>
 ```
 
-If you instead wire a custom `<action>` (not a standard `list_*` type),
-the action carries the caption: `<action id="customAction"
-text="msg://customAction.text"/>`. Either way the visible text must
-resolve, or it cannot be clicked. Add the key to
-`messages_en.properties`.
+If you wire a custom `<action>` (not a standard `list_*` type) instead, the action carries the caption: `<action id="customAction" text="msg://customAction.text"/>`.
 
-A custom button's `clickListener` / `@Subscribe` handler takes
-`ClickEvent<JmixButton>` (import `io.jmix.flowui.kit.component.button.JmixButton`).
-The wrong event type fails `compileJava` with an argument type mismatch
-at the click handler.
+A custom button's `clickListener` / `@Subscribe` handler takes `ClickEvent<JmixButton>` (import `io.jmix.flowui.kit.component.button.JmixButton`). A handler with the wrong event type compiles, then throws `IllegalArgumentException: argument type mismatch` at the click. `jmix-add-dialog-detail-flow` has the full rule.
 
 ## Icons
 
-DO NOT invent Vaadin icon names. The `VaadinIcon` enum is small and
-irregular; a single typo like `VaadinIcon.ARROW_UP_DOWN` — no such
-constant — crashes the entire view at render time.
+Do not invent Vaadin icon names. The `VaadinIcon` enum is small and irregular; one wrong name, such as `VaadinIcon.ARROW_UP_DOWN` (no such constant), crashes the whole view at render time.
 
-- When unsure which icon to use, OMIT the `icon` attribute entirely.
-  The button works without it.
-- Reuse only icon names you have seen in this project. Grep existing
-  view XML for `icon="` and copy what you find.
-- Before typing a new `VaadinIcon` constant, verify it exists (grep the
-  project, or use Context7 / the Jmix docs MCP (`search-jmix-docs`) / IDE
-  symbol lookup) — see `jmix-verify-api-symbol`.
-
-## URL Query Parameters — add alongside filter and pagination
-
-When a list view has filter, pagination, or other stateful components
-whose state should survive page reload and be shareable via URL, add
-`<urlQueryParameters>` bindings. This is the recommended pattern for
-any non-trivial list view; the seed-scaffolded `user-list-view.xml`
-ships it by default.
-
-```xml
-<facets>
-    <urlQueryParameters>
-        <genericFilter component="genericFilter"/>
-        <pagination component="pagination"/>
-    </urlQueryParameters>
-</facets>
-...
-<genericFilter id="genericFilter" dataLoader="customersDl">...</genericFilter>
-<simplePagination id="pagination" dataLoader="customersDl"/>
-```
-
-**Both halves are mandatory.** Every `<urlQueryParameters>` child binds
-to a layout component BY ID; if that component is missing, the view
-CRASHES AT INIT with `Component with id '<x>' not found` — taking down
-every test that opens the view. When copying from another view (e.g.
-`user-list-view.xml`), copy BOTH the binding AND the component, or
-NEITHER.
-
-Omit `<urlQueryParameters>` entirely when the view has no filter or
-pagination (e.g. a small static reference table).
-
-Self-check: for EVERY `<urlQueryParameters>` child, grep the SAME file
-for a component whose `id` equals the `component="..."` value. If it
-is absent, either add the matching component to the layout
-(`<simplePagination id="pagination" dataLoader="...Dl"/>` or
-`<genericFilter id="genericFilter" dataLoader="...Dl">`) or delete that
-entry.
+- When unsure which icon to use, leave out the `icon` attribute. The button works without it.
+- Reuse only icon names you have seen in this project: grep existing view XML for `icon="` and copy what you find.
+- Before typing a new `VaadinIcon` constant, verify it with `jmix-verify-api-symbol`.
 
 ## JPQL Entity Names
 
@@ -202,19 +123,13 @@ public class Product {
 
 Do not write `select e from PRODUCT_ e` or `select e from Product_ e` unless the entity itself is named that way in JPA metadata.
 
-## Standard load through `<loader><query>` — no delegate needed
+## Data loading
 
-A `StandardListView` loads through the `<loader><query>` you declare in the
-XML. You do NOT need an `@Install(target = Target.DATA_LOADER)` load delegate;
-if you DO write one, it must return `List<E>` — returning the `LoadContext`
-itself means the query never runs and the grid is empty at open.
+A `StandardListView` loads through the `<loader><query>` you declare in the XML. You do not need an `@Install(target = Target.DATA_LOADER)` load delegate. If you write one, it must return `List<E>`: returning the `LoadContext` itself means the query never runs and the grid is empty at open.
 
-## Overriding `beforeEnter` — always call `super`, unconditionally
+## Overriding `beforeEnter`: always call `super`
 
-The `dataLoadCoordinator` auto-load fires INSIDE
-`StandardListView.beforeEnter(...)`. An override that skips the `super` call —
-or calls it only on one branch — leaves the grid silently empty: no exception, no
-warning, a clean compile and a clean render.
+The `dataLoadCoordinator` auto-load runs inside `StandardListView.beforeEnter(...)`. An override that skips the `super` call, or calls it only on one branch, leaves the grid empty with no exception, no warning, a clean compile and a clean render.
 
 ```java
 public class OrderListView extends StandardListView<Order> implements BeforeEnterObserver {
@@ -238,87 +153,37 @@ public class OrderListView extends StandardListView<Order> implements BeforeEnte
 }
 ```
 
-The same holds for every overridden view lifecycle method (`beforeEnter`,
-`afterNavigation`): do your work, then call `super`, on every code path. An
-early `return` before `super` is the defect.
+The same holds for every overridden view lifecycle method (`beforeEnter`, `afterNavigation`): do your work, then call `super`, on every code path. An early `return` before `super` is the defect.
 
-## Column widths — `rem` or px, never `em`
+## Column widths: `rem` or px, never `em`
 
 ```xml
 <column property="number" width="9rem"/>   <!-- RIGHT -->
 <column property="number" width="9em"/>    <!-- WRONG: header and body drift apart -->
 ```
 
-`em` resolves against the font size of the element it is applied to, and the grid
-header and body cells are separate elements. Under the Lumo (compatibility) theme
-the header is deliberately smaller than the body (`--lumo-font-size-s` 14px against
-`--lumo-font-size-m` 16px): the same `9em` becomes 126px in the header and 144px in
-the body — 8/7 per column, accumulating rightwards until the last column is off by
-a wide margin. Under the default Aura theme the header font size currently equals
-the body's, so `em` happens to line up — but the defect is one token away:
-`--vaadin-grid-header-font-size` is a public knob, and any theme or project CSS that
-sets it re-opens the drift. Vaadin documents this on Grid: "Using the em length unit
-is discouraged as it might lead to misalignment issues if the header, body, and
-footer cells have different font sizes. Instead, use rem."
+`em` resolves against the font size of the element it is set on, and grid header and body cells are separate elements. Under the Lumo (compatibility) theme the header font is 14px (`--lumo-font-size-s`) and the body font 16px (`--lumo-font-size-m`): `9em` is 126px in the header and 144px in the body, and the difference adds up column by column to the right. Under the default Aura theme the two sizes are currently equal, but any theme or project CSS that sets the public `--vaadin-grid-header-font-size` brings the drift back. Vaadin's Grid documentation also says to use `rem`, not `em`. On a narrow table the first columns still line up, so a small grid does not show the defect.
 
-The defect hides itself on narrow tables — the first columns line up — so a small
-grid gives no warning that the rule was broken.
-
-## Adding a settings facet
-
-Add it when the user's grid layout should persist between visits. Place it in
-`<facets>`:
-
-```xml
-<facets>
-    <dataLoadCoordinator auto="true"/>
-    <settings auto="true"/>
-</facets>
-```
-
-- With `auto="true"` the facet manages only components that have an `id`:
-  `dataGrid` / `treeDataGrid` (column order, width, visibility, sorting),
-  `genericFilter` and `details` (opened state), `simplePagination` (page size,
-  when `itemsPerPageVisible="true"`).
-- Storage is the `FLOWUI_USER_SETTINGS` table, provided by
-  `jmix-flowui-data-starter`. Check the module is a dependency.
-- Do NOT add a resource-role policy for `flowui_UserSettingsItem`: the framework
-  reads and writes settings through `UnconstrainedDataManager`.
-- From then on, saved settings override later descriptor changes — see the next
-  section.
-
-## Saved user settings outrank the descriptor
-
-Applies when the view declares a `<settings>` facet (e.g. `<settings auto="true"/>`).
-This skill's skeleton does not add one, but existing views often have it.
-
-The facet persists column width, order and visibility per user. Saved values are
-applied OVER the descriptor on open, they carry no version marker, and editing the
-descriptor does not invalidate them. The user does not have to touch anything:
-opening the view once is enough — a full snapshot of all columns is saved on leave.
-So after a descriptor change, the change is visible only to users who never opened
-that view.
-
-The symptom is indistinguishable from "the deployment did not arrive": new value in
-the source, old value on screen. And it disables verification — **until the saved
-settings are cleared, checking such a change in the browser proves nothing**, which
-makes a correct change look broken and invites a second "fix" of working code.
-
-After changing column width, order or visibility on a view with a settings facet,
-clear the stored settings for that view (`FLOWUI_USER_SETTINGS`) before verifying.
+If the view has a `<settings>` facet and you change column width, order or visibility, first read `references/settings-facet.md` in this skill's folder.
 
 ## Forbidden
 
 - Declaring actions without visible buttons or another reachable UI trigger.
 - Using `@Table` names in JPQL.
-- `urlQueryParameters` references to component ids that are not declared in the XML.
 - Java controller without matching XML descriptor.
 - XML descriptor without matching `@ViewDescriptor`.
 - Hardcoded title text.
+- A custom button or custom action without `text="msg://..."` (blank caption; a UI test cannot click it).
+- A custom button handler typed with anything other than `ClickEvent<JmixButton>` (`IllegalArgumentException: argument type mismatch` at the click).
+- Dropping `list_create` / `list_remove` when only "read instead of edit" was asked.
+- Treating `list_read` as a `readOnly` descriptor attribute (it is an action type that opens the detail view in read-only mode).
 - Invented or unverified icon names.
+- `layout = MainView.class` in an add-on module (use `DefaultMainViewParent.class`).
 - Missing role view policy.
+- `@ViewPolicy` / `@MenuPolicy` on the view controller, or written as `@ViewPolicy("...")` (no `value()` member; does not compile).
 - Adding menu policy for dialog-only detail views.
 - A load delegate returning `LoadContext` instead of `List<E>` (the query never runs; the grid is empty at open).
-- An overridden `beforeEnter` that does not call `super.beforeEnter(event)` on every path (the auto-load never fires; the grid is empty).
-- `<column width="…em">` — header and body resolve `em` against different font sizes and drift apart.
-- On a view with a `<settings>` facet: verifying a change to column width, order or visibility in the browser without clearing saved user settings first — the check returns a false negative.
+- An overridden `beforeEnter` (or other lifecycle method) that does not call `super` on every path, including an early `return` (the auto-load never runs; the grid is empty).
+- `<column width="…em">`: header and body resolve `em` against different font sizes and drift apart.
+- `urlQueryParameters` references to component ids that are not declared in the XML (`Component with id '<x>' not found` at view init).
+- On a view with a `<settings>` facet: verifying a change to column width, order or visibility in the browser without clearing saved user settings first (the check returns a false negative).

@@ -10,21 +10,28 @@ Use this skill when adding or changing a database-backed Jmix entity.
 ## Steps
 
 1. Create or update the Java entity in `src/main/java/<base-package>/entity`.
-   **Changing an existing entity? Read "Widening an existing entity" below first.**
+   If you change an existing entity, first read `references/widening.md` in this skill's folder.
 2. Add Jmix and JPA metadata: `@JmixEntity`, `@Entity`, `@Table`.
-3. **Choose the id strategy explicitly** — generated surrogate or assigned natural
-   key. See "Id strategy" below.
+   - If the entity is `@Embeddable` or extends or is extended by another entity, first read `references/embeddable-inheritance.md` in this skill's folder.
+   - If the entity belongs to a non-default data store or to an add-on, read **When the entity is in a non-default data store or in an add-on**.
+3. Choose the id strategy explicitly; see "Id strategy" below. If the entity extends a
+   framework base class, first read `references/framework-superclass.md` in this skill's folder.
 4. Add `@Version`.
 5. Add `@InstanceName` on a stable human-readable field or method.
-6. Define columns with exact `nullable`, `length`, `precision`, and `scale` constraints from requirements.
-   **Check every column name against the reserved words of every targeted dialect** — see "Column names" below.
-   **A `length` of 255 is `@Column`'s own default — omit it** and let the changelog spell
-   `varchar(255)`; see "Constraint Audit" below.
-7. Use `FetchType.LAZY` for relationships.
+6. Define columns with exact `nullable`, `length`, `precision`, and `scale` constraints from
+   requirements. Check every column name against the reserved words of every targeted
+   dialect ("Column names" below). Omit `length = 255`: it is `@Column`'s own default, and
+   the changelog still spells `varchar(255)` ("Constraint audit" below).
+   If the entity stores an uploaded file, read **When the entity has a file attribute**.
+7. Use `FetchType.LAZY` for relationships. A required reference needs three annotations
+   ("Required references" below).
+   - If the entity is a parent or child in an aggregate, first read `references/composition.md` in this skill's folder.
+   - If a reference carries `@OnDeleteInverse` and its target has no soft delete, first read `references/on-delete-inverse.md` in this skill's folder.
 8. Create the Liquibase changelog using `jmix-create-liquibase-changelog`.
 9. Add entity and attribute message keys using `jmix-add-i18n-keys`.
 10. Add or update views and security roles if the entity is user-facing.
-11. Before finishing, compare every required constraint against the source requirements and the Liquibase changelog.
+11. Before finishing, compare every required constraint against the source requirements and
+    the Liquibase changelog ("Constraint audit" below).
 
 ## Entity Template
 
@@ -61,31 +68,18 @@ public class Customer {
 }
 ```
 
-## Column names
+Imports: Spring Boot 3 and later use `jakarta.*`, never `javax.*`. `@PostConstruct` is from
+`jakarta.annotation`; `@NotNull` / `@Email` are from `jakarta.validation.constraints`.
 
-A column name derived from the field name may be an SQL **reserved word**, and
-the dialects a project targets do not agree about which words those are. The
-check is per dialect, not per SQL standard: a green suite against the test store
-proves nothing about the production store.
+## Id strategy
 
-- **PostgreSQL:** `select catcode from pg_get_keywords() where word = '<lower-case name>'`
-  — `reserved` cannot be used as an identifier at all. `END` is reserved;
-  `START`, `LANGUAGE`, `TEXT`, `TYPE` and `NAME` are unreserved and fine.
-- **HSQLDB** (the usual test store): default settings accept SQL-standard
-  keywords as identifiers, so it will NOT warn you — `START`, `END` and
-  `LANGUAGE` all pass there in DDL, INSERT, SELECT and UPDATE.
+Decide the strategy before writing the `@Id` field; it is expensive to change once rows and
+changelogs exist. A new entity uses the same id strategy as the project's existing entities,
+unless its id must come from outside the application (assigned natural key below). In a
+project with no entities yet, use a generated UUID.
 
-Rename the field or give it an explicit prefixed `@Column(name = "...")`. Common
-offenders an entity field naturally produces: `end`, `order`, `user`, `group`,
-`desc`, `references`.
-
-## Id strategy — an explicit choice, not a default
-
-Two strategies. Decide which one the entity needs BEFORE writing the `@Id` field;
-the wrong one is expensive to change once rows and changelogs exist.
-
-**Generated surrogate UUID** — the default for entities this application owns.
-Jmix assigns the id on `DataManager.create()`:
+**Generated surrogate** — for entities this application owns. Jmix assigns the id on
+`DataManager.create()`. The template uses a `UUID`:
 
 ```java
 @JmixGeneratedValue
@@ -94,10 +88,16 @@ Jmix assigns the id on `DataManager.create()`:
 private UUID id;
 ```
 
-**Assigned natural key** — when the id comes from OUTSIDE the application and must
-be preserved: a numeric id from an external system being mirrored, an
-externally-issued code. NO `@JmixGeneratedValue` — it makes Jmix assign the id at
-creation, which is exactly what must not happen here. The writer sets the id:
+With a `Long` (or `Integer`) id field, the same `@JmixGeneratedValue` makes Jmix take the
+id from a database sequence named `seq_id_<entity name>`. Jmix creates that sequence on
+first use if it does not exist; `@JmixGeneratedValue(sequenceName = "...")` takes the id
+from the named sequence instead (Jmix also creates it on first use if it is missing). The id column is `bigint` for a `Long` id and `int`/`integer` for an
+`Integer` id, not `${uuid.type}`.
+
+**Assigned natural key** — when the id comes from outside the application and must be
+preserved: a numeric id from an external system being mirrored, an externally issued code.
+No `@JmixGeneratedValue`: it makes Jmix assign the id at creation, which must not happen
+here. The writer sets the id:
 
 ```java
 @Column(name = "ID", nullable = false)
@@ -111,113 +111,55 @@ account.setId(dto.id());       // caller MUST set it — nothing generates it
 dataManager.save(account);
 ```
 
-Pick the assigned key when: the source system's id is the identity users and
-integrations refer to, or a sync must upsert by that id (load-by-id, insert if
-absent). Pick the generated surrogate otherwise — including when the external key
-merely needs to be UNIQUE, which is a unique index on an ordinary column, not an
-id. Match the Liquibase column type to the Java type (`bigint` for `Long`, not
-`${uuid.type}`).
+Pick the assigned key when the source system's id is the identity users and integrations
+refer to, or a sync must upsert by that id (load by id, insert if absent). Otherwise pick the
+generated surrogate, including when the external key only needs to be unique: that is a
+unique index on an ordinary column, not an id. Match the Liquibase column type to the Java
+type (`bigint` for `Long`, not `${uuid.type}`).
 
-**Inherited key from a framework `@MappedSuperclass`** — when the entity extends a
-base class the framework ships (the application-settings base, and other add-on
-base classes), the key is declared there already. Write NO `@Id`, no
-`@JmixGeneratedValue` and no `@Version` on the subclass. Read that superclass
-before writing the changelog: it decides the id column's name AND type — an `int`
-or `bigint` key is common there, so `${uuid.type}` is the wrong default — and it
-often contributes further columns (a version, a tenant column) that the table must
-still create even though no field in the subclass mentions them.
+## Column names
 
-## Required references — BOTH annotations, or the field is not really required
+A column name derived from the field name may be an SQL reserved word, and the targeted
+dialects do not agree which words those are. Check per dialect, not per SQL standard: a
+green suite against the test store proves nothing about the production store.
 
-A required `@ManyToOne` needs the constraint in two places:
+- **PostgreSQL:** `select catcode from pg_get_keywords() where word = '<lower-case name>'`
+  — `reserved` cannot be used as an identifier at all. `END` is reserved;
+  `START`, `LANGUAGE`, `TEXT`, `TYPE` and `NAME` are unreserved and fine.
+- **HSQLDB** (the usual test store): default settings accept SQL-standard keywords as
+  identifiers, so it will not warn you — `START`, `END` and `LANGUAGE` all pass there in
+  DDL, INSERT, SELECT and UPDATE.
+
+Rename the field or give it an explicit prefixed `@Column(name = "...")`. Common offenders
+an entity field produces: `end`, `order`, `user`, `group`, `desc`, `references`.
+
+## Required references
+
+A required reference carries all three annotations (this is what Jmix Studio generates):
 
 ```java
-@JoinColumn(name = "CUSTOMER_ID", nullable = false)   // ← metamodel: mandatory
-@ManyToOne(fetch = FetchType.LAZY, optional = false)  // ← JPA: not optional
+@NotNull
+@JoinColumn(name = "CUSTOMER_ID", nullable = false)
+@ManyToOne(fetch = FetchType.LAZY, optional = false)
 private Customer customer;
 ```
 
-Omitting `nullable = false` on `@JoinColumn` leaves the Jmix metamodel treating
-the attribute as OPTIONAL: the UI does not require it, no validation fires, and
-the failure surfaces later as a database constraint error — or as a null nobody
-expected. `optional = false` alone is not enough. This is a hard rule; it holds
-for every required reference, not only composition children.
+`@NotNull` and `optional = false` make the attribute mandatory in the Jmix metamodel.
+`@JoinColumn(nullable = false)` declares the foreign key column NOT NULL; it must match the
+changelog. Write all three. This holds for every required reference, not only composition
+children.
 
-## Widening an existing entity
+## Required-field defaults
 
-Adding fields to an entity that already exists is a DIFFERENT task from creating
-one. Change only what the requirement asks for:
+This rule applies to a required field whose default value the requirements define: a
+status, a flag, a date ("defaults to X", "auto-set on create/update", "default now()",
+"defaults to 0"). The default must apply at the entity layer, so that a bare
+`DataManager.create()` + `DataManager.save()` succeeds without the caller touching the
+field. Programmatic paths (services, REST, tests) bypass the UI, so a default that lives
+only in a view is no default.
 
-- **Do NOT touch** the `@Id` field or its strategy, `@Table(name = ...)`,
-  `@Version`, or the existing columns' types and constraints. An entity with an
-  assigned `Long` id stays that way — do not "normalize" it to a generated UUID.
-- **Add** the new fields with their exact constraints, plus new `@Index` entries in
-  `@Table(indexes = {...})` if the new columns need indexing (see below).
-- **Pair it with an `addColumn` changelog**, never a second `createTable` — see
-  `jmix-create-liquibase-changelog` ("Changing an existing table").
-- Follow the precedent already in the project: read the entity's own changelog
-  before writing the new one, and match its naming and column-type style.
-
-## Index parity — declare every index in BOTH places
-
-When you add an index (typically on a new reference/FK column), declare it in the
-entity annotation AND in the changelog:
-
-```java
-@Table(name = "CUSTOMER", indexes = {
-        @Index(name = "IDX_CUSTOMER_MANAGER", columnList = "MANAGER_ID"),
-        @Index(name = "IDX_CUSTOMER_REGION", columnList = "REGION_ID")
-})
-```
-
-```xml
-<createIndex indexName="IDX_CUSTOMER_MANAGER" tableName="CUSTOMER">
-    <column name="MANAGER_ID"/>
-</createIndex>
-```
-
-Same names on both sides. **No gate catches the drift** — a missing `@Index`
-changes neither the metamodel nor the schema, so `compileJava`, the Jmix
-inspection, and a green `clean test` all pass with the index in the changelog only.
-It breaks Studio round-tripping and the code-as-source-of-truth convention, and it
-is found by nothing but this check. Do it as you write the column, not as a later
-audit.
-
-### Make it unique when the column is a natural key
-
-For a single-column natural key that must be unique, add `unique = true` to the
-`@Index` and mirror it with `unique="true"` on the `<createIndex>`:
-
-```java
-@Table(name = "DEPARTMENT", indexes = @Index(
-        name = "IDX_DEPARTMENT_ON_NAME", columnList = "NAME", unique = true))
-```
-
-```xml
-<createIndex indexName="IDX_DEPARTMENT_ON_NAME" tableName="DEPARTMENT" unique="true">
-    <column name="NAME"/>
-</createIndex>
-```
-
-For a rule that spans several columns, use a unique **constraint** rather than a
-unique index — `@Table(uniqueConstraints = @UniqueConstraint(name = "UK_ORDER_LINE",
-columnNames = {"ORDER_ID", "PRODUCT_ID"}))` paired with `<addUniqueConstraint
-tableName="ORDER_LINE" columnNames="ORDER_ID, PRODUCT_ID"
-constraintName="UK_ORDER_LINE"/>`. Same name on both sides, as above.
-
-One rule neither can express: a **case-insensitive** uniqueness constraint cannot be
-declared with `@Index`/`@UniqueConstraint` at all — it needs a functional index on
-`lower(column)` and dialect-specific SQL, so decide it at design time, not when
-writing the changelog.
-
-## Required-field defaults — at the ENTITY layer, not elsewhere
-
-When a required field "defaults to X" or is "auto-set on create/update"
-(e.g. "default now()", "auto-set", "defaults to 0"), the default MUST
-apply at the entity layer so a bare `DataManager.create()` +
-`DataManager.save()` succeeds with the caller never touching the field.
-This is the contract: programmatic paths (services, REST, tests) bypass
-the UI, so a default that lives only in the view is no default at all.
+A required field the user enters (name, email) gets no default: saving is rejected until it
+is filled, and tests must set it.
 
 Three patterns, in order of preference:
 
@@ -229,11 +171,9 @@ Three patterns, in order of preference:
 private Integer quantity = 0;
 ```
 
-**Initial default at creation — `@PostConstruct`**
-
-`@PostConstruct` fires when Jmix instantiates the entity
-(`DataManager.create()`, `Metadata.create()`, `DataContext.create()`),
-before the caller sets any field. Works for both JPA entities and DTOs.
+**Initial default at creation — `@PostConstruct`.** It fires when Jmix instantiates the
+entity (`DataManager.create()`, `Metadata.create()`, `DataContext.create()`), before the
+caller sets any field. Works for both JPA entities and DTOs.
 
 ```java
 @Column(name = "CREATED_AT", nullable = false)
@@ -246,11 +186,8 @@ public void postConstruct() {
 }
 ```
 
-Imports (Spring Boot 3 uses `jakarta.*`, never `javax.*`): `@PostConstruct` from `jakarta.annotation`; `@NotNull` / `@Email` from `jakarta.validation.constraints`.
-
-**Auto-set on every save — `EntitySavingEvent` listener** (for
-`lastUpdated`-style fields that must touch on UPDATE too, or for any
-cross-entity defaulting):
+**Auto-set on every save — `EntitySavingEvent` listener**, for `lastUpdated`-style fields
+that must change on UPDATE too, or for defaults that depend on other entities:
 
 ```java
 import io.jmix.core.event.EntitySavingEvent;
@@ -267,12 +204,11 @@ public class CustomerSavingListener {
 }
 ```
 
-`EntitySavingEvent` fires before EVERY save (both insert and update),
-so the listener covers initial and subsequent timestamps in one place.
-`Customer` must declare the `lastUpdated` field; for the full event-listener
-pattern see `jmix-add-entity-event-listener`.
+`EntitySavingEvent` fires before every save (insert and update), so one listener covers the
+initial and later values. `Customer` must declare the `lastUpdated` field; for the full
+listener pattern see `jmix-add-entity-event-listener`.
 
-### Anti-patterns that look right and break tests
+Placements that look right and break tests:
 
 | Wrong placement                                    | Why it fails                                   |
 |----------------------------------------------------|------------------------------------------------|
@@ -281,107 +217,122 @@ pattern see `jmix-add-entity-event-listener`.
 | Default set in an `EntityChangedEvent` listener    | The listener fires AFTER persist — too late for `@NotNull`. It reacts to saves; it does not default them. |
 | Default set only in the calling UI controller      | Programmatic paths (services, REST, tests) bypass it. |
 
-## Accessors
+## Index parity
 
-Match what the project's entities already do. A codebase where every entity carries
-`@Getter @Setter` is a working configuration — the enhancer runs over those classes
-and the suite passes — so writing the one new entity with hand-written accessors
-makes it the odd one out for a breakage that does not occur. In a project with
-hand-written accessors, write them by hand.
-
-## Composition Checklist
-
-For parent-child aggregates:
-
-- Parent collection has `@Composition`.
-- Parent collection has `@OnDelete(DeletePolicy.CASCADE)` when child lifecycle belongs to parent **and the parent is soft-deleted** — for a hard-deleted parent see the branch below.
-- Child has a non-null back reference to parent.
-- Child `@ManyToOne` uses `fetch = FetchType.LAZY` and `optional = false`.
-- Child join column is `nullable = false`.
-- Parent detail view edits the child collection via a property-bound `<collection property=...>` (no loader/query), and the parent fetchPlan includes the child property.
-- The child's own detail view exists, plus its role policy, when the UI opens the child in a dialog.
+When you add an index (typically on a reference column), declare it in the entity
+annotation and in the changelog, with the same name on both sides:
 
 ```java
-import io.jmix.core.DeletePolicy;
-import io.jmix.core.entity.annotation.OnDelete;
-import io.jmix.core.metamodel.annotation.Composition;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-
-@Composition
-@OnDelete(DeletePolicy.CASCADE)
-@OneToMany(mappedBy = "parent")
-private List<ChildLine> lines;  // leave uninitialized — Jmix returns a NotInstantiatedList
-
-@JoinColumn(name = "PARENT_ID", nullable = false)
-@ManyToOne(fetch = FetchType.LAZY, optional = false)
-private Parent parent;
+@Table(name = "CUSTOMER", indexes = {
+        @Index(name = "IDX_CUSTOMER_MANAGER", columnList = "MANAGER_ID"),
+        @Index(name = "IDX_CUSTOMER_REGION", columnList = "REGION_ID")
+})
 ```
-
-### Cascade for a hard-deleted parent
-
-`@OnDelete(DeletePolicy.CASCADE)` is an application-layer policy, and Jmix applies it
-only to a parent that supports soft delete. On a parent with no `@DeletedDate`/`@DeletedBy`
-the annotation does nothing and the children are orphaned.
-
-For a hard-deleted parent, put the cascade on the child's foreign key in the changelog
-instead:
 
 ```xml
-<addForeignKeyConstraint baseTableName="CHILD_LINE" baseColumnNames="PARENT_ID"
-                         constraintName="FK_CHILD_LINE_ON_PARENT"
-                         referencedTableName="PARENT" referencedColumnNames="ID"
-                         onDelete="CASCADE"/>
+<createIndex indexName="IDX_CUSTOMER_MANAGER" tableName="CUSTOMER">
+    <column name="MANAGER_ID"/>
+</createIndex>
 ```
 
-Also, add the `@OnDeleteInverse(DeletePolicy.CASCADE)` to the entity attribute. It doesn't affect the runtime behavior, 
-but it's an indicator for Studio when it generates changelogs: 
+No check catches the difference: a missing `@Index` changes neither the metamodel nor the
+schema, so `compileJava`, the Jmix inspection, and a green `test` all pass with the
+index in the changelog only. It breaks Studio round-tripping and the rule that the code is
+the source of truth. Do it as you write the column, not later.
 
-```java
-@OnDeleteInverse(DeletePolicy.CASCADE)
-@JoinColumn(name = "PARENT_ID", nullable = false)
-@ManyToOne(fetch = FetchType.LAZY, optional = false)
-private Parent parent;
-```
-
-`jmix-create-liquibase-changelog` presents a DB-level `onDelete="CASCADE"` as the option
-you almost never want, because it assumes the Jmix default of soft delete. A hard-deleted
-composition parent is the exception that wording allows for.
-
-### Delete policies on a plain reference to a hard-deleted entity
-
-The same rule covers `@OnDeleteInverse(DeletePolicy.DENY)` / `UNLINK` on an ordinary
-`@ManyToOne`: Jmix runs the delete-policy processor only when the entity being
-DELETED supports soft delete. The trait that matters is on the reference's target
-(`Product` when the annotation sits on `OrderLine.product`), not on the entity that
-carries the annotation. On a hard-deleted target the annotation is just an indicator 
-for Studio to generate a FK constraint with `ON DELETE`. 
-DENY surfaces as a foreign-key violation from the database — a persistence exception, never
-`DeletePolicyException`.
-
-For a hard-deleted target put the policy on the foreign key in the changelog instead
-(see `jmix-create-liquibase-changelog`, "Two referential actions on one row"):
-
-- UNLINK → `onDelete="SET NULL"` on the FK; the column must be nullable.
-- DENY → a plain FK with no `onDelete`; the database rejects the delete. Tests and
-  error handling must expect the persistence exception, not `DeletePolicyException`.
-- CASCADE → `onDelete="CASCADE"`, as in the composition branch above.
+If a column or a set of columns must be unique, first read `references/unique-columns.md` in this skill's folder.
 
 ## Auditing and Soft Delete
 
-Add audit fields with the Spring Data annotations from `org.springframework.data.annotation`: `@CreatedBy`, `@CreatedDate`, `@LastModifiedBy`, `@LastModifiedDate`. For soft delete add `@DeletedBy` and `@DeletedDate` from `io.jmix.core.annotation` — soft-deleted rows are then auto-filtered out of `DataManager`/JPQL queries.
+Add audit fields with the Spring Data annotations from `org.springframework.data.annotation`:
+`@CreatedBy`, `@CreatedDate`, `@LastModifiedBy`, `@LastModifiedDate`. For soft delete add
+`@DeletedBy` and `@DeletedDate` from `io.jmix.core.annotation`; soft-deleted rows are then
+filtered out of `DataManager`/JPQL queries automatically.
 
-That filter applies to **writes** as well as to the queries the application issues. 
-Inserting or updating a row whose reference points at a soft-deleted entity fails — with a message that names the wrong cause:
+If a saved entity may reference a soft-deleted row, read **When a saved reference may point to a soft-deleted row**.
+
+## Calculated and Transient Properties
+
+Non-persistent derived attributes use `@JmixProperty` + `@Transient` +
+`@DependsOnProperties({"a", "b"})` (`@JmixProperty` from `io.jmix.core.metamodel.annotation`).
+An `@InstanceName` method also needs `@DependsOnProperties` listing every attribute it
+reads, so they are fetched.
+
+`@DependsOnProperties` lists only the entity's own attributes. A referenced entity is fetched
+with its instance name only, so do not read its other attributes in a calculated property.
+
+## Accessors
+
+Match what the project's entities already do. If every entity carries `@Getter @Setter`,
+that works (the enhancer runs over those classes and the suite passes), so write the new
+entity the same way. In a project with hand-written accessors, write them by hand.
+
+## Constraint audit
+
+`compileJava` does not build the schema — Liquibase does — so a difference between Java and
+DDL is silent. Check the Java annotations and the changelog side by side:
+
+- `nullable` / `@NotNull`
+- `length` — compare the effective length, not whether the attribute is written. `@Column`'s
+  default is 255, so a 255-character column omits `length` in the annotation, while the
+  changelog must still spell `varchar(255)` because SQL has no such default. An attribute
+  present on one side and absent on the other is not a difference here.
+- `precision` and `scale` — they default to 0, which is never the requirement, so always
+  write them on both sides.
+- enum id values and column type
+- foreign key nullability
+- indexes and unique constraints
+- default values for required fields
+
+Field semantics to apply when they are clear:
+
+- A field named `email` usually gets `@Email`, unless the requirements say otherwise.
+- Unlimited or large text uses the project's long-text pattern, usually `@Lob` plus a
+  matching Liquibase type. Do not invent a length when the requirements say unlimited or the
+  project uses long text for the same concept.
+- `BigDecimal` columns use the exact required precision and scale in Java and Liquibase.
+
+If a field uses `@PropertyDatatype`, read **When a field uses `@PropertyDatatype`**.
+
+## Forbidden
+
+- Missing `@JmixEntity`.
+- Constructor-based entity creation.
+- `@Data`, `@EqualsAndHashCode` or `@ToString` on a Jmix entity: they generate `equals`/`hashCode`/`toString` over mutable persistent fields, replacing the identity semantics the framework relies on and touching lazy references while doing it.
+- `FetchType.EAGER`.
+- `javax.*` imports instead of `jakarta.*`.
+- Missing Liquibase changelog for persistent changes.
+- A new entity with an id strategy different from the project's existing entities, unless its id is an assigned natural key or it extends a framework `@MappedSuperclass`.
+- `@JmixGeneratedValue` on an assigned natural key — Jmix then assigns the id itself, and the source system's id is lost.
+- `${uuid.type}` for the id column of a `Long` or `Integer` id.
+- A column name that is a reserved word in any targeted dialect; HSQLDB will not warn.
+- A required `@ManyToOne` without all three of `@NotNull`, `@ManyToOne(..., optional = false)` and `@JoinColumn(..., nullable = false)`.
+- A required field with a default from the requirements that is set only in the UI (`InitEntityEvent`, a UI controller), only in a service mutator, or in an `EntityChangedEvent` listener.
+- An index declared in the changelog but missing from `@Table(indexes = …)`, or the reverse.
+- An `@InstanceName` method or calculated property without `@DependsOnProperties` for every attribute it reads, or one that reads non-instance-name attributes of a referenced entity.
+- An invented `length` for unlimited text.
+- `length = 255` written explicitly on `@Column`.
+- `precision` or `scale` missing on either side (Java or changelog).
+- An accessor style different from the project's other entities.
+- Changing an existing entity's id strategy, `@Table` name, `@Version`, or existing columns' types and constraints while adding fields to it; a second `createTable` for an existing table.
+- Nullable child back references in composition aggregates.
+- Instantiating or replacing a collection field that Jmix populated — it may be a `NotInstantiatedList`/`NotInstantiatedSet`. Leave collection fields uninitialized; do not assign `new ArrayList`/`new HashSet`.
+
+## Special cases
+
+### When a saved reference may point to a soft-deleted row
+
+The soft-delete filter applies to writes as well as to the application's queries. Inserting
+or updating a row whose reference points at a soft-deleted entity fails, with a message that
+names the wrong cause:
 
 ```
 IllegalStateException: During synchronization a new object was found through
 a relationship that was not marked cascade PERSIST
 ```
 
-If a reference to a soft-deleted row is a legal state in the model (a child that may sit beneath a deleted parent), the save must carry the hint:
+If such a reference is a legal state in the model (a child that may stay under a deleted
+parent), the save must carry the hint:
 
 ```java
 dataManager.save(new SaveContext()
@@ -389,13 +340,7 @@ dataManager.save(new SaveContext()
         .saving(entity));
 ```
 
-## Calculated and Transient Properties
-
-Non-persistent derived attributes use `@JmixProperty` + `@Transient` + `@DependsOnProperties({"a", "b"})` (`@JmixProperty` from `io.jmix.core.metamodel.annotation`). The same applies to an `@InstanceName` method: it must carry `@DependsOnProperties` listing every attribute it reads so they are fetched.
-
-`@DependsOnProperties` lists only the entity's own attributes; a referenced entity is fetched with its instance name only, so don't read its other attributes in a calculated property.
-
-## File attributes
+### When the entity has a file attribute
 
 Use `FileRef` for an uploaded file reference. The JPA converter is applied automatically:
 
@@ -408,67 +353,16 @@ private FileRef scanFile;
 
 Map the matching Liquibase column as `varchar(1024)`.
 
-## Embeddable, Inheritance, and Data Stores
+### When the entity is in a non-default data store or in an add-on
 
-- `@Embeddable` value objects (still annotated `@JmixEntity`) are supported, as are JPA inheritance strategies (`@Inheritance` with `JOINED`, `SINGLE_TABLE`, or `TABLE_PER_CLASS`).
-- For `SINGLE_TABLE`, an **abstract** base class is normal and carries NO
-  `@DiscriminatorValue` of its own — it is never instantiated, so there is no row
-  to discriminate. Only the concrete subclasses need one. (The published examples
-  usually show a concrete base that does have one; the difference is plain JPA, not
-  a Jmix rule — see `jmix-verify-api-symbol`.)
-- **Loading through the base class does not fetch subclass attributes.** A
-  `dataManager.load(BaseType.class)` builds its default fetch plan from the base
-  metaclass's own properties, so casting the result to a subclass and reading a
-  subclass-declared attribute throws `IllegalStateException: Cannot get unfetched
-  attribute`. See `jmix-configure-fetch-plan` for the fix.
-- For a non-default data store, annotate the entity with `@Store(name = "...")` (defined in `application.properties`); add-on entities use an entity-name prefix, e.g. `@Entity(name = "app_Customer")`.
+For a non-default data store, annotate the entity with `@Store(name = "...")` (the store is
+defined in `application.properties`). Add-on entities use an entity-name prefix, e.g.
+`@Entity(name = "app_Customer")`.
 
-## Constraint Audit
+### When a field uses `@PropertyDatatype`
 
-`compileJava` does not build the schema — Liquibase does — so Java/DDL
-drift is silent. Check Java annotations and the Liquibase changelog side
-by side:
-
-- `nullable` / `@NotNull`
-- `length` — compare the **effective** length, not whether the attribute is written.
-  `@Column`'s own default is 255, so a 255-character column omits `length` from the
-  annotation while the changelog must still spell `varchar(255)`, because SQL has no such default.
-  An attribute present on one side and absent on the other is not drift here. `precision` and `scale` default to 0,
-  which is never the requirement, so those are always written on both sides.
-- `precision` and `scale`
-- enum id values and column type
-- foreign key nullability
-- indexes and unique constraints
-- default values for required fields
-
-When a field uses `@PropertyDatatype`, inspect the datatype class's `@Ddl` too.
-Compare its SQL type with the intended column and verify the effective generated
-DDL; matching `@Column` and Liquibase alone can hide a conflicting datatype
-declaration. Do not assume the field annotation wins. Use a compatible datatype
-or separate display formatting from schema typing, and review generated migrations
+Inspect the datatype class's `@Ddl` too. Compare its SQL type with the intended column and
+verify the effective generated DDL: matching `@Column` and Liquibase alone can hide a
+conflicting datatype declaration. Do not assume the field annotation wins. Use a compatible
+datatype or separate display formatting from schema typing, and review generated migrations
 for unintended precision or scale changes before applying them.
-
-## Semantic Constraint Checks
-
-Apply common Java validation and persistence mappings when the field semantics are clear:
-
-- Fields named `email` should usually have `@Email` unless the requirements explicitly say otherwise.
-- Unlimited or large text should use the project pattern for long text, usually `@Lob` plus a matching Liquibase type, not an invented arbitrary length.
-- `BigDecimal` columns must use the exact required precision and scale in both Java and Liquibase.
-- Do not invent a length for a field when the requirements say it is unlimited or when the existing project uses long text for the same concept.
-
-## Forbidden
-
-- Missing `@JmixEntity`.
-- Constructor-based entity creation.
-- `@Data`, `@EqualsAndHashCode` or `@ToString` on a Jmix entity: they generate `equals`/`hashCode`/`toString` over mutable persistent fields, replacing the identity semantics the framework relies on and touching lazy references while doing it.
-- `FetchType.EAGER`.
-- Missing Liquibase changelog for persistent changes.
-- A required `@ManyToOne` with `optional = false` but no `@JoinColumn(nullable = false)` — the metamodel then treats it as optional and the UI does not require it.
-- `@JmixGeneratedValue` on an assigned natural key — Jmix then assigns the id itself, defeating the point of preserving the source system's id.
-- Changing an existing entity's id strategy, `@Table` name, or `@Version` while adding fields to it.
-- An index declared in the changelog but missing from `@Table(indexes = …)`, or the reverse.
-- Nullable child back references in composition aggregates.
-- Relying only on UI initialization for required persistence fields.
-- Instantiating or replacing a collection field that Jmix populated — it may be a `NotInstantiatedList`/`NotInstantiatedSet`. Leave collection fields uninitialized; do not assign `new ArrayList`/`new HashSet`.
-- A 0-byte `.java` — it passes compile and the clean test boot, but breaks the registry. Confirm every file you wrote is non-empty.

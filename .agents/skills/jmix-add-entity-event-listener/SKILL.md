@@ -17,18 +17,16 @@ Use this skill when business logic must react to entity save, change, delete, or
    - `io.jmix.core.event.EntitySavingEvent`
 4. For created entities, load by `event.getEntityId()` when related data is needed.
 5. If you specify a custom fetch plan, include every scalar and reference property read later (see `jmix-configure-fetch-plan`).
-6. For deleted entities, do not load `event.getEntityId()`; use old values or old reference ids from `event.getChanges()`.
-7. Use `EntitySavingEvent` for defaults or transformations that must happen before data is saved; a required persistent default still belongs at the entity layer (see `jmix-create-entity`).
+6. For deleted entities, do not load `event.getEntityId()`; use old values or old reference ids from `event.getChanges()`. If the listener reacts to deletes, first read `references/deleted-events.md` in this skill's folder. If children removed by an `ON DELETE CASCADE` foreign key need per-row cleanup, first read `references/database-cascade.md` in this skill's folder.
+7. Use `EntitySavingEvent` for defaults or transformations that must happen before data is saved; a required persistent default still belongs at the entity layer (see `jmix-create-entity`). If an `EntitySavingEvent` listener must read a reference of the entity, first read `references/saving-event-reference.md` in this skill's folder. If a stored value is computed from composition children (an order total from its lines), first read `references/derived-from-children.md` in this skill's folder.
 8. Use `EntityLoadingEvent` for initializing non-persistent attributes from already loaded local persistent state.
-9. Use a before-commit `@EventListener` path for validation that must reject the current save/remove operation.
+9. Use a before-commit `@EventListener` path for validation that must reject the current save/remove operation. If the write being validated can also violate a database constraint, read **When the validated write can violate a database constraint** below.
 10. Put multi-entity changes in a transactional service method when atomicity matters.
 11. Reject unsupported updates/deletes inside the event path before treating work as complete.
-12. Search the changed code for `@TransactionalEventListener`; if the listener performs validation, rejects updates/deletes, or sets required defaults, replace it with `@EventListener` plus `EntitySavingEvent`/`EntityChangedEvent` or another before-commit path. Decide by the direction of failure — see "Event Timing".
+12. Search the changed code for `@TransactionalEventListener`; if it sets required defaults, move them to an `EntitySavingEvent` `@EventListener`; if it performs validation or rejects updates/deletes, replace it with an `EntityChangedEvent` `@EventListener` or another before-commit path. Decide by the direction of failure (see **Event timing**).
 13. Add tests or at least compile/startup validation for the event listener.
 
-## EntityChangedEvent
-
-### Listener Template
+## Listener template
 
 ```java
 import io.jmix.core.DataManager;
@@ -78,15 +76,15 @@ public class LedgerEntryEventListener {
 }
 ```
 
-### Fetch Plan Safety
+## Fetch plan safety
 
-For non-deleted events, the loaded entity should contain every property the listener reads. The safest default is loading by event id with the normal plan:
+For non-deleted events, the loaded entity must contain every property the listener reads. The safest default is loading by event id with the normal plan:
 
 ```java
 LedgerEntry entry = dataManager.load(event.getEntityId()).one();
 ```
 
-For non-deleted events, if you use a custom fetch plan, add all accessed scalar fields and references:
+With a custom fetch plan, add all accessed scalar fields and references:
 
 ```java
 LedgerEntry entry = dataManager.load(LedgerEntry.class)
@@ -98,148 +96,24 @@ LedgerEntry entry = dataManager.load(LedgerEntry.class)
 ledgerService.apply(entry.getAccount().getId(), entry.getAmount(), entry.getType());
 ```
 
-After writing the listener, scan the method: every `entry.getX()` used after loading must be available in the fetch plan.
+After writing the listener, scan the method: every `entry.getX()` used after loading must be in the fetch plan.
 
-### Event Timing
+## Event timing
 
-Use normal Spring `@EventListener` for logic that must affect the current save/remove operation:
+Decide by the direction of failure:
 
-- required default values;
-- rejecting unsupported updates or deletes;
-- synchronous changes to related persistent state;
-- validation whose exception must propagate to `DataManager.save()` or `DataManager.remove()`.
+- Before commit, with a normal Spring `@EventListener`: logic that must be able to reject or change the current save/remove operation — required default values, rejecting unsupported updates or deletes, synchronous changes to related persistent state, validation whose exception must propagate to `DataManager.save()` or `DataManager.remove()`.
+- After commit, with `@TransactionalEventListener`: reactions such as notifications or integration events, and any change to a resource the database transaction cannot roll back (file storage, an external API, an outbound notification), however required it is.
 
-`@TransactionalEventListener` is for after-transaction reactions such as notifications or integration events. Do not use it when failure must roll back or reject the current persistence operation.
-
-**The criterion is the direction of failure.**
-A handler that must be able to REJECT the operation belongs before commit. A handler
-that mutates a resource the database transaction cannot roll back — file storage, an
-external API, an outbound notification — belongs AFTER commit, however required it is.
-
-The mistake this prevents: deleting an uploaded file from a before-commit handler
-because the deletion is "a required synchronous side effect". `EntityChangedEvent` is
-published in `beforeCommit`, so if anything later aborts the transaction the row is
-still there and its file is gone — the exact inverse of the leak the handler exists to
-prevent.
-
-`EntityChangedEvent` (before commit) is delivered AFTER the SQL flush. If the write
-being validated can itself violate a database constraint, the constraint error is
-raised first and the listener never runs.
-
-Use `EntityChangedEvent.Type.DELETED` to detect deletes. Deleted entity instances cannot be loaded by `event.getEntityId()` because they have already been removed, so delete-side logic must use the old values and old reference ids available from `event.getChanges()`.
-
-For `Type.DELETED`, `event.getChanges()` snapshots every non-read-only property of the entity with its last-known pre-delete value — unlike `Type.UPDATED`, where only actually-mutated attributes appear. So `getOldValue(name)` works for scalar (non-reference) attributes too, and references come back as ids:
-
-```java
-@EventListener
-public void onOrderLineChanged(EntityChangedEvent<OrderLine> event) {
-    if (event.getType() == EntityChangedEvent.Type.DELETED) {
-        LocalDate postingDate = event.getChanges().getOldValue("postingDate"); // scalar pre-delete value
-        Id<Order> orderId = event.getChanges().getOldReferenceId("order");     // reference as id
-        // validate against the pre-delete state, e.g. reject the delete
-    }
-}
-```
-
-The change set covers the deleted entity's OWN attributes. A reference is snapshotted as
-`Id.of(value)` only, so the referenced entity's columns are not reachable through it.
-
-#### A child removed by a database cascade produces no event at all
-
-When a parent is hard-deleted and its children go with it through an `ON DELETE CASCADE`
-foreign key, no hook sees those children. There is nothing to subscribe to and no state
-left to read.
-
-So any per-row cleanup a cascaded child owns — file storage, external APIs — must run
-BEFORE the parent delete is requested (load the children, clean up, then remove the parent,
-in a service method), or be accepted and recorded as a gap. Do not plan it as delete-side
-listener work; there is no event to hang it on.
+Example: an uploaded file deleted from a before-commit handler as "a required synchronous side effect". `EntityChangedEvent` is published in `beforeCommit`; if anything later aborts the transaction, the row stays and its file is gone.
 
 ## EntitySavingEvent and EntityLoadingEvent
 
-`EntitySavingEvent` contains the entity instance before it is written to the data store. Use it for required defaults, value normalization, and transformations that must be persisted with the current save operation.
-
-It is published for created and updated instances only: `remove` publishes no `EntitySavingEvent`. To react to removals as well (cache invalidation, audit), listen to `EntityChangedEvent` and check `Type.DELETED`.
+`EntitySavingEvent` contains the entity instance before it is written to the data store. Use it for required defaults, value normalization, and transformations that must be persisted with the current save operation. It is published for created and updated instances only: `remove` publishes no `EntitySavingEvent`. To react to removals as well (cache invalidation, audit), listen to `EntityChangedEvent` and check `Type.DELETED`.
 
 `EntityLoadingEvent` contains the loaded entity instance after it is read from the data store. Use it to initialize non-persistent attributes from local persistent fields, for example decrypting a stored value into a transient UI-facing property.
 
-For `EntitySavingEvent` and `EntityLoadingEvent`, read and write only local attributes of the event entity. Do not assume referenced entities are loaded or that loading references inside an `EntityLoadingEvent` will cascade loading events predictably.
-
-### Reading a reference you nevertheless need
-
-Inside `EntitySavingEvent` an unloaded reference does NOT lazy-load — the getter
-throws. That is an exception to the ordinary rule (outside the save path a reference
-missing from the fetch plan is lazy-loaded and only local attributes throw), so code
-written from the general rule fails here.
-
-This also rules out the obvious workaround: `dataManager.load(Category.class)
-.id(order.getCategory().getId())` never runs, because `order.getCategory()` throws
-first. `entity.getRef().getId()` is not a safe way to learn a reference's id — it
-needs the reference loaded.
-
-```java
-@EventListener
-public void onOrderSaving(EntitySavingEvent<Order> event) {
-    Order order = event.getEntity();
-    Category category = entityStates.isLoaded(order, "category")
-            ? order.getCategory()
-            : dataManager.load(Order.class).id(order.getId())
-                    .fetchPlan(fp -> fp.addFetchPlan(FetchPlan.BASE)
-                            .add("category", FetchPlan.BASE))
-                    .optional().map(Order::getCategory).orElse(null);
-    // ... use category, keep working with `order`
-}
-```
-
-Read the reference OUT of the separately loaded instance and keep using the event's
-entity. Do NOT continue with the reloaded copy and do not merge it back: it carries
-what is in the database and overwrites values set in memory but not yet saved.
-
-## Stored values derived from composition children
-
-A save writes only its save set: `DataContext` includes only changed instances, and
-`DataManager.save(x)` only what you pass. Changing the parent from a line's
-`EntitySavingEvent`, or changing lines and saving only the parent, writes nothing.
-So compute each stored value when its own entity is saved, and when a line is saved
-without its parent, reload the parent and save it.
-
-Put the calculation in a Spring bean, not in the entity: it often needs other beans
-(prices, rates, settings), and the listeners, the view's live total
-(`jmix-create-composition-detail-view`) and tests then share one implementation.
-
-```java
-@EventListener
-public void onOrderLineSaving(EntitySavingEvent<OrderLine> event) {
-    event.getEntity().setAmount(orderTotals.lineAmount(event.getEntity()));
-}
-
-@EventListener
-public void onOrderSaving(EntitySavingEvent<Order> event) {
-    Order order = event.getEntity();
-    if (entityStates.isLoaded(order, "lines")) {
-        order.setTotal(orderTotals.total(order));   // sums lineAmount(line), not stored amounts
-    }
-}
-
-@EventListener   // a line saved or removed without its order
-public void onOrderLineChanged(EntityChangedEvent<OrderLine> event) {
-    Id<Order> orderId = event.getType() == EntityChangedEvent.Type.DELETED
-            ? event.getChanges().getOldReferenceId("order")
-            : Id.of(dataManager.load(event.getEntityId()).fetchPlan(fp -> fp.add("order")).one().getOrder());
-    dataManager.load(orderId)
-            .fetchPlan(fp -> fp.addFetchPlan(FetchPlan.BASE).add("lines", FetchPlan.BASE))
-            .optional()
-            .ifPresent(order -> {
-                BigDecimal total = orderTotals.total(order);
-                if (order.getTotal() == null || order.getTotal().compareTo(total) != 0) {
-                    order.setTotal(total);
-                    dataManager.saveWithoutReload(order);
-                }
-            });
-}
-```
-
-Saving the order changes no line, so no further line event follows.
+In both events, read and write only local attributes of the event entity. Do not assume referenced entities are loaded, or that loading references inside an `EntityLoadingEvent` will cascade loading events predictably.
 
 ## Forbidden
 
@@ -247,7 +121,17 @@ Saving the order changes no line, so no further line event follows.
 - Assuming `EntityChangedEvent` directly contains the full entity instance.
 - Assuming `EntityLoadingEvent` is a replacement for fetching references or running cross-entity queries.
 - Reading an entity property that is omitted from a custom fetch plan.
-- `@TransactionalEventListener` for validation, or for immutable-record enforcement — anything that must be able to reject the operation.
+- Loading a deleted entity by `event.getEntityId()`.
+- `@TransactionalEventListener` for validation, for immutable-record enforcement, or for required defaults — anything that must be able to reject or change the operation.
+- Setting a required default in an `EntityChangedEvent` listener: it runs after the SQL flush, too late for `@NotNull` (see `jmix-create-entity`).
 - A before-commit handler for a side effect the transaction cannot undo (file storage, external APIs, notifications).
+- Expecting `EntitySavingEvent` on `remove`.
+- Reading referenced entities in `EntitySavingEvent` or `EntityLoadingEvent` as if they were loaded.
 - Putting UI code in entity listeners.
 - Side effects without an explicit service method when several entities must stay consistent.
+
+## Special cases
+
+### When the validated write can violate a database constraint
+
+`EntityChangedEvent` (before commit) is delivered after the SQL flush. If the write being validated can itself violate a database constraint, the constraint error is raised first and the listener never runs.
