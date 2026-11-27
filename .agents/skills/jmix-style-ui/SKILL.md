@@ -1,6 +1,6 @@
 ---
 name: jmix-style-ui
-description: Style Jmix Flow UI components in Jmix 2 / Vaadin 24 — views, fragments, grid renderers, or components built in a controller. Read this before writing getStyle().set(...), classNames, themeNames, addThemeVariants(...), or CSS custom properties (--lumo-*, occasionally --vaadin-*). A token or theme name the active theme does not define fails silently — code compiles, tests pass, rendering is wrong.
+description: Use before styling Jmix Flow UI components with getStyle().set(...), classNames, themeNames, theme variants, or CSS custom properties (--lumo-*, --vaadin-*) in views, fragments, or renderers.
 ---
 
 # Style Flow UI components
@@ -92,18 +92,12 @@ attribute joins entries with spaces) but stores one bogus entry, so a later
 `remove("pill")` or `contains("badge")` silently does nothing. When you need
 several names, add them separately or use `addAll(List.of("badge", "pill"))`.
 
-**A theme name is component-specific, not just globally "supported".** In Jmix
-2.x, names such as `badge`, `pill`, `primary`, `small`, and
-`tertiary-inline` are real, but that does NOT mean every component reacts to
-every one of them. A name can exist in XSD / Studio metadata and still do
-nothing on the concrete component you put it on. Read the selector, not just the
-name.
-
-For example, `themeNames="badge primary small"` is valid for HTML badge-like
-containers, and `ButtonVariant.LUMO_TERTIARY_INLINE` is a real Lumo button
-variant used by Jmix itself. But a badge-specific theme name on a plain button,
-or a component-specific theme name on the wrong host element, still compiles and
-silently renders as the default component.
+A theme name or `*Variant` constant is only a string that some stylesheet has
+to style, and it is component-specific. In Jmix 2.x, names such as `badge`,
+`pill`, `primary`, `small`, and `tertiary-inline` are real, but a badge name on
+a plain button, or a component-specific name on the wrong host element, still
+compiles and renders as the default component. Before you add a theme name or
+variant, first read `references/theme-variant.md` in this skill's folder.
 
 **3. Inline `getStyle().set(...)` — last resort.** Correct for a one-off dynamic
 value (a color computed from data, a width from a measurement), not for a look
@@ -188,62 +182,14 @@ Jmix Lumo may add its own small layer of custom properties such as
 `--jmix-lumo-warning-background-color`. Treat these exactly like any other
 token: if the stylesheet does not define it, do not use it.
 
-## Theme names and variants that exist — enumerate them, do not guess them
-
-`themeNames` and `*Variant` constants are just strings. They compile even when
-the active component/theme combination does nothing with them.
-
-Enumerate the names from the same compiled bundle — one grep covers every
-layer (Vaadin component styles, Lumo's badge module, Jmix, add-ons):
-
-```bash
-grep -rhoE "theme~=['\"]?[a-z0-9-]+" build/dev-bundle/ \
-  | sed -E "s/theme~=['\"]?//" | sort -u
-# or run it over the extracted src/main/bundles/dev.bundle from the previous section
-```
-
-The XML-side `themeNames` values that XSD / Studio metadata suggest are in the
-resolved `jmix-flowui` jar:
-
-```bash
-FLOWUI=$(find ~/.gradle/caches -name 'jmix-flowui-2.*.jar' ! -name '*-sources.jar' | tail -1)
-unzip -p "$FLOWUI" 'io/jmix/flowui/view/layout.xsd' \
-  | grep -n "badgeThemeNames\|tertiary-inline"
-```
-
-What this tells you in Jmix 2 — and why only the bundle grep is conclusive:
-
-- `badge` / `pill` are real, but they are styled by Lumo's **badge module**
-  (enabled through the theme's `lumoImports`), not by the `jmix-lumo` theme
-  folder — a grep of the Jmix layer alone reports them as unstyled.
-- `tertiary-inline` is real, but it lives in the Vaadin button component's own
-  Lumo styles — again visible in the bundle, absent from the theme folders.
-- A name being present in XSD metadata does NOT prove it applies to your
-  component.
-- The project's own theme (`src/main/frontend/themes/<theme-name>/`) can add
-  more selectors, so grep that folder too. When you need to see which names
-  come from Jmix itself, the extracted Jmix layer is at
-  `src/main/frontend/generated/jar-resources/themes/jmix-lumo/`.
-
-## When the active theme has no suitable token or variant
-
-Four acceptable options, in this order:
-
-1. **A verified `--lumo-*` token** from the active theme.
-2. **A verified `--vaadin-*` token** when you specifically need a lower-level
-   Vaadin component hook and the active theme defines it.
-3. **A project-defined CSS class or custom property** in the theme stylesheet.
-4. **A literal, theme-neutral value** for a genuinely neutral decoration:
-
-```java
-card.getStyle()
-        .set("border", "1px solid rgba(128, 128, 128, 0.3)")
-        .set("border-radius", "6px");
-```
+If the active theme has no suitable token, first read `references/no-suitable-token.md` in this skill's folder.
 
 When you rely on a token for something essential (a link's affordance, a status
 color), add a theme-independent fallback too, e.g. `text-decoration: underline`
 next to the accent color.
+
+If a component paints to a `<canvas>` or passes color options directly to a
+JavaScript drawing API (some charts and diagrams), first read `references/drawing-api-colors.md` in this skill's folder.
 
 ## Why a wrong token or theme name is invisible to every gate
 
@@ -260,22 +206,12 @@ declaration parses, the build succeeds, and the browser applies the fallback:
 
 The same is true for a dead `themeNames` / variant combination: the component
 just renders as though you had not applied that style at all. So the defect
-survives `compileJava`, the Jmix inspection, and a green `clean test`. The
-rendering is merely wrong — no exception, no warning, nothing in the log.
+survives `compileJava`, the Jmix inspection, and a green `test`, with no
+exception, no warning, and nothing in the log.
 
-**CSS tokens do not resolve automatically in drawing APIs.** Some chart,
-diagram, or other components paint to a `<canvas>` and pass colour options
-directly to a JavaScript drawing API. Such APIs do not interpret `var(...)` as
-CSS. Before passing a theme token to a component option, check whether the
-component resolves CSS custom properties itself. If it does not, use the
-component's palette/theme API, a literal colour, or resolve the custom
-property first (for example with
-`getComputedStyle(...).getPropertyValue(...)`) and pass the resulting colour
-value.
+## Verify — the computed style, in a browser
 
-## Verify — the COMPUTED style, in a browser
-
-The declaration looks identical whether the property resolves or not, so reading
+The declaration looks the same whether the property resolves or not, so reading
 the Java or the CSS proves nothing. Open the view with a browser tool (Gate 3 in
 `jmix-verify-bootrun`) and read the computed value:
 
@@ -286,13 +222,8 @@ getComputedStyle(document.querySelector('#statusLabel')).color
 A resolved token gives a real color (`rgb(...)`); an undefined one gives the
 inherited value — that difference is the check. Do the same for
 `borderRadius`/`borderColor` when you set them. If no browser tool is available,
-say `styling not browser-verified` rather than calling it done.
-
-This check applies only when the value becomes a CSS declaration. If a
-component passes the value directly to a drawing API, there may be no
-corresponding computed style to inspect; verify the rendered result and, when
-necessary, inspect the component's frontend implementation to confirm whether it
-resolves CSS custom properties.
+say `styling not browser-verified` rather than calling it done. For a value
+passed to a drawing API, first read `references/drawing-api-colors.md` in this skill's folder.
 
 The same check catches a dead theme variant, because a variant the component or
 theme does not style computes exactly like the component with no variant at all:
@@ -313,12 +244,20 @@ the two match, the variant did nothing.
   (or XSD / constants / the active theme CSS) first.
 - Assuming a valid theme name works on every component without checking the
   selector that styles it.
+- `--aura-*` tokens — Jmix 2 runs Lumo, so they are undefined.
+- An essential look (a link's affordance, a status color) that depends only on a
+  token, with no theme-independent fallback.
+- A new CSS file that nothing `@import`s — its rules never apply.
+- `ThemeList.add("badge pill")` — add one token per entry.
+- Re-implementing a badge or size variant with hand-written CSS.
 - Passing `var(...)` to a component option consumed directly by a drawing API
   unless the component explicitly resolves CSS custom properties before drawing.
 - Inline `getStyle().set(...)` for a look that a component theme variant,
   utility class, or reusable CSS class already provides.
 - A repeated inline style across several components instead of one CSS class in
   the project theme.
-- Claiming styling works from a green compile / `clean test` — neither renders
-  anything.
+- Claiming styling works from a green compile / `test` — neither renders
+  anything. Without a browser check, report `styling not browser-verified`.
+- Treating a reading of the Java or the CSS as proof of the look — only the
+  computed style in a browser shows it.
 - Editing generated frontend files — they are regenerated on every build.

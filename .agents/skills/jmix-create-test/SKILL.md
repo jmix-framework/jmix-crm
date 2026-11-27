@@ -5,24 +5,23 @@ description: Create or update Jmix unit, integration, UI integration, or end-to-
 
 # Create Test
 
-Use this skill when adding or changing tests for Jmix application behavior.
-
 ## Steps
 
 1. Choose the smallest test type that proves the behavior.
 2. Use a plain JUnit test for pure Java logic without Spring/Jmix services.
 3. Use `@SpringBootTest` for services, DataManager persistence, entity listeners, security, and transactions.
-4. Use `@UiTest` with `FlowuiTestAssistConfiguration` for Flow UI controller/component behavior without a browser.
-5. Use end-to-end browser tests only for real browser behavior, routing, login, theme, or Vaadin client-side interactions.
+4. Use `@UiTest` with `FlowuiTestAssistConfiguration` for Flow UI controller/component behavior without a browser. This includes the minimal test that opens each created or changed view for Gate 3 of `jmix-verify-bootrun`; write it even when the view is also walked in a browser. First read `references/ui-test.md` in this skill's folder. If the test checks grid columns or form fields hidden by security, also read `references/ui-test-hidden-by-security.md` in this skill's folder.
+5. Use end-to-end browser tests only for real browser behavior, routing, login, theme, or Vaadin client-side interactions. Read **When the behavior needs a real browser** below.
 6. Create test data through `DataManager.create()` and `DataManager.save()`.
-7. Set authentication with the project's `AuthenticatedAsAdmin` extension or `SystemAuthenticator`.
-8. Clean up created persistent data in `@AfterEach`.
+7. Set authentication with the project's `AuthenticatedAsAdmin` extension or `SystemAuthenticator`. If the code under test runs on a scheduler, `@Async`, or application event listener path, first read `references/outside-user-session.md` in this skill's folder.
+8. Clean up created persistent data in `@AfterEach`. If an entity has `@DeletedDate`/`@DeletedBy`, read **When the test removes a soft-deletable entity** below.
 9. Mock external systems at the boundary; prefer `@MockitoBean` on Spring Boot 3.4+ projects and follow the project's existing compiled pattern otherwise.
 10. Run the smallest relevant Gradle test command.
+11. Before finishing, go through **Final review** below.
 
-Before typing any Jmix/Vaadin symbol you didn't copy from this project's `src` — a class, enum constant, action id, component, or event inner-class — confirm it. A guessed symbol survives typing and then breaks `compileJava`. Use the Context7 MCP (`/jmix-framework/jmix-context7`) when available, otherwise the official docs plus a working example already in this repo — see `jmix-verify-api-symbol`.
+Before typing any Jmix/Vaadin symbol you didn't copy from this project's `src` — a class, enum constant, action id, component, or event inner-class — verify it with `jmix-verify-api-symbol`.
 
-## Unit Test Pattern
+## Unit test pattern
 
 ```java
 class PriceCalculatorTest {
@@ -35,16 +34,12 @@ class PriceCalculatorTest {
 }
 ```
 
-Do not invent an unregistered anonymous or local subclass of a Jmix entity for
-an in-memory fixture. The class still enters the test classpath: Jmix metadata
-discovery in another test can encounter it and fail with a missing metaclass,
-even when the fixture's own plain unit test passes. To exercise a missing-handler
-branch, vary the injected registry or collaborator list while using an existing
-entity type. If a new subtype is genuinely needed, register it through the
-supported test configuration and run the full suite with a fresh context; running
-only the fixture's unit test does not check metamodel discovery.
+Do not create an unregistered anonymous or local subclass of a Jmix entity for an in-memory fixture. The class is still on the test classpath: Jmix metadata discovery in another test can find it and fail with a missing metaclass, even when the fixture's own unit test passes.
 
-## Integration Test Pattern
+- To test a missing-handler branch, vary the injected registry or collaborator list and use an existing entity type.
+- If a new subtype is really needed, register it through the supported test configuration and run the full suite with a fresh context. Running only the fixture's unit test does not check metamodel discovery.
+
+## Integration test pattern
 
 ```java
 @SpringBootTest
@@ -74,9 +69,9 @@ class CustomerServiceTest {
 }
 ```
 
-When the code under test (a service method, an entity event listener) may call `dataManager.save()` on the registered entity a second time, the reference in the cleanup list goes stale — its version lags the database — and `remove` in `@AfterEach` throws an optimistic-lock exception. So use the id to reload-then-remove.
+Cleanup reloads by id and then removes. The code under test (a service method, an entity event listener) may save the entity again, so the instance in the cleanup list can have an old version, and removing it throws an optimistic-lock exception.
 
-## Security Test Pattern
+## Security test pattern
 
 ```java
 Optional<Customer> result = systemAuthenticator.withUser(
@@ -87,274 +82,71 @@ Optional<Customer> result = systemAuthenticator.withUser(
 
 Use this when the expected result depends on Jmix security policies.
 
-Test row-level rules by loading data as the user and asserting which rows come back;
-a permission API such as `SecureOperations` proves only that a policy exists.
+Test row-level rules by loading data as the user and asserting which rows come back. A permission API such as `SecureOperations` proves only that a policy exists.
 
-## UI Integration Test Pattern
+If the test checks grid columns or form fields hidden by attribute permissions, first read `references/ui-test-hidden-by-security.md` in this skill's folder.
 
-```java
-@UiTest
-@SpringBootTest(classes = {AppApplication.class, FlowuiTestAssistConfiguration.class})
-class CustomerUiTest {
-    @Autowired
-    private ViewNavigators viewNavigators;
-
-    @Test
-    void opensCustomerList() {
-        viewNavigators.view(UiTestUtils.getCurrentView(), CustomerListView.class).navigate();
-        CustomerListView view = UiTestUtils.getCurrentView();
-        DataGrid<Customer> grid = UiTestUtils.getComponent(view, "customersDataGrid");
-        assertThat(grid).isNotNull();
-    }
-}
-```
-
-Use the project's helper for component lookup if it exists. Otherwise keep a local typed helper small and explicit. A `@UiTest` that navigates to a view will fail to find it if the view's id or the component id is wrong — the test, not just `compileJava`, is what catches that.
-
-**Find components by id, not by localized text.** In a `@UiTest` the UI and session
-locale is the JVM default (`Locale.getDefault()`), while `Messages` takes the locale
-from `CurrentAuthentication`, which has no client locale there and falls back to the
-first entry of `jmix.core.available-locales`. Comparing a caption with
-`messages.getMessage(key)` passes only where the two happen to agree — on a developer
-machine, not on an `en_US` CI runner. Look components up by id; when the test must
-assert localized text, resolve it with the locale the component used, or pin the UI
-locale in the test setup.
-
-`UiTestUtils.getCurrentView()` works as the navigation origin even before the
-test navigates anywhere: `@UiTest` opens the initial view before each test, so a
-current view always exists.
-
-**Authenticate as a database user when behavior depends on the current user.** By
-default, `@UiTest` uses the system user. The system user is created at application
-startup and has no row in the application's user table. Code that resolves the
-current user through `DataManager` or the user repository therefore finds no
-entity and can silently take a "not the current user" branch. Wrap navigation,
-interaction, and assertions in `runWithUser` so the whole UI operation uses a
-real test user:
-
-```java
-systemAuthenticator.runWithUser("admin", () -> {
-    viewNavigators.detailView(UiTestUtils.getCurrentView(), Order.class)
-            .editEntity(order)
-            .navigate();
-    OrderDetailView view = UiTestUtils.getCurrentView();
-    JmixButton approveButton = UiTestUtils.getComponent(view, "approveButton");
-    assertThat(approveButton.isVisible()).isTrue();
-});
-```
-
-Use `withUser` instead when the authenticated block returns a value. This is
-separate from testing security policies: authenticate whenever the result
-depends on which application user is looking at the data.
-
-`runWithUser` inside the test body cannot cover code that runs before the test:
-`@UiTest` opens the initial/main view first, still as the system user. When that
-view's code resolves the current user — or every test in the class needs the
-same real user — implement `UiTestAuthenticator` and pass it in
-`@UiTest(authenticator = ...)` so the whole class, including the initial view,
-runs as that user.
-
-**Select an inactive `tabSheet` tab before clicking its components.** Component
-lookup and `@ViewComponent` injection can find a component on a non-selected tab,
-but `JmixTabSheet` explicitly disables the content of every non-selected tab
-(and attaches it to the component tree only when its tab is first selected).
-`Button.click()` checks `isEnabled()` first, so on that content it is a silent
-no-op and does not call its subscribed handler. This is specific to inactive tab
-content — a merely detached component, such as one built in a controller and not
-yet added anywhere, clicks normally. To test the component interaction, select
-the tab first:
-
-```java
-JmixTabSheet tabSheet = UiTestUtils.getComponent(view, "orderTabSheet");
-JmixButton approveButton = UiTestUtils.getComponent(view, "approveButton");
-
-tabSheet.setSelectedIndex(1); // enable the tab content that contains approveButton
-approveButton.click();
-```
-
-If the test targets only the server-side handler, fire the event directly and
-state why you bypass the disabled component:
-
-```java
-// The button is on an inactive tab; invoke the server-side handler directly.
-ComponentUtil.fireEvent(approveButton, new ClickEvent<>(approveButton));
-```
-
-Direct event firing does not prove that the tab selection and browser click path
-work. A silent `click()` on the disabled content also does not prove that the
-button is broken in a browser. Use a browser test when that client-side path is
-the behavior under test.
-
-**List a nested `@TestConfiguration` in `classes` explicitly.** Do not rely on the
-usual "a static `@TestConfiguration` inside the test class is picked up
-automatically" behaviour once `@SpringBootTest(classes = {...})` names an explicit
-set, as `@UiTest` requires — in practice the nested class's beans do not appear.
-Name it yourself:
-
-```java
-@UiTest
-@SpringBootTest(classes = {
-        AppApplication.class,
-        FlowuiTestAssistConfiguration.class,
-        CustomerUiTest.MockApiConfig.class})   // ← nested config, listed EXPLICITLY
-class CustomerUiTest {
-
-    @TestConfiguration
-    static class MockApiConfig { /* @Bean overrides */ }
-}
-```
-
-Omitting it does not fail loudly: the beans simply never get defined, and the test
-runs against the real collaborator (a live HTTP call, or a `NoSuchBeanDefinition`
-far from the cause).
-
-## Reaching what is NOT a component on the form
-
-`UiTestUtils.getComponent(...)` only finds components in the view. Dialogs and
-notifications are NOT children of the `UI` — walking `UI.getCurrent().getChildren()`
-compiles, runs, and finds nothing (the UI's children are just the main view). The
-resulting failure reads as "the dialog never opened", accusing correct view code.
-
-```java
-DialogInfo dialog = UiTestUtils.getLastOpenedDialog();
-assertThat(dialog.getText()).contains("...");
-dialog.getButtons().stream()
-        .filter(b -> "YES".equals(b.getText()))
-        .findFirst().orElseThrow()
-        .click();
-```
-
-The same class also provides `getOpenedDialogs()`, `getLastOpenedNotification()`,
-`getOpenedNotifications()` and `validateView(detailView)` — assert dialogs,
-notifications and validation errors through these, never by traversing the tree.
-
-These helpers read static registries (`OpenedDialogs`, `OpenedNotifications`).
-`JmixUiTestExtension` empties them after each test, but within a test they still hold
-whatever was opened before the action under test — by the initial view or by setup
-steps. Before asserting "no dialog opened" or on the LAST notification, clear them
-right before the action:
-
-```java
-openedDialogs.closeOpenedDialogs();             // @Autowired OpenedDialogs
-openedNotifications.closeOpenedNotifications(); // @Autowired OpenedNotifications
-approveAction.actionPerform(ordersDataGrid);
-assertThat(UiTestUtils.getOpenedDialogs()).isEmpty();
-```
-
-Data containers are reached through `ViewControllerUtils`, because `View.getViewData()`
-is protected and the compiler does not point anywhere:
-
-```java
-CollectionContainer<Category> dc =
-        ViewControllerUtils.getViewData(view).getContainer("categoriesDc");
-assertThat(dc.getItems()).allMatch(Category::isApplicable);
-```
-
-### Components inside a fragment
-
-Components inside a fragment are not found by id from the view. The fragment loader
-keeps a component's XML id as fragment-scoped data, not as the element id, so
-`UiTestUtils.getComponent(view, "ordersGrid")` and any walk comparing
-`Component.getId()` report "no component" for a correct descriptor. The fragment itself
-IS a view component — take it from the view, then ask the fragment for its content:
-
-```java
-OrderListFragment fragment = UiTestUtils.getComponent(view, "orderListFragment");
-DataGrid<Order> grid = (DataGrid<Order>) FragmentUtils.getComponent(fragment, "ordersGrid");
-```
-
-`FragmentUtils.findComponent(fragment, id)` is the `Optional` form; both live in
-`io.jmix.flowui.fragment`.
-
-### dropdownButton items
-
-Items of a `dropdownButton` are not view components either, so
-`UiTestUtils.getComponent(view, itemId)` does not find them. Get the button by its
-component id and ask it for the item:
-
-```java
-DropdownButton createButton = UiTestUtils.getComponent(view, "createButton");
-assertThat(createButton.getItem("createFromTemplate")).isNull(); // null, not an exception
-
-ActionItem blankItem = (ActionItem) createButton.getItem("createBlank");
-blankItem.getAction().actionPerform(createButton);
-```
-
-`getItems()` lists the items and skips separators.
-
-## Hidden grid columns
-
-A grid column whose attribute the current role may not view is removed from the Vaadin
-grid, but `DataGrid` still keeps it by key: `getColumnByKey("discount")` returns the
-column and its `isVisible()` is `true`, so an assertion on visibility reports a hidden
-column as shown. Assert the removal through the column's element:
-
-```java
-Grid.Column<Order> column = grid.getColumnByKey("discount");
-assertThat(column == null || column.getElement().getParent() == null).isTrue();
-```
-
-A form field bound to such an attribute is hidden with `setVisible(false)`, so
-`assertThat(field.isVisible()).isFalse()` is correct for fields.
-
-## Testing code that runs outside a user session
-
-A scheduler / `@Async` / application event listener path has no authenticated user, and a test that
-sets authentication up **hides** exactly the defect worth catching. Call the entry
-point bare, and authenticate only the data setup:
-
-```java
-@Test
-void generateDailyReportsRunsOnTheSchedulerThread() {
-    systemAuthenticator.runWithSystem(() -> givenOrder());   // setup only
-    // no authentication around the call — reproduces the scheduler thread
-    reportService.generateDailyReports();
-}
-```
-
-See `jmix-run-background-code` for the `@Authenticated` / `SystemAuthenticator`
-rules on the production side.
-
-## End-To-End Tests
-
-Use Masquerade/Selenide or the project's browser-test stack when browser verification is required. Enable test ids only in a test profile and prefer stable component ids over text selectors.
-
-## Cleanup Audit
+## Final review
 
 Before finishing, check:
 
-- Every created persistent record is removed in `@AfterEach`, using the same authentication level needed for deletion.
-- Cleanup reloads by id then removes instead of removing the instance that can be stale.
-- A **soft-deletable** entity (one carrying `@DeletedDate`/`@DeletedBy`) is NOT removed by `dataManager.remove` — the row is only stamped, stays in the store for every later run, and stays visible to any query issued with soft deletion off. Teardown that must leave the store clean removes it hard:
-    ```java
-    dataManager.save(new SaveContext()
-            .setHint(PersistenceHints.SOFT_DELETION, false)
-            .removing(entity));
-    ```
+- Every created persistent record is removed in `@AfterEach`, using the authentication level needed for deletion.
+- Cleanup reloads by id and then removes, instead of removing an instance that can be stale.
+- `@AfterEach` deletes child rows (with a `@ManyToOne`/`@JoinColumn` to another cleaned-up entity) before the parents they reference. Check the order again when a new FK is added to an entity that existing cleanup already covers. A wrong order throws a constraint violation in teardown, and JUnit reports it against the test, so it looks like a test bug.
+- If an entity has `@DeletedDate`/`@DeletedBy`, read **When the test removes a soft-deletable entity** below.
+- No `@Transactional` on the test class or methods: it rolls back the writes that `@AfterEach` cleanup and the second back-to-back run depend on.
+- An in-memory datasource with a fixed name (`jdbc:hsqldb:mem:<fixed>`) is shared by every `@SpringBootTest` context in the JVM that uses it. It is not reset per class or per method (HSQLDB registers a `mem:` catalog by name for the JVM's lifetime). So:
+  - `@AfterEach` cleanup is required even for a test that only reads, or a later test in the same run sees its rows.
+  - A test that calls a method twice to prove idempotency must not expect a fresh precondition between the calls. Set up explicitly the precondition that the code under test checks.
 - Test data has unique values to avoid collisions.
-- Assertions verify persisted or visible behavior, not just absence of exceptions.
-- A test that compares a stored date-time with its in-memory original (equality, "same event", `isEqual`) creates the value at the column precision — e.g. `OffsetDateTime.now().truncatedTo(ChronoUnit.MICROS)` for a PostgreSQL `timestamp`. `now()` carries nanoseconds on Linux JDKs and microseconds on macOS, and the driver rounds the value to the column on write, so a reloaded value differs from the original about half the time: green on a developer Mac, red on Linux CI.
-- UI tests that depend on who is viewing the data authenticate as a real database user around navigation, interaction, and assertions.
-- UI tests select the containing `tabSheet` tab before calling `click()` on a component in that tab, unless they intentionally fire the server-side event directly and explain why.
+- Assertions verify persisted or visible behavior, not only the absence of exceptions.
+- A test that compares a stored date-time with its in-memory original (equality, "same event", `isEqual`) creates the value at the column precision, for example `OffsetDateTime.now().truncatedTo(ChronoUnit.MICROS)` for a PostgreSQL `timestamp`. `now()` has nanoseconds on Linux JDKs and microseconds on macOS, and the driver rounds the value to the column on write, so the reloaded value differs about half the time: green on a developer Mac, red on Linux CI.
 - The test command can run one class or method without running the full suite.
-- No `@Transactional` on the test class or methods — it rolls back the writes that `@AfterEach` cleanup and the twice-back-to-back run depend on.
-- Run the single class twice back-to-back — a second green run proves no leaked rows or cross-test data dependence that one pass hides.
-- `@AfterEach` deletions run in FK-safe order: child rows (holding a `@ManyToOne`/`@JoinColumn` to another cleaned-up entity) before the parents they reference. Re-check this whenever a new FK is added to an entity already covered by an existing cleanup block — a previously-safe order can silently become unsafe and throw a constraint violation in teardown, which JUnit reports against the test that triggered it rather than the cleanup, so it first reads as a test bug rather than an ordering one.
-- An in-memory datasource with a FIXED name (`jdbc:hsqldb:mem:<fixed>`) is shared for the whole JVM/test run across every `@SpringBootTest` context that resolves to it — it is NOT reset per class or per method (HSQLDB's `mem:` catalog is registered by name for the JVM's lifetime). So `@AfterEach` cleanup is mandatory even for a test that only reads, or a later test in the same run sees its leftover rows; and a test that calls the same method twice to prove idempotency must not assume a fresh precondition between the two calls — set up explicitly the precondition the code under test actually checks.
+- Run the single class twice back-to-back. A second green run shows there are no leftover rows and no dependence on data from other tests.
+- For a UI test: it runs as a real database user when the behavior depends on the current user, and it selects the `tabSheet` tab before `click()` on a component in that tab (see `references/ui-test.md` in this skill's folder).
 
 ## Forbidden
 
 - `@Transactional` on test classes/methods — it rolls back writes, so `@AfterEach` cleanup of committed entities and running the test twice back-to-back both stop working.
-- `@MockBean` (deprecated) — use `@MockitoBean`.
+- `@MockBean` (deprecated since Spring Boot 3.4) in a project where `@MockitoBean` is available.
 - `new Entity()` or constructor-created Jmix entities in persistence tests.
+- An unregistered anonymous or local subclass of a Jmix entity as a test fixture.
+- Removing the saved instance in cleanup instead of reloading it by id.
 - Tests that depend on data left by previous tests.
 - Cleanup only at the end of the test method.
+- Deleting parents before the child rows that reference them in `@AfterEach`.
+- `dataManager.remove` as the only cleanup of a soft-deletable entity.
+- Test data without unique values.
+- A test that asserts only that nothing was thrown.
+- An idempotency test that expects a fresh precondition between its two calls on a shared fixed-name HSQLDB `mem:` datasource.
+- Comparing a reloaded date-time with an original from `now()` that is not truncated to the column precision.
+- Checking row-level rules only through a permission API such as `SecureOperations`.
+- `spring.main.allow-bean-definition-overriding=true` to replace a bean for one test — use a distinct `@Primary` bean instead.
+- `@WithUserDetails` for Jmix security tests when `SystemAuthenticator` or the project auth extension is available.
+- Authenticating before calling a scheduler/`@Async` entry point and then claiming that path is covered.
 - UI tests that assert only that navigation did not throw.
-- Calling `click()` on a component in a non-selected `tabSheet` tab and treating the silent no-op as evidence about browser behavior.
+- Finding UI components by localized text, or comparing a caption with `messages.getMessage(key)` without resolving it in the component's locale or setting the UI locale in the test.
 - Leaving `@UiTest` as the system user when the behavior depends on resolving the current user from the database.
+- A nested `@TestConfiguration` left out of `@SpringBootTest(classes = {...})` — its beans are silently never defined.
+- Looking for dialogs or notifications by walking `UI.getCurrent().getChildren()`.
+- `UiTestUtils.getComponent(view, id)` for a component inside a fragment or a `dropdownButton` item.
+- Calling `click()` on a component in a non-selected `tabSheet` tab and treating the silent no-op as evidence about browser behavior.
+- Asserting `isVisible()` on a grid column hidden by security.
 - Browser tests for behavior that `@UiTest` or service tests can prove.
 - Hardcoded sleeps when framework waits or component assertions are available.
-- `@WithUserDetails` for Jmix security tests when `SystemAuthenticator` or the project auth extension is available.
-- A nested `@TestConfiguration` left out of `@SpringBootTest(classes = {...})` — its beans are silently never defined.
-- `spring.main.allow-bean-definition-overriding=true` to replace a bean for one test — use a distinct `@Primary` bean instead.
-- Authenticating before calling a scheduler/`@Async` entry point and then claiming that path is covered.
+
+## Special cases
+
+### When the test removes a soft-deletable entity
+
+An entity with `@DeletedDate`/`@DeletedBy` is not removed by `dataManager.remove`: the row is only marked, stays in the store for every later run, and is visible to any query with soft deletion off. Teardown that must leave the store clean removes it hard:
+
+```java
+dataManager.save(new SaveContext()
+        .setHint(PersistenceHints.SOFT_DELETION, false)
+        .removing(entity));
+```
+
+### When the behavior needs a real browser
+
+Use Masquerade/Selenide or the project's browser-test stack. Enable test ids only in a test profile, and prefer stable component ids over text selectors.

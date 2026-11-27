@@ -5,8 +5,6 @@ description: Create Jmix service-layer business logic with DataManager, transact
 
 # Create Service Logic
 
-Use this skill when implementing business operations, calculations, or persistence workflows.
-
 ## Steps
 
 1. Create a Spring `@Service` in the `service` package.
@@ -16,6 +14,9 @@ Use this skill when implementing business operations, calculations, or persisten
 5. Validate business invariants in the service before saving.
 6. Return domain values or saved entities, not UI components.
 7. Keep view controllers thin: they should call services, not implement business rules.
+8. If a scheduler, `@Async`, or a listener calls the method, read **When a scheduler, `@Async`, or a listener calls the service** below.
+9. If you need aggregates, a lock, or a hard delete, read **When you need aggregates, a lock, or a hard delete** below.
+10. Verify any unfamiliar Jmix/Vaadin symbol before typing it (`jmix-verify-api-symbol`). After writing the service, run static checks (`jmix-ide-static-analysis`) and the tests (Gate 2, `jmix-verify-bootrun`).
 
 ## Service Template
 
@@ -50,7 +51,7 @@ public class AccountService {
 }
 ```
 
-Consume the instance RETURNED by `dataManager.save(...)`: the pre-save argument is stale (no generated id/version), while `save(...)` returns the fresh managed copy. A missing transaction boundary and using the stale argument are both compile- and render-clean defects.
+Use the instance returned by `save(...)`: the argument is stale (no generated id or version). A missing transaction boundary and use of the stale argument both compile and render cleanly.
 
 ## DataManager Loading
 
@@ -64,13 +65,11 @@ List<Customer> activeCustomers = dataManager.load(Customer.class)
         .list();
 ```
 
-### DataManager saving
+The Condition API (`PropertyCondition` / `LogicalCondition`) is an alternative to JPQL.
 
-When the result is unused — `saveWithoutReload()`.
+## DataManager Saving
 
-`save()` re-selects the entity from the database after persisting, so the caller
-gets a fresh instance. When the caller does NOT use the returned instance, that
-reload is wasted work:
+`save()` reloads the entity after persisting. Use it when you use the return value (generated id, new version, reloaded state); otherwise use `saveWithoutReload()`:
 
 ```java
 // result discarded → the reload is pointless
@@ -80,34 +79,29 @@ dataManager.save(repository);
 dataManager.saveWithoutReload(repository);
 ```
 
-Rule: use `save()` when you consume the return value (you need the generated id,
-the new version, or the reloaded state); use `saveWithoutReload()` when you do
-not. The Jmix IDE inspection reports the discarded-result case as *"Result of
-DataManager.save() is not used; use saveWithoutReload() to avoid a redundant
-reload"* — it is a true finding, and `compileJava` never reports it, so a
-compile-only Gate 1 lets it through (see `jmix-ide-static-analysis`).
-
-## Gotchas
-
-- New vs detached: a null id does not mean "new" (ids can be generated early). Use `io.jmix.core.EntityStates#isNew(entity)`.
-- `DataManager` does more than `load`/`save`: `loadValues()` for scalar/aggregate data, the Condition API (`PropertyCondition` / `LogicalCondition`) as a JPQL alternative, pessimistic `lockMode()`, and hard delete by setting the `PersistenceHints.SOFT_DELETION` hint to `false` (e.g. `saveContext.setHint(PersistenceHints.SOFT_DELETION, false)`).
-
-## Called from a scheduler, `@Async`, or a listener?
-
-A service method reached from a thread with no logged-in user needs
-`@Authenticated` (or a `SystemAuthenticator` block), or its first `DataManager`
-call throws `IllegalStateException: Authentication is not set`. No gate catches
-this — see `jmix-run-background-code`.
+The Jmix IDE inspection reports the discarded result as *"Result of DataManager.save() is not used; use saveWithoutReload() to avoid a redundant reload"*. It is a true finding that `compileJava` never reports, so a compile-only Gate 1 misses it (see `jmix-ide-static-analysis`).
 
 ## Forbidden
 
 - Business logic in view controllers.
-- `dataManager.save(...)` with the result discarded — use `saveWithoutReload(...)`.
 - UI components, dialogs, or notifications in services.
+- `dataManager.save(...)` with the result discarded — use `saveWithoutReload(...)`.
+- Using the argument of `save(...)` instead of the returned instance.
+- Missing transaction boundary for multi-step updates that must be atomic.
 - Constructor calls for Jmix entities.
 - `EntityManager` for regular CRUD.
-- Missing transaction boundary for multi-step updates that must be atomic.
+- Field injection instead of constructor injection.
+- Treating a green `compileJava` as Gate 1 without the static checks.
+- Treating a null id as "new" (ids can be generated early) — use `io.jmix.core.EntityStates#isNew(entity)`.
 
-## Verify
+## Special cases
 
-Verify any unfamiliar Jmix/Vaadin symbol before typing it (`jmix-verify-api-symbol`), then run the gates after writing the service: static checks (`jmix-ide-static-analysis`) and the context-load test (`jmix-verify-bootrun`).
+### When a scheduler, `@Async`, or a listener calls the service
+
+The thread has no logged-in user, and the first `DataManager` call throws `IllegalStateException: Authentication is not set` — see `jmix-run-background-code`.
+
+### When you need aggregates, a lock, or a hard delete
+
+- Scalar or aggregate data: `dataManager.loadValues()`.
+- Pessimistic lock: `lockMode()` on the load.
+- Hard delete: set the `PersistenceHints.SOFT_DELETION` hint to `false`, for example `saveContext.setHint(PersistenceHints.SOFT_DELETION, false)`.
